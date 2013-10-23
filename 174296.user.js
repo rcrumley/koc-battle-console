@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131021b
+// @version        20131023a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131021b';
+var Version = '20131023a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -213,7 +213,8 @@ var Options = {
   GESeveryhour:0,
   GESeveryday:0,
   detAFK: true,
-  SexyTourneyActive:false,
+  TourneyModeActive:false,
+  UseTourneyMM:false,
   CrestList    : {"i1101":0,"i1102":0,"i1103":0,"i1104":0,"i1105":0,"i1106":0,"i1107":0,"i1108":0,"i1109":0,"i1110":0,"i1111":0,"i1112":0,"i1113":0,"i1114":0,"i1115":0,"i1120":0,"i1121":0,"i1122":0},
 };
 //unsafeWindow.pt_Options=Options;
@@ -8710,7 +8711,7 @@ Tabs.transport = {
         11,792,500,000 12292500000   35734.8  37250
         **/
                 if (loadBoostBase > Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100) {
-        loadBoostBase = Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100
+        loadBoostBase = Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100;
      };
      loadBoostBase += featherweight; //Should be done after throne room max check to get max boost?
         loadBoostBase += 1;
@@ -13867,8 +13868,8 @@ Tabs.AutoTrain = {
 		
     // get more population in previous city ready for next time
     if (t.city !=0) {
-		if (TrainOptions.Enabled[t.city] && Options.SexyTourneyActive) {
-			GetMorePopulation(t.city-1); }
+		if (TrainOptions.Enabled[t.city] && Options.TourneyModeActive) {
+			t.GetMorePopulation(t.city-1); }
 	}
 		
     t.city++;
@@ -13950,6 +13951,50 @@ Tabs.AutoTrain = {
       onFailure: function () {profiler.stop();}
     });
   },
+  
+	GetMorePopulation: function (cityidx) {
+		var t = Tabs.popcontrol;
+		if (!t.tcp) return; // not loaded yet
+		var cityId = Seed.cities[cityidx][0]
+
+		t.tcp.selectBut(cityidx);
+		t.show_city(cityId);
+
+		t.max_idle_pop = (parseInt(Seed.citystats['city'+cityId].pop[1])).toFixed(0);
+		t.cur_idle_pop = (parseInt(Seed.citystats['city'+cityId].pop[0])).toFixed(0);
+		num = parseInt(t.max_idle_pop) - parseInt(t.cur_idle_pop);
+		if (num == 0) return; // max pop
+   
+		t.poptab_troop_dismiss = 1; // First try ST
+		t.show_city(cityId);
+
+		// if no slots free, check if less than a min to go in current training queue...
+
+		NearlyDone = false;
+		if ((t.slots_free <= 0) && (t.barracks != 0)) {
+			var q = Seed.queue_unt['city'+cityId];
+			for(var i = 0; i<q.length; i++){
+				if(!q[i][7]){
+					cur = q[i][3] - now;
+					break;
+				}
+			}
+			NearlyDone = (cur <= 60);
+			if (NearlyDone) {t.log("Nearly Done...");}
+		}	
+   
+   
+		if ((t.cur_mm == 0) && (Options.UseTourneyMM)) {
+			t.poptab_troop_dismiss = 2; // Then try MM
+			t.show_city(cityId);
+		}   
+   
+		if (((t.slots_free > 0) || NearlyDone) && (t.cur_mm != 0) ) {
+			t.log("Generating Tournament Population");
+			t.dismiss_mm(cityId);
+		}	
+	},
+
 }
 
 /************************ Gold Collector ************************/
@@ -20636,15 +20681,12 @@ Tabs.Attack = {
 			return;
 		}
 
-		
 		if (!t.checkCityTroops(r,CrestDataNum)) {
 //			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
 			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},2000);
 			return;
 		};
 			
-
-
 		var march_slots = Number(Number(March.getEmptySlots(cityID.split("city")[1]))-Number(Options.CrestSlots));
 		if (march_slots < 1) {
 //			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
@@ -21277,7 +21319,11 @@ Tabs.popcontrol = {
       //m += '<td><input type="submit" id="poptab_test" value="Test"></td>';
       m += '</tr>';     
       m += '</table>';
-   
+
+      m += '<DIV class=pbStat>Tournament Mode</div>';
+	  m += '<DIV align="center"><b>Converts Supply Troops and MM to Idle Population</b><br>Turn this on during a tournament to automatically convert supply troops or MM to maximum idle population in each city.<br>The idea is that they will be retrained as scouts, pikes or swordsmen - i.e. more might!<br>This only works if auto-training is active for the city, and there are training slots available. (or less than 1 minute to go)</div>';      
+	  m += '<table border="0" width="100%"><tr><td align="center"><INPUT id=pbtourney type=submit value="Tournament Mode : OFF" \></td><td align="center"><INPUT id=pbtourneymm type=checkbox '+(Options.UseTourneyMM?'CHECKED':'')+'\> Use MM when no more Supply Troops </td><td></tr></table>';      
+	  
       m += '<DIV class=pbStat>Action Log:</div>';
 
       m += '<DIV style="height:250px; max-height:250px; overflow-y:auto">';
@@ -21306,7 +21352,11 @@ Tabs.popcontrol = {
       document.getElementById('poptab_run_cycle').addEventListener   ('click', function(){   t.run_cycle (t.tcp.city.id);  } , false);
       //document.getElementById('poptab_test').addEventListener   ('click', function(){   t.btest  ();   } , false);
          document.getElementById('poptab_troop_dismiss').addEventListener('change', function(){t.poptab_troop_dismiss = document.getElementById('poptab_troop_dismiss').value;} , false);
-  
+
+      document.getElementById('pbtourney').addEventListener ('click', function() {t.toggleTourneyMode()}, false);
+	  t.togOpt('pbtourneymm','UseTourneyMM');
+      t.setTourneyText(false);
+
    },
 
    disable_btns : function ()
@@ -21812,8 +21862,35 @@ Tabs.popcontrol = {
          });
       },
 
-
+  toggleTourneyMode : function () { 
+	var t = Tabs.popcontrol;
+    Options.TourneyModeActive=!Options.TourneyModeActive;
+    saveOptions();
+	t.setTourneyText(true);
+  },	
+   
+  setTourneyText : function (log) {
+    if (Options.TourneyModeActive)
+	  {document.getElementById('pbtourney').value = "Tournament Mode : ON"; if (log) {Tabs.popcontrol.log("Tournament Mode turned ON");}}
+	else
+	  {document.getElementById('pbtourney').value = "Tournament Mode : OFF"; if (log) {Tabs.popcontrol.log("Tournament Mode turned OFF");}}
+  },
+  
+	togOpt : function (checkboxId, optionName, callOnChange){
+		var t = Tabs.popcontrol;
+		var checkbox = document.getElementById(checkboxId);
+		if (Options[optionName])
+			checkbox.checked = true;
+		checkbox.addEventListener ('change', eventHandler, false);
+		function eventHandler (){
+			Options[optionName] = this.checked;
+			saveOptions();
+			if (callOnChange)
+				callOnChange (this.checked);
+		}
+	},  
 }
+
 /****** Gifts Tab ********/
 Tabs.gifts = {
    tabLabel: unsafeWindow.g_js_strings.commonstr.gift,
@@ -22989,107 +23066,5 @@ params.u3= 1;
 setTimeout (function() {t.doattack()}, 5000);
 },
 }
-
-/*******************  Sexy Tourney Tab ****************/
-
-Tabs.SexyTourney = {
-   tabOrder: 999999,
-   tabDisabled : false,
-   tabLabel : 'Sexy Tourney',
-   myDiv : null,
-   
-   init : function (div) {
-      var t = Tabs.SexyTourney;      
-      t.myDiv = div;
-      var m = '<DIV class=pbStat>Converts Supply Troops (or Militia) to Idle Population</div><br>';
-		m += '<DIV align="center">How to use: During tournaments, turn this on to automatically convert any supply troops or militiamen to maximum idle population for all cities.<br>It will only work if Automatic Training is active for that city, there are training slots available OR there is less than 1 minute to go on the current training queue. Progress and Log can be seen on the Population Tab. NB While this is cycling best not press any buttons there...<br>Tip: During tourney reduce number of cottages and increase number of barracks for maximum benefit.</div>';      
-		m += '<table width="100%"><tr><td align="center"><INPUT id=pbsexy type=submit value="Turn On" \></td></tr><tr><td align="center"><INPUT id=pbsexymm type=checkbox '+(Options.UseSexyMM?'CHECKED':'')+'\> Use MM when no more Supply Troops </td><td></tr></table>';      
-      div.innerHTML = m;
-      document.getElementById('pbsexy').addEventListener ('click', function() {t.toggleSexyTourney()}, false);
-	  t.togOpt('pbsexymm','UseSexyMM');
-      t.setSexyText();
-   },
-  
-  toggleSexyTourney : function () { 
-    var t = Tabs.SexyTourney;      
-    Options.SexyTourneyActive=!Options.SexyTourneyActive;
-    saveOptions();
-	t.setSexyText();
-  },	
-   
-  setSexyText : function () {
-    if (Options.SexyTourneyActive)
-	  {document.getElementById('pbsexy').value = "Turn Off"; Tabs.popcontrol.log("Sexy Tourney turned ON");}
-	else
-	  {document.getElementById('pbsexy').value = "Turn On"; Tabs.popcontrol.log("Sexy Tourney turned OFF");}
-  },
-  
-  hide : function (){
-    var t = Tabs.SexyTourney;
-  },
-
-  show : function (){
-    var t = Tabs.SexyTourney;
-  },
-
-	togOpt : function (checkboxId, optionName, callOnChange){
-		var t = Tabs.SexyTourney;
-		var checkbox = document.getElementById(checkboxId);
-		if (Options[optionName])
-			checkbox.checked = true;
-		checkbox.addEventListener ('change', eventHandler, false);
-		function eventHandler (){
-			Options[optionName] = this.checked;
-			saveOptions();
-			if (callOnChange)
-				callOnChange (this.checked);
-		}
-	},  
-}
-
-function GetMorePopulation(cityidx) {
-   var t = Tabs.popcontrol;
-   if (!t.tcp) return; // not loaded yet
-   var cityId = Seed.cities[cityidx][0]
-
-   t.tcp.selectBut(cityidx);
-   t.show_city(cityId);
-
-   t.max_idle_pop = (parseInt(Seed.citystats['city'+cityId].pop[1])).toFixed(0);
-   t.cur_idle_pop = (parseInt(Seed.citystats['city'+cityId].pop[0])).toFixed(0);
-   num = parseInt(t.max_idle_pop) - parseInt(t.cur_idle_pop);
-   if (num == 0) return; // max pop
-   
-   t.poptab_troop_dismiss = 1; // First try ST
-   t.show_city(cityId);
-
-// if no slots free, check if less than a min to go in current training queue...
-
-   NearlyDone = false;
-   if (t.slots_free <= 0) {
-		var q = Seed.queue_unt['city'+cityId];
-		for(var i = 0; i<q.length; i++){
-			if(!q[i][7]){
-				cur = q[i][3] - now;
-				break;
-			}
-		}
-		NearlyDone = (cur <= 60);
-		if (NearlyDone) {t.log("Nearly Done...");}
-   }	
-   
-   
-   if ((t.cur_mm == 0) && (Options.UseSexyMM)) {
-		t.poptab_troop_dismiss = 2; // Then try MM
-		t.show_city(cityId);
-	}   
-   
-   if (((t.slots_free > 0) || NearlyDone) && (t.cur_mm != 0) ) {
-        t.log("Generating Sexy Tourney Population");
-		t.dismiss_mm(cityId);
-	}	
-}
-      
-/*******************  End Sexy Tourney ****************/
 
 pbStartup ();
