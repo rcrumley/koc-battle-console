@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Battle Monitor Lite
-// @version         20131018a
+// @version         20131028a
 // @namespace       kbc
 // @homepage        https://userscripts.org/scripts/show/172426
 // @downloadURL     https://userscripts.org/scripts/source/172426.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Reduce CPU usage when monitoring</p>   
+// @releasenotes 	<p>Include load as a pvp effect</p>   
 // ==/UserScript==
 
 //	┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@
 //	│   October 2013 Barbarossa69 (http://userscripts.org/users/272942)										 │
 //	└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131018a';
+var Version = '20131028a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -77,7 +77,7 @@ var FFVersion = getFirefoxVersion();
 
 var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+420; // difference between local time and PST in mins. All KoC TimeStamps appear to be in PST...
 
-var GlobalEffects = [1,2,3,4,5,7,17,18,19,20,21,23,102,103,8,9,73];
+var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
 var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102];
 var DefenceEffects = [2,18,25,30,35,40,45,51,104];
@@ -86,8 +86,9 @@ var RangeEffects = [5,21,37,42,58,63];
 var SpeedEffects = [4,20,27,32,47,53,57,62];
 var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
 var OtherCombatEffects = [8,9,13,14,15,16,73];
+var OtherPVPEffects = [6,22,48,54,59,64];
 
-var DebuffEffects = [17,18,19,20,21,23,29,39,50,61,30,40,51,31,41,52,42,63,32,53,62];
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
  
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
@@ -1636,7 +1637,7 @@ function eventPaintTRStats () {
 		var LineStyle = '';
 		var EndStyle = '';
 		
-		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1));
+		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1) || (OtherPVPEffects.indexOf(parseInt(k)) > -1));
 		
 		if (Options.MonitorColours) {	
 			LineStyle = '<span style="color:#888;">';
