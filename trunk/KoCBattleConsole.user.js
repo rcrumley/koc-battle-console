@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131018a
+// @version			20131031a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes	<p>Monitor Function Rewrite!<ul><li>More efficient!</li><li>More responsive!</li><li>Less memory!</li></ul></p><p>Added option to only show PVP effects</p><p>New "sleep mode" option</p><p>Monitor history log</p>
+// @releasenotes	<p>City Defence "dashboard" Mode</p><p>Send all reinforcements home button</p><p>Include load as a pvp effect</p><p>Scrolling history log and search filters</p>
 // ==/UserScript==
 
 //	┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│   October 2013 Barbarossa69 (https://userscripts.org/users/272942)									 │
 //	└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131018a';
+var Version = '20131031a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -84,6 +84,7 @@ var Options = {
 	OverviewBattleBtn   : true,
 	SleepMode           : false,
 	PVPOnly             : false,
+	DashboardMode       : false,
 };
 
 var JSON2 = JSON; 
@@ -136,7 +137,7 @@ var TotalTroops;
 var FFVersion = getFirefoxVersion();
 var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+420; // difference between local time and PST in mins. All KoC TimeStamps appear to be in PST...
 
-var GlobalEffects = [1,2,3,4,5,7,17,18,19,20,21,23,102,103,8,9,73];
+var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
 var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102];
 var DefenceEffects = [2,18,25,30,35,40,45,51,104];
@@ -145,8 +146,9 @@ var RangeEffects = [5,21,37,42,58,63];
 var SpeedEffects = [4,20,27,32,47,53,57,62];
 var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
 var OtherCombatEffects = [8,9,13,14,15,16,73];
+var OtherPVPEffects = [6,22,48,54,59,64];
 
-var DebuffEffects = [17,18,19,20,21,23,29,39,50,61,30,40,51,31,41,52,42,63,32,53,62];
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
 
 var	gType = {wood:'Guardian_hp',ore:'Guardian_attack',food:'Guardian_speed',stone:'Guardian_train'};
  
@@ -177,6 +179,7 @@ var Cities   = {};
 var userInfo = {};
 var rsltInfo = {};
 var HTMLRegister = {};
+var Reins	= [];
 
 var inc     = [];
 var incCity = [];
@@ -195,6 +198,9 @@ var	LogTR = [];
 var LastTR = [];
 var MaxLogEntries = 50;
 var MonitorID = 0;
+var NameFilter = '';
+var AllianceFilter = '';
+var DashWidth = 490;
 
 if (typeof SOUND_FILES == 'undefined') var SOUND_FILES = new Object();
 if (typeof SOUND_FILES.timeout == 'undefined'){
@@ -214,6 +220,7 @@ uW.btShowCity = function (idx) {
 	var l = document.getElementById("citysel_" + idx);
 	uW.citysel_click(l);
 	uW.changeview_city(document.getElementById("mod_views_city"));
+	uW.btShowDefenceWindow();
 }
 
 uW.btGotoMapHide = function (x, y){
@@ -272,8 +279,19 @@ uW.btShowEmbassy = function (city) {
 	uW.modal_build(a)
 }
 
-uW.btSendAllHome = function () {
-    // to do!
+uW.btSendAllHome = function (cityId) {
+	uW.jQuery('#btSendAllHome').addClass("disabled");
+	serverwait = true;
+	var Returns = [];
+	Returns = Reins.slice();
+	var delayer = 0;
+    for (r in Returns) {
+		var mid = Returns[r];
+		delayer = delayer + 1;
+		setTimeout (SendHome,(500*delayer),mid); // spread them out ...
+	}
+	delayer = delayer + 1;
+	setTimeout (function () { uW.jQuery('#btSendAllHome').removeClass("disabled"); serverwait = false; },(500*delayer)); // let screen updates run again
 }
 
 uW.btSelectTroopType = function (sel) {SelectTroopType(sel);}
@@ -291,8 +309,10 @@ uW.btDeleteLog = function (entry) {DeleteLog(entry);}
 uW.btPostLog = function (entry) {PostLog(entry);}
 uW.btToggleKeep = function (entry) {ToggleKeep(entry);}
 uW.btUpdateLabel = function (elem,entry) {UpdateLabel(elem,entry);}
-uW.btStartKeyTimer = function (elem,entry) {StartKeyTimer(elem,entry);}
-uW.btStopKeyTimer = function (elem,entry) {StopKeyTimer(elem,entry);}
+uW.btStartKeyTimer = function (elem,notify,entry) {StartKeyTimer(elem,notify,entry);}
+uW.btFilterLog = function () {FilterLog();}
+uW.btClearNameFilter = function () {ClearNameFilter();}
+uW.btClearAllianceFilter = function () {ClearAllianceFilter();}
 
 // allow access from external tools
 
@@ -323,6 +343,7 @@ function btStartup (){
 	}
 
 	readOptions();	   
+	if (!trusted) {Options.RefreshSeed = false; saveOptions ();}
 
 	Seed = uW.seed;
 
@@ -393,11 +414,11 @@ function btStartup (){
 	m += '<TR id=btMapOpts class="divHide"><TD colspan="3" align=right class=xtab><table><tr><td align=right class=xtab>&nbsp;&nbsp;&nbsp;Provinces</td><td class=xtab><INPUT id=ProvinceChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Levels</td><td class=xtab><INPUT id=LevelChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Alliance Mists</td><td class=xtab><INPUT id=MistedChk type=checkbox /></td></tr></table></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Override impending attack notification</td></tr>';
-	m += '<TR id=btRefreshSeedOpt class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=RefreshSeedChk type=checkbox /></td><td class=xtab>Automatically refresh incoming marches (every 15 seconds)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >CITY DEFENCE OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Dashboard Mode (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
 	m += '<TD align=right class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
@@ -422,7 +443,7 @@ function btStartup (){
 	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",180,400,"btCityOption")}, false);
 
 	document.getElementById('btPlayerSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit',popMon);}, true);  
-	document.getElementById('btCityDefenceButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btCityDefenceButton',popDef);}, true);  
+	document.getElementById('btCityDefenceButton').addEventListener('mousedown',function(me) {if (!Options.DashboardMode) {ResetWindowPos (me,'btCityDefenceButton',popDef);}}, true);  
 	document.getElementById('btIncomingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btIncomingButton',popInc);}, true);  //
 	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  //
   
@@ -437,9 +458,10 @@ function btStartup (){
 	ToggleOption ('ProvinceToolsChk', 'ShowProvinceTools');
 	ToggleOption ('MoveFurnitureChk', 'MoveFurniture');
 	ToggleOption ('AutoUpdateChk', 'AutoUpdates');
-	ToggleOption ('RefreshSeedChk', 'RefreshSeed');
 	MapToggle ();
 
+	ToggleOption ('DashboardChk', 'DashboardMode', DashboardToggle);
+	DashboardToggle ();
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
@@ -496,7 +518,7 @@ function btStartup (){
 			break;
 		}	
 	}
-   
+
 	// delay altering uW Functions by 5 seconds  
   
 	setTimeout (function () {AlterUWFuncs();}, 5000);
@@ -505,7 +527,7 @@ function btStartup (){
 
 	loadLog();
 	setCities();
-
+   
 	// start main looper
 
 	SecondTimer = setTimeout(EverySecond,0);
@@ -514,15 +536,12 @@ function btStartup (){
 
 	if (Options.MonitorStartState && (Options.LastMonitored != "")) {MonitorTRClick();}
 	if (Options.IncomingStartState) {ToggleIncomingMarches();}
-	if (Options.DefenceStartState) {ToggleCityDefence(Options.CurrentCity);}
+	if (Options.DefenceStartState || (Options.DashboardMode && !Options.SleepMode)) {ToggleCityDefence(Options.CurrentCity);}
 	
 	// Set to check for updates in 15 seconds
 	
 	if (Options.AutoUpdates && !trusted) setTimeout(function(){AutoUpdater.check();},15000); 
 
-	if (trusted) uW.jQuery('#btRefreshSeedOpt').attr('class','');
-	else {Options.RefreshSeed = false; saveOptions ();}
-  
 	// All done!
 	
 	uW.btLoaded = true;
@@ -533,7 +552,7 @@ function DefaultWindowPos(OptPos,elem) {
 		var c = getClientCoords (document.getElementById(elem));
 		Options[OptPos].x = c.x+4;
 		Options[OptPos].y = c.y+c.height;
-		saveOptions ();
+		setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	}
 }
 
@@ -634,7 +653,7 @@ function RefreshSeed() {
 	    		unsafeWindow.seed.ss = seed.ss;
 	    		unsafeWindow.seed.queue_atkinc = seed.queue_atkinc;
 	    		unsafeWindow.seed.players = seed.players;
-				unsafeWindow.seed.queue_sacr = seed.queue_sacr;
+				unsafeWindow.seed.queue_sacr = seed.queue_sacr; 
 
 	    		unsafeWindow.document.seed = unsafeWindow.seed;
 	    		Seed = unsafeWindow.seed;
@@ -704,6 +723,8 @@ function EverySecond () {
 		PaintCityInfo(Seed.cities[Options.CurrentCity][0]);
 		
 	/* check city defence mode and attack status for buttons */
+
+	if (Options.DashboardMode) { CheckDashPosition(); }
 
 	if (popDef) {
 		for (var cityId in Cities.byID){
@@ -881,6 +902,58 @@ function SacToggle () {
 	ResetFrameSize('btMain',180,400);
 }
 
+function getStyle(x,styleProp) {
+	if (x.currentStyle)
+		var y = x.currentStyle[styleProp];
+	else if (window.getComputedStyle)
+		var y = document.defaultView.getComputedStyle(x,null).getPropertyValue(styleProp);
+	return y;
+}
+
+function CheckDashPosition () {
+	// adjust left setting for chat and/or aio dashboard (!)
+	var Chat = document.getElementById('kocmain_bottom').childNodes[1];
+	var ChatWidth = 0; 
+	if (Chat && (Chat.className == 'mod_comm') && (parseIntNan(getStyle(Chat,'top')) < 0)) {
+		ChatWidth = parseIntNan(getStyle(Chat,'width'));
+	}
+	var AIO = document.getElementById('Dash_div');
+	var AIOWidth = 0;
+	if (AIO && (parseIntNan(getStyle(AIO,'top')) < 0)) {
+		AIOWidth = parseIntNan(getStyle(AIO,'width'));
+	}
+	var Dash = document.getElementById('btDashboard');
+	if (Dash) {Dash.style.left = 760+ChatWidth+AIOWidth+"px"; }
+}
+
+function DashboardToggle () {
+	if (Options.DashboardMode) {
+		// append dashboard div to koc container
+		var Dash = document.createElement('div');
+		Dash.id='btDashboard';
+		Dash.style.position = 'relative';	
+		Dash.style.width = (DashWidth+20)+'px';	
+		Dash.style.top = "-1345px";
+		Dash.style.height = "5000px";
+		Dash.style.overflow = 'auto';
+		document.getElementById('kocContainer').appendChild(Dash);
+		CheckDashPosition();
+		// if city defence on display, destroy and recreate
+		if (popDef) { popDef.show(false); popDef.destroy(); popDef = null; }
+		if (uW.btLoaded) {ToggleCityDefence(Options.CurrentCity);}
+	}
+	else {
+		// remove dashboard div from koc container if it exists	
+		var elem = document.getElementById('btDashboard');
+		if (elem) {
+			// if city defence on display, move to main doc before removing div
+			if (popDef) { document.body.appendChild(popDef.div); popDef.show(false); popDef.destroy(); popDef = null; ToggleCityDefence(Options.CurrentCity); }
+			elem.parentNode.removeChild(elem);
+		}
+	}
+}
+
+
 function CheckDefaultRitual (sel) {
 	sel.value = parseInt(sel.value);
 	if (isNaN(sel.value)) sel.value = 0;
@@ -1056,6 +1129,10 @@ function ToggleSleep (sleep) {
 	else {
 		a.innerHTML='<span style="color: #ff6">BATTLE</span>';
 		a.title='Battle Console is wide awake!';
+		if (Options.DashboardMode) {
+			if (!popDef) {ToggleCityDefence(Cities.byID[uW.currentcityid]);}
+		}
+
 		if (SecondTimer) { clearTimeout(SecondTimer); }
 		SecondTimer = setTimeout(EverySecond,1000);  // restart main loop
 	}	
@@ -1844,7 +1921,7 @@ function onUnload (){
 	Options.WinSize = mainPop.getDimensions();
 	if (popMon) { Options.MonPos = popMon.getLocation(); }
 	if (popInc) { Options.IncPos = popInc.getLocation(); }
-	if (popDef) { Options.DefPos = popDef.getLocation(); }
+	if (popDef && !Options.DashboardMode) { Options.DefPos = popDef.getLocation(); }
 	if (popLog) { Options.LogPos = popLog.getLocation(); }
 	saveOptions();
 }
@@ -2342,7 +2419,7 @@ function ToggleIncomingMarches (){
 		m += '<td align="right" class=xtab>From You</td><TD class=xtab><INPUT id=IncYoursChk type=checkbox /></td>';
 		m += '</tr></table></div><div id=btIncomingMain></div></div>';
 
-		popInc = new CPopup('btIncoming', Options.IncPos.x, Options.IncPos.y, 700, 200, true, function (){Options.IncomingStartState = false;Options.IncPos = popInc.getLocation();saveOptions();popInc=null;});
+		popInc = new CPopup('btIncoming', Options.IncPos.x, Options.IncPos.y, 720, 200, true, function (){Options.IncomingStartState = false;Options.IncPos = popInc.getLocation();saveOptions();popInc=null;});
 		popInc.getMainDiv().innerHTML = m;
 		popInc.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Incoming Marches</B></DIV>';
 
@@ -2368,10 +2445,9 @@ function BuildIncomingDisplay() {
 	var incomingfiltered = false;
 
 	var bclass = "brown11";
-	var btext  = "Refresh";
-    if (RefreshingSeed) bclass += " disabled";
+    if (RefreshingSeed || Options.RefreshSeed) bclass += " disabled";
   
-	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>Target</b></td><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td class="xtabHD" align="right"><a id=btRefreshSeed class="inlineButton btButton '+bclass+'"><span>'+btext+'</span></a></td></tr>';
+	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>Target</b></td><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td class="xtabHD" align="right"><a id=btRefreshSeed class="inlineButton btButton '+bclass+'"><span>Refresh</span></a></td></tr>';
       
 	for(n in inc) {
 		var a = inc[n];
@@ -2515,7 +2591,7 @@ function BuildIncomingDisplay() {
 		document.getElementById('btIncomingMain').innerHTML = z;
 		if (Options.RefreshSeed) uW.jQuery('#btRefreshSeed').addClass("disabled");
 		else document.getElementById('btRefreshSeed').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
-		ResetFrameSize('btIncoming',200,700);
+		ResetFrameSize('btIncoming',200,720);
 	}
 
 }
@@ -2540,13 +2616,10 @@ function ToggleCityDefence (Curr){
 	}
 	else
 	{
-		var bclass = "brown11";
-		var btext  = "Refresh";
-		if (RefreshingSeed) bclass += " disabled";
 		HTMLRegister = {}; // reset everything!
 
 		m = '<div id="btDefence_content"><div><table width="100%"><tr><td class=xtab><b>&nbsp;&nbsp;City : </b><span id=btCastlesContainer></span></td><td class=xtab align="right"><span id="btCityAlert">&nbsp;</span></td></tr>';
-		m += '<tr><td class=xtab colspan="2" align="right"><a id=btRefreshSeed2 class="inlineButton btButton '+bclass+'"><span>'+btext+'</span></a></td></tr></table></div>';
+		m += '<tr><td class=xtab colspan="2" align="right"><a id=btRefreshSeed2 class="inlineButton btButton blue14"><span>Refresh</span></a>&nbsp;<span id=btAutoSpan class="divHide"><a id=btAutoRefresh class="inlineButton btButton blue14"><span style="width:30px;display:inline-block;text-align:center;">Auto</span></a></span></td></tr></table></div>';
 		m += '<div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
 		m += '</table></div>';
@@ -2573,7 +2646,16 @@ function ToggleCityDefence (Curr){
 		m += '</table></div><br>';
 		m += '</div>';
 
-		popDef = new CPopup('btDefence', Options.DefPos.x, Options.DefPos.y, 500, 100, true, function (){Options.DefenceStartState = false;Options.CurrentCity = -1;Options.DefPos = popDef.getLocation();saveOptions();popDef = null});
+		popDef = new CPopup('btDefence', Options.DefPos.x, Options.DefPos.y, DashWidth, 100, (!Options.DashboardMode), function () {Options.DefenceStartState = false; Options.CurrentCity = -1; if (!Options.DashboardMode) {Options.DefPos = popDef.getLocation();} else {document.body.appendChild(popDef.div); popDef.destroy();} saveOptions(); popDef = null});
+		
+		if (Options.DashboardMode) {
+			popDef.BASE_ZINDEX = 56;
+			elem = document.getElementById('btDefence_outer');
+			elem.style.left = '0px';
+			elem.style.top = '0px';
+			document.getElementById('btDashboard').appendChild(elem);
+		}	
+		
 		popDef.getMainDiv().innerHTML = m;
 		popDef.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;City Defence</B></DIV>';
 
@@ -2581,32 +2663,56 @@ function ToggleCityDefence (Curr){
 			
 		Castles = new CdispCityPicker ('btCastles', document.getElementById('btCastlesContainer'), true, null, Curr);
 		document.getElementById('btCastlesContainer').addEventListener ('click', function(){SetCurrentCity (Castles.city.id);} , false);
-		document.getElementById('btStatusLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btStatus");Options.OverviewState = !(Options.OverviewState);saveOptions();}, false);
-		document.getElementById('btGuardianLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btGuardian");Options.GuardianState = !(Options.GuardianState);saveOptions();}, false);
-		document.getElementById('btThroneLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btThrone");Options.ThroneState = !(Options.ThroneState);saveOptions();}, false);
-		document.getElementById('btSacrificeLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btSacrifice");Options.SacrificeState = !(Options.SacrificeState);saveOptions();}, false);
-		document.getElementById('btTroopLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btTroop");Options.TroopState = !(Options.TroopState);saveOptions();}, false);
-		document.getElementById('btWallDefenceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btWallDefence");Options.FortificationState = !(Options.FortificationState);saveOptions();}, false);
-		document.getElementById('btReinforceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btReinforce");Options.ReinforceState = !(Options.ReinforceState);saveOptions();}, false);
-		document.getElementById('btAttackLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,500,"btAttack");Options.AttackState = !(Options.AttackState);saveOptions();}, false);
+		document.getElementById('btStatusLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btStatus");Options.OverviewState = !(Options.OverviewState);saveOptions();}, false);
+		document.getElementById('btGuardianLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btGuardian");Options.GuardianState = !(Options.GuardianState);saveOptions();}, false);
+		document.getElementById('btThroneLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btThrone");Options.ThroneState = !(Options.ThroneState);saveOptions();}, false);
+		document.getElementById('btSacrificeLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btSacrifice");Options.SacrificeState = !(Options.SacrificeState);saveOptions();}, false);
+		document.getElementById('btTroopLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btTroop");Options.TroopState = !(Options.TroopState);saveOptions();}, false);
+		document.getElementById('btWallDefenceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btWallDefence");Options.FortificationState = !(Options.FortificationState);saveOptions();}, false);
+		document.getElementById('btReinforceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btReinforce");Options.ReinforceState = !(Options.ReinforceState);saveOptions();}, false);
+		document.getElementById('btAttackLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btAttack");Options.AttackState = !(Options.AttackState);saveOptions();}, false);
 
-		if (Options.OverviewState) ToggleDivDisplay("btDefence",100,500,"btStatus");
-		if (Options.GuardianState) ToggleDivDisplay("btDefence",100,500,"btGuardian");
-		if (Options.ThroneState) ToggleDivDisplay("btDefence",100,500,"btThrone");
-		if (Options.SacrificeState) ToggleDivDisplay("btDefence",100,500,"btSacrifice");
-		if (Options.TroopState) ToggleDivDisplay("btDefence",100,500,"btTroop");
-		if (Options.ReinforceState) ToggleDivDisplay("btDefence",100,500,"btReinforce");
-		if (Options.FortificationState) ToggleDivDisplay("btDefence",100,500,"btWallDefence");
-		if (Options.AttackState) ToggleDivDisplay("btDefence",100,500,"btAttack");
+		if (Options.OverviewState) ToggleDivDisplay("btDefence",100,DashWidth,"btStatus");
+		if (Options.GuardianState) ToggleDivDisplay("btDefence",100,DashWidth,"btGuardian");
+		if (Options.ThroneState) ToggleDivDisplay("btDefence",100,DashWidth,"btThrone");
+		if (Options.SacrificeState) ToggleDivDisplay("btDefence",100,DashWidth,"btSacrifice");
+		if (Options.TroopState) ToggleDivDisplay("btDefence",100,DashWidth,"btTroop");
+		if (Options.ReinforceState) ToggleDivDisplay("btDefence",100,DashWidth,"btReinforce");
+		if (Options.FortificationState) ToggleDivDisplay("btDefence",100,DashWidth,"btWallDefence");
+		if (Options.AttackState) ToggleDivDisplay("btDefence",100,DashWidth,"btAttack");
 		
-		if (Options.RefreshSeed) uW.jQuery('#btRefreshSeed2').addClass("disabled");
-		else document.getElementById('btRefreshSeed2').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
+		document.getElementById('btRefreshSeed2').addEventListener ('click', function() {setTimeout(function() { SetCurrentCity (Castles.city.id); RefreshSeed();},250);}, false);
+		document.getElementById('btAutoRefresh').addEventListener ('click', function() {ToggleAutoRefresh();}, false);
+		if (Options.RefreshSeed) {
+			uW.jQuery('#btRefreshSeed2').addClass("disabled");
+			uW.jQuery('#btAutoRefresh').addClass("red14");
+			uW.jQuery('#btAutoRefresh').removeClass("blue14");
+			document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Off</span>';
+		}
+		if (trusted) uW.jQuery('#btAutoSpan').removeClass("divHide");
 		
         SetCurrentCity(Seed.cities[Curr][0]);
 		
 		popDef.show(true);
-		ResetFrameSize('btDefence',100,500);
+		ResetFrameSize('btDefence',100,DashWidth);
 		Options.DefenceStartState = true;
+	}
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+}
+
+function ToggleAutoRefresh() {
+	Options.RefreshSeed = !Options.RefreshSeed;
+	if (Options.RefreshSeed) {
+		uW.jQuery('#btRefreshSeed2').addClass("disabled");
+		uW.jQuery('#btAutoRefresh').addClass("red14");
+		uW.jQuery('#btAutoRefresh').removeClass("blue14");
+		document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Off</span>';
+	}
+	else {
+		uW.jQuery('#btRefreshSeed2').removeClass("disabled");
+		uW.jQuery('#btAutoRefresh').removeClass("red14");
+		uW.jQuery('#btAutoRefresh').addClass("blue14");
+		document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Auto</span>';
 	}
 	saveOptions ();
 }
@@ -2883,17 +2989,19 @@ function PaintCityInfo(cityId) {
 	CheckForHTMLChange('btTroopCell',CityTag+Troops);
 	
 	// reinforcements
-
+	
 	reinforcements = false;
+	Reins = [];
 	var z = "";
 	var r = 0;
     for (k in inc){
-		if ((inc[k].toCityId == cityId) && ((inc[k].marchStatus == 2) || (inc[k].marchType == 2)) && (inc[k].fromCityId != cityId)) {
+		var to = Cities.byID[inc[k].toCityId];
+		if ((inc[k].toCityId == cityId) && (to.tileId == inc[k].toTileId) && ((inc[k].marchStatus == 2) || (inc[k].marchType == 2)) && (inc[k].fromCityId != cityId)) {
 			reinforcements = true;
 			var a = inc[k];
 			var player = Seed.players['u'+a.fromPlayerId];
 			var fromname = player.n;
-			var marchdir = "Count";	
+			marchdir = "Return"; // always show troops remaining
 			var	marchtime=uW.timestr(a.arrivalTime - unixTime()); 
 			
 			r=r+1;
@@ -2907,10 +3015,13 @@ function PaintCityInfo(cityId) {
 			for(i=1; i<nTroopType+1; i++){
 				if(a["unit"+i+marchdir] > 0) z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': '+ addCommas(a["unit"+i+marchdir])+'</span> ';
 			}
-			if ((a.marchStatus == 2) || (a.arrivalTime - unixTime() <= 0))	
+			if ((a.marchStatus == 2) || (a.arrivalTime - unixTime() <= 0))	{
 				z += '</td><td class=xtab align="right"><a id="btSendHome'+a.marchId+'" class="inlineButton btButton blue14" onclick="btSendHome('+ a.marchId +')"><span>Send Home</span></a></td></tr>';
-			else 
+				Reins.push(a.marchId); // for send all home logic
+			}	
+			else { 
 				z += '</td><td class=xtab align="right">'+marchtime+'</td></tr>';
+			}	
         }
     }
 	if (!reinforcements) {
@@ -2918,10 +3029,11 @@ function PaintCityInfo(cityId) {
 	}
 	else
 	{
-		z = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td width="40" class="xtabHD">&nbsp;</td></tr>'+z + '</table><br></div>';
+		z = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td width="40" class="xtabHD"><a id="btSendAllHome" class="inlineButton btButton red14" onclick="btSendAllHome('+cityId+')"><span>Send All Home</span></a></td></tr>'+z;
+		z += '<tr><td class=xtab colspan="4"><div class="ErrText" align="center" id=btReinErr>&nbsp;</div></td></tr></table></div>';
 	}
 	
-	CheckForHTMLChange('btReinforceCell',CityTag+z);
+	CheckForHTMLChange('btReinforceCell',CityTag+z,serverwait);
 	
 	// incoming attacks
 
@@ -3021,7 +3133,7 @@ function PaintCityInfo(cityId) {
 
 	CheckForHTMLChange('btWallDefenceCell',CityTag+Defences);
 	
-	ResetFrameSize('btDefence',100,500);
+	ResetFrameSize('btDefence',100,DashWidth);
 }
 
 function TroopImage(tt) {
@@ -3158,10 +3270,12 @@ function ToggleDefenceMode (cityId) {
     },false);
 }
   
-function SendHome (marchId, notify){
+function SendHome (marchId) {
+	setReinError('&nbsp;');
 	uW.jQuery('#btSendHome'+marchId).addClass("disabled");
 	ResetHTMLRegister('btReinforceCell')
-    var march = Seed.queue_atkinc['m'+ marchId];
+	var march = {};
+	march = Seed.queue_atkinc['m'+ marchId];
     if (!march) { return; }
     var params = uW.Object.clone(uW.g_ajaxparams);
     params.mid = marchId;
@@ -3173,34 +3287,30 @@ function SendHome (marchId, notify){
         method: "post",
         parameters: params,
         onSuccess: function (rslt) {
-          if (rslt.ok){
-            var upkeep = 0;
-            for (var i=1; i<nTroopType+1; i++)
-              upkeep += parseInt(march["unit" + i + "Return"]) * parseInt(uW.unitupkeeps[i])
-            uW.seed.resources["city"+ march.toCityId].rec1[3] -= upkeep;
-            if (parseInt(march.fromPlayerId) == parseInt(uW.tvuid)) {
-              var mymarch = uW.seed.queue_atkp["city" + march.fromCityId]["m" + marchId];
-              var marchtime = Math.abs(parseInt(mymarch.destinationUnixTime) - parseInt(mymarch.eventUnixTime));
-              mymarch.returnUnixTime = unixTime() + marchtime;
-              mymarch.marchStatus = 8;
-            }
-            delete uW.seed.queue_atkinc["m" + marchId];
-        	PaintCityInfo(march.toCityId)
-			if (notify != null)
-              notify(null);
-          } else {
-            if (notify != null)
-              notify(rslt.errorMsg);
-          }
-		  uW.jQuery('#btSendHome'+marchId).removeClass("disabled");
-
+			if (rslt.ok){
+				var upkeep = 0;
+				for (var i=1; i<nTroopType+1; i++)
+					upkeep += parseInt(march["unit" + i + "Return"]) * parseInt(uW.unitupkeeps[i])
+				uW.seed.resources["city"+ march.toCityId].rec1[3] -= upkeep;
+				if (parseInt(march.fromPlayerId) == parseInt(uW.tvuid)) {
+					var mymarch = uW.seed.queue_atkp["city" + march.fromCityId]["m" + marchId];
+					var marchtime = Math.abs(parseInt(mymarch.destinationUnixTime) - parseInt(mymarch.eventUnixTime));
+					mymarch.returnUnixTime = unixTime() + marchtime;
+					mymarch.marchStatus = 8;
+				}
+				delete uW.seed.queue_atkinc["m" + marchId];
+			} else {
+				setReinError(rslt.errorMsg);
+			}
         },
         onFailure: function () {
-          if (notify != null)
-            notify(rslt.errorMsg);
-		  uW.jQuery('#btSendHome'+marchId).removeClass("disabled");
+            setReinError(rslt.errorMsg);
         },
-    },false);
+    });
+}
+
+function setReinError(msg) {
+	document.getElementById('btReinErr').innerHTML = msg;
 }
 
 function StartRitual () {
@@ -3277,6 +3387,32 @@ function StopRitual (sacNo, notify){
 			uW.jQuery('#btStopRitual'+sacNo).removeClass("disabled");
         },
     },false);
+}
+
+function SwitchGuardian (cityId,Type) {
+    var params = uW.Object.clone(unsafeWindow.g_ajaxparams);
+    params.ctrl = "Guardian";
+    params.action = "summon";
+    params.cityId = cityId;
+    switch(Type) {
+		case 50: params.type = "wood"; break;
+		case 51: params.type = "ore"; break;
+		case 52: params.type = "food"; break;
+		case 53: params.type = "stone"; break;
+	}
+    new AjaxRequest(uW.g_ajaxpath + "ajax/_dispatch.php" + uW.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (rslt) {
+			if (rslt.ok) {
+				unsafeWindow.seed.buildings["city"+ cityId].pos500[0] = Type;
+				// need to delay 8 seconds before allowing again
+			} 
+		},
+		onFailure: function () {
+			return;
+		}
+    })
 }
 
 /********************* MONITOR FUNCTIONS *******************************/
@@ -3389,7 +3525,7 @@ function eventPaintTRStats () {
 		var LineStyle = '';
 		var EndStyle = '';
 		
-		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1));
+		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1) || (OtherPVPEffects.indexOf(parseInt(k)) > -1));
 		
 		if (Options.MonitorColours) {	
 			LineStyle = '<span style="color:#888;">';
@@ -3729,7 +3865,7 @@ function ToggleLog (){
 	{
 		m = '<div id="btLog_content"><div id=btLogMain></div></div>';
 
-		popLog = new CPopup('btLog', Options.LogPos.x, Options.LogPos.y, 700, 200, true, function (){popLog = null;});
+		popLog = new CPopup('btLog', Options.LogPos.x, Options.LogPos.y, 720, 300, true, function (){popLog = null;});
 		popLog.getMainDiv().innerHTML = m;
 		popLog.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor Log</B></DIV>';
 
@@ -3748,12 +3884,18 @@ function PaintLog() {
 	var bclass = "blue14";
 	var btext  = "Clear Log";
   
-	var z = '<div align="center"><TABLE id=btLogTable cellSpacing=0 width=98% height=0%><tr><td class="xtabHD" align="center" style="width:20px">&nbsp;</td><td class="xtabHD" style="width:80px"><b>Date/Time</b></td><td class="xtabHD"><b>Name</b></td><td class="xtabHD"><b>Alliance</b></td><td class="xtabHD" style="width:140px"><b>Label</b></td><td class="xtabHD" align="center" style="width:30px"><b>Keep</b></td><td class="xtabHD" align="right" style="width:100px"><a id=btClearLog class="inlineButton btButton '+bclass+'"><span>'+btext+'</span></a></td></tr>';
-      
+	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td class="xtab">Filter by Name: <INPUT class="btInput" id="btNameFilter" size=16 style="width: 115px" type=text value="'+NameFilter+'" onkeyup="btStartKeyTimer(this,btFilterLog)" onchange="btFilterLog()" />&nbsp;<a class="inlineButton btButton brown8" onclick="btClearNameFilter()"><span>Clear</span></a></td><td class="xtab">Alliance: <INPUT class="btInput" id="btAllianceFilter" size=16 style="width: 115px" type=text value="'+AllianceFilter+'" onkeyup="btStartKeyTimer(this,btFilterLog)" onchange="btFilterLog()" />&nbsp;<a class="inlineButton btButton brown8" onclick="btClearAllianceFilter()"><span>Clear</span></a></td></td><td class="xtab" align=right>('+CurrLog.length+'/'+MaxLogEntries+')</td></tr></table>';
+	z += '<TABLE cellSpacing=0 width=98% height=0%><tr><td class="xtabHD" align="center" style="width:20px">&nbsp;</td><td class="xtabHD" style="width:80px"><b>Date/Time</b></td><td style="width:115px" class="xtabHD"><b>Name</b></td><td style="width:115px" class="xtabHD"><b>Alliance</b></td><td class="xtabHD" style="width:145px"><b>Label</b></td><td class="xtabHD" align="center" style="width:30px"><b>Keep</b></td><td class="xtabHD" align="right"><a id=btClearLog class="inlineButton btButton '+bclass+'"><span>'+btext+'</span></a></td></tr></table>';
+	z += '<div style="max-height:330px; overflow-y:scroll" align="center"><TABLE id=btLogTable cellSpacing=0 width=98% height=0%>';
+	
 	var n = CurrLog.length;
 	while (n--) {
 		var a = CurrLog[n];
 
+		logfiltered = true;
+		if ((NameFilter != "") && (a.name.toUpperCase().search(NameFilter.toUpperCase()) < 0)) continue;
+		if ((AllianceFilter != "") && (a.alliance.toUpperCase().search(AllianceFilter.toUpperCase()) < 0)) continue;
+		
 		logshow = true;
 		r=r+1;
 		rowClass = 'evenRow';		
@@ -3761,12 +3903,12 @@ function PaintLog() {
 		if (rem == 1) rowClass = 'oddRow';		
 
 		z += '<tr class="'+rowClass+'">';
-		z += '<TD class="xtab trimg" id="trimg'+n+'" align=left><img src="'+ThroneImage+'"</img></td>';
-		z += '<TD class=xtab>'+formatDateTime(a.ts)+'</td>';
-		z += '<TD class=xtab>'+MonitorLink(a.name)+'</td>';
-		z += '<TD class=xtab>'+a.alliance+'</td>';
-		z += '<TD class=xtab><INPUT class="btInput" id="btLabel'+n+'" size=20 style="width: 150px" type=text value="'+a.label+'" onfocus="btStartKeyTimer(this,'+n+')" onblur="btStopKeyTimer(this,'+n+')" onchange="btUpdateLabel(this,'+n+')" /></td>';
-		z += '<TD class=xtab align=center><INPUT id="btKeep'+n+'" type=checkbox '+(a.keep?'CHECKED':'')+' onclick="btToggleKeep('+n+')" /></td>';
+		z += '<TD style="width:20px" class="xtab trimg" id="trimg'+n+'" align=left><img src="'+ThroneImage+'"</img></td>';
+		z += '<TD style="width:80px" class=xtab>'+formatDateTime(a.ts)+'</td>';
+		z += '<TD style="width:115px" class=xtab>'+MonitorLink(a.name)+'</td>';
+		z += '<TD style="width:115px" class=xtab>'+a.alliance+'</td>';
+		z += '<TD style="width:145px" class=xtab><INPUT class="btInput" id="btLabel'+n+'" size=20 style="width: 140px" type=text value="'+a.label+'" onkeyup="btStartKeyTimer(this,btUpdateLabel,'+n+')" onchange="btUpdateLabel(this,'+n+')" /></td>';
+		z += '<TD style="width:30px" class=xtab align=center><INPUT id="btKeep'+n+'" type=checkbox '+(a.keep?'CHECKED':'')+' onclick="btToggleKeep('+n+')" /></td>';
 		z += '<TD class=xtab align=right><a id="btShowLog'+n+'" class="inlineButton btButton brown8" onclick="btShowLog('+n+')"><span>Open</span></a>&nbsp;<a id="btPostLog'+n+'" class="inlineButton btButton brown8" onclick="btPostLog('+ n +')"><span>Post</span></a>&nbsp;<a id="btDeleteLog'+n+'" class="inlineButton btButton brown8" onclick="btDeleteLog('+n+')"><span>Del</span></a></td>';
 		z += '</tr>';
     }
@@ -3783,7 +3925,7 @@ function PaintLog() {
 	if (popLog) {
 		document.getElementById('btLogMain').innerHTML = z;
 		document.getElementById('btClearLog').addEventListener ('click', function() {ClearLog();}, false);
-		ResetFrameSize('btLog',200,700);
+		ResetFrameSize('btLog',300,720);
 		
 		var cItems = document.getElementById('btLogTable').getElementsByClassName('trimg');
 		for (var i = 0; i < cItems.length; i++) { createToolTip(cItems[i]); }
@@ -3799,11 +3941,8 @@ function createToolTip (elem) {
 
 	for (k in TempStatEffects) {
 		var HisContent = "";
-//		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1));
-//		if (!Options.PVPOnly || PVP) {
-			if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
-			if (HisContent != "") { TempcText += HisContent + "<br>"; }
-//		}	
+		if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
+		if (HisContent != "") { TempcText += HisContent + "<br>"; }
 	}
 	
 	unsafeWindow.jQuery('#'+elem.id).children("span").remove();
@@ -3824,6 +3963,7 @@ function ToggleKeep(entry) {
 }
 
 function UpdateLabel(elem,entry) {
+	if (KeyTimer) { clearTimeout(KeyTimer); }
 	CurrLog[entry].label = elem.value;
 	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 }
@@ -3837,7 +3977,7 @@ function PostLog(entry) {
 
 	for (k in TempStatEffects) {
 		var HisContent = "";
-		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1));
+		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1) || (OtherPVPEffects.indexOf(parseInt(k)) > -1));
 		if (!Options.PVPOnly || PVP) {
 			if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
 			if (HisContent != "") { TempcText += HisContent + "||"; }
@@ -3857,22 +3997,28 @@ function DeleteLog(entry) {
 	if (popLog) PaintLog();
 }
 
-function StartKeyTimer(elem,entry) {
-	SaveValue = elem.value;
+function StartKeyTimer(elem,notify,entry) {
 	if (KeyTimer) { clearTimeout(KeyTimer); }
-	KeyTimer = setTimeout( function () {CheckForChange(elem,entry);},1000);
+	KeyTimer = setTimeout( function () {notify(elem,entry);},1000);
 }
 
-function StopKeyTimer(elem,entry) {
+function FilterLog() {
 	if (KeyTimer) { clearTimeout(KeyTimer); }
-	UpdateLabel(elem,entry);	
+	NameFilter = document.getElementById('btNameFilter').value;
+	AllianceFilter = document.getElementById('btAllianceFilter').value;
+	PaintLog();	
 }
 
-function CheckForChange(elem,entry) {
-	if (SaveValue != elem.value) {
-		UpdateLabel(elem,entry);	
-	}
-	SaveValue = elem.value;
+function ClearNameFilter() {
+	if (KeyTimer) { clearTimeout(KeyTimer); }
+	document.getElementById('btNameFilter').value = "";
+	FilterLog();	
+}
+
+function ClearAllianceFilter() {
+	if (KeyTimer) { clearTimeout(KeyTimer); }
+	document.getElementById('btAllianceFilter').value = "";
+	FilterLog();	
 }
   
 // ************************* Startup ************************************
