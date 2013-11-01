@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20131019a
+// @version        20131030a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20131019a';
+var Version = '20131030a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -6311,6 +6311,9 @@ Tabs.Options = {
   // This refreshes the data without a full web page refresh.
   updateAll : function () {
 
+	// stop update_seed_ajax while this is happening. This is a kabam indicator (but it does still fire on a cancel training.. who knows why they've done it like that)
+	uW.g_update_seed_ajax_do = true;
+  
 	  //potential fix for missing troop recalls:  true flag forces troop march update
 	   //unsafeWindow.update_seed_ajax(true);
       // update the timestamps
@@ -6329,6 +6332,8 @@ Tabs.Options = {
                   method: "POST",
                   parameters: params,
                   onSuccess: function (rslt) {
+					  // let update_seed_ajax run again in game
+					  uW.g_update_seed_ajax_do = false;
                       var mainSrcHTMLCode = rslt.responseText;
                       var myregexp = /var seed=\{.*?\};/;                      
                       var match = myregexp.exec(mainSrcHTMLCode);
@@ -6383,8 +6388,11 @@ Tabs.Options = {
                          
 
                       }
+					  
                   },
                   onFailure: function () {
+					  // let update_seed_ajax run again in game
+					  uW.g_update_seed_ajax_do = false;
                       logit("ERROR ********: ", inspect(rslt,3,1));
                       if (notify != null)
                           notify(rslt.errorMsg);
@@ -10876,7 +10884,7 @@ Tabs.IRC = {
 	document.getElementById('ptIRCcmdRules').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.enable = e.target.checked;saveIRCOptions();}, false);
 	document.getElementById('ptIRCcmdRulesMsg').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.message = e.target.value;saveIRCOptions();}, false);
 	
-	var a = JSON2.parse(GM_getValue ('IRCSeen_log_'+GetServerId(), '{}'));
+        var a = JSON2.parse(localStorage.getItem('IRCSeen_log_'+GetServerId()));
     if (matTypeof(a) == 'object')
     {
         t.seenLog = a;
@@ -10887,7 +10895,7 @@ Tabs.IRC = {
   onUnload : function ()
   {
 	  var t = Tabs.IRC;
-      GM_setValue ('IRCSeen_log_'+GetServerId(), JSON2.stringify(t.seenLog));
+        localStorage.setItem('IRCSeen_log_'+GetServerId(), JSON2.stringify(t.seenLog));
   },  
 
   grabChat : function (uid, name, msg) {
@@ -10947,6 +10955,7 @@ Tabs.IRC = {
 		
 	var updateSeen = {"name":name, "timestamp":time, "lastpost":lastPost};
 	t.seenLog[uid] = updateSeen;
+        localStorage.setItem('IRCSeen_log_'+GetServerId(), JSON2.stringify(t.seenLog));
   },
   
   processSeen : function (msg) {
@@ -12836,7 +12845,7 @@ var LoadCapFix = {
   init : function (){
     var t = LoadCapFix;
 //    t.capLoadEffect = new CalterUwFunc ('cm.MarchModal.updateTroopResource', [[/\$\("#modal/ig, 'jQuery("#modal'] , [/1\s*\+\s*loadBoost\)/i, '1 + Math.min(loadBoost,6.25+loadEffectBoost+techLoadBoost)); for(var sacIndex = 0; sacIndex < seed.queue_sacr["city" + currentcityid].length; sacIndex ++ ) if(seed.queue_sacr["city" + currentcityid][sacIndex]["unitType"] == untid) load *= seed.queue_sacr["city" + currentcityid][sacIndex]["multiplier"][0]; load=Math.floor(load-1);'] ]);
-    t.capLoadEffect = new CalterUwFunc ('cm.MarchModal.updateTroopResource', [[/\$\("#modal/ig, 'jQuery("#modal'] , [/if\(jQuery/i, 'loadBoost = Math.min(loadBoost,6.25+loadEffectBoost+techLoadBoost); for(var sacIndex = 0; sacIndex < seed.queue_sacr["city" + currentcityid].length; sacIndex ++ ) if(seed.queue_sacr["city" + currentcityid][sacIndex]["unitType"] == untid) unit_number *= seed.queue_sacr["city" + currentcityid][sacIndex]["multiplier"][0]; if(jQuery'],[/var\s*resources/i,'load=load-1;var resources'] ]);
+    t.capLoadEffect = new CalterUwFunc ('cm.MarchModal.updateTroopResource', [[/\$\("#modal/ig, 'jQuery("#modal'] , [/if\(jQuery/i, 'loadBoost = Math.min(loadBoost,6.25+techLoadBoost); for(var sacIndex = 0; sacIndex < seed.queue_sacr["city" + currentcityid].length; sacIndex ++ ) if(seed.queue_sacr["city" + currentcityid][sacIndex]["unitType"] == untid) unit_number *= seed.queue_sacr["city" + currentcityid][sacIndex]["multiplier"][0]; if(jQuery'],[/var\s*resources/i,'load=load-1;var resources'] ]);
     t.capLoadEffect.setEnable(Options.fixLoadCap);
   },
 
@@ -13817,7 +13826,7 @@ function saveAutoTrainOptions (){
 
 function readIRCOptions (){
   var serverID = GetServerId();
-	s = GM_getValue ('IRCOptions_'+serverID);
+	s = localStorage.getItem('IRCOptions_'+serverID);
 	if (s != null){
 		opts = JSON2.parse (s);
 		for (k in opts){
@@ -13835,7 +13844,7 @@ function readIRCOptions (){
 
 function saveIRCOptions (){
   var serverID = GetServerId();
-	GM_setValue ('IRCOptions_'+serverID, JSON2.stringify(IRCOptions));
+    localStorage.setItem('IRCOptions_'+serverID, JSON2.stringify(IRCOptions));
 }
 
 function readChatIconsOptions (){
