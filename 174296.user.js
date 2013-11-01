@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131023a
+// @version        20131029b
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131023a';
+var Version = '20131029b';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -136,7 +136,7 @@ var Options = {
   pbWideMap    : false,
   pbFoodAlert  : false,
   pbFoodAlertInt  : 6,
-  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,alertTRtoff:false,AFK:true,lastatkarr:[]},
+  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{}},
   alertSound   : {enabled:false, soundUrl:DEFAULT_ALERT_SOUND_URL, repeat:true, playLength:20, repeatDelay:0.5, volume:100, alarmActive:false, expireTime:0},
   spamconfig   : {aspam:false, spamvert:'Join my Alliance!!', spammins:'30', atime:2 , spamstate:'a'},
   giftDomains  : {valid:false, list:{}},
@@ -201,7 +201,7 @@ var Options = {
   dfbtns: false,
   crestbtns: false,
   Farmbtns: false,
-  SaveState: {},
+  SaveState: {guardian:{}},
   CrestSlots: 0,
   colorCityTabs: true,
   ThroneHUD: false,
@@ -216,6 +216,8 @@ var Options = {
   TourneyModeActive:false,
   UseTourneyMM:false,
   CrestList    : {"i1101":0,"i1102":0,"i1103":0,"i1104":0,"i1105":0,"i1106":0,"i1107":0,"i1108":0,"i1109":0,"i1110":0,"i1111":0,"i1112":0,"i1113":0,"i1114":0,"i1115":0,"i1120":0,"i1121":0,"i1122":0},
+  ReverseTransport:false,
+  ReverseTransportPercent:90,
 };
 //unsafeWindow.pt_Options=Options;
 
@@ -2407,13 +2409,14 @@ Tabs.Throne = {
                 "Merry Chandelier"                  : "http://i.imgur.com/iBzYUh5.png",
                 "Chandelier Of The Green Knight"    : "http://i.imgur.com/MEVEjPM.png",
                 "Maganimous Chandelier"             : "http://i.imgur.com/CJWVQEh.jpg",
+                "Candelabrum of Cruelty"            : "http://i.imgur.com/Iu2BCQ8.png",
                 
             },
             Tables : {
                 "Dark Master Jack"      : "http://i.imgur.com/2ThozSy.png",
                 "Healers Shrine"        : "http://i.imgur.com/clPMfAQ.png",
                 "Skillful Table"        : "http://i.imgur.com/zk18k12.png",
-                
+                "Bombardment Table"     : "http://i.imgur.com/o4slc5U.png",
             },
             Trophies : {
                 "Courageous Trophy"     : "http://i.imgur.com/ODDVqwD.png",
@@ -4480,7 +4483,8 @@ Tabs.tower = {
     <TR><TD align=right><INPUT id=pbalertTR type=checkbox '+ (Options.alertConfig.alertTR?'CHECKED ':'') +'/></td><TD> '+translate("Toggle to TR set ")+' <INPUT id=pbalertTRset type=text size=2 maxlength=2 value="'+ Options.alertConfig.alertTRset +'"> '+translate("on impending");
     m+= '<INPUT id=pbalertTRAFK type=checkbox '+ (Options.alertConfig.AFK?'CHECKED ':'') +'/> Only when AFK</td></tr>\
     <TR><TD><INPUT id=pbalerttoff type=checkbox '+ (Options.alertConfig.alertTRtoff?'CHECKED ':'') +'/></td><td>'+translate("Stop auto outgoing marches on impending")+'</td></tr>\
-    <TR><TD align=right><INPUT id=pbalertTR2 type=checkbox '+ (Options.alertConfig.alertTR2?'CHECKED ':'') +'/></td><TD> '+translate("Toggle TR and marches back after: ")+' <INPUT id=pbalertTRsetmin type=text size=3 maxlength=3 value="'+ Options.alertConfig.alertTRsetwaittime +'"> '+translate("minutes without incoming attack")+'</td></tr>\
+    <TR><TD align=right><INPUT id=pbalertguard type=checkbox '+ (Options.alertConfig.guardian?'CHECKED ':'') +'/></td><TD> '+translate("Toggle to wood guardian on impending (uses same afk setting as TR toggle)")+'</td></tr>\
+    <TR><TD align=right><INPUT id=pbalertTR2 type=checkbox '+ (Options.alertConfig.alertTR2?'CHECKED ':'') +'/></td><TD> '+translate("Toggle TR, guardian, and marches back after: ")+' <INPUT id=pbalertTRsetmin type=text size=3 maxlength=3 value="'+ Options.alertConfig.alertTRsetwaittime +'"> '+translate("minutes without incoming attack")+'</td></tr>\
     <TR><TD></TD><TD><INPUT id=pboldattacks type=submit value="'+unsafeWindow.g_js_strings.commonstr.post+' '+unsafeWindow.g_js_strings.ImpendingAttacks.incoming+' '+unsafeWindow.g_js_strings.commonstr.totx+' '+unsafeWindow.g_js_strings.commonstr.chat+'"/><BR></td></tr>\
         <TR><TD><INPUT id=pbSoundEnable type=checkbox '+ (Options.alertSound.enabled?'CHECKED ':'') +'/></td><TD>'+translate("Play sound on incoming attack/scout")+'</td></tr>\
         <TR><TD></td><TD><DIV id=pbLoadingSwf>'+translate("Loading SWF player")+'</div><DIV style="display:none" id=pbSoundOpts><TABLE cellpadding=0 cellspacing=0>\
@@ -4532,6 +4536,7 @@ Tabs.tower = {
     document.getElementById('pbalertraid').addEventListener ('change', t.e_alertOptChanged, false);
     document.getElementById('pbalertTR').addEventListener ('change', t.e_alertOptChanged, false);
     document.getElementById('pbalertTRset').addEventListener ('change', t.e_alertOptChanged, false);
+    document.getElementById('pbalertguard').addEventListener ('change', t.e_alertOptChanged, false);
     document.getElementById('pbalertTR2').addEventListener ('change', t.e_alertOptChanged, false);
     document.getElementById('pbalerttoff').addEventListener ('change', t.e_alertOptChanged, false);
     document.getElementById('pbalertTRsetmin').addEventListener ('change', t.e_alertOptChanged, false);
@@ -4707,6 +4712,7 @@ getpinauth : function () {
     Options.alertConfig.alertTR=document.getElementById('pbalertTR').checked;
     Options.alertConfig.alertTR2=document.getElementById('pbalertTR2').checked;
     Options.alertConfig.alertTRtoff=document.getElementById('pbalerttoff').checked;
+    Options.alertConfig.guardian=document.getElementById('pbalertguard').checked;
     Options.alertConfig.AFK=document.getElementById('pbalertTRAFK').checked;
     var trset = parseInt(document.getElementById('pbalertTRset').value);
     Options.alertConfig.alertTRset = trset;
@@ -4766,6 +4772,7 @@ getpinauth : function () {
         t.displayDefMode (cityId);
       }
       Options.alertConfig.raidautoswitch[cityId] = false;
+      Options.alertConfig.guardautoswitch[cityId] = false;
     }
       var now = unixTime();
     var incomming = false;
@@ -4774,6 +4781,8 @@ getpinauth : function () {
         if (m.marchType==3 || m.marchType==4) {
 			if(Options.alertConfig.lastatkarr.indexOf(m.mid) == -1) {
 				Options.alertConfig.lastatkarr.push(m.mid);
+          if (m.departureTime > Options.alertConfig.lastAttack)
+            setTimeout(function(){Options.alertConfig.lastAttack = m.departureTime;saveOptions},500);
 				t.newIncoming (m);
 			};
           incomming = true;
@@ -4783,6 +4792,9 @@ getpinauth : function () {
 			if (Options.alertConfig.raid && incomming){
             Options.alertConfig.raidautoswitch[m.toCityId] = true;
           };
+      if (Options.alertConfig.guard && incomming){
+	Options.alertConfig.guardautoswitch[m.toCityId] = true;
+      }
           if(!incomming) Options.alertConfig.lastatkarr = new Array();
       saveOptions();
     if(Options.alertConfig.RecentActivity) {
@@ -4798,8 +4810,22 @@ getpinauth : function () {
                };
                if (Options.SaveState.trset != Seed.throne.activeSlot)
                if(Options.alertConfig.AFK) {
-                  if(isAFK)Tabs.Throne.doPreset(Options.SaveState.trset);
-               } else Tabs.Throne.doPreset(Options.SaveState.trset);
+                  if(isAFK) {
+		     Tabs.Throne.doPreset(Options.SaveState.trset);
+	             for (var cityId in Cities.byID){
+                        if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
+			   t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
+		        Options.alertConfig.guardautoswitch[cityId] = false;
+	             }
+		   }
+               } else {
+		  Tabs.Throne.doPreset(Options.SaveState.trset);
+	          for (var cityId in Cities.byID){
+                     if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
+		        t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
+		     Options.alertConfig.guardautoswitch[cityId] = false;
+	          }
+	       }
                Options.alertConfig.RecentActivity = false;
                saveOptions();
             }
@@ -4913,6 +4939,7 @@ getpinauth : function () {
                if(Options.SaveState.crest)Tabs.Attack.toggleCrestState();
             };
             Options.SaveState.trset = Seed.throne.activeSlot;
+            if(Seed.buildings["city"+ m.toCityId].pos500 && Seed.buildings["city"+ m.toCityId].pos500[0] !=50) Options.SaveState.guardian[m.toCityId]=Seed.buildings["city"+ m.toCityId].pos500[0];
          };
          Options.alertConfig.RecentActivity = true;
          saveOptions();
@@ -4924,6 +4951,11 @@ getpinauth : function () {
             if(isAFK)Tabs.Throne.doPreset(preset);
          }else Tabs.Throne.doPreset(preset);
       }
+    }
+    if (Options.alertConfig.guardian){
+         if(Options.alertConfig.AFK) {
+            if(isAFK) if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
+         } else if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
    }
   },
   
@@ -4968,6 +5000,40 @@ getpinauth : function () {
      };
      msg = msg.substring(0, Number(msg.length-5));
      sendChat ("/a "+  msg);
+  },
+
+  changeGuardian : function (cityId,guardiantype){
+    var t = Tabs.tower;
+    var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+    params.ctrl = "Guardian";
+    params.action = "summon";
+    params.cityId = cityId;
+    switch(guardiantype) {
+      case 50:
+	params.type = "wood";
+	break;
+      case 51:
+	params.type = "ore";
+	break;
+      case 52:
+	params.type = "food";
+	break;
+      case 53:
+	params.type = "stone";
+	break;
+    }
+    new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch.php" + unsafeWindow.g_ajaxsuffix, {
+	method: "post",
+	parameters: params,
+	onSuccess: function (rslt) {
+		if (rslt.ok) {
+			unsafeWindow.seed.buildings["city"+ cityId].pos500[0]=guardiantype;
+		} 
+	},
+	onFailure: function () {
+                return;
+	}
+    })
   },
   
   sendalert : function (m){
@@ -8203,11 +8269,11 @@ Tabs.transport = {
         m += '<TD><INPUT id=pbTradeReset type=submit value="' + translate("Delete Routes") + '"></td>';
         m += '</tr></table></div>';
         m += '<DIV id=pbTraderDivDRoute class=pbStat>' + translate("TRADE ROUTE OPTIONS") + '</div>';
-        m += '<TABLE id=pbtraderfunctions width=100% height=0% class=pbTab><TR align="center"><TR align="left">';
-        m += '<TD colspan=4>' + translate("Check transport every:") + ' <INPUT id=pbtransportinterval type=text size=2 value="' + Options.transportinterval + '"\> ' + translate("minutes") + '</td></tr></table>';
-        m += '<TD colspan=4>' + translate("Do not send transport out if less than") + ' <INPUT id=pbminwagons type=text size=8 value="' + Options.minwagons + '"\> ' + translate("troops are needed. (Needless transports are skipped this way)") + '</td></tr></table>';
-        m += '<DIV style="margin-top:10px;margin-bottom:5px;">' + translate("If the \"trade\" amount is 0 then it will transport the max amount above \"keep\". Gold only if there is space left...") + '</div>';
-        m += '<DIV style="margin-top:10px;margin-bottom:5px;">If the \"min\" amount is not zero, and the amount of this resource in the city falls below the min amount, it will reverse-transport resources back from the target city up to this amount...</div>';
+        m += '<TABLE id=pbtraderfunctions width=100% height=0% class=pbTab><TR align="left">';
+        m += '<TD >&nbsp;' + translate("Check transport every:") + ' <INPUT id=pbtransportinterval type=text size=2 value="' + Options.transportinterval + '"\> ' + translate("minutes") + '</td></tr>';
+        m += '<TD >&nbsp;' + translate("Do not send transport out if less than") + ' <INPUT id=pbminwagons type=text size=8 value="' + Options.minwagons + '"\> ' + translate("troops are needed. (Needless transports are skipped this way)") + '</td></tr>';
+        m += '<TD >&nbsp;' + translate("If the \"trade\" amount is 0 then it will transport the max amount above \"keep\". Gold only if there is space left...") + '</td></tr>';
+        m += '<TD ><INPUT id=pbrevtrans type=checkbox '+(Options.ReverseTransport?'CHECKED':'')+'> Reverse transport if resource amount falls below <INPUT id=pbrevtranspc type=text size=2 value="' + Options.ReverseTransportPercent + '"\> % of the "Keep" value.</td></tr></table>';
         m += '<DIV id=pbTraderDivDRoute class=pbStat>' + translate("TRANSPORTS") + '</div>';
         m += '<TABLE id=pbaddtraderoute width=95% height=0% class=pbTab><TR align="left">';
         m += '<TR align="left"><TD>' + translate("From City:") + '</td> <TD width=310px><DIV style="margin-bottom:10px;"><span id=ptrescity></span></div></td></tr>';
@@ -8230,7 +8296,6 @@ Tabs.transport = {
         m += '<TD id=HaveRec1 align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipFood type=checkbox unchecked=true\></td>';
         m += '<TD width=180px  align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountFood type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountFood type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountFood type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxFood type=submit value="Max"></td></tr>';
         m += '<TR align="center">';
@@ -8239,7 +8304,6 @@ Tabs.transport = {
         m += '<TD id=HaveRec2 align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipWood type=checkbox unchecked=true\></td>';
         m += '<TD width=180px align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountWood type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountWood type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountWood type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxWood type=submit value="Max"></td></tr>';
         m += '<TR align="center">';
@@ -8248,7 +8312,6 @@ Tabs.transport = {
         m += '<TD id=HaveRec3 align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipStone type=checkbox unchecked=true\></td>';
         m += '<TD width=180px align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountStone type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountStone type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountStone type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxStone type=submit value="Max"></td></tr>';
         m += '<TR align="center">';
@@ -8257,7 +8320,6 @@ Tabs.transport = {
         m += '<TD id=HaveRec4 align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipOre type=checkbox unchecked=true\></td>';
         m += '<TD width=180px align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountOre type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountOre type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountOre type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxOre type=submit value="Max"></td></tr>';
         m += '<TR align="center">';
@@ -8266,7 +8328,6 @@ Tabs.transport = {
         m += '<TD id=HaveRec5 align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipAstone type=checkbox unchecked=true\></td>';
         m += '<TD width=180px align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountAstone type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountAstone type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountAstone type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxAstone type=submit value="Max"></td></tr>';
         m += '<TR align="center">';
@@ -8275,7 +8336,6 @@ Tabs.transport = {
         m += '<TD id=HaveGold align=right width=110px></td>';
         m += '<TD width=55px align=right><INPUT id=pbshipGold type=checkbox unchecked=true\></td>';
         m += '<TD width=180px align=left>' + translate("Keep:") + ' <INPUT id=pbtargetamountGold type=text size=11 maxlength=20 value="0" disabled=true\></td>';
-        m += '<TD width=180px  align=left>Min: <INPUT id=pbminamountGold type=text size=11 maxlength=20 value="0"></td>';
         m += '<TD width=100px>' + translate("Trade:") + ' <INPUT id=pbtradeamountGold type=text size=11 maxlength=20 value="0"\></td>';
         m += '<TD width=50px><INPUT id=MaxGold type=submit value="Max"></td></tr>';
         m += '</table>';
@@ -8424,6 +8484,21 @@ Tabs.transport = {
                 .value;
             saveOptions();
         }, false);
+		document.getElementById('pbrevtrans').addEventListener('change', function(){
+			Options.ReverseTransport = document.getElementById('pbrevtrans').checked;
+			saveOptions();
+		}, false);
+        document.getElementById('pbrevtranspc')
+            .addEventListener('keyup', function () {
+            if (isNaN(document.getElementById('pbrevtranspc')
+                .value)) {
+                document.getElementById('pbrevtranspc')
+                    .value = 0;
+            }
+            Options.ReverseTransportPercent = document.getElementById('pbrevtranspc')
+                .value;
+            saveOptions();
+        }, false);
         document.getElementById('pbtargetamountFood')
             .addEventListener('change', function () {
             if (isNaNCommas(document.getElementById('pbtargetamountFood')
@@ -8458,42 +8533,6 @@ Tabs.transport = {
             .addEventListener('change', function () {
             if (isNaNCommas(document.getElementById('pbtargetamountGold')
                 .value)) document.getElementById('pbtargetamountGold')
-                .value = 0;
-        }, false);
-        document.getElementById('pbminamountFood')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountFood')
-                .value)) document.getElementById('pbminamountFood')
-                .value = 0;
-        }, false);
-        document.getElementById('pbminamountWood')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountWood')
-                .value)) document.getElementById('pbminamountWood')
-                .value = 0;
-        }, false);
-        document.getElementById('pbminamountStone')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountStone')
-                .value)) document.getElementById('pbminamountStone')
-                .value = 0;
-        }, false);
-        document.getElementById('pbtargetamountOre')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountOre')
-                .value)) document.getElementById('pbminamountOre')
-                .value = 0;
-        }, false);
-        document.getElementById('pbminamountAstone')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountAstone')
-                .value)) document.getElementById('pbminamountAstone')
-                .value = 0;
-        }, false);
-        document.getElementById('pbminamountGold')
-            .addEventListener('change', function () {
-            if (isNaNCommas(document.getElementById('pbminamountGold')
-                .value)) document.getElementById('pbminamountGold')
                 .value = 0;
         }, false);
         document.getElementById('pbtradeamountFood')
@@ -8811,18 +8850,6 @@ Tabs.transport = {
             .value);
         var target_Gold = parseIntCommas(document.getElementById('pbtargetamountGold')
             .value);
-        var min_Food = parseIntCommas(document.getElementById('pbminamountFood')
-            .value);
-        var min_Wood = parseIntCommas(document.getElementById('pbminamountWood')
-            .value);
-        var min_Stone = parseIntCommas(document.getElementById('pbminamountStone')
-            .value);
-        var min_Ore = parseIntCommas(document.getElementById('pbminamountOre')
-            .value);
-        var min_Astone = parseIntCommas(document.getElementById('pbminamountAstone')
-            .value);
-        var min_Gold = parseIntCommas(document.getElementById('pbminamountGold')
-            .value);
         var trade_Food = parseIntCommas(document.getElementById('pbtradeamountFood')
             .value);
         var trade_Wood = parseIntCommas(document.getElementById('pbtradeamountWood')
@@ -8849,27 +8876,21 @@ Tabs.transport = {
                 city: city,
                 ship_Food: ship_Food,
                 target_Food: target_Food,
-                min_Food: min_Food,
                 trade_Food: trade_Food,
                 ship_Wood: ship_Wood,
                 target_Wood: target_Wood,
-                min_Wood: min_Wood,
                 trade_Wood: trade_Wood,
                 ship_Stone: ship_Stone,
                 target_Stone: target_Stone,
-                min_Stone: min_Stone,
                 trade_Stone: trade_Stone,
                 ship_Ore: ship_Ore,
                 target_Ore: target_Ore,
-                min_Ore: min_Ore,
                 trade_Ore: trade_Ore,
                 ship_Astone: ship_Astone,
                 target_Astone: target_Astone,
-                min_Astone: min_Astone,
                 trade_Astone: trade_Astone,
                 ship_Gold: ship_Gold,
                 target_Gold: target_Gold,
-                min_Gold: min_Gold,
                 trade_Gold: trade_Gold,
                 target_x: target_x,
                 target_y: target_y,
@@ -8960,7 +8981,6 @@ Tabs.transport = {
             n += '<TR><TD width=50px align=center><img alt="' + icon + '" src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/' + icon + '_30.png"></td>';
             n += '<TD width=50px align=center><INPUT id=pbbship' + icon + ' type=checkbox></td>';
             n += '<TD width=125px>' + translate("Keep:") + ' <INPUT id=pbbtargetamount' + icon + ' type=text size=11 maxlength=11 value="0"></td>';
-            n += '<TD width=125px>Min: <INPUT id=pbbminamount' + icon + ' type=text size=11 maxlength=11 value="0"></td>';
             n += '<TD width=125px>' + translate("Trade:") + ' <INPUT id=pbbtradeamount' + icon + ' type=text size=11 maxlength=11 value="0"\></td></tr>';
         }
         n += '</table><BR><TABLE id=editRoutes class=pbTab><TR><TD><a class="button20" id="Cancel"><span>' + translate("Cancel") + '</span></a></td>';
@@ -8998,18 +9018,6 @@ Tabs.transport = {
             .value = r[queueId].target_Astone;
         document.getElementById('pbbtargetamountgold')
             .value = r[queueId].target_Gold;
-        document.getElementById('pbbminamountfood')
-            .value = r[queueId].min_Food;
-        document.getElementById('pbbminamountwood')
-            .value = r[queueId].min_Wood;
-        document.getElementById('pbbminamountstone')
-            .value = r[queueId].min_Stone;
-        document.getElementById('pbbminamountiron')
-            .value = r[queueId].min_Ore;
-        document.getElementById('pbbminamountaetherstone')
-            .value = r[queueId].min_Astone;
-        document.getElementById('pbbminamountgold')
-            .value = r[queueId].min_Gold;
         document.getElementById('pbbtradeamountfood')
             .value = r[queueId].trade_Food;
         document.getElementById('pbbtradeamountwood')
@@ -9055,18 +9063,6 @@ Tabs.transport = {
             r[queueId].target_Astone = parseIntCommas(document.getElementById('pbbtargetamountaetherstone')
                 .value);
             r[queueId].target_Gold = parseIntCommas(document.getElementById('pbbtargetamountgold')
-                .value);
-            r[queueId].min_Food = parseIntCommas(document.getElementById('pbbminamountfood')
-                .value);
-            r[queueId].min_Wood = parseIntCommas(document.getElementById('pbbminamountwood')
-                .value);
-            r[queueId].min_Stone = parseIntCommas(document.getElementById('pbbminamountstone')
-                .value);
-            r[queueId].min_Ore = parseIntCommas(document.getElementById('pbbminamountiron')
-                .value);
-            r[queueId].min_Astone = parseIntCommas(document.getElementById('pbbminamountaetherstone')
-                .value);
-            r[queueId].min_Gold = parseIntCommas(document.getElementById('pbbminamountgold')
                 .value);
             r[queueId].trade_Food = parseIntCommas(document.getElementById('pbbtradeamountfood')
                 .value);
@@ -9148,7 +9144,7 @@ Tabs.transport = {
     if(!t.traderState.running) return;
     if(t.tradeRoutes.length==0) return;
     t.doTrades(t.count,false);
-    t.doTrades(t.count,true);
+    if (Options.ReverseTransport) {t.doTrades(t.count,true);}
     t.count++;
     if(t.count < t.tradeRoutes.length){
               t.checkdotradetimeout = setTimeout(function() { t.checkdoTrades();}, 5000);
@@ -9182,8 +9178,6 @@ Tabs.transport = {
         if (!rev) { 
 			var city = t.tradeRoutes[count]["city"];
 			var cityID = 'city' + city;
-
-
 			var xcoord = t.tradeRoutes[count]["target_x"];
 			var ycoord = t.tradeRoutes[count]["target_y"];
 		}
@@ -9198,7 +9192,7 @@ Tabs.transport = {
 		}
 		if(!Cities.byID[city]) return;
 
-		if (rev) {
+		if (rev) { // only allow one reverse transport at a time
 			if (t.tradeRoutes[count]["rev_eta"]) {
 				if (parseInt(t.tradeRoutes[count]["rev_eta"]) > unsafeWindow.unixtime()) return;
 			} 
@@ -9216,13 +9210,14 @@ Tabs.transport = {
         var target_Ore = t.tradeRoutes[count]["target_Ore"];
         var target_Astone = t.tradeRoutes[count]["target_Astone"];
         var target_Gold = t.tradeRoutes[count]["target_Gold"];
-        var min_Food = t.tradeRoutes[count]["min_Food"];
-        var min_Wood = t.tradeRoutes[count]["min_Wood"];
-        var min_Stone = t.tradeRoutes[count]["min_Stone"];
-        var min_Ore = t.tradeRoutes[count]["min_Ore"];
-        var min_Astone = t.tradeRoutes[count]["min_Astone"];
-        var min_Gold = t.tradeRoutes[count]["min_Gold"];
-        var ship_Food = t.tradeRoutes[count]["ship_Food"];
+		var revpc = parseIntNan(Options.ReverseTransportPercent);
+		var min_Food = t.tradeRoutes[count]["target_Food"] * revpc /100;
+		var min_Wood = t.tradeRoutes[count]["target_Wood"] * revpc /100;
+		var min_Stone = t.tradeRoutes[count]["target_Stone"] * revpc /100;
+		var min_Ore = t.tradeRoutes[count]["target_Ore"] * revpc /100;
+		var min_Astone = t.tradeRoutes[count]["target_Astone"] * revpc /100;
+		var min_Gold = t.tradeRoutes[count]["target_Gold"] * revpc /100;
+		var	ship_Food = t.tradeRoutes[count]["ship_Food"];
         var ship_Wood = t.tradeRoutes[count]["ship_Wood"];
         var ship_Stone = t.tradeRoutes[count]["ship_Stone"];
         var ship_Ore = t.tradeRoutes[count]["ship_Ore"];
@@ -9265,7 +9260,14 @@ Tabs.transport = {
 			if (trade_Stone > 0 && (carry_Stone > trade_Stone)) carry_Stone = parseIntNan(trade_Stone);
 			if (trade_Ore > 0 && (carry_Ore > trade_Ore)) carry_Ore = parseIntNan(trade_Ore);
 			if (trade_Astone > 0 && (carry_Astone > trade_Astone)) carry_Astone = parseIntNan(trade_Astone);
-		}	
+		}
+		else { // reverse trans up to keep value (not min value)
+			if (carry_Food > 0 && (target_Food > min_Food)) carry_Food = parseIntNan(target_Food - citymax_Food);
+			if (carry_Wood > 0 && (target_Wood > min_Wood)) carry_Wood = parseIntNan(target_Wood - citymax_Wood);
+			if (carry_Stone > 0 && (target_Stone > min_Stone)) carry_Stone = parseIntNan(target_Stone - citymax_Stone);
+			if (carry_Ore > 0 && (target_Ore > min_Ore)) carry_Ore = parseIntNan(target_Ore - citymax_Ore);
+			if (carry_Astone > 0 && (target_Astone > min_Astone)) carry_Astone = parseIntNan(target_Astone - citymax_Astone);
+		}
         carry_Astone *= 5; //Multiply by 5 to account for 5 times less carrying capacity
       
       if (t.tradeRoutes[count]['TroopType'] == undefined) var wagons = parseInt(Seed.units[cityID]['unt'+ 9]);
@@ -10747,6 +10749,9 @@ Tabs.AutoCraft = {
 	craftMinAether : 50000,
 	craftinfo : {},
 	totaether : 0,
+	spires: [],
+	csok: true,
+	lastcsok: true,
 
 	init: function(div){
 		var t = Tabs.AutoCraft;
@@ -10838,6 +10843,7 @@ Tabs.AutoCraft = {
 		str +="<td align=center id=totaether>"+ addCommas(t.totaether) + "</td>";  
 		str +='<tr style="background: #e8e8e8" align=right><td><img height=18 src='+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/3.jpg title="Crafting"></td>';
 		for(i=0; i<Cities.numCities; i++) {
+			t.spires.push(getUniqueCityBuilding(Cities.cities[i].id,20));
 			str +="<td align=center id=citycraft"+i+">"+ t.getCityCrafting(i) + "</td>";  
 		}    
 		str +="<td>&nbsp;</td></tr></tbody></table>";    
@@ -10856,9 +10862,9 @@ Tabs.AutoCraft = {
 		document.getElementById("Crafting_Save").addEventListener ('click', function (){t.saveCraftState()}, false);
 		document.getElementById("pbCraftRunning").addEventListener ('click', function (){t.toggleStateRunning(this)}, false);     
 		t.changeCraft ('pbCraftMinAether', 'CraftMinAether')
-		document.getElementById('pbacTR').addEventListener ('change', function() {TrainOptions.actr = this.checked;saveCraftState();}, false);
-		document.getElementById('pbacTRbase').addEventListener ('change', function() {TrainOptions.actrbase = this.checked;saveCraftState();}, false);
-		document.getElementById('pbacTRset').addEventListener ('change', function() {TrainOptions.actrset = this.value;saveCraftState();}, false);
+		document.getElementById('pbacTR').addEventListener ('change', function() {TrainOptions.actr = this.checked;t.saveCraftState();}, false);
+		document.getElementById('pbacTRbase').addEventListener ('change', function() {TrainOptions.actrbase = this.checked;t.saveCraftState();}, false);
+		document.getElementById('pbacTRset').addEventListener ('change', function() {TrainOptions.actrset = this.value;t.saveCraftState();}, false);
 		var cItems = document.getElementById('pbcraftingqueues').getElementsByTagName('input');
 		for (var i = 0; i < cItems.length; i++) {
 			cItems[i].addEventListener('change', function(){t.saveCraftState()}, false);
@@ -10892,7 +10898,7 @@ Tabs.AutoCraft = {
 		if (ingredients != '') ingredients = '<b>Ingredients</b><br>' + ingredients;
 
 		unsafeWindow.jQuery('#'+elem.id).children("span").remove();
-		unsafeWindow.jQuery('#'+elem.id).append('<span class="crafttip"><b>Recipe Name</b><br>' +name+' ('+odds+')<br><b>Requirements</b><br>Spire Lv.'+requirements+'<br>Aetherstone : '+addCommas(astone)+'<br>'+ingredients + '</div>');
+		unsafeWindow.jQuery('#'+elem.id).append('<span class="crafttip"><b>Recipe Name</b><br>' +name+' ('+odds+')<br><b>Requirements</b><br>Spire Lv.'+requirements+'<br>Aetherstone : '+addCommas(astone)+'<br>'+ingredients + '</span>');
 	},
 	
 	getCityAether : function (i) {
@@ -10908,9 +10914,10 @@ Tabs.AutoCraft = {
 	getCityCrafting : function (i) {
 		var t = Tabs.AutoCraft;
 		var now = unixTime();
-		var gotSpire = (getCityBuilding(Cities.cities[i].id,20).count != 0);
+		t.spires[i] = getUniqueCityBuilding(Cities.cities[i].id,20);
+		var gotSpire = (t.spires[i].count != 0);
 		if (gotSpire) {
-			var str = '<span>Spire (Lv.'+getCityBuilding(Cities.cities[i].id,20).maxLevel+')</span><BR>';
+			var str = '<span>Spire (Lv.'+t.spires[i].maxLevel+')</span><BR>';
 			var totTime = 0;
 			// the last item in the queue should be the item in progress
 			var len = Seed.queue_craft["city" + Cities.cities[i].id].length;
@@ -10967,14 +10974,21 @@ Tabs.AutoCraft = {
 			document.getElementById("citycraft"+i).innerHTML = t.getCityCrafting(i);  
 		}
 		document.getElementById("totaether").innerHTML = addCommas(t.totaether);  
+		
 		var cs = Math.floor(equippedthronestats(81));
 		document.getElementById("currcs").innerHTML = cs+'%';
-		if (TrainOptions.actr && (cs < Number(TrainOptions.actrset)))
-			unsafeWindow.jQuery('#currcs').css('color', 'red');
-		else	
-			unsafeWindow.jQuery('#currcs').css('color', 'black');
+		t.csok = (!TrainOptions.actr || (cs >= Number(TrainOptions.actrset)));
+		if (t.csok != t.lastcsok) {
+			if (!t.csok) {
+				unsafeWindow.jQuery('#currcs').css('color', 'red');
+			}	
+			else {	
+				unsafeWindow.jQuery('#currcs').css('color', 'black');
+			}
+		}		
+		t.lastcsok = t.csok;
 		
-		t.timerStat = setTimeout(function() { t.updateStat(); }, 1000);
+		t.timerStat = setTimeout(function() { t.updateStat(); }, 3000);
 	},
 
 	RefreshCraftNumbers : function() {
@@ -11056,14 +11070,14 @@ Tabs.AutoCraft = {
 		if (TrainOptions.actr && !TrainOptions.actrbase && (cs < Number(TrainOptions.actrset))) return; // not enough crafting speed
 		if (!TrainOptions.CraftingCities[c+1]) return; // no autocraft in this city
 		if (t.citydelay[c+1] > 0) { t.citydelay[c+1]--; return; } // city being delayed due to error, reduce delay number and skip city
-		if (getCityBuilding(cityId,20).count==0) return; // no spire in this city
+		if (t.spires[c].count==0) return; // no spire in this city
 		if (parseInt(Seed.resources["city" + cityId]['rec5'][0])<t.CraftMinAether) return;  // not enough a-stone
 
 		var tableau = [];
 		for(var d in TrainOptions.CraftingNb) {
 			if ((!TrainOptions.CraftingNbFix[d] && (parseInt(TrainOptions.CraftingNb[d])>0)) || (TrainOptions.CraftingNbFix[d] && (parseInt(TrainOptions.CraftingNb[d])>parseIntNan(Seed.items["i"+d])+t.checkCraftQueues(d)))) {
 				if(parseInt(Seed.resources["city" + cityId]['rec5'][0]) >= parseInt(t.craftinfo[d].astone[1]))
-					if(parseInt(t.craftinfo[d].requirements.building) <= parseInt(getCityBuilding(cityId,20).maxLevel))
+					if(parseInt(t.craftinfo[d].requirements.building) <= parseInt(t.spires[c].maxLevel))
 						if(t.craftinfo[d].inputItems == "") { // "base items"
 							tableau.push (d);
 						} else {
@@ -13152,7 +13166,7 @@ Tabs.Reassign = {
         var t = Tabs.Reassign;
         var popReassignRoutes = null;
         t.popReassignRoutes = new pbPopup('pbShowTrade', 0, 0, 1100, 485, true, function() {clearTimeout (1000);});
-        var m = '<DIV style="max-height:460px; height:460px; overflow-y:auto"><TABLE align=center cellpadding=0 cellspacing=0 width=100% class="pbShowReassignRoutes" id="pbRoutesQueue">';       
+        var m = '<DIV style="max-height:460px; height:460px; overflow-y:auto; max-width:1100px; width:1100px; overflow-x:scroll"><TABLE align=center cellpadding=1 cellspacing=1 width=100% class="pbShowReassignRoutes" id="pbRoutesQueue">';       
         t.popReassignRoutes.getMainDiv().innerHTML = '</table></div>' + m;
         t.popReassignRoutes.getTopDiv().innerHTML = '<TD><CENTER><B>'+translate("Reassign routes")+'</center></td>';
         t.paintReassignRoutes();
@@ -13233,7 +13247,7 @@ Tabs.Reassign = {
          row.insertCell(0).innerHTML = "ID";
          row.insertCell(1).innerHTML = translate("From");
          row.insertCell(2).innerHTML = translate("To");
-         row.insertCell(3).innerHTML = translate("Sup. Tr.");
+         row.insertCell(3).innerHTML = translate("SupplyTr");
          row.insertCell(4).innerHTML = "";
          row.insertCell(5).innerHTML = translate("MM");
          row.insertCell(6).innerHTML = "";
@@ -13400,7 +13414,7 @@ Tabs.Reassign = {
         else var troopsselect=["SupplyTroop","Militiaman","Scout","Pikeman","Swordsman","Archers","Cavalry","HeavyCavalry","SupplyWagons","Ballista","BatteringRam","Catapult","","","","FlameArcher","Hussar"];
         for (k=0; k<troopsselect.length; k++) {
             var citytroops = Seed.units[cityID]['unt'+(parseInt(k)+1)];
-            var marchtroops = marching.marchUnits[parseInt(k)+1];
+            var marchtroops = marching.marchUnits[k];
             citytotal = parseInt(citytroops) + parseInt(marchtroops);
             //alert(citytotal + ' > ' + t.reassignRoutes[count][troopsselect[k]] + ' - ' + totalsend + ' <= ' + maxsend + ' - ' + t.reassignRoutes[count]['Send'+troopsselect[k]]);
             //if(k== 5) GM_log(citytotal +'  ' + t.reassignRoutes[count][troopsselect[k]]);
@@ -13991,7 +14005,7 @@ Tabs.AutoTrain = {
    
 		if (((t.slots_free > 0) || NearlyDone) && (t.cur_mm != 0) ) {
 			t.log("Generating Tournament Population");
-			t.dismiss_mm(cityId);
+			t.dismiss_mm(cityId,true); // no retry
 		}	
 	},
 
@@ -15888,6 +15902,21 @@ function getCityBuilding (cityId, buildingId){
   return ret;
 }
 
+// this one is for building types where more than one is not allowed - so it returns when building found (faster!?)
+function getUniqueCityBuilding (cityId, buildingId){
+  var b = Seed.buildings['city'+cityId];
+  var ret = {count:0, maxLevel:0};
+  for( var k in b){
+   if(b[k] && b[k][0] == buildingId){
+      ++ret.count;
+      if(parseInt(b[k][1]) > ret.maxLevel)
+         ret.maxLevel = parseInt(b[k][1]);
+	  return ret;
+   }
+  }
+  return ret;
+}
+
 // example: https://www150.kingdomsofcamelot.com
 var myServerId = null;
 function getServerId() {
@@ -16666,9 +16695,9 @@ function getMarchInfo (cityID){
       march = Seed.queue_atkp[cityID][k];
       if(march.marchType != 5){
           if (typeof (march) == 'object'){
-            for (ii=0; ii<16; ii++){
-              ret.marchUnits[ii] += parseInt (march['unit'+ ii +'Count']);
-              ret.returnUnits[ii] += parseInt (march['unit'+ ii +'Return']);
+            for (ii=0; ii<17; ii++){
+              ret.marchUnits[ii] += parseInt (march['unit'+ (ii+1) +'Count']);
+              ret.returnUnits[ii] += parseInt (march['unit'+ (ii+1) +'Return']);
             }
             for (ii=1; ii<5; ii++){
               ret.resources[ii] += parseInt (march['resource'+ ii]);
@@ -21669,7 +21698,7 @@ Tabs.popcontrol = {
       t.timer_cycle = setTimeout (function() {t.run_cycle(cityId)}, 1500);
       },
 
-   dismiss_mm : function (cityId)
+   dismiss_mm : function (cityId,noretry)
       {
       var t = Tabs.popcontrol;
       t.disable_btns();
@@ -21712,7 +21741,7 @@ Tabs.popcontrol = {
                t.busy = false;
                }
             },
-         });      
+         },noretry);      
       setTimeout(unsafeWindow.update_seed_ajax, 250);
       },
 
