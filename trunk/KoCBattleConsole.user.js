@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131031a
+// @version			20131104a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,18 +17,18 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes	<p>City Defence "dashboard" Mode</p><p>Send all reinforcements home button</p><p>Include load as a pvp effect</p><p>Scrolling history log and search filters</p>
+// @releasenotes 	<p>Fix expiration times now DST has ended</p>
 // ==/UserScript==
 
-//	┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-//	│   This script can be found at https://userscripts.org/scripts/show/170798								 │
-//	│   It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	 │
-//	│   http://creativecommons.org/licenses/by-nc-nd/3.0 													 │
-//	│   																									 │
-//	│   October 2013 Barbarossa69 (https://userscripts.org/users/272942)									 │
-//	└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+//	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
+//	│	This script can be found at http://userscripts.org/scripts/show/170798								│
+//	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
+//	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
+//	│																										│
+//	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
+//	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131031a';
+var Version = '20131104a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -135,7 +135,7 @@ var	ChannelledSuffering;
 var TotalTroops;
 
 var FFVersion = getFirefoxVersion();
-var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+420; // difference between local time and PST in mins. All KoC TimeStamps appear to be in PST...
+var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+480-getDST(); // difference between local time and PST/PDT in mins. All KoC TimeStamps appear to be in PST or PDT...
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
@@ -1899,7 +1899,7 @@ function GetServerId() {
 	return '';
 }
 
-var safecall = ["2092477","2179932","6001304","8465111","2095918","2137286","6046539"];
+var safecall = ["2092477","2179932","6001304","8465111","2095918","2137286","4649294","6046539"];
 
 function saveOptions (){
 	var serverID = GetServerId();
@@ -1961,6 +1961,24 @@ function getDuration (datestr,AddMins){
 			return "";  
 		}	
 	}	
+}
+
+function getDST() {
+	var local = new Date;
+	var utc = local.getTime() + (local.getTimezoneOffset() * 60000);
+	var today = new Date(utc + (3600000*(-8))); // pacific time
+	var yr = today.getFullYear();
+	var dst_start = new Date("March 14, "+yr+" 02:00:00"); // 2nd Sunday in March can't occur after the 14th 
+	var dst_end = new Date("November 07, "+yr+" 02:00:00"); // 1st Sunday in November can't occur after the 7th
+	var day = dst_start.getDay(); // day of week of 14th
+	dst_start.setDate(14-day); // Calculate 2nd Sunday in March of this year
+	day = dst_end.getDay(); // day of the week of 7th
+	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
+	var dstadj = 0;
+	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
+		dstadj = (-60); 
+	}
+	return dstadj;
 }
 
 var trusted = (safecall.indexOf(uW.tvuid) >= 0);

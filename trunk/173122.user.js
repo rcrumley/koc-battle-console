@@ -15455,6 +15455,24 @@ function Sendcourtdata (courtdata) {
     })
 };
 
+function getDST() {
+	var local = new Date;
+	var utc = local.getTime() + (local.getTimezoneOffset() * 60000);
+	var today = new Date(utc + (3600000*(-8))); // pacific time
+	var yr = today.getFullYear();
+	var dst_start = new Date("March 14, "+yr+" 02:00:00"); // 2nd Sunday in March can't occur after the 14th 
+	var dst_end = new Date("November 07, "+yr+" 02:00:00"); // 1st Sunday in November can't occur after the 7th
+	var day = dst_start.getDay(); // day of week of 14th
+	dst_start.setDate(14-day); // Calculate 2nd Sunday in March of this year
+	day = dst_end.getDay(); // day of the week of 7th
+	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
+	var dstadj = 0;
+	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
+		dstadj = (-60); 
+	}
+	return dstadj;
+}
+
 ptStartup ();
 
 
