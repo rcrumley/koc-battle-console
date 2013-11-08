@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131029b
+// @version        20131104a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131029b';
+var Version = '20131104a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -4898,7 +4898,7 @@ getpinauth : function () {
   soundTheAlert : function (){
     var t = Tabs.tower;
     Options.alertSound.alarmActive = true;
-    t.playSound(true);
+    new t.playSound(true);
   },
      
   stopSoundAlerts : function (){
@@ -5273,7 +5273,7 @@ getpinauth : function () {
 	  x.location=y;
 	  setTimeout(function(){
      var data = {};
-      data.Subject ='kocalaert'+getServerId()+' ';
+      data.Subject ='kocalert '+getServerId()+' ';
       if(m.marchStatus == 9) data.Subject += attackrecalled;
       data.Subject += scoutingat+' '+target;
       data.Message = msg.replace(eval('/'+fchar+'/g'),'');
@@ -7403,7 +7403,7 @@ Tabs.Search = {
     var alliance = rslt.allianceNames;
     
     for (k in map){
-      if (t.opt.searchType==0 && map[k].tileType==51 && !map[k].tileCityId ) {  // if barb
+      if (t.opt.searchType==0 && map[k].tileType==51 && (!map[k].tileCityId || (map[k].tileCityId==0))) {  // if barb
         type = 0;
       } else if (t.opt.searchType==1 && map[k].tileType>=10 &&  map[k].tileType<=50) { // if wild
         if (map[k].tileType == 10)
@@ -9144,7 +9144,7 @@ Tabs.transport = {
     if(!t.traderState.running) return;
     if(t.tradeRoutes.length==0) return;
     t.doTrades(t.count,false);
-    if (Options.ReverseTransport) {t.doTrades(t.count,true);}
+    if (Options.ReverseTransport) {setTimeout(t.doTrades,2500,t.count,true);}
     t.count++;
     if(t.count < t.tradeRoutes.length){
               t.checkdotradetimeout = setTimeout(function() { t.checkdoTrades();}, 5000);
@@ -9184,6 +9184,7 @@ Tabs.transport = {
 		else
 		{
 			var city = t.tradeRoutes[count]["target_city"];
+			var tgtcityID = 'city' + city;
 			var revcity = t.tradeRoutes[count]["city"];
 			var cityID = 'city' + revcity;
 			if(!Cities.byID[revcity]) return;
@@ -9270,15 +9271,21 @@ Tabs.transport = {
 		}
         carry_Astone *= 5; //Multiply by 5 to account for 5 times less carrying capacity
       
-      if (t.tradeRoutes[count]['TroopType'] == undefined) var wagons = parseInt(Seed.units[cityID]['unt'+ 9]);
-      else var wagons =  parseInt(Seed.units[cityID][t.tradeRoutes[count]['TroopType']]);
-      var rallypointlevel = March.getMaxSize(city);
-        if (parseInt(wagons) > parseInt(rallypointlevel)){ wagons = (rallypointlevel); }
-        
       if (t.tradeRoutes[count]['TroopType'] == undefined) var unit = 'unt9';
       else var unit = t.tradeRoutes[count]['TroopType'];
-      var Troops = parseInt(Seed.units[cityID][unit]);
-      if(parseInt(Troops)>parseInt(wagons)) Troops = wagons;
+
+	  if (!rev) {
+		var Troops = parseInt(Seed.units[cityID][unit]); 
+		var slots = Number(March.getEmptySlots(cityID.split("city")[1]));
+	  }	
+	  else {
+		 var Troops = parseInt(Seed.units[tgtcityID][unit]); 
+ 		 var slots = Number(March.getEmptySlots(tgtcityID.split("city")[1]));
+	  }	 
+      if (parseInt(slots) <=0){ if (DEBUG_TRACE) {logit('Transport - No free slots');} return; } // no free slots - don't bother server!
+	  
+      var rallypointlevel = March.getMaxSize(city);
+        if (parseInt(Troops) > parseInt(rallypointlevel)){ Troops = (rallypointlevel); }
       
       var featherweight = parseInt(Seed.tech.tch10) * 0.1;
         var loadEffectBoost = 0;
@@ -9302,7 +9309,7 @@ Tabs.transport = {
         var LoadUnit = Math.floor(loadBoostBase*Load)-1;
         var maxloadperwagon = LoadUnit;
           var maxload = (maxloadperwagon * Troops);
-          if(wagons <= 0) {return; }
+          if(Troops <= 0) {return; }
 
            for (var t=0; t< Seed.cities.length;t++) {
                if ( parseInt(Seed.cities[t][0]) == city) var cityname = Seed.cities[t][1];
@@ -9431,6 +9438,11 @@ Tabs.transport = {
       case 'unt10': params.u10 = wagons_needed;break;
       case 'unt11': params.u11 = wagons_needed;break;
       case 'unt12': params.u12 = wagons_needed;break;
+      case 'unt13': params.u13 = wagons_needed;break;
+      case 'unt14': params.u14 = wagons_needed;break;
+      case 'unt15': params.u15 = wagons_needed;break;
+      case 'unt16': params.u16 = wagons_needed;break;
+      case 'unt17': params.u17 = wagons_needed;break;
     }
         
            if ((carry_Food + carry_Wood + carry_Stone + carry_Ore + carry_Astone + carry_Gold) > 0) {
@@ -9442,50 +9454,51 @@ Tabs.transport = {
                   parameters: params,
                   loading: true,
                   onSuccess: function (transport) {
-                 profiler.stop();
-                  var rslt = eval("(" + transport.responseText + ")");
-                  if (rslt.ok) {
-				  if (!rev)
-					actionLog('Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
-				  else	
-					actionLog('Reverse Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
-                 var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-				var ut = unsafeWindow.unixtime();
+					profiler.stop();
+					var rslt = eval("(" + transport.responseText + ")");
+					if (rslt.ok) {
+						if (!rev)
+							actionLog('Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
+						else	
+							actionLog('Reverse Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
+						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+						var ut = unsafeWindow.unixtime();
 				 
-				 if (rev) {
-					var t = Tabs.transport;
-					t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
-				 }
-            var unitsarr = [];
-            for (j in unsafeWindow.unitcost)
-               unitsarr.push(0);
-            for(i = 0; i <= unitsarr.length; i++)
-               if(params["u"+i])
-                    unitsarr[i] = params["u"+i];
-                 var resources=new Array();
-                 resources[0] = params.gold;
-                 for(i=1; i<=5; i++){
-                    resources[i] = params["r"+i];
-                 }
-                 var currentcityid = city;
- 							var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-                 unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
-                 if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-                  } else {
-                 var t = Tabs.transport;
-                   if (rslt.user_action == "backOffWaitTime") {
-                  logit('backoffwaittime '+rslt.wait_time);
-                        var wait = 1;
-                        if(rslt.wait_time)
-                        wait = rslt.wait_time;
-                        setTimeout (function(){t.doTrades(count,rev,rslt.tt);}, wait*1000);
-                        return;
-                 };
-				  if (!rev)
-					actionLog(''+translate("TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
-				  else	
-					actionLog(''+translate("REVERSE TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
-                  }
+						if (rev) {
+							var t = Tabs.transport;
+							t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
+						}
+						var unitsarr = [];
+						for (j in unsafeWindow.unitcost)
+							unitsarr.push(0);
+						for(i = 0; i <= unitsarr.length; i++)
+							if(params["u"+i])
+								unitsarr[i] = params["u"+i];
+						var resources=new Array();
+						resources[0] = params.gold;
+						for(i=1; i<=5; i++){
+							resources[i] = params["r"+i];
+						}
+						var currentcityid = city;
+						var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
+						unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
+						if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
+					} else {
+						var t = Tabs.transport;
+						if (rslt.user_action == "backOffWaitTime") {
+							logit('backoffwaittime '+rslt.wait_time);
+							var wait = 1;
+							if(rslt.wait_time)
+								wait = rslt.wait_time;
+							setTimeout (function(){t.doTrades(count,rev,rslt.tt);}, wait*1000);
+							return;
+						};
+						if (!rslt.msg) {rslt.msg = 'Error Code ('+rslt.error_code+')';}
+						if (!rev)
+							actionLog(''+translate("TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
+						else	
+							actionLog(''+translate("REVERSE TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
+					}
                   },
                   onFailure: function () {profiler.stop();
 				  }
@@ -10988,7 +11001,7 @@ Tabs.AutoCraft = {
 		}		
 		t.lastcsok = t.csok;
 		
-		t.timerStat = setTimeout(function() { t.updateStat(); }, 3000);
+		t.timerStat = setTimeout(function() { t.updateStat(); }, 2000);
 	},
 
 	RefreshCraftNumbers : function() {
@@ -11171,7 +11184,7 @@ Tabs.AutoCraft = {
 						}
 					}
 				}
-				t.RefreshCraftNumbers();
+//				t.RefreshCraftNumbers();
 				unsafeWindow.jQuery('#craftcity'+c).css('color', 'rgb(66, 39, 20)')
 				return;
 			},
@@ -23095,5 +23108,6 @@ params.u3= 1;
 setTimeout (function() {t.doattack()}, 5000);
 },
 }
+
 
 pbStartup ();
