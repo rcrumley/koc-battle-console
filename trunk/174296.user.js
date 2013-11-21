@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131119d
+// @version        20131120e
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131119d';
+var Version = '20131120e';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -445,8 +445,8 @@ var ChampionOptions = {
    Good:0,
    Bad:0,
    Items: [],
-    Salvage:{Attack:true,Defense:true,Life:true,Speed:true,Accuracy:true,Range:true,Load:true,Damage:true,BonusDamage:true,Armor:true,Strength:true,Dexterity:true,Health:true,Hit:true,Crit:true,Block:true},
-   SalvageA:{Attack:{},Defense:{},Life:{},Speed:{},Accuracy:{},Range:{},Load:{},Damage:{},BonusDamage:{},Armor:{},Strength:{},Dexterity:{},Health:{},Hit:{},Crit:{},Block:{}},
+    Salvage:{Attack:true,Defense:true,Life:true,Speed:true,Accuracy:true,Range:true,Load:true,Damage:true,'Bonus Damage':true,Armor:true,Strength:true,Dexterity:true,Health:true,Hit:true,Crit:true,Block:true},
+   SalvageA:{Attack:{},Defense:{},Life:{},Speed:{},Accuracy:{},Range:{},Load:{},Damage:{},'Bonus Damage':{},Armor:{},Strength:{},Dexterity:{},Health:{},Hit:{},Crit:{},Block:{}},
    SalvageQuality:0,
    saveXitems:0,
    Championkeep:1,
@@ -22721,7 +22721,8 @@ Tabs.Champion = {
     setInterval(t.salvageCheck,2*60*1000);
  },
      saveSalvageOptions : function(){
-         for (k in t.Effects) {
+	var t = Tabs.Champion;
+         for (k in t.championStatEffects) {
             var ele = document.getElementById('pbChampionItems'+k);
             //var ele2 = document.getElementById(k+'Min');
             ChampionOptions.Salvage[k]=ele.checked;
@@ -22847,7 +22848,7 @@ Tabs.Champion = {
 
       m+='<TR></tr><TR><TD><B>Champion:</b></td></tr>';
       m+='<TR><TD></td><TD><INPUT id=Damage type=checkbox '+ (ChampionOptions.Salvage.Damage?'CHECKED ':'') +'/>&nbsp;Damage</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA.Damage.Min,'id=DamageMin')+'</td></tr>';
-      m+='<TR><TD></td><TD><INPUT id=BonusDamage type=checkbox '+ (ChampionOptions.Salvage.BonusDamage?'CHECKED ':'') +'/>&nbsp;Bonus Damage</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA.BonusDamage.Min,'id=BonusDamageMin')+'</td></tr>';
+      m+='<TR><TD></td><TD><INPUT id=BonusDamage type=checkbox '+ (ChampionOptions.Salvage['Bonus Damage']?'CHECKED ':'') +'/>&nbsp;Bonus Damage</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA['Bonus Damage'].Min,'id=BonusDamageMin')+'</td></tr>';
       m+='<TR><TD></td><TD><INPUT id=Armor type=checkbox '+ (ChampionOptions.Salvage.Armor?'CHECKED ':'') +'/>&nbsp;Armor</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA.Armor.Min,'id=ArmorMin')+'</td></tr>';
       m+='<TR><TD></td><TD><INPUT id=Strength type=checkbox '+ (ChampionOptions.Salvage.Strength?'CHECKED ':'') +'/>&nbsp;Strength</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA.Strength.Min,'id=StrengthMin')+'</td></tr>';
       m+='<TR><TD></td><TD><INPUT id=Dexterity type=checkbox '+ (ChampionOptions.Salvage.Dexterity?'CHECKED ':'') +'/>&nbsp;Dexterity</td><td>Min number of lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA.Dexterity.Min,'id=DexterityMin')+'</td></tr>';
@@ -22860,17 +22861,16 @@ Tabs.Champion = {
         
       m+='<TABLE width=80% class=pbTab>';
       for (k in t.championStatEffects) {
-//logit('chsteff ' +k+ ':' +t.championStatEffects[k]);
         if(!ChampionOptions.SalvageA[k]) ChampionOptions.SalvageA[k] = {};
         if(!ChampionOptions.SalvageA[k].Min) ChampionOptions.SalvageA[k].Min = 0;//fixing a mistake, Min must be defined.  
          m += '<TR><TD><A onclick="chsetFAV('+ k +')"><DIV class=pbSalvage_fav id=chSalvageFAV'+k+'></div></td>';
 //         m += '<TD class=pbChampion><INPUT id=pbChampionItems'+k+' type=checkbox checked='+ (ChampionOptions.Salvage[k]?'CHECKED ':'') +'>'+ unsafeWindow.cm.thronestats.effects[k][1] +'</td><TD>'+ unsafeWindow.cm.thronestats.effects[k][3]+'</td><TD width="4">'+ unsafeWindow.cm.thronestats.effects[k][2]+'</td>\
          m += '<TD class=pbChampion><INPUT id=pbChampionItems'+k+' type=checkbox checked='+ (ChampionOptions.Salvage[k]?'CHECKED ':'') +'>'+ t.championStatEffects[k][1] +'</td><TD>'+ t.championStatEffects[k][3]+'</td><TD width="4">'+ t.championStatEffects[k][2]+'</td>\
-         <td></td><td class=pbChampionST><select id=ch'+k+'>';
+         <td></td><td class=pbChampionST><select id='+k+'>';
          for(g = 0;g<t.EquipType.length;g++)
          m+='<option value="'+t.EquipType[g]+'">'+t.EquipType[g]+'</option>'
       m+='</select></td>';
-         m+='<td class=pbChampionS>Min lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA[k].Min,'id=ch'+k+'Min')+'</td></tr>';
+         m+='<td class=pbChampionS>Min lines ' + htmlSelector({0:'Off', 1:'1 line', 2:'2 lines', 3:'3 lines', 4:'4 lines', 5:'5 lines'},ChampionOptions.SalvageA[k].Min,'id='+k+'Min')+'</td></tr>';
       }  
       m+= '</table>';
 
@@ -22900,7 +22900,7 @@ Tabs.Champion = {
       document.getElementById('chLoad').addEventListener ('change', function(){ChampionOptions.Salvage.Load = document.getElementById('chLoad').checked;saveChampionOptions();},false);
 
       document.getElementById('Damage').addEventListener ('change', function(){ChampionOptions.Salvage.Damage = document.getElementById('Damage').checked;saveChampionOptions();},false);
-      document.getElementById('BonusDamage').addEventListener ('change', function(){ChampionOptions.Salvage.BonusDamage = document.getElementById('BonusDamage').checked;saveChampionOptions();},false);
+      document.getElementById('BonusDamage').addEventListener ('change', function(){ChampionOptions.Salvage['Bonus Damage'] = document.getElementById('BonusDamage').checked;saveChampionOptions();},false);
       document.getElementById('Armor').addEventListener ('change', function(){ChampionOptions.Salvage.Armor = document.getElementById('Armor').checked;saveChampionOptions();},false);
       document.getElementById('Strength').addEventListener ('change', function(){ChampionOptions.Salvage.Strength = document.getElementById('Strength').checked;saveChampionOptions();},false);
       document.getElementById('Dexterity').addEventListener ('change', function(){ChampionOptions.Salvage.Dexterity = document.getElementById('Dexterity').checked;saveChampionOptions();},false);
@@ -22918,7 +22918,7 @@ Tabs.Champion = {
       document.getElementById('chLoadMin').addEventListener ('change', function(){ChampionOptions.SalvageA.Load.Min = this.value;saveChampionOptions();},false);
 
       document.getElementById('DamageMin').addEventListener ('change', function(){ChampionOptions.SalvageA.Damage.Min = this.value;saveChampionOptions();},false);
-      document.getElementById('BonusDamageMin').addEventListener ('change', function(){ChampionOptions.SalvageA.BonusDamage.Min = this.value;saveChampionOptions();},false);
+      document.getElementById('BonusDamageMin').addEventListener ('change', function(){ChampionOptions.SalvageA['Bonus Damage'].Min = this.value;saveChampionOptions();},false);
       document.getElementById('ArmorMin').addEventListener ('change', function(){ChampionOptions.SalvageA.Armor.Min = this.value;saveChampionOptions();},false);
       document.getElementById('StrengthMin').addEventListener ('change', function(){ChampionOptions.SalvageA.Strength.Min = this.value;saveChampionOptions();},false);
       document.getElementById('DexterityMin').addEventListener ('change', function(){ChampionOptions.SalvageA.Dexterity.Min = this.value;saveChampionOptions();},false);
@@ -23078,9 +23078,9 @@ Upgrade_Enhance :function (){
         o.text = unsafeWindow.kocChampionItems[i]["name"];
         o.value = unsafeWindow.kocChampionItems[i]["equipmentId"];
         document.getElementById("ChampionItems").options.add(o);
-        if (unsafeWindow.kocChampionItems[i]["repairing"]) {
-	   t.repairEnd=unsafeWindow.kocChampionItems[i]["eta"];
-	   t.repairStart=unsafeWindow.kocChampionItems[i]["start"];
+        if (unsafeWindow.seed.champion.equipment[i]) if (unsafeWindow.seed.champion.equipment[i]["repairing"]) {
+	   t.repairEnd=unsafeWindow.seed.champion.equipment[i]["eta"];
+	   t.repairStart=unsafeWindow.seed.champion.equipment[i]["start"];
 	}
     }
     document.getElementById('chaddEnhance').addEventListener ('click', function (){t.addToQueue(document.getElementById('ChampionItems').value,"Enhance");},false);
@@ -23343,9 +23343,9 @@ FillEquipCheckboxes: function(){
    t.CompPos=0;
    for (k in unsafeWindow.kocChampionItems){
       counter++;
-      if (unsafeWindow.kocChampionItems[k]["repairing"]) {
-	t.repairEnd=unsafeWindow.kocChampionItems[k]["eta"];
-	t.repairStart=unsafeWindow.kocChampionItems[i]["start"];
+      if (unsafeWindow.seed.champion.equipment[k]) if (unsafeWindow.seed.champion.equipment[k]["repairing"]) {
+	 t.repairEnd=unsafeWindow.seed.champion.equipment[k]["eta"];
+	 t.repairStart=unsafeWindow.seed.champion.equipment[k]["start"];
       }
       if (counter > ActiveItems) break;
       z = unsafeWindow.kocChampionItems[k];
@@ -23639,8 +23639,9 @@ PaintSalvageHistory : function() {
 //	if(Seed.queue_Champion.end  > unsafeWindow.unixtime()) {
         if(t.repairEnd  > unsafeWindow.unixtime()) {
 		if(document.getElementById('chShowStatus'))document.getElementById('chShowStatus').innerHTML = "Waiting on repair";
+		t.setRepairTimer = setTimeout (t.repairTimerUpdate,1000);
 		return;
-	};
+	} else t.repairEnd == null;
 
 //	if(Seed.queue_Champion.end == undefined) {
         if(t.repairEnd == undefined) {
