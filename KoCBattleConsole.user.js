@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131119a
+// @version			20131121a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Overview Re-work</p><p>Display Champion Information</p><p>Temp fix for incoming attack display (disabled)</p><p>Option to change TR/guardian/marshall</p>
+// @releasenotes 	<p>Fix incoming attack display on main screen</p><p>Change city champion</p><p>Options button to reset window positions</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131119a';
+var Version = '20131121a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -129,7 +129,10 @@ var CityIncoming = false;
 var CityStillComing = false;
 var nTroopType = Object.keys(uW.unitcost).length;
 var SaveGemHTML;
+var SaveGemHTML2;
 var GemContainer;
+var GemContainer2;
+var oldchamp = 0;
   
 var	SacSettings;
 var SacSpeed;
@@ -177,6 +180,9 @@ var PresetImage_SEL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src
 var TroopImagePrefix = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_";
 var TroopImageSuffix = "_30.jpg";
 
+var ChampImagePrefix = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/championPort_0";
+var ChampImageSuffix = "_50x50.jpg";
+
 var URL_CASTLE_BUT = "data:image/png;base64,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";
 var URL_CASTLE_BUT_SEL = "data:image/png;base64,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";
 
@@ -213,6 +219,7 @@ var CurrPreset = Seed.throne.activeSlot;
 var	ThroneDelay = 0;
 var GuardDelay = 0;
 var ExpandMarshall = false;
+var ExpandChampion = false;
 
 var presetTimer = null;
 var presetFailures = 0;
@@ -338,6 +345,10 @@ uW.btCancelMarshall = function () {CancelMarshall();}
 uW.btChangeMarshall = function () {ChangeMarshall();}
 uW.btSetMarshall = function () {SetMarshall();}
 uW.btBoostMarshall = function () {BoostMarshall();}
+uW.btCancelChampion = function () {CancelChampion();}
+uW.btChangeChampion = function () {ChangeChampion();}
+uW.btFreeChampion = function () {FreeChampion();}
+uW.btSetChampion = function (elem) {SetChampion(elem);}
 
 // allow access from external tools
 
@@ -447,8 +458,9 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MapOverrideChk type=checkbox /></td><td class=xtab>Display additional information on map</td></tr>';
 	m += '<TR id=btMapOpts class="divHide"><TD colspan="3" align=right class=xtab><table><tr><td align=right class=xtab>&nbsp;&nbsp;&nbsp;Provinces</td><td class=xtab><INPUT id=ProvinceChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Levels</td><td class=xtab><INPUT id=LevelChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Alliance Mists</td><td class=xtab><INPUT id=MistedChk type=checkbox /></td></tr></table></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Show incoming attack timers in Throne Room/Champion Hall</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >CITY DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
@@ -468,6 +480,7 @@ function btStartup (){
 	document.getElementById('btUIDSubmit').addEventListener ('click', UIDClick, false);
 	document.getElementById('btLogSubmit').addEventListener ('click', ToggleLog, false);
 	document.getElementById('btUpdateCheck').addEventListener ('click', function() {AutoUpdater.call(true,true);}, false);
+	document.getElementById('btResetWindows').addEventListener ('click', function() {ResetAllWindows();}, false);
 	document.getElementById('btPlayer').addEventListener ('keypress', function(e) {if ( e.which == 13)  document.getElementById('btPlayerSubmit').click();}, false);
 	document.getElementById('btPlayer').addEventListener ('focus', function (){setError('&nbsp;');}, false);
 	document.getElementById('btCityDefenceButton').addEventListener ('click', function () {ToggleCityDefence(Options.CurrentCity);}, false);
@@ -584,8 +597,8 @@ function btStartup (){
 	uW.btLoaded = true;
 }
 
-function DefaultWindowPos(OptPos,elem) {
-	if ((Options[OptPos]==null) || (Options[OptPos].x==null) || (Options[OptPos].x=='') || (isNaN(Options[OptPos].x))) {
+function DefaultWindowPos(OptPos,elem,force) {
+	if (force || (Options[OptPos]==null) || (Options[OptPos].x==null) || (Options[OptPos].x=='') || (isNaN(Options[OptPos].x))) {
 		var c = getClientCoords (document.getElementById(elem));
 		Options[OptPos].x = c.x+4;
 		Options[OptPos].y = c.y+c.height;
@@ -594,7 +607,6 @@ function DefaultWindowPos(OptPos,elem) {
 }
 
 function AlterUWFuncs() {
-
 	// add entries to the menu items and tooltips windows
 
 	for (jj in uW.cm.ContextMenuMapController.prototype.MapContextMenus.City) {
@@ -724,69 +736,76 @@ function RefreshSeed() {
 }
 
 function EverySecond () {
-
-	if (Options.SleepMode) return;
-
-	SecondLooper = SecondLooper+1;
-
-	/* Reduce Delayers if they are Active */
+// handle exceptions so not to lose timer to script crashing out?
+	try {
 	
-	if (ThroneDelay > 0) { ThroneDelay--; PaintTRPresets(); } 
-	if (GuardDelay > 0) { GuardDelay--; PaintGuardianSelector(); }
+		if (Options.SleepMode) return;
+
+		SecondLooper = SecondLooper+1;
+
+		/* Reduce Delayers if they are Active */
 	
-	/* If Monitoring active, then refresh TR, or maintain loop to refresh player stats */
-
-	if (MonitoringActive && popMon) {
-		setTimeout(function() {MonitorTRLoop();},0);
-	}
-
-	/* Automatically Refresh Marches in Seed, if Option set */  
-
-	if (Options.RefreshSeed && ((SecondLooper % RefreshSeedInterval) == 1) && !RefreshingSeed) {
-		setTimeout(function() {RefreshSeed();},250);
-	}
+		if (ThroneDelay > 0) { ThroneDelay--; PaintTRPresets(); } 
+		if (GuardDelay > 0) { GuardDelay--; PaintGuardianSelector(); }
 	
-	/* Show extra info on map */
-	
-	if ((Options.ShowProvinceOnMap || Options.ShowLevelOnMap || Options.ShowMistedOnMap) && Options.OverrideMapDisplay) {
-		setTimeout(function() {ShowMapInformation();},500);
-	}	
-	
-	/* create and sort local copy of atkinc here - use this for all atkinc functions */
+		/* If Monitoring active, then refresh TR, or maintain loop to refresh player stats */
 
-	inc = [];
-	incCity = [];
-
-	for(n in Seed.queue_atkinc) {
-		inc.push(Seed.queue_atkinc[n]);
-	}
-	inc.sort(function(a, b){ if(!a.arrivalTime) a.arrivalTime = -1; if(!b.arrivalTime) b.arrivalTime = -1;return a.arrivalTime-b.arrivalTime });
-     
-	CheckForIncoming();
-	BuildIncomingDisplay();
-
-	if (!(Options.CurrentCity < 0))
-		PaintCityInfo(Seed.cities[Options.CurrentCity][0]);
-		
-	/* check city defence mode and attack status for buttons, and current TR preset for TR changer */
-
-	if (popDef) {
-		for (var cityId in Cities.byID){
-			var city_num = Cities.byID[cityId].idx;
-			if (Seed.citystats["city" + cityId].gate != 0) {
-				uW.jQuery("#btCastles_" + city_num).removeClass("hiding").addClass("defending");
-			} else {
-				uW.jQuery("#btCastles_" + city_num).removeClass("defending").addClass("hiding");
-			}
-			if (incCity.indexOf(city_num) >= 0) { uW.jQuery("#btCastles_" + city_num).addClass("attack"); }
-			else {uW.jQuery("#btCastles_" + city_num).removeClass("attack"); }
+		if (MonitoringActive && popMon) {
+			setTimeout(function() {MonitorTRLoop();},0);
 		}
-		
-		if (Options.PresetChange && (CurrPreset != Seed.throne.activeSlot)) { PaintTRPresets(); }
-		if (CurrGuardian != Seed.guardian[Options.CurrentCity].type) { PaintGuardianSelector(); }
-    }
 
-	SecondTimer = setTimeout(EverySecond,1000);
+		/* Automatically Refresh Marches in Seed, if Option set */  
+
+		if (Options.RefreshSeed && ((SecondLooper % RefreshSeedInterval) == 1) && !RefreshingSeed) {
+			setTimeout(function() {RefreshSeed();},250);
+		}
+	
+		/* Show extra info on map */
+	
+		if ((Options.ShowProvinceOnMap || Options.ShowLevelOnMap || Options.ShowMistedOnMap) && Options.OverrideMapDisplay) {
+			setTimeout(function() {ShowMapInformation();},500);
+		}	
+	
+		/* create and sort local copy of atkinc here - use this for all atkinc functions */
+
+		inc = [];
+		incCity = [];
+
+		for(n in Seed.queue_atkinc) {
+			inc.push(Seed.queue_atkinc[n]);
+		}
+		inc.sort(function(a, b){ if(!a.arrivalTime) a.arrivalTime = -1; if(!b.arrivalTime) b.arrivalTime = -1;return a.arrivalTime-b.arrivalTime });
+     
+		CheckForIncoming();
+		BuildIncomingDisplay();
+
+		if (!(Options.CurrentCity < 0))
+			PaintCityInfo(Seed.cities[Options.CurrentCity][0]);
+		
+		/* check city defence mode and attack status for buttons, and current TR preset for TR changer */
+
+		if (popDef) {
+			for (var cityId in Cities.byID){
+				var city_num = Cities.byID[cityId].idx;
+				if (Seed.citystats["city" + cityId].gate != 0) {
+					uW.jQuery("#btCastles_" + city_num).removeClass("hiding").addClass("defending");
+				} else {
+					uW.jQuery("#btCastles_" + city_num).removeClass("defending").addClass("hiding");
+				}
+				if (incCity.indexOf(city_num) >= 0) { uW.jQuery("#btCastles_" + city_num).addClass("attack"); }
+				else {uW.jQuery("#btCastles_" + city_num).removeClass("attack"); }
+			}
+		
+			if (Options.PresetChange && (CurrPreset != Seed.throne.activeSlot)) { PaintTRPresets(); }
+			if (CurrGuardian != Seed.guardian[Options.CurrentCity].type) { PaintGuardianSelector(); }
+		}
+
+		SecondTimer = setTimeout(EverySecond,1000);
+	}
+	catch (err) {
+		logit(err); // write to log
+		SecondTimer = setTimeout(EverySecond,1000);
+	}
 }
 
 function CheckForIncoming () {
@@ -805,7 +824,6 @@ function CheckForIncoming () {
 	StillComing = false;
 	TRVisible = false;
 	ChampVisible = false;
-	CanNotify = document.getElementById('impendingAttackContainer');
   
 	// Find TR gem container element if it exists..
   
@@ -827,15 +845,18 @@ function CheckForIncoming () {
 		if (!Incoming) SaveGemHTML2 = GemContainer2.innerHTML;
 	}
 	
-/*	if (!TRVisible) { // try something
+	if (!TRVisible) { // try something
 		for (e in el2) {
-			TRVisible = true;
 			GemContainer = el2[e];
 			if (!Incoming) SaveGemHTML = GemContainer.innerHTML;
 			GemContainer.style.height = 40+'px';
+			GemContainer.id = 'btGemContainer';
 			break;
 		}
-	}*/
+	}
+
+	//CanNotify = document.getElementById('impendingAttackContainer');
+	CanNotify = document.getElementById('btGemContainer');
 	
 	for(n in inc) {
 		var a = inc[n];
@@ -869,8 +890,9 @@ function CheckForIncoming () {
 		msgend = '</div></td></tr></table></div>';
 		if (Options.OverrideAttackAlert) {
 			if (CanNotify) {
-				uW.jQuery("#promoTimeLeft").hide();
-				document.getElementById('impendingAttackContainer').innerHTML = msgcontainer+msgtable+msglink1+'btAlertIncoming'+msglink2+name+msglink3+msgend+'</div>';
+				//uW.jQuery("#promoTimeLeft").hide();
+				//document.getElementById('impendingAttackContainer').innerHTML = msgcontainer+msgtable+msglink1+'btAlertIncoming'+msglink2+name+msglink3+msgend+'</div>';
+				document.getElementById('btGemContainer').innerHTML = '<br><center><span style="color:#800;"><b>RED ALERT!</b></span></center>'+msgcontainer+msgtable+msglink1+'btAlertIncoming'+msglink2+name+msglink3+msgend+'</div><center>'+bywho+'</center>';
 				document.getElementById('btAlertIncoming').addEventListener ('click', function(){ShowWatchTower(to)}, false);
 			}	
 			if (TRVisible) {
@@ -892,8 +914,9 @@ function CheckForIncoming () {
 	if (Incoming && !StillComing) {
 		if (Options.OverrideAttackAlert) {
 			if (CanNotify) {
-				document.getElementById('impendingAttackContainer').innerHTML = ""; 
-				uW.jQuery("#promoTimeLeft").show();
+				document.getElementById('btGemContainer').innerHTML = SaveGemHTML; 
+				//document.getElementById('impendingAttackContainer').innerHTML = ""; 
+				//uW.jQuery("#promoTimeLeft").show();
 			}	
 			if (TRVisible) {
 				GemContainer.innerHTML = SaveGemHTML;
@@ -1613,6 +1636,20 @@ function ResetWindowPos (me,el,pop){
     if (pop) { pop.setLocation ({x: c.x+4, y: c.y+c.height}); mainPop.unfocusMe();pop.focusMe();}
     saveOptions();
   }
+}
+
+function ResetAllWindows () {
+	DefaultWindowPos('WinPos','main_engagement_tabs',true);
+	mouseMainTab ({button:2});
+	DefaultWindowPos('LogPos','btLogSubmit',true);
+	ResetWindowPos({button:2},'btLogSubmit',popLog);
+	DefaultWindowPos('IncPos','btIncomingButton',true);
+	ResetWindowPos({button:2},'btIncomingButton',popInc);
+	DefaultWindowPos('DefPos','btCityDefenceButton',true);
+	if (!Options.DashboardMode) ResetWindowPos({button:2},'btCityDefenceButton',popDef);
+	DefaultWindowPos('MonPos','btPlayerSubmit',true);
+	ResetWindowPos({button:2},'btPlayerSubmit',popMon);
+	logit('All window positions reset');
 }
 
 function eventHideShow (){
@@ -2636,7 +2673,7 @@ function BuildIncomingDisplay() {
 		var rem = (r % 2);
 		if (rem == 1) rowClass = 'oddRow';		
 
-		z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' alt='+hint+' title='+hint+'></td>';
+		z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' title='+hint+'></td>';
 		z += '<TD class=xtab>'+marchtime+'</td>';
 		z += '<TD class=xtabBR>';
 		if (targetcity != "") z += '<span class=xtab>'+targetcity+'</span> ';
@@ -2839,6 +2876,7 @@ function ResetHTMLRegister(div) {
 function SetCurrentCity(cityId) {
 	serverwait = false;
 	ExpandMarshall = false;
+	ExpandChampion = false;
 
 	CurrentCityId = cityId;
 
@@ -2948,7 +2986,20 @@ function PaintCityInfo(cityId) {
 	Status += '<tr><td class=xtab width=70>Name</a></td><td class=xtab><b>'+Seed.cities[Curr][1]+'</b></td><td class=xtab rowspan=2 align=center>'+DefButton+'</td></tr>';
 	Status += '<tr><td class=xtab>Location</a></td><td class=xtab><b>'+uW.provincenames['p'+Seed.cities[Curr][4]]+'&nbsp;'+coordLink(Seed.cities[Curr][2],Seed.cities[Curr][3])+'</b></td></tr>';
 	Status += '<tr><td class=xtab>Faction</a></td><td class=xtab><b>'+CityFaction+'</b></td><td class=xtab><b>'+prestigeexp+'</b></td></tr>';
-
+	
+	Embassy = '<span class=xtab style="color:#f00">No Embassy!</span>';
+    var emb = getCityBuilding(cityId, 8);
+    if (emb.count > 0){
+      var availSlots = emb.maxLevel;
+      for (k in Seed.queue_atkinc){
+		if ((Seed.queue_atkinc[k].toCityId == cityId) && (Seed.queue_atkinc[k].marchStatus == 2) && (Seed.queue_atkinc[k].fromCityId != cityId) && (Cities.byID[Seed.queue_atkinc[k].fromCityId]==null)) {
+          --availSlots;
+        }
+      }
+      Embassy = availSlots +' of '+ emb.maxLevel +' slots available';
+    }
+	Status += '<tr><td class=xtab><a onClick="btShowEmbassy('+Curr+')">Embassy</a></td><td class=xtab colspan=2><b>'+Embassy+'</b></span></b></td></tr>';
+	
     var hall = getCityBuilding(cityId, 7);
 	
 	Marshall = '<span class=xtab style="color:#f00">No Marshall!</span>';
@@ -2964,7 +3015,7 @@ function PaintCityInfo(cityId) {
 				Marshall += '&nbsp;&nbsp;<a id="btChangeMarshall" class="inlineButton btButton brown8" onclick="btChangeMarshall()"><span>Change</span></a>';
 				Gauntlets = Seed.items.i221;
 				if (!(s.combatBoostExpireUnixtime > unixTime()) && Gauntlets ) {
-					Marshall += '&nbsp;<a id="btBoostMarshall" class="inlineButton btButton brown8" onclick="btBoostMarshall()"><span>Boost</span></a>&nbsp;('+Seed.items.i221+'<img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+GauntletImage+'">)';
+					Marshall += '&nbsp;<a id="btBoostMarshall" class="inlineButton btButton brown8" onclick="btBoostMarshall()"><span>Boost</span></a>&nbsp;('+Seed.items.i221+'<img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+GauntletImage+'" title="Gauntlet of Courage">)';
 				}
 				else {
 					if (s.combatBoostExpireUnixtime > unixTime()) {
@@ -2998,35 +3049,55 @@ function PaintCityInfo(cityId) {
 	Marshall += '&nbsp;&nbsp;&nbsp;<a id="btSetMarshall" class="inlineButton btButton brown8" onclick="btSetMarshall()"><span>Assign</span></a>&nbsp;<a id="btCancelMarshall" class="inlineButton btButton brown8" onclick="btCancelMarshall()"><span>Cancel</span></a></div>';
 	
 	Status += '<tr><td class=xtab valign=top><a onClick="btShowKnightsHall('+Curr+')">Marshall</a></td><td class=xtab colspan=2><b>'+Marshall+'</b></td></tr>';
-	
-	Embassy = '<span class=xtab style="color:#f00">No Embassy!</span>';
-    var emb = getCityBuilding(cityId, 8);
-    if (emb.count > 0){
-      var availSlots = emb.maxLevel;
-      for (k in Seed.queue_atkinc){
-		if ((Seed.queue_atkinc[k].toCityId == cityId) && (Seed.queue_atkinc[k].marchStatus == 2) && (Seed.queue_atkinc[k].fromCityId != cityId) && (Cities.byID[Seed.queue_atkinc[k].fromCityId]==null)) {
-          --availSlots;
-        }
-      }
-      Embassy = availSlots +' of '+ emb.maxLevel +' slots available';
-    }
-	Status += '<tr><td class=xtab><a onClick="btShowEmbassy('+Curr+')">Embassy</a></td><td class=xtab colspan=2><b>'+Embassy+'</b></span></b></td></tr>';
 
 	var GotChamp = false;
-	Champion = '<span class=xtab style="color:#f00">No Champion!</span>';
-	Champs = uW.cm.ChampionModalController.getCastleViewData();
-	for (y in Champs.champions) {
-		citychamp = Champs.champions[y];
-		if (citychamp.city == cityId) {
-			GotChamp = true;
-			if (citychamp.status == 'Defending') {champstat = '<span class=xtab style="color:#080">('+citychamp.status+')</span>';}
-			else { champstat = '<span class=xtab style="color:#f00">('+citychamp.status+')</span>';}
-			Champion = '<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="ChampStats"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+AttackImage+'"></td><td class=xtab>'+citychamp.name+'</td><td class=xtab>'+champstat+'</tr></table>';
-			break;
+	var CheckChamp = false;
+	
+	Champion = '<table cellspacing=0><tr><td class="xtab"><span class=xtab style="color:#f00">No Champion!</span></td><td class=xtab>';
+	try {
+		Champs = uW.cm.ChampionModalController.getCastleViewData();
+		for (y in Champs.champions) {
+			citychamp = Champs.champions[y];
+			if (citychamp.city == cityId) {
+				GotChamp = true;
+				if (oldchamp != citychamp.id) { ExpandChampion = false; }
+				if (citychamp.status == 'Defending') {champstat = '<span class=xtab style="color:#080">('+citychamp.status+')</span>';}
+				else { champstat = '<span class=xtab style="color:#f00">('+citychamp.status+')</span>';}
+				Champion = '<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="ChampStats"><img height=14 style="vertical-align:text-top;" src="'+ChampImagePrefix+citychamp.portrait+ChampImageSuffix+'"></td><td class=xtab>'+citychamp.name+'</td><td class=xtab>'+champstat+'</td><td class=xtab>';
+				break;
+			}
 		}
+		
+		if (ExpandChampion) {
+			Champion += '<a id="btCancelChampion" class="inlineButton btButton brown8" onclick="btCancelChampion()"><span>Cancel</span></a></td></tr></table><div><table cellspacing=0>';
+		}	
+		else {
+			if (!GotChamp) { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Assign</span></a>'; }
+			else { if (citychamp.status == 'Defending') { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Change</span></a>'; }}
+			if (GotChamp && (citychamp.status == 'Defending')) { Champion += '&nbsp;<a id="btFreeChampion" class="inlineButton btButton brown8" onclick="btFreeChampion()"><span>Unassign</span></a>'; }
+			Champion += '</td></tr></table><div class=divHide><table cellspacing=0>';
+		}
+		for (y in Champs.champions) {
+			chkchamp = Champs.champions[y];
+			if (chkchamp.id) {
+				if (chkchamp.city != cityId) {
+					CheckChamp = true;
+					if (chkchamp.city == 0) { chkcity = 'unassigned';} else { chkcity = Cities.byID[chkchamp.city].name;}
+					chkbtn = '';
+					chkcol = 'color:#f80;'; if (chkchamp.status != 'Defending') { chkcol = ""; }
+					if (chkchamp.status != 'Marching') {chkbtn = '<a id="btSetChampion'+chkchamp.id+'" class="inlineButton btButton brown8" onclick="btSetChampion(this)"><span>Assign</span></a>'; } else {chkcol='color:#800;'}
+					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.id+'"><img height=14 style="vertical-align:text-top;" src="'+ChampImagePrefix+chkchamp.portrait+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+chkchamp.defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
+				}
+			}	
+		}
+		Champion += '</table></div>';
 	}	
+	catch (err) {
+		logit(err); // write to log
+		Champion = '<span class=xtab style="color:#f00">Error reading champion data :(</span>';
+	}
 
-	Status += '<tr><td class=xtab><a onClick="btShowChampion()">Champion</a></td><td class=xtab colspan=2><b>'+Champion+'</b></span></b></td></tr>';
+	Status += '<tr><td class=xtab valign=top><a onClick="btShowChampion()">Champion</a></td><td class=xtab colspan=2><b>'+Champion+'</b></span></b></td></tr>';
 	
 	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
 	Status += '</table>';
@@ -3038,7 +3109,22 @@ function PaintCityInfo(cityId) {
 		PaintTRPresets(); 
 		PaintGuardianSelector(); 
 		if (GotChamp) {
+			oldchamp = citychamp.id;	
 			createChampionToolTip(document.getElementById('ChampStats'),citychamp);
+		}
+		else {
+			oldchamp = 0;
+		}
+
+		if (CheckChamp) {
+			for (y in Champs.champions) {
+				chkchamp = Champs.champions[y];
+				if (chkchamp.id) {
+					if (chkchamp.city != cityId) {
+						createChampionToolTip(document.getElementById('ChampStats'+chkchamp.id),chkchamp);
+					}	
+				}
+			}	
 		}
 	}
 
@@ -3245,7 +3331,7 @@ function PaintCityInfo(cityId) {
 			var rem = (r % 2);
 			if (rem == 1) rowClass = 'oddRow';		
 
-			z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' alt='+hint+' title='+hint+'></td>';
+			z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' title='+hint+'></td>';
 			z += '<TD class=xtabBR><span class=xtab>'+marchtime+'</span></td>';
 			z += '<TD class=xtabBR><span class=xtab>'+fromname+'</span> ';
 			if (fromcoords != "") { z+= '<span class=xtab>'+fromcoords+'</span>'; }
@@ -3813,6 +3899,39 @@ function BoostMarshall() {
 		},
 		onFailure : function () { uW.jQuery('#btBoostMarshall').removeClass("disabled"); }
 	})
+}
+
+function CancelChampion() {
+	ExpandChampion = false;
+	PaintCityInfo(Seed.cities[Options.CurrentCity][0]);	
+}
+
+function ChangeChampion() {
+	ExpandChampion = true;
+	PaintCityInfo(Seed.cities[Options.CurrentCity][0]);	
+}
+
+function FreeChampion() {
+ 	uW.jQuery('#btFreeChampion').addClass("disabled");
+	uW.cm.ChampionManager.updateDefendingCity('null', uW.currentcityid);	
+}
+
+function SetChampion(elem,free) {
+	var champid = elem.id.substr(13);
+	var cindex = 'null';
+ 	uW.jQuery('#'+elem.id).addClass("disabled");
+
+	for (y in Champs.champions) {
+		chkchamp = Champs.champions[y];
+		if (chkchamp.id) {
+			if (chkchamp.id == champid) {
+				cindex = ''+chkchamp.index;
+				break;
+			}	
+		}
+	}
+	
+	uW.cm.ChampionManager.updateDefendingCity(cindex, uW.currentcityid);	
 }
 
 function PaintGuardianSelector () {
