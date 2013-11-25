@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131121b
+// @version        20131124a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131121b';
+var Version = '20131124a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -3880,7 +3880,9 @@ paintHoover : function (){
 	if (y.unique == 30286 && id == 9) p = unsafeWindow.cm.thronestats.tiers[id][4]; else
         p = unsafeWindow.cm.thronestats.tiers[id][tier];
         Current = p.base + ((level * level + level) * p.growth * 0.5);
+	if (ThroneOptions.Items["0"])
         var quality = parseInt(unsafeWindow.kocThroneItems[ThroneOptions.Items["0"]["id"]]["quality"]);
+	else var quality = 0;
         if (i<=quality) m+='<TR><TD><FONT color=green>' + Current + "% " + unsafeWindow.cm.thronestats["effects"][id]["1"] + '</font></td></tr>';
         else m+='<TR><TD><FONT color=red>' + Current + "% " + unsafeWindow.cm.thronestats["effects"][id]["1"] + '</font></td></tr>';
     }
@@ -5228,7 +5230,10 @@ getpinauth : function () {
    var orderdefend = unsafeWindow.g_js_strings.openCastle.orderdefend;
    var technology = unsafeWindow.g_js_strings.commonstr.technology;
    var chEffect1 = {201:"Damage",202:"Bonus Damage",203:"Armor",204:"Strength",205:"Dexterity",206:"Health",207:"Hit Chance",208:"Crit Chance",209:"Block"};
+   var chEff1Base = {"Damage":30,"Bonus Damage":0,"Armor":7,"Strength":27,"Dexterity":27,"Health":60,"Hit Chance":4,"Crit Chance":3,"Block":3};
    var chEffect2 = {1:"Attack",2:"Defense",3:"Life",4:"Combat Speed",5:"Range",6:"Load",7:"Accuracy",17:"Attack Debuff",18:"Defense Debufff",19:"Life Debuff",20:"Combat Speed Debuff",21:"Range Debuff",22:"Load Debuff",23:"Accuracy Debuff"};
+   var chEff1Net;
+
     if (m.marchType == 3){
       if (!Options.alertConfig.scouting)
         return;
@@ -5275,9 +5280,12 @@ getpinauth : function () {
       msg += '|'+UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
     }
     if (m.championInfo) {
-      msg += ' || Champion Data:';
-      for (k in m.championInfo.effects[1])
-	msg += '|' +chEffect1[k]+ ': ' +m.championInfo.effects[1][k]+', ';
+      msg += ' || Champion Item Stats:';
+      for (k in m.championInfo.effects[1]) {
+        chEff1Net = m.championInfo.effects[1][k]-chEff1Base[chEffect1[k]];
+        chEff1Net = chEff1Net.toFixed(1);
+	if (chEff1Net > 0.0) msg += '|' +chEffect1[k]+ ': +' +chEff1Net+', ';
+      }
       for (k in m.championInfo.effects[2])
 	msg += '|' +chEffect2[k]+ ': ' +m.championInfo.effects[2][k]+', ';
     }
@@ -16202,6 +16210,8 @@ function AddMainTabLink(text, eventListener, mouseListener) {
       gmTabs.style.width='735px';
       gmTabs.lang = 'en_PB';
     }
+	gmTabs.style.height='0%';
+	gmTabs.style.overflow='auto';
     gmTabs.appendChild(a);
     a.addEventListener('click',eventListener, false);
     if (mouseListener != null)
@@ -16239,6 +16249,8 @@ function AddSubTabLink(text, eventListener, id) {
       gmTabs.style.width='735px';
       gmTabs.lang = 'en_PB';
     }
+	gmTabs.style.height='0%';
+	gmTabs.style.overflow='auto';
     gmTabs.appendChild(a);
     a.addEventListener('click',eventListener, false);
     if (id != null)
@@ -22627,64 +22639,7 @@ Tabs.Champion = {
   init : function (div){
     var t = Tabs.Champion;
     t.cont = div;
-
-    var enhanceMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_ENHANCE_AETHERSTONE_MAP"),enhObjSize=0;
-    for (var k in enhanceMap)
-       enhObjSize++;
-    for (i=1; i<enhObjSize+1; i++) 
-       t.EnhanceCost[i]=enhanceMap[i]["Aetherstones"];
-//       logit('Qual ' +enhanceMap[i]["Rarity"]+ ': ' +enhanceMap[i]["Aetherstones"]);
-    var upgradeMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_UPGRADE_AETHERSTONE_MAP"),upgObjSize=0;
-    for (var k in upgradeMap)
-       upgObjSize++;
-    for (i=1; i<upgObjSize+1; i++)
-       t.UpgradeCost[i]=upgradeMap[i]["Aetherstones"];
-//       logit('Level ' +upgradeMap[i]["Level"]+ ': ' +upgradeMap[i]["Aetherstones"]);
-
-    unsafeWindow.chsetFAV = t.setSalvageFAV;
-    unsafeWindow.chSavlage = t.setSalvageItem;
-    unsafeWindow.chActionPopup = t.ActionPopup;
-//    unsafeWindow.chpostInfo = t.postInfo;
-//    unsafeWindow.chdoEquip = t.doEquip;
-    unsafeWindow.chfupgenh = t.fupgenh;
-    var a = JSON2.parse(GM_getValue ('ChampionHistory_'+getServerId(), '[]'));
-    if (matTypeof(a) == 'array') t.log = a;
-    var a = JSON2.parse(GM_getValue ('ChampionSalvageHistory_'+getServerId(), '[]'));
-    if (matTypeof(a) == 'array') t.SalvageLog = a;
-
-    var effectTiers = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS");
-    var effObjSize=0,effsplit={},championStatTiers={},basegrowth={};
-    for (var k in effectTiers) {
-       effsplit=effectTiers[k]["Id_Tier"].split(",");
-       championStatTiers[''+effsplit[0]]={};
-    }  
-    for (var k in effectTiers) {
-       effsplit=effectTiers[k]["Id_Tier"].split(",");
-       basegrowth={};
-       basegrowth['base']=effectTiers[k]["Base"];
-       basegrowth['growth']=effectTiers[k]["Growth"];
-       championStatTiers[''+effsplit[0]][''+effsplit[1]]=basegrowth;
-    }  
-   t.championStatTiers=championStatTiers;
-
-
-   var championStatEffects={};
-   for (i=1; i<8; i++)
-      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
-   for (i=17; i<24; i++)
-      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
-//   for (i=201; i<210; i++)
-//      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects['1'];
-   championStatEffects['201']={1:"Damage",2:["Damage"],3:"Combat"};
-   championStatEffects['202']={1:"Bonus Damage",2:["Bonus Damage"],3:"Combat"};
-   championStatEffects['203']={1:"Armor",2:["Armor"],3:"Combat"};
-   championStatEffects['204']={1:"Strength",2:["Strength"],3:"Combat"};
-   championStatEffects['205']={1:"Dexterity",2:["Dexterity"],3:"Combat"};
-   championStatEffects['206']={1:"Health",2:["Health"],3:"Combat"};
-   championStatEffects['207']={1:"Hit",2:["Hit"],3:"Combat"};
-   championStatEffects['208']={1:"Crit",2:["Crit"],3:"Combat"};
-   championStatEffects['209']={1:"Block",2:["Block"],3:"Combat"};
-   t.championStatEffects=championStatEffects;
+    t.initChampData();
 
     var main = '<TABLE align=center><TR><TD><INPUT class=pbSubtab ID=ptmrcxSubSal type=submit value="Salvage"></td>';
     main +='<TD><INPUT class=pbSubtab ID=ptmrcxSubUE type=submit value="Upgrade/Enhance"></td>';
@@ -22740,14 +22695,83 @@ Tabs.Champion = {
       saveChampionOptions();
    },
    
+     initChampData : function(){
+	var t = Tabs.Champion;
+
+    var enhanceMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_ENHANCE_AETHERSTONE_MAP"),enhObjSize=0;
+    for (var k in enhanceMap)
+       enhObjSize++;
+    for (i=1; i<enhObjSize+1; i++) 
+       t.EnhanceCost[i]=enhanceMap[i]["Aetherstones"];
+    var upgradeMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_UPGRADE_AETHERSTONE_MAP"),upgObjSize=0;
+    for (var k in upgradeMap)
+       upgObjSize++;
+    for (i=1; i<upgObjSize+1; i++)
+       t.UpgradeCost[i]=upgradeMap[i]["Aetherstones"];
+
+    unsafeWindow.chsetFAV = t.setSalvageFAV;
+    unsafeWindow.chSavlage = t.setSalvageItem;
+    unsafeWindow.chActionPopup = t.ActionPopup;
+//    unsafeWindow.chpostInfo = t.postInfo;
+//    unsafeWindow.chdoEquip = t.doEquip;
+    unsafeWindow.chfupgenh = t.fupgenh;
+
+    var a = JSON2.parse(GM_getValue ('ChampionHistory_'+getServerId(), '[]'));
+    if (matTypeof(a) == 'array') t.log = a;
+    var a = JSON2.parse(GM_getValue ('ChampionSalvageHistory_'+getServerId(), '[]'));
+    if (matTypeof(a) == 'array') t.SalvageLog = a;
+
+    var effectTiers = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS");
+    var effObjSize=0,effsplit={},championStatTiers={},basegrowth={};
+    for (var k in effectTiers) {
+       effsplit=effectTiers[k]["Id_Tier"].split(",");
+       championStatTiers[''+effsplit[0]]={};
+    }  
+    for (var k in effectTiers) {
+       effsplit=effectTiers[k]["Id_Tier"].split(",");
+       basegrowth={};
+       basegrowth['base']=effectTiers[k]["Base"];
+       basegrowth['growth']=effectTiers[k]["Growth"];
+       championStatTiers[''+effsplit[0]][''+effsplit[1]]=basegrowth;
+    }  
+   t.championStatTiers=championStatTiers;
+
+   var championStatEffects={};
+   for (i=1; i<8; i++)
+      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
+   for (i=17; i<24; i++)
+      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
+//   for (i=201; i<210; i++)
+//      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects['1'];
+   championStatEffects['201']={1:"Damage",2:["Damage"],3:"Combat"};
+   championStatEffects['202']={1:"Bonus Damage",2:["Bonus Damage"],3:"Combat"};
+   championStatEffects['203']={1:"Armor",2:["Armor"],3:"Combat"};
+   championStatEffects['204']={1:"Strength",2:["Strength"],3:"Combat"};
+   championStatEffects['205']={1:"Dexterity",2:["Dexterity"],3:"Combat"};
+   championStatEffects['206']={1:"Health",2:["Health"],3:"Combat"};
+   championStatEffects['207']={1:"Hit",2:["Hit"],3:"Combat"};
+   championStatEffects['208']={1:"Crit",2:["Crit"],3:"Combat"};
+   championStatEffects['209']={1:"Block",2:["Block"],3:"Combat"};
+   t.championStatEffects=championStatEffects;
+
+	for (var i in unsafeWindow.kocChampionItems){
+	  if (unsafeWindow.seed.champion.equipment[i]) if (unsafeWindow.seed.champion.equipment[i]["repairing"]) {
+	    if (unsafeWindow.seed.champion.equipment[i]["eta"]>t.repairEnd) t.repairEnd=unsafeWindow.seed.champion.equipment[i]["eta"];
+	    if (unsafeWindow.seed.champion.equipment[i]["start"]>t.repairStart) t.repairStart=unsafeWindow.seed.champion.equipment[i]["start"];
+	  }
+    }     
+   },
+   
     Uniques : function () {
         var t = Tabs.Champion;
         var UniqueItems = {
             Weapon : {
                 "Black Knights Blade"   : "http://i.imgur.com/QjAxD5J.png",
+                "Blade of Radiance"     : "http://img443.imageshack.us/img443/5593/dk9v.png",
             },
             Armor : {
                 "Black Knights Armor"   : "http://i.imgur.com/hap9CtH.png",
+                "Armor of the Wild"     : "http://img819.imageshack.us/img819/5202/hs99.png",
             },
             /* Helm : {
                 "Pendragons Banner"     : "http://i.imgur.com/lQ1iSSD.png",
@@ -23087,10 +23111,6 @@ Upgrade_Enhance :function (){
         o.text = unsafeWindow.kocChampionItems[i]["name"];
         o.value = unsafeWindow.kocChampionItems[i]["equipmentId"];
         document.getElementById("ChampionItems").options.add(o);
-        if (unsafeWindow.seed.champion.equipment[i]) if (unsafeWindow.seed.champion.equipment[i]["repairing"]) {
-	   t.repairEnd=unsafeWindow.seed.champion.equipment[i]["eta"];
-	   t.repairStart=unsafeWindow.seed.champion.equipment[i]["start"];
-	}
     }
     document.getElementById('chaddEnhance').addEventListener ('click', function (){t.addToQueue(document.getElementById('ChampionItems').value,"Enhance");},false);
     document.getElementById('chaddUpgrade').addEventListener ('click', function (){t.addToQueue(document.getElementById('ChampionItems').value,"Upgrade");},false);
@@ -23646,11 +23666,15 @@ PaintSalvageHistory : function() {
         if (!ChampionOptions.Active) return;
         t.checkUpgradeInfo();
 //	if(Seed.queue_Champion.end  > unsafeWindow.unixtime()) {
-        if(t.repairEnd  > unsafeWindow.unixtime()) {
+        if(t.repairEnd  > now) {
 		if(document.getElementById('chShowStatus'))document.getElementById('chShowStatus').innerHTML = "Waiting on repair";
-		t.setRepairTimer = setTimeout (t.repairTimerUpdate,1000);
+		 t.setRepairTimer = setInterval (t.repairTimerUpdate,1000);
 		return;
-	} else t.repairEnd == null;
+	} 
+//// Repairs so reset status
+	  ChampionOptions.ibrokeitems.pop(ChampionOptions.Items["0"]["id"]);
+	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].status = 1;
+	  t.repairEnd = null;
 
 //	if(Seed.queue_Champion.end == undefined) {
         if(t.repairEnd == undefined) {
@@ -23667,7 +23691,8 @@ PaintSalvageHistory : function() {
                 	t.setActionTimer = setInterval(t.doAction,60*1000);
                 	return;
         	}
-        	if (unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken == true){
+//        	if (unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken == true){
+        	if (unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].status < 0){
                 	setTimeout(t.doRepair,5000);
                 	clearTimeout(t.setActionTimer);
                 	t.setActionTimer = setInterval(t.doAction,10000);
@@ -23682,11 +23707,10 @@ PaintSalvageHistory : function() {
             		if (ChampionOptions.Items["0"]["action"] == "Upgrade") setTimeout(t.doUpgrade,5000); 
             		if (ChampionOptions.Items["0"]["action"] == "Enhance") setTimeout(t.doEnhance,5000); 
             		clearTimeout(t.setActionTimer);
-            		t.setActionTimer = setInterval(t.doAction,10000);
+            		t.setActionTimer = setInterval(t.doAction,30000);
         	}
         
 	};
-        
   },
   
   
@@ -23753,7 +23777,7 @@ PaintSalvageHistory : function() {
                     Seed.resources["city" + cityid]["rec5"][0] -= rslt.aetherstones;
 //                      y.level = rslt.level;
                       y.rarity = rslt.rarity;
-//                    y.status = rslt.status;
+                      y.status = 1;
 //                    if (rslt.success)
                     if (!rslt.broken)
                     {                    
@@ -23769,7 +23793,8 @@ PaintSalvageHistory : function() {
                     else
                     {
                if(!params.chanceItem) {
-                  y.isBroken = true;
+//                  y.isBroken = true;
+                  y.status = -2;
                   y.brokenType = "rarity";
                   y.name = y.createName();
 		  ChampionOptions.ibrokeitems.push(params.eid);
@@ -23777,6 +23802,7 @@ PaintSalvageHistory : function() {
                        ChampionOptions.Tries++;
                        document.getElementById('chShowStatus').innerHTML = 'Enhance failed :( <br />Item: ' + unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].name +"<br />Waiting for repair...";
                        document.getElementById('chShowTries').innerHTML = "Tries: " + ChampionOptions.Tries + "<br />Good requests: " + ChampionOptions.Good + "   Bad requests: " + ChampionOptions.Bad;
+		       setTimeout(t.doRepair,5000);
                     }
 //                    unsafeWindow.cm.ChampionView.renderInventory(unsafeWindow.kocChampionItems);
 //		    unsafeWindow.cm.ChampionPanelView.renderBroken(y);
@@ -23787,7 +23813,9 @@ PaintSalvageHistory : function() {
                     ChampionOptions.Good++;
                     saveChampionOptions();
                 } else {
-                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken = true;
+//                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken = true;
+                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].status = -2;
+			  setTimeout(t.doRepair,5000);
                     ChampionOptions.Bad++;
                     saveChampionOptions();
                 }
@@ -23863,6 +23891,7 @@ PaintSalvageHistory : function() {
                        y.level = rslt.level;
 //                       y.rarity = rslt.rarity;
 //                       y.name = y.createName();
+			y.status = 1;
                        t.addToLog(ChampionOptions.Items["0"]["id"],ChampionOptions.Items["0"]["action"],ChampionOptions.Tries,ChampionOptions.Good,ChampionOptions.Bad);
                        ChampionOptions.Tries = 0;
                        ChampionOptions.Good = 0;
@@ -23874,9 +23903,9 @@ PaintSalvageHistory : function() {
                     else
                     {
                if(!params.chanceItem) {
-                       y.isBroken = true;
+//                       y.isBroken = true;
                        y.brokenType = "level";
-//                       y.status = rslt.item.status;
+                       y.status = -3;
                        y.name = y.createName();
 		       ChampionOptions.ibrokeitems.push(params.eid);
                }
@@ -23886,6 +23915,7 @@ PaintSalvageHistory : function() {
                      document.getElementById('chShowStatus').innerHTML = 'Upgrade failed :( <br />Item: ' + unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].name +"<br />Waiting for repair...";
                   if(document.getElementById('chShowTries'))
                      document.getElementById('chShowTries').innerHTML = "Tries: " + ChampionOptions.Tries + "<br />Good requests: " + ChampionOptions.Good + "   Bad requests: " + ChampionOptions.Bad;
+		     setTimeout(t.doRepair,5000);
                     }
 //                    unsafeWindow.cm.ChampionView.renderInventory(unsafeWindow.kocChampionItems);
 //		    unsafeWindow.cm.ChampionPanelView.renderBroken(y);
@@ -23896,7 +23926,9 @@ PaintSalvageHistory : function() {
                         ChampionOptions.Good++;
                         saveChampionOptions();
                 } else {
-                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken = true;
+//                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken = true;
+                	  unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken = -3;
+			  setTimeout(t.doRepair,5000);
                     ChampionOptions.Bad++;
                     saveChampionOptions();
                 }
@@ -23913,7 +23945,8 @@ PaintSalvageHistory : function() {
 		var y = unsafeWindow.kocChampionItems;
 		for(i in y) {
 			logit('i is '+i);
-			if(!y[i].isBroken) {
+//			if(!y[i].isBroken) {
+			if(y[i].status == 1) {
 				logit('and is not broken '+i);
 				t.doUpgradesimple(i);
 				setTimeout(t.doUpgradeAll,2000);
@@ -23962,10 +23995,11 @@ PaintSalvageHistory : function() {
                     Seed.resources["city" +cityid]["rec5"][0] -= rslt.aetherstones;
                     if (rslt["broken"]){
 						ChampionOptions.ibrokeitems.push(params.eid);
-						y.isBroken = true;
+//						y.isBroken = true;
                        y.brokenType = "level";
-//                       y.status = rslt.item.status;
+                       y.status = -3;
                        y.name = y.createName();
+		       setTimeout(t.doRepair,5000);
 					} else {
 						y.level = rslt.level;
 //                       y.rarity = rslt.rarity;
@@ -24010,7 +24044,8 @@ PaintSalvageHistory : function() {
                     **/
         if(ChampionOptions.ibrokeitems.length > 0)
         if(unsafeWindow.kocChampionItems[ChampionOptions.ibrokeitems[0]]) {
-        if(!unsafeWindow.kocChampionItems[ChampionOptions.ibrokeitems[0]].isBroken)ChampionOptions.ibrokeitems.shift();//if it's not broke, don't fix it! lol
+//        if(!unsafeWindow.kocChampionItems[ChampionOptions.ibrokeitems[0]].isBroken)ChampionOptions.ibrokeitems.shift();//if it's not broke, don't fix it! lol
+        if(unsafeWindow.kocChampionItems[ChampionOptions.ibrokeitems[0]].status == 1)ChampionOptions.ibrokeitems.shift();//if it's not broke, don't fix it! lol
 		} else ChampionOptions.ibrokeitems.shift();//if it's not there, remove it
 
         var cityid = 0;
@@ -24037,11 +24072,14 @@ PaintSalvageHistory : function() {
 					  if(params.eid != ChampionOptions.Items["0"]["id"]) ChampionOptions.ibrokeitems.shift();
 					  else t.repairId = ChampionOptions.Items["0"]["id"];
 				  } else ChampionOptions.ibrokeitems.shift();
-//                  Seed.queue_Champion.itemId= params.eid;
+                  unsafeWindow.seed.queue_champion = {};
+                  unsafeWindow.seed.queue_champion.itemId= params.eid;
 //                  Seed.queue_Champion.start=unixTime();
 //                  Seed.queue_Champion.end= rslt.eta;
                   t.repairStart = rslt.start;
                   t.repairEnd = rslt.eta;
+		  unsafeWindow.kocChampionItems[params.eid].status = 2; //2 for repair of enhance, 3 for repair of upgrade
+		   t.setRepairTimer = setInterval (t.repairTimerUpdate,1000);
 //                  unsafeWindow.cm.ChampionView.renderInventory(unsafeWindow.kocChampionItems);
 		    unsafeWindow.cm.ChampionModalView.renderFilteredItems();
                   var x = rslt.eta - unixTime();
