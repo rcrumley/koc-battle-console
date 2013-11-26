@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20131124a
+// @version        20131126a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20131124a';
+var Version = '20131126a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -5372,22 +5372,6 @@ MaxScouts : function (city){
 	  setTimeout(t.doScout,30000, x,y,box); // try again in 30 secs..
 	  return;
 	}
-
-
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
 
   	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
 	params.cid= t.ScoutInfo.id;
@@ -14169,9 +14153,9 @@ uW.ptGotoMap = function (x, y){
     uW.reCenterMapWithCoor();
     var a = document.getElementById("mod_views").getElementsByTagName("a");
     for (var b = 0; b < a.length; b++) {
-        a[b].className = ""
+        a[b].className = "buttonv2 nav h20"
     }
-    document.getElementById('mod_views_map').className = "sel";
+    document.getElementById('mod_views_map').className = "buttonv2 nav h20 sel";
     document.getElementById("maparea_city").style.display = 'none';
     document.getElementById("maparea_fields").style.display = 'none';
     document.getElementById("maparea_map").style.display = 'block';
