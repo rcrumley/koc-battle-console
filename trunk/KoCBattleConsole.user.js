@@ -257,7 +257,7 @@ uW.btGotoMapHide = function (x, y){
 	try {
 		Modal.hideModal();
 	} catch (e){ }
-	uW.ptGotoMap (x, y);  
+	uW.btGotoMap (x, y);  
 }
 
 uW.btGotoMap = function (x, y){
@@ -267,9 +267,9 @@ uW.btGotoMap = function (x, y){
 		uW.reCenterMapWithCoor();
 		var a = document.getElementById("mod_views").getElementsByTagName("a");
 		for (var b = 0; b < a.length; b++) {
-			a[b].className = ""
+			a[b].className = "buttonv2 nav h20"
 		}
-		document.getElementById('mod_views_map').className = "sel";
+		document.getElementById('mod_views_map').className = "buttonv2 nav h20 sel";
 		document.getElementById("maparea_city").style.display = 'none';
 		document.getElementById("maparea_fields").style.display = 'none';
 		document.getElementById("maparea_map").style.display = 'block';
