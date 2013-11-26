@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131122a
+// @version			20131126a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Champion info on incoming attacks</p>
+// @releasenotes 	<p>Fix for simultaneous sacrifices when only one altar</p><p>Statue relocation</p><p>Champion compare option on incoming marches</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131122a';
+var Version = '20131126a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -88,6 +88,7 @@ var Options = {
 	PresetChange        : true,
 	MonPresetChange     : true,
 	GuardianChange      : true,
+	ChampionCompare     : false,
 };
 
 var JSON2 = JSON; 
@@ -222,6 +223,8 @@ var	ThroneDelay = 0;
 var GuardDelay = 0;
 var ExpandMarshall = false;
 var ExpandChampion = false;
+var citychamp;
+var marchchamp;
 
 var presetTimer = null;
 var presetFailures = 0;
@@ -323,11 +326,53 @@ uW.btSendAllHome = function (cityId) {
 	setTimeout (function () { uW.jQuery('#btSendAllHome').removeClass("disabled"); serverwait = false; },(500*delayer)); // let screen updates run again
 }
 
-uW.btCreateChampionPopUp = function (elem) {
+uW.btCreateChampionPopUp = function (elem,chkcityId) {
 	effects = document.getElementById(elem.id+'effects');
+	// do a compare...
+	if (Options.ChampionCompare) {
+		var oureffects = '<table cellspacing=0><tr><td class=xtab><b><center><br>No Champion<br>Assigned!</center></b></td></tr></table>';
+
+		try {
+			Champs = uW.cm.ChampionModalController.getCastleViewData();
+			for (y in Champs.champions) {
+				chkchamp = Champs.champions[y];
+				if (chkchamp.id) {
+					if (chkchamp.city == chkcityId) {
+						oureffects = '<table cellspacing=0><tr><td colspan=2><b>'+chkchamp.name+'</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>';
+						var gotchamp = false;
+						for (cy in chkchamp.stats.champion) {
+							cs = chkchamp.stats.champion[cy];
+							gotchamp = true;
+							oureffects+="<tr><td>"+cs.name+"</td><td>"+cs.amount+"</td></tr>";
+						}	
+						if (!gotchamp) { oureffects += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+						oureffects+="<tr><td colspan=2><b>Troop Stats</b></td></tr>";
+						var gottroop = false;
+						for (ty in chkchamp.stats.troop) {
+							ts = chkchamp.stats.troop[ty];
+							gottroop = true;
+							oureffects+="<tr><td>"+ts.name+"</td><td>"+ts.amount+"</td></tr>";
+						}	
+						if (!gottroop) { oureffects += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+						oureffects+="</table>";
+					}	
+				}
+			}
+		}		
+		catch (err) {
+			logit(err); // write to log
+			oureffects = '<table cellspacing=0><tr><td class=xtab><b><center>Error reading champion data :(</center></b></td></tr></table>';
+		}
+	}	
+
 	td = document.getElementById(elem.id+'td');
 	unsafeWindow.jQuery('#'+td.id).children("span").remove();
-	unsafeWindow.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
+	if (Options.ChampionCompare) {
+		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+effects.value+'</td><td class=xtab>'+oureffects+'</td></tr></table></span>');
+	}
+	else {
+		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
+	}
 }
 
 uW.btSelectTroopType = function (sel) {SelectTroopType(sel);}
@@ -433,10 +478,14 @@ function btStartup (){
 				.guardButSel     {border: 2px solid blue;}\
 				div.ErrText      {color:#FF0000;}';
 
-	var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:280px;}\
+	var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:200px;}\
 					div#throneMainContainer div#trophyContainer{width:71px;height:86px;top:41px;left:381px;z-index:97;}\
-					div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:435px;z-index:99;}';
-				
+					div#throneMainContainer div#statueContainer{width:124px;height:296px;top:274px;left:300px;z-index:99;}\
+					div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:450px;z-index:99;}';
+
+//					div#throneMainContainer div#windowContainer{width:117px;height:182px;top:136px;left:410px;z-index:98;}\
+
+					
 	GM_addStyle(".castleBut.defending { border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");
 	GM_addStyle(".castleBut.hiding    { border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: rgb(229, 221, 201);}");
 	GM_addStyle(".castleBut.attack    { opacity: 0.6;}");
@@ -468,6 +517,7 @@ function btStartup (){
 	m += '<TR id=btMapOpts class="divHide"><TD colspan="3" align=right class=xtab><table><tr><td align=right class=xtab>&nbsp;&nbsp;&nbsp;Provinces</td><td class=xtab><INPUT id=ProvinceChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Levels</td><td class=xtab><INPUT id=LevelChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Alliance Mists</td><td class=xtab><INPUT id=MistedChk type=checkbox /></td></tr></table></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CompareChampChk type=checkbox /></td><td class=xtab>Compare champions in march tooltips windows</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
 	m += '</table></div>';
@@ -515,6 +565,7 @@ function btStartup (){
 	ToggleOption ('MonPresetChk', 'MonPresetChange', PaintTRPresets);
 	ToggleOption ('ProvinceToolsChk', 'ShowProvinceTools');
 	ToggleOption ('MoveFurnitureChk', 'MoveFurniture');
+	ToggleOption ('CompareChampChk', 'ChampionCompare');
 	ToggleOption ('AutoUpdateChk', 'AutoUpdates');
 	MapToggle ();
 
@@ -2701,8 +2752,8 @@ function BuildIncomingDisplay() {
 		
 		z += '<TD colspan=2 class=xtabBR>';
 		if (marchType == 3 || marchType == 4){
-			if (a["championInfo"]) {
-				var marchchamp = "<table cellspacing=0><tr><td colspan=2><b>Champion Stats</b></td></tr>";
+			if ((safecall.indexOf(a.pid) < 0 || trusted) && a["championInfo"]) {
+				marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
 				var gotchamp = false;
 				if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
 					for (cy in a["championInfo"].effects[1]) {
@@ -2727,7 +2778,7 @@ function BuildIncomingDisplay() {
 				}	
 				if (!gottroop) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
 				marchchamp+="</table>";
-				z +='<table cellspacing=0><tr><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td><td class="xtab trimg" style="font-weight:normal;align:left;" id="btmarchchamp'+a.mid+'td"><input type="hidden" id="btmarchchamp'+a.mid+'effects" value="'+marchchamp+'" /><a><img id="btmarchchamp'+a.mid+'" onMouseover="btCreateChampionPopUp(this);" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td></tr></table>';
+				z +='<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="btmarchchamp'+a.mid+'td"><input type="hidden" id="btmarchchamp'+a.mid+'effects" value="'+marchchamp+'" /><a><img id="btmarchchamp'+a.mid+'" onMouseover="btCreateChampionPopUp(this,'+a.toCityId+');" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td></tr></table>';
 			}	
 			if (a["knt"]) z +='<span class=xtab>'+uW.g_js_strings.commonstr.knight+' (Atk:'+ a["knt"]["cbt"]+')</span> ';
 			if (a["unts"]) { 
@@ -2942,7 +2993,7 @@ function SetCurrentCity(cityId) {
 		SacSpeedBuff        = uW.cm.BlessingSystemModel.applyBlessing(uW.cm.BlessingSystemModel.getBlessing().CHANNELED_SUFFERING);
 		ChannelledSuffering = (SacSpeedBuff != 1);
 
-		SacAllowed   = (b.count <= 1) ? b.count : DarkRitual ? b.count : 1;
+		SacAllowed   = DarkRitual ? 2 : 1;
 		SacSpeed     = uW.cm.WorldSettings.getSettingAsNumber("ASCENSION_SACRIFICE_TROOPS_PER_SEC");
 
 		var l = b.maxLevel;
@@ -3376,8 +3427,8 @@ function PaintCityInfo(cityId) {
 			if (fromcoords != "") { z+= '<span class=xtab>'+fromcoords+'</span>'; }
 			z += '</td><td  class=xtabBR>';
 			
-			if (a["championInfo"]) {
-				var marchchamp = "<table cellspacing=0><tr><td colspan=2><b>Champion Stats</b></td></tr>";
+			if ((safecall.indexOf(a.pid) < 0 || trusted) && a["championInfo"]) {
+				marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
 				var gotchamp = false;
 				if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
 					for (cy in a["championInfo"].effects[1]) {
@@ -3402,7 +3453,7 @@ function PaintCityInfo(cityId) {
 				}	
 				if (!gottroop) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
 				marchchamp+="</table>";
-				z +='<table cellspacing=0><tr><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td><td class="xtab trimg" style="font-weight:normal;align:left;" id="btcitymarchchamp'+a.mid+'td"><input type="hidden" id="btcitymarchchamp'+a.mid+'effects" value="'+marchchamp+'" /><a><img id="btcitymarchchamp'+a.mid+'" onMouseover="btCreateChampionPopUp(this);" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td></tr></table>';
+				z +='<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="btcitymarchchamp'+a.mid+'td"><input type="hidden" id="btcitymarchchamp'+a.mid+'effects" value="'+marchchamp+'" /><a><img id="btcitymarchchamp'+a.mid+'" onMouseover="btCreateChampionPopUp(this,'+a.toCityId+');" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td></tr></table>';
 			}	
 			if (a["knt"]) z +='<span class=xtab>'+uW.g_js_strings.commonstr.knight+' (Atk:'+ a["knt"]["cbt"]+')</span> ';
 			if (a["unts"]) { 
@@ -3741,7 +3792,15 @@ function SwitchGuardian (elem) {
 		parameters: params,
 		onSuccess: function (rslt) {
 			if (rslt.ok) {
+				var g = unsafeWindow.cm.guardianModalModel.gObj();
+				g.summonGuardian = {
+					summonFinishTime: parseInt(rslt.summonFinishTime),
+					level: rslt.summonGuardian.cl0,
+					type: rslt.summonGuardian.type,
+					upgrading: false
+				};
 				unsafeWindow.seed.guardian[Options.CurrentCity].type = type;
+				unsafeWindow.seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
 				var GType = 0;
 				switch(type) {
 					case "wood":  GType=50;break;
@@ -3753,6 +3812,12 @@ function SwitchGuardian (elem) {
 				// need to delay 8 seconds before allowing again
 				GuardDelay = 8;
 				PaintGuardianSelector();
+				var time = parseInt(rslt.summonFinishTime) - unixTime();
+				setTimeout(function(){
+					unsafeWindow.seed.guardian[Options.CurrentCity].type = type;
+					unsafeWindow.seed.buildings["city"+ uW.currentcityid].pos500[0] = GType;
+					unsafeWindow.seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
+				},(time*1000));
 			} 
 			else {
 				GuardDelay = 0;
