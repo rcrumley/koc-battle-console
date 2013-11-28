@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131126a
+// @version			20131128a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Fix for simultaneous sacrifices when only one altar</p><p>Statue relocation</p><p>Champion compare option on incoming marches</p>
+// @releasenotes 	<p>Fix flickering of incoming attack champion tooltips</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131126a';
+var Version = '20131128a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -2647,6 +2647,7 @@ function BuildIncomingDisplay() {
 	var r = 0;
 	var incomingshow = false;
 	var incomingfiltered = false;
+	var inctimes = {};
 
 	var bclass = "brown11";
     if (RefreshingSeed || Options.RefreshSeed) bclass += " disabled";
@@ -2671,6 +2672,7 @@ function BuildIncomingDisplay() {
 
 		fromname = "";
 		if (a.score) {
+			var marchId = a.mid;
 			if (!a.marchType) {a.marchType = 4;}
 			if (!a.arrivalTime || a.arrivalTime == -1) {marchtime = '??????';}
 			else {marchtime=uW.timestr(a.arrivalTime - unixTime());} 
@@ -2681,12 +2683,14 @@ function BuildIncomingDisplay() {
 		}
 		else
 		{
+			var marchId = a.marchId;
 			if ((a.arrivalTime - unixTime()) < 0) continue;
 			marchtime=uW.timestr(a.arrivalTime - unixTime());
 			player = Seed.players['u'+a.fromPlayerId];
 			if (Seed.players['u'+a.fromPlayerId]) {fromname = Seed.players['u'+a.fromPlayerId].n;}
 			else if (a.players && a.players['u'+a.fromPlayerId]) {fromname = a.players['u'+a.fromPlayerId].n;}
 		}
+		inctimes[marchId] = marchtime;
 
 		if (!a.fromXCoord) {fromcoords = "";}
         else {fromcoords = coordLink(a.fromXCoord,a.fromYCoord);}
@@ -2736,7 +2740,7 @@ function BuildIncomingDisplay() {
 		if (rem == 1) rowClass = 'oddRow';		
 
 		z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' title='+hint+'></td>';
-		z += '<TD class=xtab>'+marchtime+'</td>';
+		z += '<TD class=xtab id="marchtime'+marchId+'">&nbsp;</td>';
 		z += '<TD class=xtabBR>';
 		if (targetcity != "") z += '<span class=xtab>'+targetcity+'</span> ';
 		if (targetcoords != "") z += '<span class=xtab>'+targetcoords+'</span>';
@@ -2756,7 +2760,11 @@ function BuildIncomingDisplay() {
 				marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
 				var gotchamp = false;
 				if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
+					got202 = false;
 					for (cy in a["championInfo"].effects[1]) {
+						// missing bonus damage?
+						if ((cy == '202') && gotchamp) {got202 = true;}
+						if ((cy == '203') && !got202) { marchchamp += "<tr><td>"+uW.g_js_strings.effects.name_202+"</td><td>0</td></tr>"; }
 						str = eval('uW.g_js_strings.effects.name_'+cy);
 						if (str && str!= "") {
 							gotchamp = true;
@@ -2820,7 +2828,11 @@ function BuildIncomingDisplay() {
 	z += '</table></div><br>';
 
 	if (popInc) {
-		document.getElementById('btIncomingMain').innerHTML = z;
+		CheckForHTMLChange('btIncomingMain',z);
+		for (var m in inctimes) {
+			mt = inctimes[m];
+			document.getElementById('marchtime'+m).innerHTML = mt;
+		}
 		if (Options.RefreshSeed) uW.jQuery('#btRefreshSeed').addClass("disabled");
 		else document.getElementById('btRefreshSeed').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
 		ResetFrameSize('btIncoming',200,720);
@@ -3389,6 +3401,7 @@ function PaintCityInfo(cityId) {
 	// incoming attacks
 
 	cityincoming = false;
+	var cityinctimes = {};
 	var z = "";
 	var r = 0;
     for (k in inc){
@@ -3396,12 +3409,14 @@ function PaintCityInfo(cityId) {
 			cityincoming = true;
 			var a = inc[k];
 			var icon,hint,marchtime,fromname,marchdir,fromcoords;
+			var marchId = a.mid;
 			var marchScore = parseInt(a.score);
 			var marchType = parseInt(a.marchType);
 			var marchStatus = parseInt(a.marchStatus);
 			if (!a.marchType) {a.marchType = 4;}
 			if (!a.arrivalTime || a.arrivalTime == -1) {marchtime = '??????';}
 			else {marchtime=uW.timestr(a.arrivalTime - unixTime());} 
+			cityinctimes[marchId] = marchtime;
 			var player = Seed.players['u'+a.pid];
 			fromname = "";
 			if (player) {fromname = player.n;}
@@ -3422,7 +3437,7 @@ function PaintCityInfo(cityId) {
 			if (rem == 1) rowClass = 'oddRow';		
 
 			z += '<tr class="'+rowClass+'"><TD class=xtab><img src='+icon+' title='+hint+'></td>';
-			z += '<TD class=xtabBR><span class=xtab>'+marchtime+'</span></td>';
+			z += '<TD class=xtabBR><span class=xtab id="citymarchtime'+marchId+'">&nbsp;</span></td>';
 			z += '<TD class=xtabBR><span class=xtab>'+fromname+'</span> ';
 			if (fromcoords != "") { z+= '<span class=xtab>'+fromcoords+'</span>'; }
 			z += '</td><td  class=xtabBR>';
@@ -3431,7 +3446,11 @@ function PaintCityInfo(cityId) {
 				marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
 				var gotchamp = false;
 				if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
+					got202 = false;
 					for (cy in a["championInfo"].effects[1]) {
+						// missing bonus damage?
+						if ((cy == '202') && gotchamp) {got202 = true;}
+						if ((cy == '203') && !got202) { marchchamp += "<tr><td>"+uW.g_js_strings.effects.name_202+"</td><td>0</td></tr>"; }
 						str = eval('uW.g_js_strings.effects.name_'+cy);
 						if (str && str!= "") {
 							gotchamp = true;
@@ -3482,6 +3501,10 @@ function PaintCityInfo(cityId) {
     z += '</table></div>';
 	
 	CheckForHTMLChange('btAttackCell',CityTag+z);
+	for (var m in cityinctimes) {
+		mt = cityinctimes[m];
+		document.getElementById('citymarchtime'+m).innerHTML = mt;
+	}
 
 	// fortifications
 
