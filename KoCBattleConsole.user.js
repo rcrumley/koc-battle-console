@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131128a
+// @version			20131129a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Fix flickering of incoming attack champion tooltips</p>
+// @releasenotes 	<p>Minor fix for flickering of champion tooltips windows</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131128a';
+var Version = '20131129a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -3150,7 +3150,7 @@ function PaintCityInfo(cityId) {
 	Marshall +='</select>';
 	Marshall += '&nbsp;&nbsp;&nbsp;<a id="btSetMarshall" class="inlineButton btButton brown8" onclick="btSetMarshall()"><span>Assign</span></a>&nbsp;<a id="btCancelMarshall" class="inlineButton btButton brown8" onclick="btCancelMarshall()"><span>Cancel</span></a></div>';
 	
-	Status += '<tr><td class=xtab valign=top><a onClick="btShowKnightsHall('+Curr+')">Marshall</a></td><td class=xtab colspan=2><b>'+Marshall+'</b></td></tr>';
+	Status += '<tr><td class=xtab valign=top><a onClick="btShowKnightsHall('+Curr+')">Marshall</a></td><td class=xtabBR style="white-space:normal;" colspan=2><b>'+Marshall+'</b></td></tr>';
 
 	var GotChamp = false;
 	var CheckChamp = false;
