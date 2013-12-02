@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131129a
+// @version			20131202a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Minor fix for flickering of champion tooltips windows</p>
+// @releasenotes 	<p>Fix for arrived attacks not clearing the incoming queue</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -25,10 +25,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	November 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
+//	│	December 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131129a';
+var Version = '20131202a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -920,8 +920,8 @@ function CheckForIncoming () {
 	
 	for(n in inc) {
 		var a = inc[n];
-		// need to do something here based on watchtower level.. levels 1 and 2 have minimal information...
-		if(!a.score)continue;
+		if (!a.score) continue;
+		if (a.arrivalTime < unixTime()) continue; // don't display arrival times already happened
 		StillComing = true;
 		if ((a.arrivalTime && (a.arrivalTime < soonest.arrivalTime)) || (soonest.arrivalTime == -1)) {
 			soonest = a;
@@ -1001,7 +1001,8 @@ function CheckForIncoming () {
 	
 		for(n in inc) {
 			var a = inc[n];
-			if(!a.score)continue;
+			if (!a.score) continue;
+			if (a.arrivalTime < unixTime()) continue; // don't display arrival times already happened
 			if (inc[n].toCityId == CurrentCityId) {
 				CityStillComing = true;
 				if ((a.arrivalTime && (a.arrivalTime < citysoonest.arrivalTime)) || (citysoonest.arrivalTime == -1)) {
@@ -2672,6 +2673,7 @@ function BuildIncomingDisplay() {
 
 		fromname = "";
 		if (a.score) {
+			if (a.arrivalTime < unixTime()) continue; // don't display arrival times already happened
 			var marchId = a.mid;
 			if (!a.marchType) {a.marchType = 4;}
 			if (!a.arrivalTime || a.arrivalTime == -1) {marchtime = '??????';}
@@ -3406,8 +3408,9 @@ function PaintCityInfo(cityId) {
 	var r = 0;
     for (k in inc){
 		if ((inc[k].toCityId == cityId) && (inc[k].score)) {
-			cityincoming = true;
 			var a = inc[k];
+			if (a.arrivalTime < unixTime()) continue; // don't display arrival times already happened
+			cityincoming = true;
 			var icon,hint,marchtime,fromname,marchdir,fromcoords;
 			var marchId = a.mid;
 			var marchScore = parseInt(a.score);

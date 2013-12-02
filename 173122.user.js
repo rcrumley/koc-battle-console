@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20131126b
+// @version        20131130a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20131126b';
+var Version = '20131130a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -240,6 +240,7 @@ var CPopUpTopClass = 'ptPopTop';
 var KOCversion = null;
 var ptStartupTimer = null;
 var uW = unsafeWindow;
+var seed_player_g = uW.seed.player.g;
 var ResetColors = false;
 var nTroopType = 17;
 
@@ -6404,6 +6405,7 @@ Tabs.Options = {
                          var seed2 = eval(result);
                          
                          for (jj in seed2) {
+			   if (jj != 'resources')
                             if (seed2.hasOwnProperty(jj)) {
                                Seed[jj] = seed2[jj];
                             }
@@ -6444,7 +6446,7 @@ Tabs.Options = {
                          unsafeWindow.kocThroneItems = {};
                          unsafeWindow.createThroneItems();
                          unsafeWindow.cm.ThroneView.renderInventory(unsafeWindow.kocThroneItems);
-                         
+			 unsafeWindow.seed.player.g = seed_player_g;                         
 
                       }
 					  
