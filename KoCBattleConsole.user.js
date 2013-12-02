@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Fix for arrived attacks not clearing the incoming queue</p>
+// @releasenotes 	<p>Fix for arrived attacks not clearing the incoming queue</p><p>Option to remove transparency from windows</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -89,6 +89,7 @@ var Options = {
 	MonPresetChange     : true,
 	GuardianChange      : true,
 	ChampionCompare     : false,
+	Transparent         : true,
 };
 
 var JSON2 = JSON; 
@@ -440,14 +441,16 @@ function btStartup (){
 	Options.WinSize.x = 400;
 	Options.WinSize.y = 180;
 	DefaultWindowPos('WinPos','main_engagement_tabs');
-  
+
+	if (Options.Transparent) { Opacity = 0.9; } else { Opacity = 1.0; }
+	
 	var styles = '.xtab {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
 				.xtabHD {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#888888;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
 				.xtabBR {padding-right: 5px; border:none; background:none;}\
 				.xtabBRTop {padding-right: 5px; border:none; background:none;vertical-align:top;}\
 				tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
 				.btPopMain       {background: url("' + PanelBG + '") no-repeat scroll -10px -50px transparent; border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size:11px;}\
-				.btPopup         {border:5px ridge #666; opacity:0.9; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
+				.btPopup         {border:5px ridge #666; opacity:'+Opacity+'; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
 				.btSelector		 {font-size:11px; }\
 				.btInput		 {font-size:10px; }\
                 .AlertStyle      {background:url("' + AlertBG + '") no-repeat left;}\
@@ -512,19 +515,21 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show monitor throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=ProvinceToolsChk type=checkbox /></td><td class=xtab>Show province name on tooltips windows</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=ProvinceToolsChk type=checkbox /></td><td class=xtab>Show province name on tooltips windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MapOverrideChk type=checkbox /></td><td class=xtab>Display additional information on map</td></tr>';
 	m += '<TR id=btMapOpts class="divHide"><TD colspan="3" align=right class=xtab><table><tr><td align=right class=xtab>&nbsp;&nbsp;&nbsp;Provinces</td><td class=xtab><INPUT id=ProvinceChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Levels</td><td class=xtab><INPUT id=LevelChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Alliance Mists</td><td class=xtab><INPUT id=MistedChk type=checkbox /></td></tr></table></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CompareChampChk type=checkbox /></td><td class=xtab>Compare champions in march tooltips windows</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >CITY DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button</td><td width="120" class=xtab>&nbsp;</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
 	m += '<TD align=right class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
@@ -538,6 +543,7 @@ function btStartup (){
 	document.getElementById('btPlayerSubmit').addEventListener ('click', MonitorTRClick, false);
 	document.getElementById('btUIDSubmit').addEventListener ('click', UIDClick, false);
 	document.getElementById('btLogSubmit').addEventListener ('click', ToggleLog, false);
+
 	document.getElementById('btUpdateCheck').addEventListener ('click', function() {AutoUpdater.call(true,true);}, false);
 	document.getElementById('btResetWindows').addEventListener ('click', function() {ResetAllWindows();}, false);
 	document.getElementById('btPlayer').addEventListener ('keypress', function(e) {if ( e.which == 13)  document.getElementById('btPlayerSubmit').click();}, false);
@@ -554,6 +560,7 @@ function btStartup (){
 	document.getElementById('btIncomingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btIncomingButton',popInc);}, true);  //
 	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  //
   
+	ToggleOption ('TransparencyChk', 'Transparent');
 	ToggleOption ('MapOverrideChk', 'OverrideMapDisplay', MapToggle);
 	ToggleOption ('ProvinceChk', 'ShowProvinceOnMap', MapToggle);
 	ToggleOption ('LevelChk', 'ShowLevelOnMap', MapToggle);
