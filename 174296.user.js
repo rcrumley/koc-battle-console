@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131202a
+// @version        20131202g
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131202a';
+var Version = '20131202g';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -136,7 +136,7 @@ var Options = {
   pbWideMap    : false,
   pbFoodAlert  : false,
   pbFoodAlertInt  : 6,
-  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[]},
+  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{}},
   alertSound   : {enabled:false, soundUrl:DEFAULT_ALERT_SOUND_URL, repeat:true, playLength:20, repeatDelay:0.5, volume:100, alarmActive:false, expireTime:0},
   spamconfig   : {aspam:false, spamvert:'Join my Alliance!!', spammins:'30', atime:2 , spamstate:'a'},
   giftDomains  : {valid:false, list:{}},
@@ -212,7 +212,8 @@ var Options = {
   GESeverytenmin:0,
   GESeveryhour:0,
   GESeveryday:0,
-  detAFK: true,
+  detAFK: false,
+  expinc: false,
   TourneyModeActive:false,
   UseTourneyMM:false,
   CrestList    : {"i1101":0,"i1102":0,"i1103":0,"i1104":0,"i1105":0,"i1106":0,"i1107":0,"i1108":0,"i1109":0,"i1110":0,"i1111":0,"i1112":0,"i1113":0,"i1114":0,"i1115":0,"i1120":0,"i1121":0,"i1122":0},
@@ -2559,7 +2560,9 @@ Tabs.Throne = {
       m+='<TR><TD colspan=3><INPUT id=pbsalvage_unique type=checkbox '+ (ThroneOptions.SaveUnique?'CHECKED ':'') +'/>&nbsp; Save all cards marked as unique</TD></TR>';
       m+='<TR><TD colspan=3><INPUT id=pbheatup type=checkbox '+(ThroneOptions.heatup?'CHECKED ':'')+'/>&nbsp; Upgrade cards before salvaging to increase aetherstone and heat up modifier</TD></TR>';
       m+='<TR><TD clospan=3>Ignore attributes visually above ' + htmlSelector({1:'none', 2:'Slot 2:Uncommon (WARNING Set keep cards to 4 or less)', 3:'Slot 3:Rare(WARNING Set keep cards to 3 or less)', 4:'Slot 4:Epic (WARNING Set keep cards to 2 or less)', 5:'Slot 5:Wonderous (WARNING Set keep cards to 1)'},ThroneOptions.SalvageLevel,'id=SLevel')+'</TD></TR>';
-      m+='<tr><td colspan=3><INPUT id=shero type=checkbox '+ (ThroneOptions.savehero?'CHECKED ':'') +'/>&nbsp; Save all heroes</TD></TR></table>';
+      m+='<tr><td colspan=3><INPUT id=shero type=checkbox '+ (ThroneOptions.savehero?'CHECKED ':'') +'/>&nbsp; Save all heroes</TD></TR>';
+		m+='<tr><td colspan=3><INPUT id=sstatue type=checkbox '+ (ThroneOptions.savestatue?'CHECKED ':'') +'/>&nbsp; Save all statues</TD></TR>';
+      m+= '</table>';
       m+='<TR><TD><FONT color=red>Min number of lines will override your "Keep cards" and "ignore attributes" setting, keeping cards with lesser/larger min requirement</font></td></TR>';
       m+='<br><br><TR><TD><FONT color=red>Check boxes for items you want to <b>KEEP</b> by attribute.</font></td></TR>';
       m+='<TABLE width=60% class=pbTab><TR><TD><B>Combat:</b></td></tr>';
@@ -2675,6 +2678,7 @@ Tabs.Throne = {
       document.getElementById('pbsalvage_unique').addEventListener ('change', function(){ThroneOptions.SaveUnique = this.checked;saveThroneOptions();},false);
       document.getElementById('pbheatup').addEventListener ('change', function(){ThroneOptions.heatup = this.checked;saveThroneOptions();},false);
       document.getElementById('shero').addEventListener ('change', function(){ThroneOptions.savehero = this.checked;saveThroneOptions();},false);
+      document.getElementById('sstatue').addEventListener ('change', function(){ThroneOptions.savestatue = this.checked;saveThroneOptions();},false);
 
       document.getElementById('pbthrone_keep').addEventListener ('change', function(){ThroneOptions.thronekeep = parseInt(document.getElementById('pbthrone_keep').value);saveThroneOptions();},false);
 
@@ -3981,11 +3985,13 @@ salvageCheck : function (){
                MinReq = false;
                IsUnique = false;
                IsHero = false;
+               IsStatue = false;
                     if (y.quality > ThroneOptions.SalvageQuality) level=true;
                     if(y.level > 0) level = true;
                     if(ThroneOptions.SaveUnique) if(y.unique > 0) IsUnique = true;
                     if (ThroneOptions.SalvageQuality == 0) level=true;
 					     if (ThroneOptions.savehero && y.type=="hero") IsHero = true;                    
+					     if (ThroneOptions.savestatue && y.type=="statue") IsStatue = true;                    
                     
                     for (i=1;i<=5;i++){
                   if (ThroneOptions.Salvage_fav[y.effects["slot"+i].id]) {NotFavorite= false;};
@@ -4032,7 +4038,7 @@ salvageCheck : function (){
                         }
                     }
                     //logit('y.name '+y.name+' level '+level+' number '+number+' ThroneOptions.thronekeep '+ThroneOptions.thronekeep+' NotUpgrading '+NotUpgrading+' isEquiped '+y.isEquipped+' y.isbroken '+y.isBroken+' y.id '+y.id+' last deleted '+t.LastDeleted+' NotFavorite '+NotFavorite+' MinReq '+MinReq+' is unique '+IsUnique);
-                    if (!level && number < ThroneOptions.thronekeep && NotUpgrading && !y.isEquipped && !y.isBroken && t.LastDeleted != y.id && NotFavorite && !MinReq && !IsUnique && !IsHero) {
+                    if (!level && number < ThroneOptions.thronekeep && NotUpgrading && !y.isEquipped && !y.isBroken && t.LastDeleted != y.id && NotFavorite && !MinReq && !IsUnique && !IsHero && !IsStatue) {
                   //logit(y.name);
                         t.SalvageArray.push(y.id);
                     }                     
@@ -4479,6 +4485,10 @@ Tabs.tower = {
     m += '</tr><TR align=center>';
       for (var cityId in Cities.byID)
        m += '<TD><CENTER><INPUT id=pbattackqueue_' + cityId + ' type=submit value="A 0 | S 0"></center></td>';
+  		  m += '</tr><TR align=center>';
+      for (var cityId in Cities.byID) {
+      m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text size=10 name='+cityId+' value='+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'></CENTER></TD>';
+       };
     m += '</tr></table><BR><DIV><CENTER><INPUT id=pbSoundStop type=submit value="'+translate("Stop Sound Alert")+'"></center></div><DIV id=pbSwfPlayer></div>';
     m += '<BR><DIV class=pbStat>'+translate("SETUP")+'</div><TABLE class=pbTab>\
     <tr><td align=left><INPUT id=pbcellenable type=checkbox '+ (Options.celltext.atext?'CHECKED ':'') +'/></td>\
@@ -4604,6 +4614,12 @@ Tabs.tower = {
       }, false);
 
     for (var cityId in Cities.byID){
+    	
+      //m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text size=10 value='+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'></CENTER></TD>';
+    	document.getElementById ('towertext_'+ cityId).addEventListener('change',function(e){Options.alertConfig.towercitytext[e.target.name] = e.target.value;saveOptions();},false);
+    	
+    	
+    	
         var but = document.getElementById ('pbtabut_'+ cityId);
         addListener (but, cityId);
         t.defMode[cityId] =  parseInt(Seed.citystats["city" + cityId].gate);
@@ -4828,18 +4844,16 @@ getpinauth : function () {
 	var incomming = false;
 	for (var k in Seed.queue_atkinc) {   // check each incoming march
 		var m = Seed.queue_atkinc[k];
-		if (m.arrivalTime < now) continue; // ignore arrival times already happened - barbarossa 2/12/13
 		if (m.marchType==3 || m.marchType==4) {
 			if(Options.alertConfig.lastatkarr.indexOf(m.mid) == -1) {
 				Options.alertConfig.lastatkarr.push(m.mid);
-				Options.alertConfig.lastarrtime.push(m.arrivalTime);
-				// Below code changed to from Departure Time to Arrival Time - barbarossa 2/12/13
-				// I think sometimes this code ran too quickly following a refresh and it reverted back prematurely (incomming is false because seed hasn't set atkinc up yet).
+				Options.alertConfig.lastarrtime.push(m.arrivalTime)
 				if (m.arrivalTime > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = m.arrivalTime;//for tr toggle back
 				saveOptions();
 				t.newIncoming (m);
 			};
 			incomming = true;
+
 		}
 	}      
 	if (Options.alertConfig.raid && incomming){
@@ -4907,6 +4921,7 @@ getpinauth : function () {
 			var m = Seed.queue_atkinc[k];
 			if ((m.marchType == 3 || m.marchType == 4) && parseIntNan(m.arrivalTime) > now) {
 				t.handleTowerData(m);
+
 			}
 		}
 	}
@@ -5243,7 +5258,6 @@ getpinauth : function () {
    var chEff1Base = {"Damage":30,"Bonus Damage":0,"Armor":7,"Strength":27,"Dexterity":27,"Health":60,"Hit Chance":4,"Crit Chance":3,"Block":3};
    var chEffect2 = {1:"Attack",2:"Defense",3:"Life",4:"Combat Speed",5:"Range",6:"Load",7:"Accuracy",17:"Attack Debuff",18:"Defense Debufff",19:"Life Debuff",20:"Combat Speed Debuff",21:"Range Debuff",22:"Load Debuff",23:"Accuracy Debuff"};
    var chEff1Net;
-
     if (m.marchType == 3){
       if (!Options.alertConfig.scouting)
         return;
@@ -5253,9 +5267,14 @@ getpinauth : function () {
       return;
     }
     var city = Cities.byID[m.toCityId];
-    if ( city.tileId == m.toTileId )
+    if ( city.tileId == m.toTileId ) {
       target = unsafeWindow.g_js_strings.commonstr.city+ ' '+city.name+' ('+ city.x +','+ city.y + ')';
-    else {
+		if(Options.alertConfig.towercitytext[m.toCityId]) {
+   	 	target += '|'+Options.alertConfig.towercitytext[m.toCityId];
+ 	   };
+      
+      
+   } else {
       if (!Options.alertConfig.wilds)
         return;
       target = wilderness;
@@ -5282,13 +5301,16 @@ getpinauth : function () {
     else
         msg = '..:.|'+Options.alertConfig.aPrefix +' || '+scoutingat+' '+target+' || '+attacker+' '+ who +' || '+estimatedarrival+' ('+ unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())) +') || '+troops+': ';        
         //msg = Options.alertConfig.aPrefix +' My '+ target +' is being '+ atkType  +' by '+ who +' Incoming Troops (arriving in '+ unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())) +') : ';        
-        
    var fchar = Filter[Options.fchar];
     for (k in m.unts){
       var uid = parseInt(k.substr (1));
       var UNTCOUNT = String(String(m.unts[k]).split("")).replace(/,/g,fchar)// forced on, sucks that some people will get the funny A, but it's better than missing values of 80085 incoming troops
       msg += '|'+UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
     }
+     if(m.reportId) {
+     		setTimeout(function(){delete Seed.queue_atkinc['m'+m.reportId]},15000);//cleanup for fake tower attack
+     		msg += '||Report No: '+m.reportId;//added spaces for strange bug removing 2 characters
+		};
     if (m.championInfo) {
       msg += ' || Champion Item Stats:';
       for (k in m.championInfo.effects[1]) {
@@ -5299,7 +5321,6 @@ getpinauth : function () {
       for (k in m.championInfo.effects[2])
 	msg += '|' +chEffect2[k]+ ': ' +m.championInfo.effects[2][k]+', ';
     }
-    msg = msg.slice (0, -2);
     //msg += '  || ';
     if(m.marchStatus != 9) {
       if ( city.tileId == m.toTileId ){
@@ -12165,8 +12186,9 @@ Tabs.Options = {
         <TR><TD><INPUT id=pbThroneHUDBut type=checkbox '+ (Options.ThroneHUD?'CHECKED ':'') +'/></td><TD>'+translate("Throne HUD")+'</td></tr>\
         <TR><TD><INPUT id=pbWWclick type=checkbox '+ (Options.WWclick?'CHECKED ':'') +'/></td><TD>'+translate("Hit OK on multiple window warning popup which causes refresh")+'</td></tr>\
         <TR><TD><INPUT id=pbTreasureChest type=checkbox '+ (Options.TreasureChest?'CHECKED ':'') +'/></td><TD>'+translate("Auto click Treasure Chest finds - Use with Auto publish FB posts")+'</td></tr>\
-        <TR><TD><INPUT id=pbloginReward type=checkbox '+ (Options.loginReward?'CHECKED ':'') +'/></td><TD>'+translate("Auto click/accept daily login reward")+'</td></tr>\
-		<TR><TD><INPUT id=pbdetafk type=checkbox '+ (Options.detAFK?'CHECKED ':'')+ '/></td><TD> Do AFK events</td></tr>';
+        <TR><TD><INPUT id=pbloginReward type=checkbox '+ (Options.loginReward?'CHECKED ':'') +'/></td><TD>'+translate("Auto click/accept daily login reward")+'</td></tr>';
+		m+= '<TR><TD><INPUT id=pbdetafk type=checkbox '+ (Options.detAFK?'CHECKED ':'')+ '/></td><TD> Do AFK events</td></tr>';
+		m+= '<TR><TD><INPUT id=pbexpinc type=checkbox '+ (Options.expinc?'CHECKED ':'')+ '/></td><TD> Post missed and expired incoming marches</td></tr>';
         
         m+='<TR><TD colspan=2><BR><B>'+translate("KofC Features:")+'</b></td></tr>\
         <TR><TD><INPUT id=pbFairie type=checkbox /></td><TD>'+translate("Disable annoying Faire and Court popups (but automatically post treasure chests)")+'</td></tr>\
@@ -12301,6 +12323,7 @@ Tabs.Options = {
       t.togOpt ('pbTreasureChest', 'TreasureChest', TreasureChestClik.setEnable, TreasureChestClik.isAvailable);
       t.togOpt ('pbloginReward', 'loginReward');
       t.togOpt ('pbdetafk', 'detAFK');
+      t.togOpt ('pbexpinc', 'expinc');
       t.changeOpt ('pbwhichcity', 'smain');
       t.changeOpt ('pbMAP_DELAY','MAP_DELAY');
       t.changeOpt ('pbfilter','fchar');
@@ -18522,12 +18545,11 @@ var DeleteReports = {
     
     startdeletereports : function(){
         var t = DeleteReports;
-          if(!t.deleting){
+          if(!t.deleting && (Options.DeleteMsg || Options.DeleteMsgs0 || Options.DeleteMsgs1 || Options.DeleteMsgs2 || Options.DeleteMsgs3 || Options.expinc)){
               t.deleting = true;
               t.fetchreport(0, t.checkreports);
           }
     },
-    
     fetchreport : function(pageNo, callback){
         var t = DeleteReports;
         var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
@@ -18586,6 +18608,7 @@ var DeleteReports = {
         for(k in reports){
         	//logit(lasttenmin+" and "+reports[k].reportUnixTime+" and it is "+(lasttenmin < Number(reports[k].reportUnixTime)));
         	var reportUnixTime = Number(reports[k].reportUnixTime);
+        	if(Options.expinc) {
         	if((reports[k].marchType==4 || reports[k].marchType==3) && (lasttenmin < reportUnixTime) && t.isMyself(reports[k].side0PlayerId) && (Options.alertConfig.lastarrtime.indexOf(String(reportUnixTime)) == -1)) {
         		var x = {};
         		x.knt = {};
@@ -18613,9 +18636,10 @@ var DeleteReports = {
 				};
         		x.score = 9;
         		x.mid = reports[k].reportId;
-        		new t.faketower(k.substr(2),x);
+        			x.reportId = x.mid;
+        			new t.faketower(x.reportId,x);
+        		}
         	};
-        	
         	
             if(Options.DeleteMsg){
                 if((reports[k].marchType==4 || reports[k].marchType==9) && reports[k].side0PlayerId==0 && reports[k].side0TileType > 50)
@@ -20327,7 +20351,7 @@ Tabs.Attack = {
 	nTroopType: 17,
 	trooparray:{1:"ST",2:"MM",3:"Scout",4:"Pike",5:"Sword",6:"Arch",7:"LC",8:"HC",9:"SW",10:"Ball",11:"Ram",12:"Cat",13:"Blood",14:"Exec",15:"Siege",16:"Flame",17:"Huss",},
 	msgtimer : null,
-	MercItem : "i32100",
+	MercItem : "i30840",
 
 	/** window display **/
 	init : function (div) {
@@ -20369,7 +20393,7 @@ Tabs.Attack = {
 		m += '<TABLE class=ptTab><TR><TD>Target Co-ords:&nbsp;&nbsp;X:&nbsp;<INPUT id=pbcrestx type=text size=3 maxlength=3 value=""></td>';
 		m += '<TD>Y:&nbsp;<INPUT id=pbcresty type=text size=3 maxlength=3 value=""></td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will reduce wave 1 MM for subsequent attacks)</td></tr>';
-		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Yedda target reached)</td><td align=right>Yedda Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Emma target reached)</td><td align=right>Emma Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
    
 		var dude = unsafeWindow.unitnamedesctranslated;
 		m += '<TABLE class=ptTab><TR><TD><INPUT type=checkbox id=pbcrest_rnd1 CHECKED /></td><TD><b>Wave 1</b>&nbsp;(initial):</td><TD>&nbsp;&nbsp;<img src='+http+'kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_1_30.jpg alt='+dude.unt1[0]+'></td><TD><INPUT id=R1ST type=text size=7 maxlength=6 value=0></td>';
@@ -21363,30 +21387,34 @@ var March = {
                     //lets start telling kabam their server sucks! 
                     
 						var a = null;
-						var g = rslt.error_code;
+						var g = Number(rslt.error_code);
 						var g_server = unsafeWindow.g_server;
 						switch (g) {
-							case "0":
+							case 0:
 								a = "Unexpected Error.";
 								break;
-							case "8":
+							case 8:
 								a = "Excess traffic.";
 								unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server);
 								break;
-							case "3":
+							case 3:
 								//game out of sync
 								break;
-							case "4":
+							case 4:
 								//not enough units
 								break;
-							case "104":
+							case 104:
 								//unable to attack target
 								break;
-							case "208":
+							case 208:
 								// beginner protection
 								break;
-							case "210":
+							case 210:
 								// Max marches
+							case 213:
+								//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
+								  Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
+								//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
 								break;
 							default:
 								a = "Something has gone wrong.";

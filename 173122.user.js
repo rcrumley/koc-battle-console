@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20131130a
+// @version        20131202a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20131130a';
+var Version = '20131202a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -203,7 +203,7 @@ var IRCOptions = {
 	IRCCmdSeen : {enable:false},
 	IRCCmdRules : {enable:false, message:""},
 };
-	
+
 var GameIcons = {
     goldImgTiny   : '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_gold.png>',
     foodImgTiny   : '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_food.png>',
@@ -478,7 +478,7 @@ var knightRoles = [
   ['Steward', 'resourcefulness', 'Res'],
 ];
 
-var rats = ["2466324","	5801935","14737553"];//people who openly tried to destroy script development including reporting scripters to kabam.  now the joke is on them.
+var rats = ["2466324","5801935","14737553"];//people who openly tried to destroy script development including reporting scripters to kabam.  now the joke is on them.
 var scripters = ["7552815","10681588","1747877","2865067","10153485","15182839","1550996","1617431819","9688786","8184813","9863346","11107993","9751486","5614388","424090","14845619","8480468","7042380","731589"];
 
 
@@ -1016,7 +1016,7 @@ var ChatTimeFix = {
 
       t.ChatTime = new CalterUwFunc("Chat.getChat",[['rslt.data.newChats[i][j][1],','ptConvertTime(rslt.data.newChats[i][j][1]),'],['rslt.data.newChats[i][j][1],','ptConvertTime(rslt.data.newChats[i][j][1]),']]);
       t.ChatTime.setEnable(Options.fixChatTime);
-  },
+	},
 
   setEnable : function (tf){
 	var t = ChatTimeFix;
@@ -1057,12 +1057,12 @@ var BarbRaidMarchPatch = {
 
   init : function (){
     t = BarbRaidMarchPatch;
-	
+
 	if (FFVersion.substring(0,4) > 16)
 		t.marchFix = new CalterUwFunc ('update_march', [[/D\.toTileLevel,\s*n,\s*M\)/im,'D.toTileLevel, n, M, Math.floor(unixtime()+D.returnEta-D.marchUnixTime))']]);
 	else	
 		t.marchFix = new CalterUwFunc ('update_march', [['D.toTileLevel, n, M)','D.toTileLevel, n, M, Math.floor(unixtime()+D.returnEta-D.marchUnixTime))']]);
-    t.marchFix.setEnable(Options.togRaidPatch);
+      t.marchFix.setEnable(Options.togRaidPatch);
   },
 
   setEnable : function (tf){
@@ -1550,856 +1550,1045 @@ var Rpt = {
 	},
 
 
- 	ReportPopup: function (rslt, rpt, reportId) {
-		var t = Rpt;
-		var popReport = null;
-		//need the info from the list query
-		var m = '';
-		var unitImg = [];
-		for (var i=1;i<nTroopType+1;i++)
-			unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>' + uW.unitcost['unt'+i][0];
-		unitImg[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>Crossbows';
-		unitImg[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>Trebuchet';
-		unitImg[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>Trap';
-		unitImg[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>Caltrops';
-		unitImg[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>Spiked Barrier';
-		goldImg   = GameIcons.goldImg   + '</TD><TD>Gold';
-		foodImg   = GameIcons.foodImg   + '</TD><TD>Food';
-		woodImg   = GameIcons.woodImg   + '</TD><TD>Wood';
-		stoneImg  = GameIcons.stoneImg  + '</TD><TD>Stone';
-		oreImg    = GameIcons.oreImg    + '</TD><TD>Ore';
-		astoneImg = GameIcons.astoneImg + '</TD><TD>Aetherstone';
+    ReportPopup: function (rslt, rpt, reportId) {
+        var t = Rpt;
+        var popReport = null;
+        //need the info from the list query
+        var m = '';
+        var unitImg = [];
+        for (var i=1;i<nTroopType+1;i++)
+            unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>' + uW.unitcost['unt'+i][0];
+        unitImg[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>Crossbows';
+        unitImg[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>Trebuchet';
+        unitImg[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>Trap';
+        unitImg[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>Caltrops';
+        unitImg[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>Spiked Barrier';
+        goldImg   = GameIcons.goldImg   + '</TD><TD>Gold';
+        foodImg   = GameIcons.foodImg   + '</TD><TD>Food';
+        woodImg   = GameIcons.woodImg   + '</TD><TD>Wood';
+        stoneImg  = GameIcons.stoneImg  + '</TD><TD>Stone';
+        oreImg    = GameIcons.oreImg    + '</TD><TD>Ore';
+        astoneImg = GameIcons.astoneImg + '</TD><TD>Aetherstone';
 
-		var unitImg2 = [];
-		for (var i=1;i<nTroopType+1;i++)
-			unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>';
-		unitImg2[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>';
-		unitImg2[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>';
-		unitImg2[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>';
-		unitImg2[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>';
-		unitImg2[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>';
+        var unitImg2 = [];
+        for (var i=1;i<nTroopType+1;i++)
+            unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>';
+        unitImg2[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>';
+        unitImg2[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>';
+        unitImg2[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>';
+        unitImg2[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>';
+        unitImg2[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>';
 
-		var trEffect = [];
+        if (parseInt(rpt.side0AllianceId) == parseInt(Seed.allianceDiplomacies.allianceId)) {
+            rpt.sideId = 0;
+        } else {
+            rpt.sideId = 1;
+        }
+        
+        var trEffect = [];
 /*
-		trEffect[1] = 'Attack';
-		trEffect[2] = 'Defense';
-		trEffect[3] = 'Life';
-		trEffect[4] = 'Combat Speed';
-		trEffect[5] = 'Range';
-		trEffect[6] = 'Load';
-		trEffect[7] = 'Accuracy';
-		trEffect[8] = 'Bonus to PvP on Defense';
-		trEffect[9] = 'Bonus to PvP on Offense';
-		trEffect[10] = 'Bonus vs. Wilds';
-		trEffect[11] = 'Bonus vs. Barbarian Camps';
-		trEffect[12] = 'Bonus vs. Dark Forests';
-		trEffect[13] = 'Bonus to Traps';
-		trEffect[14] = 'Bonus to Spiked Barriers';
-		trEffect[15] = 'Bonus to Wall Mounted Crossbows';
-		trEffect[16] = 'Bonus to Wall';
-		trEffect[17] = 'Attack Debuff';
-		trEffect[18] = 'Defense Debuff';
-		trEffect[19] = 'Life Debuff';
-		trEffect[20] = 'Combat Speed Debuff';
-		trEffect[21] = 'Range Debuff';
-		trEffect[22] = 'Load Debuff';
-		trEffect[23] = 'Accuracy Debuff';
-		trEffect[24] = 'Infantry Attack';
-		trEffect[25] = 'Infantry Defense';
-		trEffect[26] = 'Infantry Life';
-		trEffect[27] = 'Infantry Combat Speed';
-		trEffect[28] = 'Infantry Accuracy Bonus';
-		trEffect[29] = 'Infantry Attack Debuff';
-		trEffect[30] = 'Infantry Defense Debuff';
-		trEffect[31] = 'Infantry Life Debuff';
-		trEffect[32] = 'Infantry Combat Speed Debuff';
-		trEffect[33] = 'Infantry Accuracy Bonus Debuff';
-		trEffect[34] = 'Ranged Attack';
-		trEffect[35] = 'Ranged Defense';
-		trEffect[36] = 'Ranged Life';
-		trEffect[37] = 'Ranged Range';
-		trEffect[38] = 'Ranged Accuracy Bonus';
-		trEffect[39] = 'Ranged Attack Debuff';
-		trEffect[40] = 'Ranged Defense Debuff';
-		trEffect[41] = 'Ranged Life Debuff';
-		trEffect[42] = 'Ranged Range Debuff';
-		trEffect[43] = 'Ranged Accuracy Bonus Debuff';
-		trEffect[44] = 'Horsed Attack';
-		trEffect[45] = 'Horsed Defense';
-		trEffect[46] = 'Horsed Life';
-		trEffect[47] = 'Horsed Combat Speed';
-		trEffect[48] = 'Horsed Load';
-		trEffect[49] = 'Horsed Accuracy Bonus';
-		trEffect[50] = 'Horsed Attack Debuff';
-		trEffect[51] = 'Horsed Defense Debuff';
-		trEffect[52] = 'Horsed Life Debuff';
-		trEffect[53] = 'Horsed Combat Speed Debuff';
-		trEffect[54] = 'Horsed Load Debuff';
-		trEffect[55] = 'Horsed Accuracy Bonus Debuff';
-		trEffect[56] = 'Siege Attack';
-		trEffect[57] = 'Siege Combat Speed';
-		trEffect[58] = 'Siege Range';
-		trEffect[59] = 'Siege Load';
-		trEffect[60] = 'Siege Accuracy';
-		trEffect[61] = 'Siege Attack Debuff';
-		trEffect[62] = 'Siege Combat Speed Debuff';
-		trEffect[63] = 'Siege Range Debuff';
-		trEffect[64] = 'Siege Load Debuff';
-		trEffect[65] = 'Siege Accuracy Debuff';
-		trEffect[66] = 'March Size';
-		trEffect[67] = 'March Speed';
-		trEffect[68] = 'Attack March Speed';
-		trEffect[69] = 'Reinforcement March Speed';
-		trEffect[70] = 'Transport March Speed';
-		trEffect[71] = 'Reassign March Speed';
-		trEffect[72] = 'Scout March Speed';
-		trEffect[73] = 'Combat';
-		trEffect[74] = 'Intelligence';
-		trEffect[75] = 'Politics';
-		trEffect[76] = 'Resourcefulness';
-		trEffect[77] = 'Troop Training Speed';
-		trEffect[78] = 'Construction Speed';
-		trEffect[79] = 'Upkeep Reduction';
-		trEffect[80] = 'Research Speed';
-		trEffect[81] = 'Crafting Speed';
-		trEffect[82] = 'Resource Production';
-		trEffect[83] = 'Food Production';
-		trEffect[84] = 'Wood Production';
-		trEffect[85] = 'Stone Production';
-		trEffect[86] = 'Ore Production';
-		trEffect[87] = 'Broad Resource Cap';
-		trEffect[88] = 'Aetherstone Cap';
-		trEffect[89] = 'Storehouse Protection';
-		trEffect[90] = 'Morale Boost';
-		trEffect[91] = 'Chance to Find Items';
-		trEffect[92] = 'Chance to Find Items in Dark Forests';
-		trEffect[93] = 'Chance to Find Items in PvP';
-		trEffect[94] = 'Druid Bonus 1'	
-		trEffect[95] = 'Fey Bonus 1'
-		trEffect[96] = 'Briton Bonus 1'
+        trEffect[1] = 'Attack';
+        trEffect[2] = 'Defense';
+        trEffect[3] = 'Life';
+        trEffect[4] = 'Combat Speed';
+        trEffect[5] = 'Range';
+        trEffect[6] = 'Load';
+        trEffect[7] = 'Accuracy';
+        trEffect[8] = 'Bonus to PvP on Defense';
+        trEffect[9] = 'Bonus to PvP on Offense';
+        trEffect[10] = 'Bonus vs. Wilds';
+        trEffect[11] = 'Bonus vs. Barbarian Camps';
+        trEffect[12] = 'Bonus vs. Dark Forests';
+        trEffect[13] = 'Bonus to Traps';
+        trEffect[14] = 'Bonus to Spiked Barriers';
+        trEffect[15] = 'Bonus to Wall Mounted Crossbows';
+        trEffect[16] = 'Bonus to Wall';
+        trEffect[17] = 'Attack Debuff';
+        trEffect[18] = 'Defense Debuff';
+        trEffect[19] = 'Life Debuff';
+        trEffect[20] = 'Combat Speed Debuff';
+        trEffect[21] = 'Range Debuff';
+        trEffect[22] = 'Load Debuff';
+        trEffect[23] = 'Accuracy Debuff';
+        trEffect[24] = 'Infantry Attack';
+        trEffect[25] = 'Infantry Defense';
+        trEffect[26] = 'Infantry Life';
+        trEffect[27] = 'Infantry Combat Speed';
+        trEffect[28] = 'Infantry Accuracy Bonus';
+        trEffect[29] = 'Infantry Attack Debuff';
+        trEffect[30] = 'Infantry Defense Debuff';
+        trEffect[31] = 'Infantry Life Debuff';
+        trEffect[32] = 'Infantry Combat Speed Debuff';
+        trEffect[33] = 'Infantry Accuracy Bonus Debuff';
+        trEffect[34] = 'Ranged Attack';
+        trEffect[35] = 'Ranged Defense';
+        trEffect[36] = 'Ranged Life';
+        trEffect[37] = 'Ranged Range';
+        trEffect[38] = 'Ranged Accuracy Bonus';
+        trEffect[39] = 'Ranged Attack Debuff';
+        trEffect[40] = 'Ranged Defense Debuff';
+        trEffect[41] = 'Ranged Life Debuff';
+        trEffect[42] = 'Ranged Range Debuff';
+        trEffect[43] = 'Ranged Accuracy Bonus Debuff';
+        trEffect[44] = 'Horsed Attack';
+        trEffect[45] = 'Horsed Defense';
+        trEffect[46] = 'Horsed Life';
+        trEffect[47] = 'Horsed Combat Speed';
+        trEffect[48] = 'Horsed Load';
+        trEffect[49] = 'Horsed Accuracy Bonus';
+        trEffect[50] = 'Horsed Attack Debuff';
+        trEffect[51] = 'Horsed Defense Debuff';
+        trEffect[52] = 'Horsed Life Debuff';
+        trEffect[53] = 'Horsed Combat Speed Debuff';
+        trEffect[54] = 'Horsed Load Debuff';
+        trEffect[55] = 'Horsed Accuracy Bonus Debuff';
+        trEffect[56] = 'Siege Attack';
+        trEffect[57] = 'Siege Combat Speed';
+        trEffect[58] = 'Siege Range';
+        trEffect[59] = 'Siege Load';
+        trEffect[60] = 'Siege Accuracy';
+        trEffect[61] = 'Siege Attack Debuff';
+        trEffect[62] = 'Siege Combat Speed Debuff';
+        trEffect[63] = 'Siege Range Debuff';
+        trEffect[64] = 'Siege Load Debuff';
+        trEffect[65] = 'Siege Accuracy Debuff';
+        trEffect[66] = 'March Size';
+        trEffect[67] = 'March Speed';
+        trEffect[68] = 'Attack March Speed';
+        trEffect[69] = 'Reinforcement March Speed';
+        trEffect[70] = 'Transport March Speed';
+        trEffect[71] = 'Reassign March Speed';
+        trEffect[72] = 'Scout March Speed';
+        trEffect[73] = 'Combat';
+        trEffect[74] = 'Intelligence';
+        trEffect[75] = 'Politics';
+        trEffect[76] = 'Resourcefulness';
+        trEffect[77] = 'Troop Training Speed';
+        trEffect[78] = 'Construction Speed';
+        trEffect[79] = 'Upkeep Reduction';
+        trEffect[80] = 'Research Speed';
+        trEffect[81] = 'Crafting Speed';
+        trEffect[82] = 'Resource Production';
+        trEffect[83] = 'Food Production';
+        trEffect[84] = 'Wood Production';
+        trEffect[85] = 'Stone Production';
+        trEffect[86] = 'Ore Production';
+        trEffect[87] = 'Broad Resource Cap';
+        trEffect[88] = 'Aetherstone Cap';
+        trEffect[89] = 'Storehouse Protection';
+        trEffect[90] = 'Morale Boost';
+        trEffect[91] = 'Chance to Find Items';
+        trEffect[92] = 'Chance to Find Items in Dark Forests';
+        trEffect[93] = 'Chance to Find Items in PvP';
+        trEffect[94] = 'Druid Bonus 1'	
+        trEffect[95] = 'Fey Bonus 1'
+        trEffect[96] = 'Briton Bonus 1'
 */
-		for (var k in uW.cm.thronestats.effects)
-			trEffect[k] = uW.cm.thronestats.effects[k][1];
-		var chEffect = ["hpm","hpr","dam","arm","str","dex","con","hit","cri","blk"];
-		var chEffectName = [uW.g_js_strings.champion_stats.hp,uW.g_js_strings.report_view.hp_remaining,uW.g_js_strings.champion_stats.damage,uW.g_js_strings.effects.name_203,uW.g_js_strings.effects.name_204,uW.g_js_strings.effects.name_205,uW.g_js_strings.effects.name_206,uW.g_js_strings.effects.name_207,uW.g_js_strings.effects.name_208,uW.g_js_strings.effects.name_209];
+        for (var k in uW.cm.thronestats.effects)
+            trEffect[k] = uW.cm.thronestats.effects[k][1];
+        var chEffect = ["hpm","hpr","dam","arm","str","dex","con","hit","cri","blk"];
+        var chEffectName = [uW.g_js_strings.champion_stats.hp,uW.g_js_strings.report_view.hp_remaining,uW.g_js_strings.champion_stats.damage,uW.g_js_strings.effects.name_203,uW.g_js_strings.effects.name_204,uW.g_js_strings.effects.name_205,uW.g_js_strings.effects.name_206,uW.g_js_strings.effects.name_207,uW.g_js_strings.effects.name_208,uW.g_js_strings.effects.name_209];
 
-		if (rpt.marchType == 0)
-			rpt.marchName = 'Desertion';
-		else if (rpt.marchType == 1)
-			rpt.marchName = 'Transport';
-		else if (rpt.marchType == 2)
-			rpt.marchName = 'Reinforce';
-		else if (rpt.marchType == 3) {
-			if (rpt.sideId == 0)
-				rpt.marchName = 'Anti-Scout';
-			else
-				rpt.marchName = 'Scout';
-		} else if (rpt.marchType == 4) {
-			if (rpt.sideId == 0)
-				rpt.marchName = 'Defend';
-			else
-				rpt.marchName = 'Attack';
-		} else
-			rpt.marchName = '?';
-		if (parseInt(rpt.side0TileType) == 10)
-			rpt.side0TileTypeText='Grass';
-		else if (parseInt(rpt.side0TileType) == 11)
-			rpt.side0TileTypeText='Lake';
-		else if (parseInt(rpt.side0TileType) == 20)
-			rpt.side0TileTypeText='Woods';
-		else if (parseInt(rpt.side0TileType) == 30)
-			rpt.side0TileTypeText='Hills';
-		else if (parseInt(rpt.side0TileType) == 40)
-			rpt.side0TileTypeText='Mount';
-		else if (parseInt(rpt.side0TileType) == 50)
-			rpt.side0TileTypeText='Plain';
-		else if (parseInt(rpt.side0CityId) ==0)
-			rpt.side0TileTypeText='Barb';
-		else
-			rpt.side0TileTypeText='City';
+        if (rpt.marchType == 0)
+            rpt.marchName = 'Desertion';
+        else if (rpt.marchType == 1)
+            rpt.marchName = 'Transport';
+        else if (rpt.marchType == 2)
+            rpt.marchName = 'Reinforce';
+        else if (rpt.marchType == 3) {
+            if (rpt.sideId == 0)
+                rpt.marchName = 'Anti-Scout';
+            else
+                rpt.marchName = 'Scout';
+        } else if (rpt.marchType == 4) {
+            if (rpt.sideId == 0)
+                rpt.marchName = 'Defend';
+            else
+                rpt.marchName = 'Attack';
+        } else
+            rpt.marchName = '?';
+        if (parseInt(rpt.side0TileType) == 10)
+            rpt.side0TileTypeText='Grass';
+        else if (parseInt(rpt.side0TileType) == 11)
+            rpt.side0TileTypeText='Lake';
+        else if (parseInt(rpt.side0TileType) == 20)
+            rpt.side0TileTypeText='Woods';
+        else if (parseInt(rpt.side0TileType) == 30)
+            rpt.side0TileTypeText='Hills';
+        else if (parseInt(rpt.side0TileType) == 40)
+            rpt.side0TileTypeText='Mount';
+        else if (parseInt(rpt.side0TileType) == 50)
+            rpt.side0TileTypeText='Plain';
+        else if (parseInt(rpt.side0CityId) ==0)
+            rpt.side0TileTypeText='Barb';
+        else
+            rpt.side0TileTypeText='City';
 
-		function buildHeader () {
-			var h='<TABLE class=ptTab width=100%>';
-			h+='<TR valign=top><TD align=left width=10%><B>';
-			if (rpt.marchName == 'Anti-Scout' || rpt.marchName == 'Scout')
-				h+=rpt.marchName+'ing at';
-			else if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
-				h+='Battle at ';
-			else if (rpt.marchName == 'Reinforce' || rpt.marchName == 'Transport')
-				h+=rpt.marchName+' from<BR />'+rpt.marchName+' to</B>';
+        function buildHeader () {
+            var h='<div id=reportHeader style="width:100%;">';
+            h+='<div id=reportHeaderLeft style="float:left;width:30%;text-align:left;">';
+            h+= formatUnixTime(rpt.reportUnixTime,'24hour');
+            h+= '<br>';
+            if (rpt.side0TileTypeText != 'City' && rpt.side0TileTypeText != 'Barb' && rpt.marchName == 'Attack') {
+                if (rslt['conquered']==1)
+                    h+='<FONT color="#CC0000"><B>Conquered</B></font>';
+                else if (rslt['conquered']==0)
+                    h+='<FONT color="#66CC33"><B>Secured</B></font>';
+            }
+            else if ((rslt['winner']==1 && rpt.sideId==0) || (rslt['winner']==0 && rpt.sideId==1)) {
+                if (rpt.marchName == 'Scout')
+                    h+='<FONT color="#CC0000"><B>Scouting Failed</B></font>';
+                else
+                    h+='<FONT color="#CC0000"><B>You were defeated</B></font>';
+            }
+            else if (rslt['winner']==0 && rpt.sideId==0)
+                h+='<FONT color="#66CC33"><B>You defended successfully!</B></font>';
+            else if (rslt['winner']==1 && rpt.sideId==1) {
+                if (rpt.marchName == 'Scout')
+                    h+='<FONT color="#66CC33"><B>Scouting Report</B></font>';
+                else
+                    h+='<FONT color="#66CC33"><B>You were victorious!</B></font>';
+            }
+            h+='</div>';
+            h+='<div id=reportHeaderCenter style="float:left;width:40%;text-align:center;">';
+            h+='<b>Glory Gained: ';
+            if (rslt['glory'])
+                h+=addCommas(rslt['glory']);
+            else
+                h+='0';
+            h+='</b></div>';
+            h+='<div id=reportHeaderRight style="float:left;width:30%;text-align:right;">';
+            h+= 'Report No: ' + reportId;
+            h+='<input id=ptpostreportid onclick="Chat.sendChat(\'/a Report No: '+reportId +'\')" style="font-size:'+ Options.overviewFontSize +'px" type="submit" value="Post To Chat"></div>';
+            h+='</div><div style="clear:both;"></div>';
+            return h;
+        }
 
-			if (rpt.side0TileTypeText == 'Barb')
-				h+=' Barbarian Camp Level ' + rpt.side0TileLevel;
-			else if (rpt.side0TileTypeText != 'City')
-				h+=' '+rpt.side0TileTypeText+' Level '+ rpt.side0TileLevel+' ';
-			h+='</B></TD>';
+        function buildBattle () {
+            var m = '';
+            //header
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Battle Results:</div>';
+            //summary
+            m+='<div id=battleSummaryContainer>';
+            //summary - attacker
+            m+='<div style="width:50%;float:left;">';
+            m+='<B>Attackers:</B> '+rpt.side1Name+' (<A onclick="ptGotoMap('+ rpt.side1XCoord +','+ rpt.side1YCoord +')">'+ rpt.side1XCoord +','+ rpt.side1YCoord +'</a>) ';
+            if (rslt['winner']==1)
+                m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
+            m+='<br>';
+            if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
+                m+='Knight Combat Skill: ' + rslt['s1KCombatLv'] + '<br>';
+            if (rslt['fght']["s1"]) {
+                var atkmight = 0;
+                for (var i=1;i<nTroopType+1;i++) {
+                    if (rslt['fght']["s1"]['u'+i]) {
+                        if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
+                            for (ix=1;ix<nTroopType+1;ix++)
+                                if (i == ix) {atkmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s1"]['u'+ix][0]) - parseInt(rslt['fght']["s1"]['u'+ix][1])))};
+                        } else {atkmight += 0;}
+                    }
+                }
+            }
+            m+='Might Lost: '+addCommas(atkmight)+'</div>';
+            //summary - defender
+            m+='<div style="width:50%;float:left;">';
+            m+='<B>Defenders</B> '+rpt.side0Name+' (<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>) ';
+            if (rslt['winner']==0)
+                m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
+            m+='<br>';
+            if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
+                m+='Knight Combat Skill: ' + rslt['s0KCombatLv'] + '<br>';
+            if (rslt['fght']["s0"]) {
+                var defmight = 0;
+                if (rslt.overwhelmed) {
+                    for (var i=1;i<nTroopType+1;i++) {
+                        if (rslt['fght']["s0"]['u'+i]) {
+                            if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
+                                for (ix=1;ix<nTroopType+1;ix++)
+                                    if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*parseInt(rslt['fght']["s0"]['u'+ix][0]))};
 
-			if (rpt.marchName == 'Reinforce' || rpt.marchName == 'Transport') {
-				h+='<TD align=left width=1%>';
-				if (Seed.player.name != rpt.side1Name)
-					h+=rpt.side1Name;
-				if (Seed.player.name != rpt.side0Name)
-					h+='<BR />'+rpt.side0Name;
-				h+='</TD>';
-			}
-			h+='<TD align=left width=5%>';
+                            } else {defmight += 0;}
+                        }
+                    }
+                    for (var i=53;i<=55;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                if (i == 53) {defmight += 4*(parseInt(rslt['fght']["s0"]['f53'][0]))};
+                                if (i == 55) {defmight += 7*(parseInt(rslt['fght']["s0"]['f55'][0]))};
+                            } else {defmight += 0;}
+                        }
+                    }
+                    for (var i=60;i<63;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                if (i == 60) {defmight += 3*(parseInt(rslt['fght']["s0"]['f60'][0]))};
+                                if (i == 61) {defmight += (parseInt(rslt['fght']["s0"]['f61'][0]))};
+                                if (i == 62) {defmight += 2*(parseInt(rslt['fght']["s0"]['f62'][0]))};
+                            } else {defmight += 0;}
+                        }
+                    }
+                } else {
+                    for (var i=1;i<nTroopType+1;i++) {
+                        if (rslt['fght']["s0"]['u'+i]) {
+                            if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
+                                for (ix=1;ix<nTroopType+1;ix++)
+                                    if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s0"]['u'+ix][0]) - parseInt(rslt['fght']["s0"]['u'+ix][1])))};
+                            } else {defmight += 0;}
+                        }
+                    }
+                    for (var i=53;i<=55;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                if (i == 53) {defmight += 4*(parseInt(rslt['fght']["s0"]['f53'][0]) - parseInt(rslt['fght']["s0"]['f53'][1]))};
+                                if (i == 55) {defmight += 7*(parseInt(rslt['fght']["s0"]['f55'][0]) - parseInt(rslt['fght']["s0"]['f55'][1]))};
+                            } else {defmight += 0;}
+                        }
+                    }
+                    for (var i=60;i<63;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                if (i == 60) {defmight += 3*(parseInt(rslt['fght']["s0"]['f60'][0]) - parseInt(rslt['fght']["s0"]['f60'][1]))};
+                                if (i == 61) {defmight += (parseInt(rslt['fght']["s0"]['f61'][0]) - parseInt(rslt['fght']["s0"]['f61'][1]))};
+                                if (i == 62) {defmight += 2*(parseInt(rslt['fght']["s0"]['f62'][0]) - parseInt(rslt['fght']["s0"]['f62'][1]))};
+                            } else {defmight += 0;}
+                        }
+                    }
+                }
+            }
+            m+='Might Lost: '+addCommas(defmight)+'<br>';
+            m+='Rounds: ' + rslt['rnds'] + '<br>';
+            if (rslt['wall']) {
+                if (rslt['wall'] == 100)
+                    m+='Attackers breached the walls.';
+                else
+                    m+='Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged';
+            }
+            m+='</div>';            
+            m+='</div>'; //end battlesummary div
+            //troops
+            
+            m+='<div id=battleTroopsContainer style="clear:both">';
+            //troops - attacker
+            m+='<div style="width:50%;float:left;"><TABLE class=ptTab width=100%>';
+            if (rslt['fght']["s1"]) {
+                m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
+                for (var i=1;i<nTroopType+1;i++) {
+                    if (rslt['fght']["s1"]['u'+i]) {
+                        if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
+                            m+='<TR><TD>' + unitImg[i] + '</td>';
+                            m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][0])+'</td>';
+                            m+='<TD align=center><font color="#CC0000">'+addCommas(rslt['fght']["s1"]['u'+i][1])+'</font></td>';
+                            m+='<TD align=center><font color="#CC0000">('+addCommas((rslt['fght']["s1"]['u'+i][0]) - (rslt['fght']["s1"]['u'+i][1]))+')</font></td></tr>';
+                        } else {
+                            m+='<TR><TD>' + unitImg[i] + '</td>';
+                            m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][0])+'</td>';
+                            m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][1])+'</td></tr>';
+                        }
+                    }
+                }
+            }
+            m+='</table></div>';
+            
+            //troops - defender
+            m+='<div style="width:50%;float:left;">';
+            m+='<TABLE class=ptTab width=100%>';
+            if (rslt['fght']["s0"]) {
+                if (rslt.overwhelmed) {
+                    m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
+                    for (var i=1;i<nTroopType+1;i++) {
+                        if (rslt['fght']["s0"]['u'+i]) {
+                            m+='<TR><TD>' + unitImg[i] + '</td>';
+                            m+='<TD align=center>???</td>';
+                            m+='<TD align=center>???</td>';
+                                if(rslt['fght']["s0"]['u'+i][0] > 0) {
+                                    m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['u'+i][0])+')</FONT></td></tr>';
+                                } else {
+                                    m+='<TD align=center>0</td></tr>';
+                                }
+                        }
+                    }
+                    for (var i=53;i<=55;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            m+='<TR><TD>' + unitImg[i] + '</td>';
+                            m+='<TD align=center>???</td>';
+                            m+='<TD align=center>???</td>';
+                                if(rslt['fght']["s0"]['f'+i][0] > 0) {
+                                    m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['f'+i][0])+')</FONT></td></tr>';
+                                } else {
+                                    m+='<TD align=center>0</td></tr>';
+                                }
+                        }
+                    }
+                    for (var i=60;i<=63;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            m+='<TR><TD>' + unitImg[i] + '</td>';
+                            m+='<TD align=center>???</td>';
+                            m+='<TD align=center>???</td>';
+                                if(rslt['fght']["s0"]['f'+i][0] > 0) {
+                                    m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['f'+i][0])+')</font></td></tr>';
+                                } else {
+                                    m+='<TD align=center>0</td></tr>';
+                                }
+                            
+                        }
+                    }
+                } else {
+                    m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
+                    for (var i=1;i<nTroopType+1;i++) {
+                        if (rslt['fght']["s0"]['u'+i]) {
+                            if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][0])+'</td>';
+                                m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['u'+i][1])+'</FONT></td>';
+                                m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['u'+i][0]) - (rslt['fght']["s0"]['u'+i][1]))+')</FONT></td></tr>';
+                            } else {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][0])+'</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][1])+'</td></tr>';
+                            }
+                        }
+                    }
+                    for (var i=53;i<=55;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
+                                m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</font></td>';
+                                m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['f'+i][0]) - (rslt['fght']["s0"]['f'+i][1]))+')</FONT></td></tr>';
+                            } else {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</td></tr>';
+                            }
+                        }
+                    }
+                    for (var i=60;i<=63;i++) {
+                        if (rslt['fght']["s0"]['f'+i]) {
+                            if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
+                                m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</font></td>';
+                                m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['f'+i][0]) - (rslt['fght']["s0"]['f'+i][1]))+')</FONT></td></tr>';
+                            } else {
+                                m+='<TR><TD>' + unitImg[i] + '</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
+                                m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</td></tr>';
+                            }
+                        }
+                    }
+                }
+            } else
+                m+='<TR><TD>No Troops Defended</TD></TR>';
+            m+='</table>';
+            m+='</div>';
+            m+='</div>'; //end troops div
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
 
-			if (rpt.marchName == 'Reinforce' || rpt.marchName == 'Transport')
-				h+='(<A onclick="ptGotoMap('+ rpt.side1XCoord +','+ rpt.side1YCoord +')">'+ rpt.side1XCoord +','+ rpt.side1YCoord +'</a>)<BR />';
-			h+='(<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>)</TD>';
+        function buildTroopStats () {
+            var m = '';
+            //header
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left><a id=reportTroopStatsHdr class=ptdivLink >Troop Stats:&nbsp;<img id=reportTroopStatsArrow height="10" src="'+GameIcons.RightArrow+'"></a></div>';
+            //stats
+            m+='<div id=reportTroopStats class="ptdivHide">';
+            //troops - attacker - stats
+            m+='<div style="width:50%;float:left;">';
+            
+            if (rslt['fght']["s1"]) {
+                for (var i=1;i<nTroopType+1;i++) {
+                    if (rslt['fght']["s1"]['u'+i]) {
+                        m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
+                        m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['hp'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['atk'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['def'][1])+'</font></td></tr><tr>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['spd'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['rng'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['ld'][1])+'</font></td></tr></table></div>';
+                    }
+                }
+            }
+            m+='</div>';
+            //troops - defender - stats
+            m+='<div style="width:50%;float:left;">';
+            if (rslt['fght']["s0"]) {
+                for (var i=1;i<nTroopType+1;i++) {
+                    if (rslt['fght']["s0"]['u'+i]) {
+                        m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
+                        m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['hp'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['atk'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['def'][1])+'</font></td></tr><tr>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['spd'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['rng'][1])+'</font></td></tr></table></div>';
+                    }
+                }
+                for (var i=53;i<=55;i++) {
+                    if (rslt['fght']["s0"]['f'+i]) {
+                        m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
+                        m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['hp'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['atk'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['def'][1])+'</font></td></tr><tr>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['spd'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['rng'][1])+'</font></td></tr></table></div>';
+                    }
+                }
+                for (var i=60;i<=63;i++) {
+                    if (rslt['fght']["s0"]['f'+i]) {
+                        m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
+                        m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['hp'][1])+'</font></td>';
+                        m+='<td style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['atk'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['def'][1])+'</font></td></tr><tr>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['spd'][1])+'</font></td>';
+                        m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['rng'][1])+'</font></td></tr></table></div>';
+                    }
+                }
+            }
+            m+='</div></div>'; //end reportTroopStats div
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
 
-			if (rpt.side0TileTypeText != 'City' && rpt.side0TileTypeText != 'Barb' && rpt.marchName == 'Attack') {
-				if (rslt['conquered']==1)
-					h+='<TD><FONT color="#CC0000"><B>Conquered</B></font></td>';
-				else if (rslt['conquered']==0)
-					h+='<TD><FONT color="#66CC33"><B>Secured</B></font></td>';
-			} else if (rpt.marchName == 'Reinforce' || rpt.marchName == 'Transport') {
-				if (rpt.side1CityName) h+='<TD align=left width=5%>'+rpt.side1CityName+'<BR />';
-				if (rpt.side0CityName) {
-					if (rpt.side0CityName != '')
-						h+=rpt.side0CityName+'</TD>';
-					else
-						h+=rpt.side0TileTypeText+' Level '+ rpt.side0TileLevel+'</TD>';
-				}
-			}
-			h+='<TD align=right>' + formatUnixTime(rpt.reportUnixTime,'24hour') + '<BR />Report No: ' + reportId + '</TD></TR></TABLE>';
-			return h;
-		}
+        function buildChampDuel () {
+            var m = '';
+            //header
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Champion Duel:</div>';
+            //summary
+            m+='<div id=ChampDuelContainer>';
+            m+='<div id=ChampAdjContainer>';
+            m+='<div style="width:50%;float:left;">';
+            // rather than fix the index for life, kabam remapped efects
+            // 0:g_js_strings.effects.name_3,
+            // 1:g_js_strings.effects.name_1,
+            // 2:g_js_strings.effects.name_2,
+            // 3:g_js_strings.commonstr.speed,
+            // 4:g_js_strings.effects.name_5,
+            // 5:g_js_strings.effects.name_6,
+            // 6:g_js_strings.effects.name_7
+            if (rslt.bonus['cmp']) {
+                m+='<b>Champion Adjustments:</b><br><TABLE class=ptTab width=100%>';
+                for (var i=0;i<24;i++) {
+                    if (rslt.bonus['cmp']['s1'][i]) {
+                        if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>'; 
+                        else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
+                             else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
+                    }
+                }
+                m+='</table></br>'
+            }
+            m+='</div>';//attacker
+            m+='<div style="width:50%;float:left;">';
+            if (rslt.bonus['cmp']) {
+                m+='<b>Champion Adjustments:</b><br><TABLE class=ptTab width=100%>';
+                for (var i=0;i<24;i++) {
+                    if (rslt.bonus['cmp']['s0'][i]) {
+                        if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+                        else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+                             else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+                    }
+                }
+                m+='</table></br>'
+            }
+            m+='</div>';//defender
+            m+='</div>';//ChampAdjContainer
+            m+='<div id=ChampStatContainer style="clear:both">';
+            m+='<div style="width:50%;float:left;">';
 
-		function handleunts () { // Troops sent to Reinforce or troops found on a Scout
-			var hunts = '', th = '', tc = '', tf = '';
-			if (rslt['unts'] != undefined) {
-				if (rpt.marchName == 'Reinforce')
-					th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Troops Reinforced</TH></TR>';
-				else if (rslt['unts']['u1'] != undefined || rslt['unts']['u2'] != undefined || rslt['unts']['u3'] != undefined || rslt['unts']['u4'] != undefined || rslt['unts']['u5'] != undefined || rslt['unts']['u6'] != undefined || rslt['unts']['u7'] != undefined || rslt['unts']['u8'] != undefined || rslt['unts']['u9'] != undefined || rslt['unts']['u10'] != undefined || rslt['unts']['u11'] != undefined || rslt['unts']['u12'] != undefined)
-					th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Troops Found</TH></TR>';
-				for (var i=1;i<nTroopType+1;i++)
-					if (rslt['unts']['u'+i] != undefined)
-						tc+='<TR><TD>' + unitImg[i] + '</TD><TD align=right>'+addCommas(rslt['unts']['u'+i])+'</TD></TR>';
-				tf='</TABLE>';
-			}
-			if (tc != '')
-				hunts = th + tc + tf;
-			return hunts;
-		}
+            if (rslt['champion_stats']) {
+                m+='<b>Champion Stats:</b><br>';
+                for (var i=1;i<chEffect.length;i++) {
+                    if (rslt.champion_stats['s1'][chEffect[i]]) {
+                        m+= chEffectName[i] +': ' + rslt.champion_stats['s1'][chEffect[i]] + '<br>';
+                    }
+                }
+            }
+            m+='</div>';//attacker
+            m+='<div style="width:50%;float:left;">';
 
-		function handlersc () { // Resources brought with reinforcements or found on a Scout
-			var hrsc = '', th = '', tc = '', tf = '';
-			if (rslt['rsc'] != undefined) {
-				if (rslt['rsc']['r1'] > 0 || rslt['rsc']['r2'] > 0 || rslt['rsc']['r3'] > 0 || rslt['rsc']['r4'] > 0) {
-					if (rpt.marchName == 'Reinforce')
-						th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Goodies Brought</TH></TR>';
-					else {
-						th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Goodies Found</TH></TR>';
-						if (rslt['gld'] > 0)
-							tc+='<TR><TD>'+goldImg+'</TD><TD align=right>'+addCommasInt(rslt['gld'])+'</TD></TR>';
-					}
-					if (rslt['rsc']['r1'] > 0)
-						tc+='<TR><TD>'+foodImg+'</TD><TD align=right>'+addCommasInt(rslt['rsc']['r1'])+'</TD></TR>';
-					if (rslt['rsc']['r2'] > 0)
-						tc+='<TR><TD>'+woodImg+'</TD><TD align=right>'+addCommasInt(rslt['rsc']['r2'])+'</TD></TR>';
-					if (rslt['rsc']['r3'] > 0)
-						tc+='<TR><TD>'+stoneImg+'</TD><TD align=right>'+addCommasInt(rslt['rsc']['r3'])+'</TD></TR>';
-					if (rslt['rsc']['r4'] > 0)
-						tc+='<TR><TD>'+oreImg+'</TD><TD align=right>'+addCommasInt(rslt['rsc']['r4'])+'</TD></TR>';
-					if (rslt['rsc']['r5'] > 0)
-						tc+='<TR><TD>'+astoneImg+'</TD><TD align=right>'+addCommasInt(rslt['rsc']['r5'])+'</TD></TR>';
-					tf='</TABLE>';
-				}
-			}
-			if (tc != '')
-				hrsc = th + tc + tf;
-			return hrsc;
-		}
+            if (rslt['champion_stats']) {
+                m+='<b>Champion Stats:</b><br>';
+                for (var i=1;i<chEffect.length;i++) {
+                    if (rslt.champion_stats['s0'][chEffect[i]]) {
+                        m+= chEffectName[i] +': ' + rslt.champion_stats['s0'][chEffect[i]] + '<br>';
+                    }
+                }
+            }
+            m+='</div>';//defender
+            m+='</div>';//ChampStatContainer
+            m+='</div>';//ChampDuelContainer
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
 
-		function handlefrt () { // Fortifications found on a Scout
-			var hfrt = '', th = '', tc = '', tf = '';
-			if (rslt['frt']) {
-				if (rslt['frt']['f53'] != undefined || rslt['frt']['f55'] != undefined || rslt['frt']['f60'] != undefined || rslt['frt']['f61'] != undefined || rslt['frt']['f62'] != undefined) {
-					th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Defenses Found</TH></TR>';
-					if (rslt['frt']['f53'] != undefined)
-						tc+='<TR><TD>' + unitImg[53] + '</TD><TD align=right>'+addCommas(rslt['frt']['f53'])+'</TD></TR>';
-					if (rslt['frt']['f55'] != undefined)
-						tc+='<TR><TD>' + unitImg[55] + '</TD><TD align=right>'+addCommas(rslt['frt']['f55'])+'</TD></TR>';
-					if (rslt['frt']['f60'] != undefined)
-						tc+='<TR><TD>' + unitImg[60] + '</TD><TD align=right>'+addCommas(rslt['frt']['f60'])+'</TD></TR>';
-					if (rslt['frt']['f61'] != undefined)
-						tc+='<TR><TD>' + unitImg[61] + '</TD><TD align=right>'+addCommas(rslt['frt']['f61'])+'</TD></TR>';
-					if (rslt['frt']['f62'] != undefined)
-						tc+='<TR><TD>' + unitImg[62] + '</TD><TD align=right>'+addCommas(rslt['frt']['f62'])+'</TD></TR>';
-					tf='</TABLE>';
-				}
-			}
-			if (tc != '')
-				hfrt = th + tc + tf;
-			return hfrt;
-		}
+        function buildThroneStats () {
+            var m = '';
+            var LineStyle = '';
+            var EndStyle = '';
+            var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
+            var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102];
+            var DefenceEffects = [2,18,25,30,35,40,45,51,104];
+            var LifeEffects = [3,19,26,31,36,41,46,52];
+            var RangeEffects = [5,21,37,42,58,63];
+            var SpeedEffects = [4,20,27,32,47,53,57,62];
+            var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
+            var OtherCombatEffects = [8,9,13,14,15,16,73];
+            var OtherPVPEffects = [6,22,48,54,59,64];
+            var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
+            
+            //header
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Throne Stats:</div>';
+            //summary
+            m+='<div id=ThroneContainer>';     
+            m+='<div style="width:50%;float:left;">';
+            if (rslt['s1ThroneRoomBoosts']) {
+                for (var i=1;i<trEffect.length+1;i++) {
+                    if (rslt['s1ThroneRoomBoosts'][i]) {
+                        LineStyle = '<span style="color:#888;">';
+                        if (AttackEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#800;">';
+                        if (DefenceEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#008;">';
+                        if (LifeEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#088;">';
+                        if (RangeEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#080;">';
+                        if (SpeedEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#000;">';
+                        if (AccuracyEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#f80;">';
+                        if (OtherCombatEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#808;">';
+                        if (GlobalEffects.indexOf(parseInt(i)) > -1) {
+                            LineStyle = LineStyle + '<strong>';
+                            EndStyle = '</strong>' + EndStyle;
+                        }
+                        if (DebuffEffects.indexOf(parseInt(i)) > -1) {
+                            LineStyle = LineStyle + '<i>';
+                            EndStyle = '</i>' + EndStyle;
+                        }
+                        m+= LineStyle + trEffect[i] +': ' + rslt['s1ThroneRoomBoosts'][i] + '%' + EndStyle + '</span><br>';
+                    }
+                }
+            }
+            m+='</div>';//attacker
+            m+='<div style="width:50%;float:left;">';
+            if (rslt['s0ThroneRoomBoosts']) {
+                for (var i=1;i<trEffect.length+1;i++) {
+                    if (rslt['s0ThroneRoomBoosts'][i]) {
+                        LineStyle = '<span style="color:#888;">';
+                        if (AttackEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#800;">';
+                        if (DefenceEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#008;">';
+                        if (LifeEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#088;">';
+                        if (RangeEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#080;">';
+                        if (SpeedEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#000;">';
+                        if (AccuracyEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#f80;">';
+                        if (OtherCombatEffects.indexOf(parseInt(i)) > -1)
+                            LineStyle = '<span style="color:#808;">';
+                        if (GlobalEffects.indexOf(parseInt(i)) > -1) {
+                            LineStyle = LineStyle + '<strong>';
+                            EndStyle = '</strong>' + EndStyle;
+                        }
+                        if (DebuffEffects.indexOf(parseInt(i)) > -1) {
+                            LineStyle = LineStyle + '<i>';
+                            EndStyle = '</i>' + EndStyle;
+                        }
+                        m+= LineStyle + trEffect[i] +': ' + rslt['s0ThroneRoomBoosts'][i] + '%' + EndStyle + '</span><br>';
+                    }
+                }
+            }
+            m+='</div>';//defender
+            m+='</div>';//throne container
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
 
-		function handleblds (bType) {
-			if(rslt['blds']){
-			var blds = rslt['blds']['b'+bType]; b = '<TR><TD>'; arField = [], firstbld = true;
-			if (bType == 1)
-				b+='Farm';
-			else if (bType == 2)
-				b+='Sawmill';
-			else if (bType == 3)
-				b+='Quarry';
-			else if (bType == 4)
-				b+='Mine';
-			b+='</TD><TD>';
-			for (var i=1; i<12; i++)
-				arField[i]=0;
-			for (var i=0; i < blds.length; i++)
-				arField[blds[i]]++
-			for (var i=11; i>0; i--) {
-				if (arField[i] > 0) {
-					if (firstbld)
-						firstbld = false;
-					else
-						b+=', ';
-					if (arField[i] > 1)
-						b+=arField[i] + ' x ';
-					b+=' ' + i;
-				}
-			}
-			b+='</TD></TR>';
-			return b;
-			}
-		}
+        function buildBoosts () {
+            var m = '';
+            //header
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Boosts:</div>';
+            //summary
+            m+='<div id=BoostsContainer>';     
+            m+='<div style="width:50%;float:left;">';
 
-		if (rpt.marchName == 'Reinforce') {
-			t.popReport = new CPopup('pbShowRein', 0, 0, 525, 340, true, function() {clearTimeout (1000);});
-			m+= '<DIV style="height:285px">';
-		} else if (rpt.marchName == 'Transport') {
-			t.popReport = new CPopup('pbShowTrans', 0, 0, 525, 240, true, function() {clearTimeout (1000);});
-			m+= '<DIV style="height:185px">';
-		} else if (rpt.marchName == 'Scout' && rslt['winner']==1 && rpt.sideId==1){
-			t.popReport = new CPopup('pbShowOther', 0, 0, 550, 740, true, function() {clearTimeout (1000);});
-			m+= '<DIV style="max-height:705px; height:705px; overflow-y:scroll">';
-		} else {
-			t.popReport = new CPopup('pbShowOther', 0, 0, 700, 680, true, function() {clearTimeout (1000);});
-			m+= '<DIV style="max-height:645px; height:645px; overflow-y:scroll">';
-		}
-		t.popReport.centerMe (mainPop.getMainDiv());
+            m+='Attack Boosted: ' + 100*rslt['s1atkBoost'] + '%<br>';
+            m+='Defense Boosted: ' + 100*rslt['s1defBoost'] + '%<br>';
 
-		m+=buildHeader();
+            if (rslt['s1guardianAtkBoost'])
+                m+='Guardian Attack Boost: ' + parseFloat(100*rslt['s1guardianAtkBoost']).toFixed(1) + '%<br>';
+            if (rslt['s1guardianDefBoost'])
+                m+='Guardian Life Boost: ' + parseFloat(100*rslt['s1guardianDefBoost']).toFixed(1) + '%<br>';
+            if (rslt['s1guardianMarchBoost'])
+                m+='Guardian March Speed Boost: ' + parseFloat(100*rslt['s1guardianMarchBoost']).toFixed(1) + '%<br>';
+            if (rslt['s1guardianTrainBoost'])
+                m+='Guardian Training Boost: ' + parseFloat(100*rslt['s1guardianTrainBoost']).toFixed(1) + '%<br>';
+            if (rslt.bonus['tch']) {
+                for (var t1l in rslt.bonus.tch.s1) {
+                    if (t1l == 'hp') var normaltech = 'Health'; 
+                    if (t1l == 'atk') var normaltech = 'Attack'; 
+                    if (t1l == 'def') var normaltech = 'Defense'; 
+                    if (t1l == 'spd') var normaltech = 'Speed'; 
+                    if (t1l == 'rng') var normaltech = 'Range'; 
+                    if (t1l == 'ld') var normaltech = 'Load'; 
+                    m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s1[t1l]*100).toFixed(0) + '%<br>';
+                }
+            }
+            if (rslt.bonus['tch2']) {
+                for (var t2l in rslt.bonus.tch2.s1) {
+                    if (t2l == 'ic') var britontech = 'Improved Cartography'; 
+                    if (t2l == 'id') var britontech = 'Improved Defenses'; 
+                    if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
+                    if (t2l == 'if') var britontech = 'Improved Fletching'; 
+                    m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s1[t2l]*100).toFixed(0) + '%<br>';
+                }
+            }
+                
+            m += '</div>';//attacker
+            
+            m+='<div style="width:50%;float:left;">';
+            if (rslt['s0atkBoost'])
+                m+='Attack Boosted: ' + 100*rslt['s0atkBoost'] + '%<br>';
+            if (rslt['s0defBoost'])
+                m+='Defense Boosted: ' + 100*rslt['s0defBoost'] + '%<br>';
+            if (rslt['s0guardianAtkBoost'])
+                m+='Guardian Attack Boost: ' + parseFloat(100*rslt['s0guardianAtkBoost']).toFixed(1) + '%<br>';
+            if (rslt['s0guardianDefBoost'])
+                m+='Guardian Life Boost: ' + parseFloat(100*rslt['s0guardianDefBoost']).toFixed(1) + '%<br>';
+            if (rslt['s0guardianMarchBoost'])
+                m+='Guardian March Speed Boost: ' + parseFloat(100*rslt['s0guardianMarchBoost']).toFixed(1) + '%<br>';
+            if (rslt['s0guardianTrainBoost'])
+                m+='Guardian Training Boost: ' + parseFloat(100*rslt['s0guardianTrainBoost']).toFixed(1) + '%<br>';
+            if (rslt.bonus['tch']) {
+                for (var t1l in rslt.bonus.tch.s0) {
+                    if (t1l == 'hp') var normaltech = 'Health'; 
+                    if (t1l == 'atk') var normaltech = 'Attack'; 
+                    if (t1l == 'def') var normaltech = 'Defense'; 
+                    if (t1l == 'spd') var normaltech = 'Speed'; 
+                    if (t1l == 'rng') var normaltech = 'Range'; 
+                    m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s0[t1l]*100).toFixed(0) + '%<br>';
+                }
+            }
+            if (rslt.bonus['tch2']) {
+                for (var t2l in rslt.bonus.tch2.s0) {
+                    if (t2l == 'ic') var britontech = 'Improved Cartography'; 
+                    if (t2l == 'id') var britontech = 'Improved Defenses'; 
+                    if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
+                    if (t2l == 'if') var britontech = 'Improved Fletching'; 
+                    m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s0[t2l]*100).toFixed(0) + '%<br>';
+                }
+            }
+            
+            m+='</div>';//defender
+            m+='</div>';//boosts
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
+        
+        function handleLoot () {
+            var m = '';
+            if (rslt['loot']) {
+                m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Loot:</div><TABLE style="width:100%;" class=ptTab>';
+                m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
+                if (rslt['loot'][0] > 0)
+                    m+=addCommas(rslt['loot'][0])+'</TD>';
+                else
+                    m+='0</td>'
+                m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
+                if (rslt['loot'][1] > 0)
+                    m+=addCommas(rslt['loot'][1])+'</TD>';
+                else
+                    m+= '0</TD>';
+                m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
+                if (rslt['loot'][2] > 0)
+                    m+=addCommas(rslt['loot'][2])+'</TD>';
+                else
+                    m+='0</td>'
+                m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
+                if (rslt['loot'][3] > 0)
+                    m+=addCommas(rslt['loot'][3])+'</TD>';
+                else
+                    m+= '0</TD>';
+                m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
+                if (rslt['loot'][4] > 0)
+                    m+=addCommas(rslt['loot'][4])+'</TD>';
+                else
+                    m+='0</td>'
+                m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
+                if (rslt['loot'][6] > 0)
+                    m+=addCommas(rslt['loot'][6])+'</TD>';
+                else
+                    m+= '0 </TD>';
+                m+='</tr>'
+                if (rslt['loot'][5]) {
+                    for (var crest=1101; crest < 1116; crest++) {
+                        if (rslt['loot'][5][crest] == 1)
+                            m+='<tr><td colspan=5><img width=30 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/items/70/' + crest + '.png>' + crestname[crest] + '</TD></TR>';
+                    }
+                }
+                m+='</TABLE><br>';
+            }
+            return m;
+        }
+        
+        function handleTransportLoot() {
+            var m='';
+            m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Loot:</div><TABLE style="width:100%;" class=ptTab>';
+            m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
+            if (rslt['gold'] > 0)
+                m+=addCommas(rslt['gold'])+'</TD>';
+            else
+                m+='0</td>'
+            m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
+            if (rslt['resource1'] > 0)
+                m+=addCommas(rslt['resource1'])+'</TD>';
+            else
+                m+='0</TD>';
+            m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
+            if (rslt['resource2'] > 0)
+                m+=addCommas(rslt['resource2'])+'</TD>';
+            else
+                m+='0</td>'
+            m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
+            if (rslt['resource3'] > 0)
+                m+=addCommas(rslt['resource3'])+'</TD>';
+            else
+                m+='0</TD>';
+            m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
+            if (rslt['resource4'] > 0)
+                m+=addCommas(rslt['resource4'])+'</TD>';
+            else
+                m+='0</td>'
+            m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
+            if (rslt['resource5'] > 0)
+                m+=addCommas(rslt['resource5'])+'</TD>';
+            else
+                m+='0</TD>';
+            m+='</tr>'
+            m+='</TABLE><br>';
+            return m;
+        }
+        
+        function handleunts () { // Troops sent to Reinforce or troops found on a Scout
+            var m = '';
+            //header
+            if (rpt.marchName == 'Reinforce')
+                m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Reinforcement:</div>';
+            else
+                m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Scout Report:</div>';
+            //summary
+            m+='<div id=battleSummaryContainer>';
+            //summary - attacker
+            m+='<div style="width:50%;float:left;">';
+            if (rpt.marchName == 'Reinforce')
+                m+='<B>Ally:</B> '+rpt.side1Name+' (<A onclick="ptGotoMap('+ rpt.side1XCoord +','+ rpt.side1YCoord +')">'+ rpt.side1XCoord +','+ rpt.side1YCoord +'</a>)<br>';
+            if (rslt['unts'] != undefined) {
+                m+='<TABLE class=ptTab>';
+                for (var i=1;i<nTroopType+1;i++)
+                    if (rslt['unts']['u'+i] != undefined)
+                        m+='<TR><TD>' + unitImg[i] + '</TD><TD align=right>'+addCommas(rslt['unts']['u'+i])+'</TD></TR>';
+                m+='</TABLE>';
+            }
+            if (rpt.marchName != 'Reinforce')
+                m+=handlefrt();
+            m+='&nbsp;</div>';
+            //summary - defender
+            m+='<div style="width:50%;float:left;">';
+            if (rpt.marchName == 'Reinforce')
+                m+='<B>Defenders</B> '+rpt.side0Name+' (<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>)<br>';
+            if (rpt.marchName != 'Reinforce') {
+                m+='<TABLE class=ptTab width=100%>';
+                if (rslt['lstlgn']) {
+                    if (!rslt['lstlgn'])
+                        m+='<TR><TD>Last Login: Not recorded</TD></TR>';
+                    else
+                        m+='<TR><TD>Last Login: ' + formatUnixTime(rslt['lstlgn']) + '</TD></TR>';
+                }
+                m+='<TR><TD>Marshall Combat: ';
+                if (rslt['knt'])
+                    m+=rslt['knt']['cbt'];
+                else
+                    m+='None';
+                m+='</TD></TR>';
+                if (rslt['pop'])
+                    m+='<TR><TD>Population: ' + addCommas(rslt['pop']) + '</TD></TR>';
+                if (rslt['hap'])
+                    m+='<TR><TD>Happiness: ' + addCommas(rslt['hap']) + '</TD></TR></TABLE>';
+                if(rslt['blds']){
+                    if (rslt['blds']['b1'] || rslt['blds']['b2'] || rslt['blds']['b3'] || rslt['blds']['b4']) {
+                        m+='<TABLE class=ptTab><TR><TH colspan=2 align=left>Fields</TH></TR>';
+                        for (var i=1; i<5; i++)
+                            if (rslt['blds']['b'+i])
+                                m+=handleblds(i);
+                        m+='</TABLE>';
+                    }
+                }
+                if (rslt['tch']) {
+                    m+='<TABLE class=ptTab><TR><TH colspan=2 align=left>Research</TH></TR>';
+                    for (var tl in rslt.tch) {
+                        tid = /[0-9]+/.exec(tl);
+                        m+='</TD></TR><TR><TD>'+uW.techcost['tch'+tid[0]][0]+'</TD><TD align=right>' + rslt.tch[tl] + '</TD></TR>';
+                    }
+                    m+='</TABLE>';
+                }
+                m+='</TD></TR></TABLE>';
+            }
+            m+='</div>';            
+            m+='</div>'; //end battlesummary div
+            m+='<div style="clear:both"></div>';
+            return m;
+        }
 
-		if (rpt.marchName == 'Transport') { // Transport
-			m+='<TABLE class=ptTab>'; // Only transports have these in rslt, so handle them here
-			if (parseInt(rslt['gold']) > 0)
-				m+='<TR><TD>'+goldImg+'</TD><TD align=right>'+addCommas(rslt['gold'])+'</TD></TR>';
-			if (parseInt(rslt['resource1']) > 0)
-				m+='<TR><TD>'+foodImg+'</TD><TD align=right>'+addCommas(rslt['resource1'])+'</TD></TR>';
-			if (parseInt(rslt['resource2']) > 0)
-				m+='<TR><TD>'+woodImg+'</TD><TD align=right>'+addCommas(rslt['resource2'])+'</TD></TR>';
-			if (parseInt(rslt['resource3']) > 0)
-				m+='<TR><TD>'+stoneImg+'</TD><TD align=right>'+addCommas(rslt['resource3'])+'</TD></TR>';
-			if (parseInt(rslt['resource4']) > 0)
-				m+='<TR><TD>'+oreImg+'</TD><TD align=right>'+addCommas(rslt['resource4'])+'</TD></TR>';
-			m+='</TABLE>';
-		}
+        function handlersc () { // Resources brought with reinforcements or found on a Scout
+            var m = '';
+            if (rslt['rsc'] != undefined) {
+                if (rslt['rsc']['r1'] > 0 || rslt['rsc']['r2'] > 0 || rslt['rsc']['r3'] > 0 || rslt['rsc']['r4'] > 0) {
+                    if (rpt.marchName == 'Reinforce')
+                        m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Goodies Brought:</div><TABLE style="width:100%;" class=ptTab>';
+                    else
+                        m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Goodies Found:</div><TABLE style="width:100%;" class=ptTab>';
+                    m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
+                    if (rslt['gld'] > 0)
+                        m+=addCommasInt(rslt['gld'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
+                    if (rslt['rsc']['r1'] > 0)
+                        m+=addCommasInt(rslt['rsc']['r1'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
+                    if (rslt['rsc']['r2'] > 0)
+                        m+=addCommasInt(rslt['rsc']['r2'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
+                    if (rslt['rsc']['r3'] > 0)
+                        m+=addCommasInt(rslt['rsc']['r3'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
+                    if (rslt['rsc']['r4'] > 0)
+                        m+=addCommasInt(rslt['rsc']['r4'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
+                    if (rslt['rsc']['r5'] > 0)
+                        m+=addCommasInt(rslt['rsc']['r5'])+'</TD>';
+                    else
+                        m+='0</td>';
+                    m+='</TABLE>';
+                }
+            }
+            return m;
+        }
 
-		m+='<TABLE class=ptTab>';
-		if ((rslt['winner']==1 && rpt.sideId==0) || (rslt['winner']==0 && rpt.sideId==1)) {
-			if (rpt.marchName == 'Scout')
-				m+='<TR><TD><FONT color="#CC0000"><B>Scouting Failed</B></font></TD></TR>';
-			else
-				m+='<TR><TD><FONT color="#CC0000"><B>You were defeated</B></font></TD></TR>';
-		}
-		if (rslt['winner']==0 && rpt.sideId==0)
-			m+='<TR><TD><FONT color="#66CC33"><B>You defended successfully!</B></font></TD></TR>';
-		if (rslt['winner']==1 && rpt.sideId==1) {
-			if (rpt.marchName == 'Scout')
-				m+='<TR><TD><FONT color="#66CC33"><B>Scouting Report</B></font></TD></TR>';
-			else
-				m+='<TR><TD><FONT color="#66CC33"><B>You were victorious!</B></font></TD></TR>';
-		}
+        function handlefrt () { // Fortifications found on a Scout
+            var hfrt = '', th = '', tc = '', tf = '';
+            if (rslt['frt']) {
+                if (rslt['frt']['f53'] != undefined || rslt['frt']['f55'] != undefined || rslt['frt']['f60'] != undefined || rslt['frt']['f61'] != undefined || rslt['frt']['f62'] != undefined) {
+                    th='<TABLE class=ptTab><TR><TH colspan=3 align=left>Defenses Found</TH></TR>';
+                    if (rslt['frt']['f53'] != undefined)
+                        tc+='<TR><TD>' + unitImg[53] + '</TD><TD align=right>'+addCommas(rslt['frt']['f53'])+'</TD></TR>';
+                    if (rslt['frt']['f55'] != undefined)
+                        tc+='<TR><TD>' + unitImg[55] + '</TD><TD align=right>'+addCommas(rslt['frt']['f55'])+'</TD></TR>';
+                    if (rslt['frt']['f60'] != undefined)
+                        tc+='<TR><TD>' + unitImg[60] + '</TD><TD align=right>'+addCommas(rslt['frt']['f60'])+'</TD></TR>';
+                    if (rslt['frt']['f61'] != undefined)
+                        tc+='<TR><TD>' + unitImg[61] + '</TD><TD align=right>'+addCommas(rslt['frt']['f61'])+'</TD></TR>';
+                    if (rslt['frt']['f62'] != undefined)
+                        tc+='<TR><TD>' + unitImg[62] + '</TD><TD align=right>'+addCommas(rslt['frt']['f62'])+'</TD></TR>';
+                    tf='</TABLE>';
+                }
+            }
+            if (tc != '')
+                hfrt = th + tc + tf;
+            return hfrt;
+        }
 
-		if (rslt['wall']) {
-			if (rslt['wall'] == 100)
-				m+='<TR><TD>Attackers breached the walls.</TD></TR>';
-			else
-				m+='<TR><TD>Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged</TD></TR>';
-		}
-		m+= '</TABLE><BR />';
+        function handleblds (bType) {
+            if(rslt['blds']){
+            var blds = rslt['blds']['b'+bType]; b = '<TR><TD>'; arField = [], firstbld = true;
+            if (bType == 1)
+                b+='Farm';
+            else if (bType == 2)
+                b+='Sawmill';
+            else if (bType == 3)
+                b+='Quarry';
+            else if (bType == 4)
+                b+='Mine';
+            b+='</TD><TD>';
+            for (var i=1; i<12; i++)
+                arField[i]=0;
+            for (var i=0; i < blds.length; i++)
+                arField[blds[i]]++
+            for (var i=11; i>0; i--) {
+                if (arField[i] > 0) {
+                    if (firstbld)
+                        firstbld = false;
+                    else
+                        b+=', ';
+                    if (arField[i] > 1)
+                        b+=arField[i] + ' x ';
+                    b+=' ' + i;
+                }
+            }
+            b+='</TD></TR>';
+            return b;
+            }
+        }
 
-		m+='<TABLE class=ptTab>';
-		m+='<TR><TD><b>Glory Gained: </b></TD><TD align=right>'+addCommas(rslt['glory'])+'</TD></TR>';
-		m+='</TABLE>';
+        if (rpt.marchName == 'Reinforce') {
+            t.popReport = new CPopup('pbShowRein', 0, 0, 700, 680, true, function() {clearTimeout (1000);});
+            m+= '<DIV style="height:285px">';
+        } else if (rpt.marchName == 'Transport') {
+            t.popReport = new CPopup('pbShowTrans', 0, 0, 525, 240, true, function() {clearTimeout (1000);});
+            m+= '<DIV style="height:185px">';
+        } else if (rpt.marchName == 'Scout' && rslt['winner']==1 && rpt.sideId==1){
+            t.popReport = new CPopup('pbShowOther', 0, 0, 550, 740, true, function() {clearTimeout (1000);});
+            m+= '<DIV style="max-height:705px; height:705px; overflow-y:scroll">';
+        } else {
+            t.popReport = new CPopup('pbShowOther', 0, 0, 700, 680, true, function() {clearTimeout (1000);});
+            m+= '<DIV style="max-height:645px; height:645px; overflow-y:scroll">';
+        }
+        t.popReport.centerMe (mainPop.getMainDiv());
 
-		if (rslt['loot']) {
-			m+='<TABLE class=ptTab>';
-			m+='<TR><TD></TR></TD><TR><TD></TR></TD><TR><TD></TR></TD><TR><TD><b>Loot:</b></TR></TD>';
-			if (rslt['loot'][0] > 0)
-				m+='<TR><TD>'+goldImg+'</TD><TD align=right>'+addCommas(rslt['loot'][0])+'</TD></TR>';
-			if (rslt['loot'][1] > 0)
-				m+='<TR><TD>'+foodImg+'</TD><TD align=right>'+addCommas(rslt['loot'][1])+'</TD></TR>';
-			if (rslt['loot'][2] > 0)
-				m+='<TR><TD>'+woodImg+'</TD><TD align=right>'+addCommas(rslt['loot'][2])+'</TD></TR>';
-			if (rslt['loot'][3] > 0)
-				m+='<TR><TD>'+stoneImg+'</TD><TD align=right>'+addCommas(rslt['loot'][3])+'</TD></TR>';
-			if (rslt['loot'][4] > 0)
-				m+='<TR><TD>'+oreImg+'</TD><TD align=right>'+addCommas(rslt['loot'][4])+'</TD></TR>';
-			if (rslt['loot'][5]) {
-				for (var crest=1101; crest < 1116; crest++) {
-					if (rslt['loot'][5][crest] == 1)
-						m+='<TR><TD><img width=30 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/items/70/' + crest + '.png></TD><TD colspan=2>' + crestname[crest] + '</TD></TR>';
-				}
-			}
-			if (rslt['loot'][6] > 0)
-				m+='<TR><TD>'+astoneImg+'</TD><TD align=right>'+addCommas(rslt['loot'][6])+'</TD></TR>';
-			m+='</TABLE><BR />';
-		}
+        m+=buildHeader();
 
-		if (rpt.marchName == 'Reinforce') {
-			m+=handleunts();
-			m+=handlersc();
-		}
+        if (rpt.marchName == 'Transport') { // Transport
+            m+=handleTransportLoot();
+        }
 
-		if (rpt.marchName == 'Scout' && rslt['winner']==1) {
-			m+='<TABLE class=ptTab width=100%><TR><TD width=50% align=left valign=top>';
-			m+=handleunts();
-			m+=handlefrt();
-			m+=handlersc();
-			m+='</TD><TD width=50% align=left valign=top>';
-			m+='<TABLE class=ptTab width=100%>';
-			if (rslt['lstlgn']) {
-				if (!rslt['lstlgn'])
-					m+='<TR><TD>Last Login: Not recorded</TD></TR>';
-				else
-					m+='<TR><TD>Last Login: ' + formatUnixTime(rslt['lstlgn']) + '</TD></TR>';
-			}
-			m+='<TR><TD>Marshall Combat: ';
-			if (rslt['knt'])
-				m+=rslt['knt']['cbt'];
-			else
-				m+='None';
-			m+='</TD></TR>';
-			if (rslt['pop'])
-				m+='<TR><TD>Population: ' + addCommas(rslt['pop']) + '</TD></TR>';
-			if (rslt['hap'])
-				m+='<TR><TD>Happiness: ' + addCommas(rslt['hap']) + '</TD></TR></TABLE>';
-			if(rslt['blds']){
-				if (rslt['blds']['b1'] || rslt['blds']['b2'] || rslt['blds']['b3'] || rslt['blds']['b4']) {
-					m+='<TABLE class=ptTab><TR><TH colspan=2 align=left>Fields</TH></TR>';
-					for (var i=1; i<5; i++)
-						if (rslt['blds']['b'+i])
-							m+=handleblds(i);
-					m+='</TABLE>';
-				}
-			}
-			if (rslt['tch']) {
-				m+='<TABLE class=ptTab><TR><TH colspan=2 align=left>Research</TH></TR>';
-				for (var tl in rslt.tch) {
-					tid = /[0-9]+/.exec(tl);
-					m+='</TD></TR><TR><TD>'+uW.techcost['tch'+tid[0]][0]+'</TD><TD align=right>' + rslt.tch[tl] + '</TD></TR>';
-				}
-				m+='</TABLE>';
-			}
-			m+='</TD></TR></TABLE>';
-		}
+        m+=handleLoot();
 
- 		if (rslt['fght']){ // not Reinforce or Transport, so we have a table with 2 columns: 1 for Attackers, 1 for Defenders
-			m+='<TABLE class=ptTab width=100%><TR><TD width=50% align=left valign=top>';
-			m+='<TABLE class=ptTab width=100%>';
-			m+='<TR><TD colspan=4><B>Attackers</B> ('+rpt.side1Name+')';
-			if (rslt['winner']==1)
-				m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
-			m+='</TD></TR>';
-			if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
-				m+='<TR><TD colspan=4>Knight Combat Skill: ' + rslt['s1KCombatLv'] + '</TD></TR>';
-			m+='<TR><TD colspan=4>Attack Boosted: ' + 100*rslt['s1atkBoost'] + '%</TD></TR>';
-			m+='<TR><TD colspan=4>Defense Boosted: ' + 100*rslt['s1defBoost'] + '%</TD></TR>';
-// add guardian info
-			if (rslt['s1guardianAtkBoost'])
-				m+='<TR><TD colspan=4>Guardian Attack Boost: ' + parseFloat(100*rslt['s1guardianAtkBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s1guardianDefBoost'])
-				m+='<TR><TD colspan=4>Guardian Life Boost: ' + parseFloat(100*rslt['s1guardianDefBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s1guardianMarchBoost'])
-				m+='<TR><TD colspan=4>Guardian March Speed Boost: ' + parseFloat(100*rslt['s1guardianMarchBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s1guardianTrainBoost'])
-				m+='<TR><TD colspan=4>Guardian Training Boost: ' + parseFloat(100*rslt['s1guardianTrainBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
+        if (rpt.marchName == 'Reinforce') {
+            m+=handlersc();
+            m+=handleunts();
+        }
 
-			m+='<TR><TD colspan=4> </TD></TR>';	
-			m+='<TR><TD colspan=4><b>Attack Results:</b></TD></TR>';
-			if (rslt['fght']["s1"]) {
-				var atkmight = 0;
-				for (var i=1;i<nTroopType+1;i++) {
-					if (rslt['fght']["s1"]['u'+i]) {
-						if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
-							for (ix=1;ix<nTroopType+1;ix++)
-								if (i == ix) {atkmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s1"]['u'+ix][0]) - parseInt(rslt['fght']["s1"]['u'+ix][1])))};
-						} else {atkmight += 0;}
-					}
-				}
-			}
-			m+='<TR><TD colspan=4>Might Lost: '+addCommas(atkmight)+'</td></tr>';
-			m+='<TR><TD colspan=4>(<A onclick="ptGotoMap('+ rpt.side1XCoord +','+ rpt.side1YCoord +')">'+ rpt.side1XCoord +','+ rpt.side1YCoord +'</a>) ' + rpt.side1CityName + '</TD></TR>';
-			if (rslt['fght']["s1"]) {
-				m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-				for (var i=1;i<nTroopType+1;i++) {
-					if (rslt['fght']["s1"]['u'+i]) {
-						if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
-							m+='<TR><TD>' + unitImg[i] + '</td>';
-							m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][0])+'</td>';
-							m+='<TD align=center><font color="#CC0000">'+addCommas(rslt['fght']["s1"]['u'+i][1])+'</font></td>';
-							m+='<TD align=center><font color="#CC0000">('+addCommas((rslt['fght']["s1"]['u'+i][0]) - (rslt['fght']["s1"]['u'+i][1]))+')</font></td></tr>';
-						} else {
-							m+='<TR><TD>' + unitImg[i] + '</td>';
-							m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][0])+'</td>';
-							m+='<TD align=center>'+addCommas(rslt['fght']["s1"]['u'+i][1])+'</td></tr>';
-						}
-					}
-				}
-			}
+        if (rpt.marchName == 'Scout' && rslt['winner']==1) {
+            m+=handlersc();
+            m+=handleunts();
+        }
+        
+        if (rslt['fght']){
+            m+=buildBattle();
+            m+=buildTroopStats();
+            m+=buildChampDuel();
+            m+=buildThroneStats();
+            m+=buildBoosts();
+        }
 
-
-			if (rslt['fght']["s1"]) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Unit Stats:</b></TD></TR>';
-				for (var i=1;i<nTroopType+1;i++) {
-					if (rslt['fght']["s1"]['u'+i]) {
-						m+='<TR><TD>' + unitImg2[i] + '<font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['hp'][1])+'<b>     Atk: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['atk'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['def'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['spd'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['rng'][1])+'</font></td></tr>';
-					}
-				}
-			}
-
-
-
-			if (rslt['s1ThroneRoomBoosts']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Throne Room Bonuses:</b></TD></TR>';
-				for (var i=1;i<trEffect.length+1;i++) {
-					if (rslt['s1ThroneRoomBoosts'][i]) {
-						m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt['s1ThroneRoomBoosts'][i] + '%</TD></TR>';
-					}
-				}
-			}
-
-
-// rather than fix the index for life, kabam remapped efects
-// 0:g_js_strings.effects.name_3,
-// 1:g_js_strings.effects.name_1,
-// 2:g_js_strings.effects.name_2,
-// 3:g_js_strings.commonstr.speed,
-// 4:g_js_strings.effects.name_5,
-// 5:g_js_strings.effects.name_6,
-// 6:g_js_strings.effects.name_7
-			if (rslt.bonus['cmp']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Champion Adjustments:</b></TD></TR>';
-				for (var i=0;i<24;i++) {
-					if (rslt.bonus['cmp']['s1'][i]) {
-					    if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>'; 
-					    else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-					         else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-					}
-				}
-			}
-
-			if (rslt['champion_stats']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Champion Stats:</b></TD></TR>';
-				for (var i=1;i<chEffect.length;i++) {
-					if (rslt.champion_stats['s1'][chEffect[i]]) {
-						m+='<TR><TD colspan=4>' + chEffectName[i] +': ' + rslt.champion_stats['s1'][chEffect[i]] + '</TD></TR>';
-					}
-				}
-			}
-
-			if (rslt.bonus['tch2']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Briton Research Bonuses:</b></TD></TR>';
-				for (var t2l in rslt.bonus.tch2.s1) {
-					if (t2l == 'ic') var britontech = 'Improved Cartography'; 
-					if (t2l == 'id') var britontech = 'Improved Defenses'; 
-					if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
-					if (t2l == 'if') var britontech = 'Improved Fletching'; 
-					m+='<TR><TD colspan=4>'+britontech+'</TD><TD align=left>' + rslt.bonus.tch2.s1[t2l] + '</TD></TR>';
-				}
-			}
-
-			m+='</TABLE></TD><TD width=50% align=right valign=top>';
-			m+='<TABLE class=ptTab width=100%>';
-			m+='<TR><TD colspan=4><B>Defenders</B> ('+rpt.side0Name+')';
-			if (rslt['winner']==0)
-				m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
-			m+='</TD></TR>';
-			if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
-				m+='<TR><TD colspan=4>Knight Combat Skill: ' + rslt['s0KCombatLv'] + '</TD></TR>';
-			if (rslt['s0atkBoost'])
-				m+='<TR><TD colspan=4>Attack Boosted: ' + 100*rslt['s0atkBoost'] + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s0defBoost'])
-				m+='<TR><TD colspan=4>Defense Boosted: ' + 100*rslt['s0defBoost'] + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-// add guardian info
-			if (rslt['s0guardianAtkBoost'])
-				m+='<TR><TD colspan=4>Guardian Attack Boost: ' + parseFloat(100*rslt['s0guardianAtkBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s0guardianDefBoost'])
-				m+='<TR><TD colspan=4>Guardian Life Boost: ' + parseFloat(100*rslt['s0guardianDefBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s0guardianMarchBoost'])
-				m+='<TR><TD colspan=4>Guardian March Speed Boost: ' + parseFloat(100*rslt['s0guardianMarchBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-			if (rslt['s0guardianTrainBoost'])
-				m+='<TR><TD colspan=4>Guardian Training Boost: ' + parseFloat(100*rslt['s0guardianTrainBoost']).toFixed(1) + '%</TD></TR>';
-			else
-				m+='<TR><TD colspan=4>&nbsp;</TD></TR>';
-
-			m+='<TR><TD colspan=4> </TD></TR>';	
-			m+='<TR><TD colspan=4><b>Defense Results:</b></TD></TR>';
-			if (rslt['fght']["s0"]) {
-				var defmight = 0;
-				if (rslt.overwhelmed) {
-					for (var i=1;i<nTroopType+1;i++) {
-						if (rslt['fght']["s0"]['u'+i]) {
-							if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
-								for (ix=1;ix<nTroopType+1;ix++)
-									if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*parseInt(rslt['fght']["s0"]['u'+ix][0]))};
-
-							} else {defmight += 0;}
-						}
-					}
-					for (var i=53;i<=55;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								if (i == 53) {defmight += 4*(parseInt(rslt['fght']["s0"]['f53'][0]))};
-								if (i == 55) {defmight += 7*(parseInt(rslt['fght']["s0"]['f55'][0]))};
-							} else {defmight += 0;}
-						}
-					}
-					for (var i=60;i<63;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								if (i == 60) {defmight += 3*(parseInt(rslt['fght']["s0"]['f60'][0]))};
-								if (i == 61) {defmight += (parseInt(rslt['fght']["s0"]['f61'][0]))};
-								if (i == 62) {defmight += 2*(parseInt(rslt['fght']["s0"]['f62'][0]))};
-							} else {defmight += 0;}
-						}
-					}
-				} else {
-					for (var i=1;i<nTroopType+1;i++) {
-						if (rslt['fght']["s0"]['u'+i]) {
-							if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
-								for (ix=1;ix<nTroopType+1;ix++)
-									if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s0"]['u'+ix][0]) - parseInt(rslt['fght']["s0"]['u'+ix][1])))};
-							} else {defmight += 0;}
-						}
-					}
-					for (var i=53;i<=55;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								if (i == 53) {defmight += 4*(parseInt(rslt['fght']["s0"]['f53'][0]) - parseInt(rslt['fght']["s0"]['f53'][1]))};
-								if (i == 55) {defmight += 7*(parseInt(rslt['fght']["s0"]['f55'][0]) - parseInt(rslt['fght']["s0"]['f55'][1]))};
-							} else {defmight += 0;}
-						}
-					}
-					for (var i=60;i<63;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								if (i == 60) {defmight += 3*(parseInt(rslt['fght']["s0"]['f60'][0]) - parseInt(rslt['fght']["s0"]['f60'][1]))};
-								if (i == 61) {defmight += (parseInt(rslt['fght']["s0"]['f61'][0]) - parseInt(rslt['fght']["s0"]['f61'][1]))};
-								if (i == 62) {defmight += 2*(parseInt(rslt['fght']["s0"]['f62'][0]) - parseInt(rslt['fght']["s0"]['f62'][1]))};
-							} else {defmight += 0;}
-						}
-					}
-				}
-			}
-			m+='<TR><TD colspan=4>Might Lost: '+addCommas(defmight)+'</td></tr>';
-			m+='<TR><TD colspan=4>Rounds: ' + rslt['rnds'] + '</TD></TR>';
-			if (rslt['fght']["s0"]) {
-				if (rslt.overwhelmed) {
-					m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-					for (var i=1;i<nTroopType+1;i++) {
-						if (rslt['fght']["s0"]['u'+i]) {
-							m+='<TR><TD>' + unitImg[i] + '</td>';
-							m+='<TD align=center>???</td>';
-							m+='<TD align=center>???</td>';
-								if(rslt['fght']["s0"]['u'+i][0] > 0) {
-									m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['u'+i][0])+')</FONT></td></tr>';
-								} else {
-									m+='<TD align=center>0</td></tr>';
-								}
-						}
-					}
-					for (var i=53;i<=55;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							m+='<TR><TD>' + unitImg[i] + '</td>';
-							m+='<TD align=center>???</td>';
-							m+='<TD align=center>???</td>';
-								if(rslt['fght']["s0"]['f'+i][0] > 0) {
-									m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['f'+i][0])+')</FONT></td></tr>';
-								} else {
-									m+='<TD align=center>0</td></tr>';
-								}
-						}
-					}
-					for (var i=60;i<=63;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							m+='<TR><TD>' + unitImg[i] + '</td>';
-							m+='<TD align=center>???</td>';
-							m+='<TD align=center>???</td>';
-								if(rslt['fght']["s0"]['f'+i][0] > 0) {
-									m+='<TD align=center><FONT color="#CC0000">('+addCommas(rslt['fght']["s0"]['f'+i][0])+')</font></td></tr>';
-								} else {
-									m+='<TD align=center>0</td></tr>';
-								}
-							
-						}
-					}
-				} else {
-					m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-					for (var i=1;i<nTroopType+1;i++) {
-						if (rslt['fght']["s0"]['u'+i]) {
-							if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][0])+'</td>';
-								m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['u'+i][1])+'</FONT></td>';
-								m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['u'+i][0]) - (rslt['fght']["s0"]['u'+i][1]))+')</FONT></td></tr>';
-							} else {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][0])+'</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][1])+'</td></tr>';
-							}
-						}
-					}
-					for (var i=53;i<=55;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
-								m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</font></td>';
-								m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['f'+i][0]) - (rslt['fght']["s0"]['f'+i][1]))+')</FONT></td></tr>';
-							} else {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</td></tr>';
-							}
-						}
-					}
-					for (var i=60;i<=63;i++) {
-						if (rslt['fght']["s0"]['f'+i]) {
-							if (rslt['fght']["s0"]['f'+i][0] > rslt['fght']["s0"]['f'+i][1]) {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
-								m+='<TD align=center><FONT color="#CC0000">'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</font></td>';
-								m+='<TD align=center><FONT color="#CC0000">('+addCommas((rslt['fght']["s0"]['f'+i][0]) - (rslt['fght']["s0"]['f'+i][1]))+')</FONT></td></tr>';
-							} else {
-								m+='<TR><TD>' + unitImg[i] + '</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][0])+'</td>';
-								m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['f'+i][1])+'</td></tr>';
-							}
-						}
-					}
-				}
-			} else
-				m+='<TR><TD>No Troops Defended</TD></TR>';
-
-
-
-			if (rslt['fght']["s0"]) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Unit Stats:</b></TD></TR>';
-				for (var i=1;i<nTroopType+1;i++) {
-					if (rslt['fght']["s0"]['u'+i]) {
-						m+='<TR><TD>' + unitImg2[i] + '<font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['hp'][1])+'<b>     Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['atk'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['def'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['spd'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['rng'][1])+'</font></td></tr>';
-					}
-				}
-				for (var i=53;i<=55;i++) {
-					if (rslt['fght']["s0"]['f'+i]) {
-						m+='<TR><TD>' + unitImg2[i] + '<font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['hp'][1])+'<b>     Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['atk'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['def'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['spd'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['rng'][1])+'</font></td></tr>';
-					}
-				}
-				for (var i=60;i<=63;i++) {
-					if (rslt['fght']["s0"]['f'+i]) {
-						m+='<TR><TD>' + unitImg2[i] + '<font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['hp'][1])+'<b>     Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['atk'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['def'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['spd'][1])+'</font></td>';
-						m+='<TD align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s0']['f'+i]['rng'][1])+'</font></td></tr>';
-					}
-				}
-			}
-
-
-			if (rslt['s0ThroneRoomBoosts']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Throne Room Bonuses:</b></TD></TR>';
-				for (var i=1;i<trEffect.length+1;i++) {
-					if (rslt['s0ThroneRoomBoosts'][i]) {
-						m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt['s0ThroneRoomBoosts'][i] + '%</TD></TR>';
-					}
-				}
-
-				}
-
-			if (rslt.bonus['cmp']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Champion Adjustments:</b></TD></TR>';
-				for (var i=0;i<24;i++) {
-					if (rslt.bonus['cmp']['s0'][i]) {
-					    if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-					    else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-					         else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-					}
-				}
-			}
-
-			if (rslt['champion_stats']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Champion Stats:</b></TD></TR>';
-				for (var i=1;i<chEffect.length;i++) {
-					if (rslt.champion_stats['s0'][chEffect[i]]) {
-						m+='<TR><TD colspan=4>' + chEffectName[i] +': ' + rslt.champion_stats['s0'][chEffect[i]] + '</TD></TR>';
-					}
-				}
-			}
-
-			if (rslt.bonus['tch2']) {
-				m+='<TR><TD colspan=4> </TD></TR>';
-				m+='<TR><TD colspan=4><b>Briton Research Bonuses:</b></TD></TR>';
-				for (var t2l in rslt.bonus.tch2.s0) {
-					if (t2l == 'ic') var britontech = 'Improved Cartography'; 
-					if (t2l == 'id') var britontech = 'Improved Defenses'; 
-					if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
-					if (t2l == 'if') var britontech = 'Improved Fletching'; 
-					m+='<TR><TD colspan=4>'+britontech+'</TD><TD align=left>' + rslt.bonus.tch2.s0[t2l] + '</TD></TR>';
-				}
-			}
-			m+='</TABLE></TD></TR></TABLE>';
-		}
-
-		m+='</DIV>';
-		t.popReport.getMainDiv().innerHTML = m;
-		t.popReport.getTopDiv().innerHTML = '<DIV align=center><B>'+rpt.marchName+' Report</B></DIV>';
-		t.popReport.show(true);
-	},
-	
+        m+='</DIV>';
+        t.popReport.getMainDiv().innerHTML = m;
+        t.popReport.getTopDiv().innerHTML = '<DIV align=center><B>'+rpt.marchName+' Report</B></DIV>';
+        document.getElementById('reportTroopStatsHdr').addEventListener ('click', function () {ToggleDivDisplay(500,500,"reportTroopStats");}, false);
+        t.popReport.show(true);
+    },
+    
 };
 
 /********************** Tournament Tab *******************************************/
@@ -4020,7 +4209,7 @@ modal_alliance_report_view("6043602",1,51,9,13487684,"Fred8135i","M","Jetson","M
             msg.push(",,");
           }
           msg.push(");return false;'>View</a></div></td></tr>");
-		  }
+        }
 		  else
 		  {
 		  // reinforcement!!
@@ -5363,7 +5552,7 @@ MaxScouts : function (city){
 
   doScout : function (x,y,box) {
   	var t = Tabs.AllianceList;
-	
+
 	openslots = document.getElementById('openSlots').value;
   	slots = CheckCityMarches(t.ScoutInfo.id);
 	rallypointlevel = getRallypoint(t.ScoutInfo.id);
@@ -5374,51 +5563,51 @@ MaxScouts : function (city){
 	  return;
 	}
 
-  	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-	params.cid= t.ScoutInfo.id;
-    params.type = 3
-    params.kid = 0
-    params.xcoord = x;
-    params.ycoord = y;
-  	params.u3 = document.getElementById('numScouts').value;
-  	params.gold = 0;
-  	params.r1 = 0;
-  	params.r2 = 0;
-  	params.r3 = 0;
-  	params.r4 = 0;
-  	params.r5 = 0;
+	  	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.cid= t.ScoutInfo.id;
+	    params.type = 3
+	    params.kid = 0
+	    params.xcoord = x;
+	    params.ycoord = y;
+	  	params.u3 = document.getElementById('numScouts').value;
+	  	params.gold = 0;
+	  	params.r1 = 0;
+	  	params.r2 = 0;
+	  	params.r3 = 0;
+	  	params.r4 = 0;
+	  	params.r5 = 0;
 
-	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-		    method: "post",
-		    parameters: params,
-		    loading: true,
-		    onSuccess: function (rslt) {
-		        var t = Tabs.AllianceList;  
-		        logit(rslt.toSource());
-		        if (rslt.ok) {
-		           var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-					var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS);
-		           var ut = unsafeWindow.unixtime();
-		           var unitsarr=[0,0,0,0,0,0,0,0,0,0,0,0,0];
-		           for(i = 0; i <= unitsarr.length; i++){
-		              if(params["u"+i]){
-		                 unitsarr[i] = params["u"+i];
-		              }
-		           }
-		           var resources=new Array();
-		           resources[0] = params.gold;
-		           for(i=1; i<=4; i++){
-		              resources[i] = params["r"+i];
-		           }
-		           var currentcityid =  params.cid;
-		           unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true,ut + rtimediff);
-		           unsafeWindow.update_seed(rslt.updateSeed)
-		           if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-		           document.getElementById(box).checked = false;        
-		        }
-		    }, 
-		    onFailure: function () {},
-	});
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
+			    method: "post",
+			    parameters: params,
+			    loading: true,
+			    onSuccess: function (rslt) {
+			        var t = Tabs.AllianceList;  
+			        logit(rslt.toSource());
+			        if (rslt.ok) {
+			           var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+ 					   var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS);
+			           var ut = unsafeWindow.unixtime();
+			           var unitsarr=[0,0,0,0,0,0,0,0,0,0,0,0,0];
+			           for(i = 0; i <= unitsarr.length; i++){
+			              if(params["u"+i]){
+			                 unitsarr[i] = params["u"+i];
+			              }
+			           }
+			           var resources=new Array();
+			           resources[0] = params.gold;
+			           for(i=1; i<=4; i++){
+			              resources[i] = params["r"+i];
+			           }
+			           var currentcityid =  params.cid;
+			           unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
+			           unsafeWindow.update_seed(rslt.updateSeed)
+			           if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
+			           document.getElementById(box).checked = false;        
+			        }
+			    }, 
+			    onFailure: function () {},
+		});
   },
 
   
@@ -6788,7 +6977,7 @@ Tabs.Train = {
 					var tier = parseInt(item["effects"]["slot"+i]["tier"]);
 					var level = item["level"];
 					if (item.unique==30286 && id==9) var p = unsafeWindow.cm.thronestats.tiers[id][4]; else
-					var p = unsafeWindow.cm.thronestats.tiers[id][tier];
+					  var p = unsafeWindow.cm.thronestats.tiers[id][tier];
 					var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 					total += Percent;
 				}
@@ -7830,26 +8019,26 @@ Tabs.Train = {
 
 /*************************************** OVERVIEW TAB ************************************************/
 var GMTclock = {
-  span : null,
-  timer : null,
+    span : null,
+    timer : null,
   
-  init : function (){
-    this.span = document.createElement ('span');
-    this.span.style.fontWeight = 'bold';
-    document.getElementById('kochead_time').parentNode.appendChild (this.span);
-    this.setEnable (Options.gmtClock);
-  },
+    init : function (){
+        this.span = document.createElement ('span');
+        this.span.style.fontWeight = 'bold';
+        document.getElementById('kochead_time').parentNode.appendChild (this.span);
+        this.setEnable (Options.gmtClock);
+    },
 
-  setEnable : function (tf){
-    var t = GMTclock;
-    if (tf){
+    setEnable : function (tf){
+        var t = GMTclock;
+        if (tf){
             setTimeout(function(){t.everySecond();},1000);
-    } else {
-      t.span.innerHTML = '';
-    }
-  },
+        } else {
+        t.span.innerHTML = '';
+        }
+    },
     
-  everySecond : function (){
+    everySecond : function (){
         var t = GMTclock;
         var now = new Date();  
         now.setTime(now.getTime() + (now.getTimezoneOffset()*60000));
@@ -7859,7 +8048,7 @@ var GMTclock = {
         } else {
             GMTclock.span.innerHTML = '';
         }
-  },
+    },
 }
 
 
@@ -9767,7 +9956,7 @@ Tabs.Attaque = {
 	 params.r2 = 0; 
 	 params.r3 = 0; 
 	 params.r4 = 0; 
-	 params.gold = 0; 
+	 params.gold = 0;
  
          if (typemarche!=3) {
         if (ById("RAAnbunit1").value>0) params.u1 = ById("RAAnbunit1").value;
@@ -9805,7 +9994,7 @@ Tabs.Attaque = {
                var rslt = transport;
                if (rslt.ok) {
                   var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-					var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS);
+				  var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS);
                   var ut = unsafeWindow.unixtime();
 
                   var unitsarr = [];
@@ -10092,7 +10281,7 @@ function equippedthronestats (stat_id){
 				var tier = parseInt(item["effects"]["slot"+i]["tier"]);
 				var level = item["level"];
 				if (item.unique==30286 && id==9) var p = uW.cm.thronestats.tiers[id][4]; else
-				var p = uW.cm.thronestats.tiers[id][tier];
+				  var p = uW.cm.thronestats.tiers[id][tier];
 				var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 				total += Percent;
 			}
@@ -10932,139 +11121,139 @@ Tabs.Alliance = {
 };
 /*********************************** IRC TAB ***********************************/
 Tabs.IRC = {
-  tabOrder : 1000,
-  tabLabel : "IRC",
-  myDiv : null,
-  seenLog : {},
+    tabOrder : 1000,
+    tabLabel : "IRC",
+    myDiv : null,
+    seenLog : {},
 
   
-  init : function (div){    
-    var t = Tabs.IRC;      
-    t.myDiv = div;
-    t.myDiv.style.maxHeight = '730px';
+    init : function (div){    
+        var t = Tabs.IRC;      
+        t.myDiv = div;
+        t.myDiv.style.maxHeight = '730px';
      
-    var m =  '<DIV class=ptstat>IRC Bot Command Server</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
-	m += '<INPUT id=ptIRCcmdEnable type=checkbox ' + (IRCOptions.IRCCmdEnable?'CHECKED ':'') + '> Global Enable (this must be checked for all other options to work)<br>';
-	m +=  '<DIV class=ptstat>IRC Bot Options</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
-    m += '<INPUT id=ptIRCcmdSeen type=checkbox ' + (IRCOptions.IRCCmdSeen.enable?'CHECKED ':'') + '> Respond to "!seen <username>" command<br>';
-    m += '<INPUT id=ptIRCcmdRules type=checkbox ' + (IRCOptions.IRCCmdRules.enable?'CHECKED ':'') + '> Respond to "!rules" command. ';
-	m += ' Rules message: <INPUT id=ptIRCcmdRulesMsg type=text size=50 value="' + IRCOptions.IRCCmdRules.message + '">';
-    t.myDiv.innerHTML = m;
+        var m =  '<DIV class=ptstat>IRC Bot Command Server</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
+        m += '<INPUT id=ptIRCcmdEnable type=checkbox ' + (IRCOptions.IRCCmdEnable?'CHECKED ':'') + '> Global Enable (this must be checked for all other options to work)<br>';
+        m += '<DIV class=ptstat>IRC Bot Options</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
+        m += '<INPUT id=ptIRCcmdSeen type=checkbox ' + (IRCOptions.IRCCmdSeen.enable?'CHECKED ':'') + '> Respond to "!seen <username>" command<br>';
+        m += '<INPUT id=ptIRCcmdRules type=checkbox ' + (IRCOptions.IRCCmdRules.enable?'CHECKED ':'') + '> Respond to "!rules" command. ';
+        m += ' Rules message: <INPUT id=ptIRCcmdRulesMsg type=text size=50 value="' + IRCOptions.IRCCmdRules.message + '">';
+        t.myDiv.innerHTML = m;
 
-    document.getElementById('ptIRCcmdEnable').addEventListener ('change', function (e){IRCOptions.IRCCmdEnable = e.target.checked;saveIRCOptions();}, false);
-    document.getElementById('ptIRCcmdSeen').addEventListener ('change', function (e){IRCOptions.IRCCmdSeen.enable = e.target.checked;saveIRCOptions();}, false);
-	document.getElementById('ptIRCcmdRules').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.enable = e.target.checked;saveIRCOptions();}, false);
-	document.getElementById('ptIRCcmdRulesMsg').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.message = e.target.value;saveIRCOptions();}, false);
-	
+        document.getElementById('ptIRCcmdEnable').addEventListener ('change', function (e){IRCOptions.IRCCmdEnable = e.target.checked;saveIRCOptions();}, false);
+        document.getElementById('ptIRCcmdSeen').addEventListener ('change', function (e){IRCOptions.IRCCmdSeen.enable = e.target.checked;saveIRCOptions();}, false);
+        document.getElementById('ptIRCcmdRules').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.enable = e.target.checked;saveIRCOptions();}, false);
+        document.getElementById('ptIRCcmdRulesMsg').addEventListener ('change', function (e){IRCOptions.IRCCmdRules.message = e.target.value;saveIRCOptions();}, false);
+    
         var a = JSON2.parse(localStorage.getItem('IRCSeen_log_'+GetServerId()));
-    if (matTypeof(a) == 'object')
+        if (matTypeof(a) == 'object')
+        {
+            t.seenLog = a;
+        }
+        window.addEventListener('unload', t.onUnload, false);
+    },
+
+    onUnload : function ()
     {
-        t.seenLog = a;
-    }
-      window.addEventListener('unload', t.onUnload, false);
-  },
-
-  onUnload : function ()
-  {
-	  var t = Tabs.IRC;
+        var t = Tabs.IRC;
         localStorage.setItem('IRCSeen_log_'+GetServerId(), JSON2.stringify(t.seenLog));
-  },  
+    },  
 
-  grabChat : function (uid, name, msg) {
-	var t = Tabs.IRC; 
-	var time = "";
-	var lastPost = "";
-	
-	if (!IRCOptions.IRCCmdEnable)
-		return;
-		
-	if (name == null)
-		return;
-	if (msg == null)
-		return;
-	
-	var a = msg.indexOf("<span class='time'>");
-	var b = msg.indexOf('</span>',a);
-	if (b>a)
-		time = msg.slice(a+19,b);
-	
-	var c = msg.indexOf("<div class='tx'>");
-	var d = msg.indexOf("</div>",c);
-	if (d>c)
-		lastPost = msg.slice(c+16,d);
+    grabChat : function (uid, name, msg) {
+        var t = Tabs.IRC; 
+        var time = "";
+        var lastPost = "";
+    
+        if (!IRCOptions.IRCCmdEnable)
+            return;
+        
+        if (name == null)
+            return;
+        if (msg == null)
+            return;
+        
+        var a = msg.indexOf("<span class='time'>");
+        var b = msg.indexOf('</span>',a);
+        if (b>a)
+            time = msg.slice(a+19,b);
+        
+        var c = msg.indexOf("<div class='tx'>");
+        var d = msg.indexOf("</div>",c);
+        if (d>c)
+            lastPost = msg.slice(c+16,d);
 
-	t.logChat(uid,name,time,lastPost);
-	if (IRCOptions.IRCCmdSeen.enable) {
-		if (msg.indexOf("!seen") >= 0) {
-			t.processSeen(msg);
-		}
-	}
-	if (IRCOptions.IRCCmdRules.enable) {
-		if (msg.indexOf("!rules") >= 0) {
-			t.processRules();
-		}
-	}
-  },
+        t.logChat(uid,name,time,lastPost);
+        if (IRCOptions.IRCCmdSeen.enable) {
+            if (msg.indexOf("!seen") >= 0) {
+                t.processSeen(msg);
+            }
+        }
+        if (IRCOptions.IRCCmdRules.enable) {
+            if (msg.indexOf("!rules") >= 0) {
+                t.processRules();
+            }
+        }
+    },
    
-  logChat : function (uid, name, time, lastPost) {
-	var t = Tabs.IRC; 
-	if (lastPost.indexOf("I need help building my")>=0)
-		return;
-	if (lastPost.indexOf("My embassy has")>=0)
-		return;
-	if (lastPost.indexOf("My wilderness at")>=0)
-		return;
-	if (lastPost.indexOf("has been scouted by")>=0)
-		return;
-	if (lastPost.indexOf("has been attacked by")>=0)
-		return;
-	if (lastPost.indexOf("is low on food")>=0)
-		return;
-	if (lastPost.indexOf("Encamped Allies")>=0)
-		return;
-	if (lastPost.indexOf("Estimated Arrival")>=0)
-		return;
-		
-	var updateSeen = {"name":name, "timestamp":time, "lastpost":lastPost};
-	t.seenLog[uid] = updateSeen;
+    logChat : function (uid, name, time, lastPost) {
+        var t = Tabs.IRC; 
+        if (lastPost.indexOf("I need help building my")>=0)
+            return;
+        if (lastPost.indexOf("My embassy has")>=0)
+            return;
+        if (lastPost.indexOf("My wilderness at")>=0)
+            return;
+        if (lastPost.indexOf("has been scouted by")>=0)
+            return;
+        if (lastPost.indexOf("has been attacked by")>=0)
+            return;
+        if (lastPost.indexOf("is low on food")>=0)
+            return;
+        if (lastPost.indexOf("Encamped Allies")>=0)
+            return;
+        if (lastPost.indexOf("Estimated Arrival")>=0)
+            return;
+        
+        var updateSeen = {"name":name, "timestamp":time, "lastpost":lastPost};
+        t.seenLog[uid] = updateSeen;
         localStorage.setItem('IRCSeen_log_'+GetServerId(), JSON2.stringify(t.seenLog));
-  },
+    },
   
-  processSeen : function (msg) {
-	var t = Tabs.IRC;
-	var username_string = msg.slice(msg.indexOf("!seen")+6);
-	var username = username_string.split('<');
-	if (username[0].length > 2)
-		Tabs.AllianceList.fetchPlayerList(username[0],t.eventGotPlayerList);
-  },
+    processSeen : function (msg) {
+        var t = Tabs.IRC;
+        var username_string = msg.slice(msg.indexOf("!seen")+6);
+        var username = username_string.split('<');
+        if (username[0].length > 2)
+            Tabs.AllianceList.fetchPlayerList(username[0],t.eventGotPlayerList);
+    },
 
-  processRules : function () {
-	var t = Tabs.IRC;
-	var automsg = sendChat('/a '+IRCOptions.IRCCmdRules.message);
-  },  
-  eventGotPlayerList : function (rslt) {
-	var t = Tabs.IRC;
-	if (!rslt.ok) {
-		var autoerrormsgPNF = sendChat("/a Player not found. Enter a valid Player.");
-		return;
-	}
-	var uid = rslt.matchedUsers[Object.keys(rslt.matchedUsers)[0]].userId;
-	if (Object.keys(t.seenLog).length > 0)
-		if (uid in t.seenLog) {
-			var automsg = sendChat('/a '+t.seenLog[uid].name+' last seen saying: ' +t.seenLog[uid].lastpost+ ' @'+ t.seenLog[uid].timestamp);
-		}
-		else
-			var autoerrormsg = sendChat("/a I haven't seen that user");
-  },
-		
-  hide : function (){         
-    mainPop.div.style.width = 750 + 'px';
-  },
-
-  show : function (){         
-  		var t = Tabs.IRC;
+    processRules : function () {
+        var t = Tabs.IRC;
+        var automsg = sendChat('/a '+IRCOptions.IRCCmdRules.message);
+    },  
+    eventGotPlayerList : function (rslt) {
+        var t = Tabs.IRC;
+        if (!rslt.ok) {
+            var autoerrormsgPNF = sendChat("/a Player not found. Enter a valid Player.");
+            return;
+        }
+        var uid = rslt.matchedUsers[Object.keys(rslt.matchedUsers)[0]].userId;
+        if (Object.keys(t.seenLog).length > 0)
+            if (uid in t.seenLog) {
+                var automsg = sendChat('/a '+t.seenLog[uid].name+' last seen saying: ' +t.seenLog[uid].lastpost+ ' @'+ t.seenLog[uid].timestamp);
+            }
+            else
+                var autoerrormsg = sendChat("/a I haven't seen that user");
+    },
+        
+    hide : function (){         
         mainPop.div.style.width = 750 + 'px';
-  },
+    },
+
+    show : function (){         
+        var t = Tabs.IRC;
+        mainPop.div.style.width = 750 + 'px';
+    },
 };
 
 /****************************  Unit Stats Calculator Tab  ******************************/
@@ -11107,10 +11296,10 @@ Tabs.UnitCalc = {
         msg += '<div class="ptdivHeader" style="background: #99CCFF;" align=left><a id=cfgGuardianHdr class=ptdivLink >Guardian&nbsp;<img id=cfgGuardianArrow height="10" src="'+GameIcons.DownArrow+'"></a></div>';
         msg += '<div id=cfgGuardian align=left class="">';
         msg += '<table border=1><tr><td>Guardians</td><td>Levels</td><td>Active</td></tr>\
-                       <tr><td>Wood </td><td><input id=ptucWood  type=text value=9 size=4></td><td><input id=ptucWoodAct type=radio name=ptucGuard checked></td></tr>\
+                       <tr><td>Wood          </td><td><input id=ptucWood  type=text value=9 size=4></td><td><input id=ptucWoodAct type=radio name=ptucGuard checked></td></tr>\
                        <tr><td>Ore<sup>*<sup></td><td><input id=ptucOre   type=text value=9 size=4></td><td><input id=ptucOreAct type=radio name=ptucGuard></td></tr>\
-                       <tr><td>Food </td><td><input id=ptucFood  type=text value=9 size=4></td><td><input id=ptucFoodAct type=radio name=ptucGuard></td></tr>\
-                       <tr><td>Stone</td><td><input id=ptucStone type=text value=9 size=4></td><td><input id=ptucStoneAct type=radio name=ptucGuard></td></tr></table>';
+                       <tr><td>Food          </td><td><input id=ptucFood  type=text value=9 size=4></td><td><input id=ptucFoodAct type=radio name=ptucGuard></td></tr>\
+                       <tr><td>Stone         </td><td><input id=ptucStone type=text value=9 size=4></td><td><input id=ptucStoneAct type=radio name=ptucGuard></td></tr></table>';
         msg += 'Set Bonus<input id=ptucGuardSet type=checkbox unchecked></div>';
         msg += '<div class="ptdivHeader" style="background: #99CCFF;" align=left><a id=cfgItemsHdr class=ptdivLink >Items&nbsp;<img id=cfgItemsArrow height="10" src="'+GameIcons.DownArrow+'"></a></div>';
         msg += '<div id=cfgItems align=left class="">';
@@ -11462,7 +11651,7 @@ Tabs.UnitCalc = {
         var itemAtk = 0;
         var itemDef = 0;
         var feyAltarAct = document.getElementById('ptucFeyAltarActive').checked ? 1 : 0;
-		var feyAltar = parseFloat(document.getElementById('ptucFeyAltarBonus').value)/100;
+        var feyAltar = parseFloat(document.getElementById('ptucFeyAltarBonus').value)/100;
         var orderDef = 0;
         
         var champLife = parseFloat(document.getElementById('ptucLifeChampMod').value);
@@ -11498,7 +11687,7 @@ Tabs.UnitCalc = {
                 else {
                     guardAtk = (1.5*guardAtk/100) + guardOreBless*0.15 + guardOreBless*(1.5*guardAtk/100);
                     guardLife = 0;
-				}
+                }
             }
             else {
                 if(defending) {
@@ -11508,7 +11697,7 @@ Tabs.UnitCalc = {
                 else {
                     guardAtk = (guardAtk/200) + guardOreBless*0.15 + guardOreBless*0.15*(guardAtk/200);
                     guardLife = 0;
-				}
+                }
             }
         } else { // don't have set bonus
            if (guardLifeAct && defending) {
@@ -11535,10 +11724,10 @@ Tabs.UnitCalc = {
                         document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( (1 + feyAltar*feyAltarAct) * (champSpd  + uW.unitstats['unt'+ui][3])                        + (1 + feyAltar*feyAltarAct) * (champSpd  + uW.unitstats['unt'+ui][3])                        * (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModInf' ).value))/100)));
                         document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( (1 + feyAltar*feyAltarAct) * (champRng  + uW.unitstats['unt'+ui][4])                        + (1 + feyAltar*feyAltarAct) * (champRng  + uW.unitstats['unt'+ui][4])                        * (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModInf' ).value))/100)));
                     } else {
-        //Trp13 - blood
-        //verified on 11/30 that bloods don't use infantry buff for atk/def. other stats unknown
-        //Trp14 - exec
-        //verified on 11/30 that exec don't use infantry buff for atk/def. other stats unknown
+                        //Trp13 - blood
+                        //verified on 11/30 that bloods don't use infantry buff for atk/def. other stats unknown
+                        //Trp14 - exec
+                        //verified on 11/30 that exec don't use infantry buff for atk/def. other stats unknown
                         document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( (1 + feyAltar*feyAltarAct) * (champLife + uW.unitstats['unt'+ui][0]) * bloodLustBlessLife   + (1 + feyAltar*feyAltarAct) * (champLife + uW.unitstats['unt'+ui][0]) * bloodLustBlessLife   * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),0)/100)));
                         document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( (1 + feyAltar*feyAltarAct) * (champAtk  + uW.unitstats['unt'+ui][1]) * bloodLustBlessAtkSpd + (1 + feyAltar*feyAltarAct) * (champAtk  + uW.unitstats['unt'+ui][1]) * bloodLustBlessAtkSpd * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),0)/100)));
                         document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( (1 + feyAltar*feyAltarAct) * (champDef  + uW.unitstats['unt'+ui][2])                        + (1 + feyAltar*feyAltarAct) * (champDef  + uW.unitstats['unt'+ui][2])                        * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),0)/100)));
@@ -11903,19 +12092,19 @@ Tabs.Marches = {
    },   
       
         
-  /***   MARCHES SUBTAB  ***/
+    /***   MARCHES SUBTAB  ***/
     showMarches : function (){
-      var t = Tabs.Marches;
-      t.marchDiv.innerHTML =null;	
-      var updatemarch = Seed.queue_atkp;
+        var t = Tabs.Marches;
+        t.marchDiv.innerHTML =null;
+        var updatemarch = Seed.queue_atkp;
         var m='';
-     
-     for (var c=0; c< Seed.cities.length;c++) {
-     		cityname = Seed.cities[c][1];
-     		cityID = 'city' + Seed.cities[c][0];    
+
+        for (var c=0; c< Seed.cities.length;c++) {
+            cityname = Seed.cities[c][1];
+            cityID = 'city' + Seed.cities[c][0];
             var raidNumber=0;
             var marchNumber=0;
-    		
+
             var tmpMsg = '';
             var raidMarchMsg = '';  
             var marchMsg = '<div class="ptdivHeader" align=left>Attack/Scout/Reinforce/Transport</div>';
@@ -11923,10 +12112,10 @@ Tabs.Marches = {
                 //raidMarchMsg += '<div class="ptdivHeader" align=left><a id=ptRaidHdr'+cityID+' class=ptdivLink >Raids&nbsp;<img id=ptRaid'+cityID+'Arrow height="10" src="'+GameIcons.RightArrow+'"></a></div>';  
                 raidMarchMsg += '<div id=ptRaid'+cityID+' align=left class="ptdivHide">';
             
-  		    for (k in Seed.queue_atkp[cityID]){
-  				if (Seed.queue_atkp[cityID].length !=0) {
-  				    var marchID = new String(k);
-  				    marchID = marchID.substr(1);
+            for (k in Seed.queue_atkp[cityID]){
+                if (Seed.queue_atkp[cityID].length !=0) {
+                    var marchID = new String(k);
+                    marchID = marchID.substr(1);
                     //marchType 1 = transport
                     //marchType 2 = reinforce
                     //marchType 3 = scouting
@@ -11938,65 +12127,65 @@ Tabs.Marches = {
                     //marchStatus 5 = waiting for report
                     //marchStatus 8 = returning
                     //matchStatus 10 = raid stopped
-  				    var marchStatus = parseInt(Seed.queue_atkp[cityID][k]["marchStatus"]);
-  				    var now = unixTime();
-  				    cityTo = null;
+                    var marchStatus = parseInt(Seed.queue_atkp[cityID][k]["marchStatus"]);
+                    var now = unixTime();
+                    cityTo = null;
                     
-					var icon, status, type, cityTo, knight, marchtime;
-  				    
-  				    for (var i=0; i<Seed.cities.length;i++) {
-  				    		if (Seed.cities[i][2] == Seed.queue_atkp[cityID][k]["toXCoord"] && Seed.cities[i][3] == Seed.queue_atkp[cityID][k]["toYCoord"]) cityTo = Seed.cities[i][1];
-  				    }
-  				    
-  				    var destinationUnixTime = Seed.queue_atkp[cityID][k]["destinationUnixTime"] - now;
-  				    var returnUnixTime = Seed.queue_atkp[cityID][k]["returnUnixTime"] - now;
-  				    var encampedUnixTime = now - Seed.queue_atkp[cityID][k]["destinationUnixTime"];
-					var restingUnixTime = now - Seed.queue_atkp[cityID][k]["returnUnixTime"];
-					
-  				    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] > now)
-						marchtime = timestr(destinationUnixTime, true);
-  				    else
-						marchtime = timestr(returnUnixTime, true);
-  				    
-  				    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now && marchType == 2)
-						marchtime = timestr(encampedUnixTime, true);
-					if (Seed.queue_atkp[cityID][k]["returnUnixTime"] < now && marchType == 9)
-						marchtime = timestr(restingUnixTime, true);
-  				  
-  				    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now || marchStatus == 8)
-						type = "returning";
-  				    else
-						type = "going";
-  				   
-					if(Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now){
-						if (marchStatus == 8)
-							marchtime = timestr(returnUnixTime, true);
-						if (type =="returning" && marchType == 2 && marchStatus != 2)
-							marchtime = timestr(returnUnixTime, true);
-						if (type =="returning" && marchType == 4 && marchStatus == 2)
-							marchtime = timestr(returnUnixTime, true);
-						if (marchStatus == 2 && marchType !=2)
-							marchtime = timestr(returnUnixTime, true);
-					}
+                    var icon, status, type, cityTo, knight, marchtime;
+
+                    for (var i=0; i<Seed.cities.length;i++) {
+                        if (Seed.cities[i][2] == Seed.queue_atkp[cityID][k]["toXCoord"] && Seed.cities[i][3] == Seed.queue_atkp[cityID][k]["toYCoord"]) cityTo = Seed.cities[i][1];
+                    }
+
+                    var destinationUnixTime = Seed.queue_atkp[cityID][k]["destinationUnixTime"] - now;
+                    var returnUnixTime = Seed.queue_atkp[cityID][k]["returnUnixTime"] - now;
+                    var encampedUnixTime = now - Seed.queue_atkp[cityID][k]["destinationUnixTime"];
+                    var restingUnixTime = now - Seed.queue_atkp[cityID][k]["returnUnixTime"];
+
+                    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] > now)
+                        marchtime = timestr(destinationUnixTime, true);
+                    else
+                        marchtime = timestr(returnUnixTime, true);
+
+                    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now && marchType == 2)
+                        marchtime = timestr(encampedUnixTime, true);
+                    if (Seed.queue_atkp[cityID][k]["returnUnixTime"] < now && marchType == 9)
+                        marchtime = timestr(restingUnixTime, true);
+
+                    if (Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now || marchStatus == 8)
+                        type = "returning";
+                    else
+                        type = "going";
+
+                    if(Seed.queue_atkp[cityID][k]["destinationUnixTime"] < now){
+                        if (marchStatus == 8)
+                            marchtime = timestr(returnUnixTime, true);
+                        if (type =="returning" && marchType == 2 && marchStatus != 2)
+                            marchtime = timestr(returnUnixTime, true);
+                        if (type =="returning" && marchType == 4 && marchStatus == 2)
+                            marchtime = timestr(returnUnixTime, true);
+                        if (marchStatus == 2 && marchType !=2)
+                            marchtime = timestr(returnUnixTime, true);
+                    }
                     if (marchType == 4 && marchStatus == 2)
-						marchtime = timestr(destinationUnixTime, true);;
-  				    
+                        marchtime = timestr(destinationUnixTime, true);;
+                    
                     var iconType = marchType;
-					if (type =="returning" && marchType != 2)
+                    if (type =="returning" && marchType != 2)
                         iconType = 8;
-  				    if (type =="returning" && marchType == 2 && marchStatus == 2)
+                    if (type =="returning" && marchType == 2 && marchStatus == 2)
                         iconType = 102;
-  				    if (type =="returning" && marchType == 2 && marchStatus != 2)
+                    if (type =="returning" && marchType == 2 && marchStatus != 2)
                         iconType = 8;
-  				    if (marchStatus == 10)
+                    if (marchStatus == 10)
                         iconType = 103;
-					if (marchStatus == 4)
+                    if (marchStatus == 4)
                         iconType = 104;
-					
+
                     if (marchType == 4 && marchStatus == 2) {
                         iconType = 102;
-  						marchtime = timestr(encampedUnixTime, true)
-  				    }
+                        marchtime = timestr(encampedUnixTime, true)
+                    }
   
                     switch (iconType) {
                         case 1: icon=GameIcons.transport;status=uW.g_js_strings.commonstr.transport;break;
@@ -12009,14 +12198,14 @@ Tabs.Marches = {
                         case 102: icon=GameIcons.reinforce;status=uW.g_js_strings.commonstr.encamped;break;
                         case 103: icon=GameIcons.raidStopped;status=uW.g_js_strings.attack_generatequeue.raidstopped;break;
                         case 104: icon=GameIcons.raidResting;status=uW.g_js_strings.attack_generatequeue.raidresting;break;
-  				    } 
-  				      				    
-  				    if (Seed.queue_atkp[cityID][k]["knightId"] !=0){
-  				    	for (i in Seed.knights[cityID]) {
-  				    			if (i == ("knt" + Seed.queue_atkp[cityID][k]["knightId"]) ) knight = Seed.knights[cityID][i]["combat"];
-  				    	}
-  				    } else knight = null;
-  				    
+                    } 
+
+                    if (Seed.queue_atkp[cityID][k]["knightId"] !=0){
+                        for (i in Seed.knights[cityID]) {
+                            if (i == ("knt" + Seed.queue_atkp[cityID][k]["knightId"]) ) knight = Seed.knights[cityID][i]["combat"];
+                        }
+                    } else knight = null;
+
                     tmpMsg = '';
                     if (marchType == 9) {
                         raidNumber++;
@@ -12034,14 +12223,14 @@ Tabs.Marches = {
                             marchMsg += '<TD><A onclick="cancelMarch('+ marchID +')">'+ icon +'</a></td>';
                         marchMsg += '<td>' + status + '</td><td>' + marchtime + '</td>';
                     }
-  				    
-  				    if (cityTo == null)
+
+                    if (cityTo == null)
                         tmpMsg += '<td>' + coordLink(Seed.queue_atkp[cityID][k]["toXCoord"],Seed.queue_atkp[cityID][k]["toYCoord"]) + '</td>';
-  				    else
+                    else
                         tmpMsg += '<td>' + cityTo + '</td>';
                     if (knight != null)
                         tmpMsg += '<td>' + uW.g_js_strings.commonstr.knight+': '+ knight + '</td>';
-  				    for(i=1; i<nTroopType+1; i++){
+                    for(i=1; i<nTroopType+1; i++){
                         if(Seed.queue_atkp[cityID][k]["unit"+i+"Count"] > 0 && type == "going")
                             tmpMsg += '<td>'+ uW.unitcost['unt'+i][0] +': '+ addCommas(Seed.queue_atkp[cityID][k]["unit"+i+"Count"]) +'</td>';
                         if(Seed.queue_atkp[cityID][k]["unit"+i+"Return"] > 0 && type == "returning")
@@ -12064,21 +12253,21 @@ Tabs.Marches = {
                         raidMarchMsg += tmpMsg;
                     } else {
                         marchMsg += tmpMsg;
-				}
-  		    }
-  	}
+                    }
+                }
+            }
             m += '<div class="ptdivHeader" align=left><a id=ptRaidHdr'+cityID+' class=ptdivLink >Raids (';
             m += raidNumber + ')&nbsp;<img id=ptRaid'+cityID+'Arrow height="10" src="'+GameIcons.RightArrow+'"></a></div>'
             m += raidMarchMsg + '</div>';
             m += marchMsg;
         }
-  	t.marchDiv.innerHTML = m;
-  	
+        t.marchDiv.innerHTML = m;
+
         for (var c=0; c< Seed.cities.length;c++) {
             cityID = 'city' + Seed.cities[c][0];
             (function(cityID,c){
                 document.getElementById('ptRaidHdr'+cityID).addEventListener ('click', function () {ToggleDivDisplay(500,500,"ptRaid"+cityID);Options.marchRaidState[c] = !(Options.marchRaidState[c]);saveOptions();}, false);
-  	
+
 
                 if (Options.marchRaidState[c]){
                     ToggleDivDisplay(500,500,"ptRaid"+cityID);
@@ -12086,60 +12275,60 @@ Tabs.Marches = {
             })(cityID,c);
         }
         
-    t.displayTimer = setTimeout (t.showMarches, 500);  
+        t.displayTimer = setTimeout (t.showMarches, 500);  
     },
-	
-	isMyself: function(userID){
-		if(!Seed.players["u"+userID])
-			return false;
-		if(Seed.players["u"+userID].n == Seed.player.name)
-			return true;
-		else
-			return false;
-		return false;
-	},
+
+    isMyself: function(userID){
+        if(!Seed.players["u"+userID])
+            return false;
+        if(Seed.players["u"+userID].n == Seed.player.name)
+            return true;
+        else
+            return false;
+        return false;
+    },
     
     butcancelmarch: function(marchID){
-    	 var t = Tabs.Marches;
-    	 	 var params = uW.Object.clone(uW.g_ajaxparams);
-    	 	 params.mid = marchID;
-     	 	 for (var c=0; c<Cities.numCities; c++){
-    	 	   var que = Seed.queue_atkp['city'+ Cities.cities[c].id];
-    	 	   if (matTypeof(que)=='array')
-    	 	     continue;
-    	 	   for (k in que){
-    	 	     if (k == 'm'+marchID){
-    	 	       params.cid = Cities.cities[c].id;
-    	 	       break;
-    	 	     }
-    	 	   }    
-    	 	 }    
-
-     	 	 new AjaxRequest(uW.g_ajaxpath + "ajax/cancelMarch.php" + uW.g_ajaxsuffix, {
-     	 	    method: "post",
-     	 	    parameters: params,
-     	 	    onSuccess: function (rslt) {
-     	 	       var march = uW.seed.queue_atkp["city" + params.cid]["m" + params.mid];
-     	 	       march.marchStatus = 8;
-     	 	       var marchtime = parseInt(march.returnUnixTime) - parseInt(march.destinationUnixTime);
-     	 	       var ut = unixTime();
-     	 	       if (uW.seed.playerEffects.returnExpire > unixTime())
-     	 	          marchtime *= 0.5
-     	 	          march.returnUnixTime = ut + marchtime;
-     	 	       march.destinationUnixTime = ut;
-     	 	       march.marchUnixTime = ut - marchtime;
-                if (rslt.updateSeed) {
-                   update_seed(rslt.updateSeed)
+        var t = Tabs.Marches;
+        var params = uW.Object.clone(uW.g_ajaxparams);
+        params.mid = marchID;
+        for (var c=0; c<Cities.numCities; c++){
+            var que = Seed.queue_atkp['city'+ Cities.cities[c].id];
+            if (matTypeof(que)=='array')
+                continue;
+            for (k in que){
+                if (k == 'm'+marchID){
+                    params.cid = Cities.cities[c].id;
+                    break;
                 }
-     	 	       if (notify != null)
-     	 	          notify(rslt.errorMsg);
-     	 	    },
-     	 	    onFailure: function () {
-     	 	       if (notify != null)
-     	 	          notify(rslt.errorMsg);
-     	 	    },
-     	 	 });
-    	 },    
+            }    
+        }    
+
+        new AjaxRequest(uW.g_ajaxpath + "ajax/cancelMarch.php" + uW.g_ajaxsuffix, {
+            method: "post",
+            parameters: params,
+            onSuccess: function (rslt) {
+                var march = uW.seed.queue_atkp["city" + params.cid]["m" + params.mid];
+                march.marchStatus = 8;
+                var marchtime = parseInt(march.returnUnixTime) - parseInt(march.destinationUnixTime);
+                var ut = unixTime();
+                if (uW.seed.playerEffects.returnExpire > unixTime())
+                    marchtime *= 0.5
+                march.returnUnixTime = ut + marchtime;
+                march.destinationUnixTime = ut;
+                march.marchUnixTime = ut - marchtime;
+                if (rslt.updateSeed) {
+                    update_seed(rslt.updateSeed)
+                }
+                if (notify != null)
+                    notify(rslt.errorMsg);
+            },
+            onFailure: function () {
+                if (notify != null)
+                    notify(rslt.errorMsg);
+            },
+        });
+    },    
       
   /***  REINFORCEMENTS SUBTAB  ***/
   showReinforcements : function (){
