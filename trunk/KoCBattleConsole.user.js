@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131202a
+// @version			20131213a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Fix for arrived attacks not clearing the incoming queue</p><p>Option to remove transparency from windows</p>
+// @releasenotes 	<p>Change name of dashboard panel</p><p>Volume control</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	December 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131202a';
+var Version = '20131213a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -90,6 +90,7 @@ var Options = {
 	GuardianChange      : true,
 	ChampionCompare     : false,
 	Transparent         : true,
+	Volume              : 100,
 };
 
 var JSON2 = JSON; 
@@ -508,10 +509,11 @@ function btStartup (){
 	m += '<div style="height:36px;" align="center"><div id=btAttackAlert style="display:none;background-color:red;height:30px;" align="left">&nbsp;</div></div>';
 	m += '<div align="center">&nbsp;&nbsp;Enemy:&nbsp;<INPUT id=btPlayer size=20 type=text value="'+Options.LastMonitored+'"/>&nbsp;<a id=btPlayerSubmit class="inlineButton btButton blue20"><span>Monitor</span></a>&nbsp;<a id=btUIDSubmit class="inlineButton btButton blue20"><span>UID</span></a>&nbsp;<a id=btLogSubmit class="inlineButton btButton blue20"><span>Log</span></a></div>';
 	m += '<div class="ErrText" align="center" id=btplayErr>&nbsp;</div>';
-	m += '<div align="center"><TABLE><TR><TD class=xtab><a id=btSleepButton class="inlineButton btButton blue20"><span style="width:50px"><center>Sleep</center></span></a></td><TD class=xtab><a id=btCityDefenceButton class="inlineButton btButton blue20"><span style="width:130px"><center>City Dashboard</center></span></a></td><TD class=xtab><a id=btIncomingButton class="inlineButton btButton blue20"><span style="width:130px"><center>Incoming Marches</center></span></a></td></tr></table></div>';
+	m += '<div align="center"><TABLE><TR><TD class=xtab><a id=btSleepButton class="inlineButton btButton blue20"><span style="width:50px"><center>Sleep</center></span></a></td><TD class=xtab><a id=btCityDefenceButton class="inlineButton btButton blue20"><span style="width:130px"><center>Battle Dashboard</center></span></a></td><TD class=xtab><a id=btIncomingButton class="inlineButton btButton blue20"><span style="width:130px"><center>Incoming Marches</center></span></a></td></tr></table></div>';
 	m += '<div class="divHeader" align="right"><a id=btOptionLink class=divLink >OPTIONS&nbsp;<img id=btOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
+    m += '<TR id=btSoundOpts class="divHide"><TD class=xtab>&nbsp;</td><TD colspan=2 align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider></span></td><TD align=right id=btVolOut style="width:30px;">0</td></tr></table></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show monitor throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
@@ -526,7 +528,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
 	m += '</table></div>';
-	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >CITY DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
+	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >BATTLE DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
@@ -566,7 +568,7 @@ function btStartup (){
 	ToggleOption ('LevelChk', 'ShowLevelOnMap', MapToggle);
 	ToggleOption ('MistedChk', 'ShowMistedOnMap', MapToggle);
 	ToggleOption ('AlertOverrideChk', 'OverrideAttackAlert');
-	ToggleOption ('SoundChk', 'MonitorSound');
+	ToggleOption ('SoundChk', 'MonitorSound', SoundToggle);
 	ToggleOption ('MonitorColoursChk', 'MonitorColours');
 	ToggleOption ('PVPOnlyChk', 'PVPOnly');
 	ToggleOption ('MonPresetChk', 'MonPresetChange', PaintTRPresets);
@@ -575,6 +577,7 @@ function btStartup (){
 	ToggleOption ('CompareChampChk', 'ChampionCompare');
 	ToggleOption ('AutoUpdateChk', 'AutoUpdates');
 	MapToggle ();
+	SoundToggle ();
 
 	ToggleOption ('PresetChk', 'PresetChange', PaintTRPresets);
 	ToggleOption ('DashboardChk', 'DashboardMode', DashboardToggle);
@@ -582,7 +585,12 @@ function btStartup (){
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
-  
+
+	VolSlider = new SliderBar (document.getElementById('btVolSlider'), 200, 21, 0);
+	VolSlider.setValue (Options.Volume/100);
+	VolSlider.setChangeListener(VolumeChanged);
+	VolumeChanged (Options.Volume/100);
+	
 	AddMainTabLink('BATTLE', eventHideShow, mouseMainTab);
  
 	addScript ('uwuwuwFunc = function (text){ eval (text);  }');  
@@ -662,6 +670,13 @@ function btStartup (){
 	// All done!
 	
 	uW.btLoaded = true;
+}
+
+function VolumeChanged (val) {
+	document.getElementById('btVolOut').innerHTML = parseInt(val*100);
+    Options.Volume = parseInt(val*100);
+	saveOptions();
+	if (AudioManager.player) {AudioManager.setVolume(1, Options.Volume);}
 }
 
 function DefaultWindowPos(OptPos,elem,force) {
@@ -1063,6 +1078,13 @@ function MapToggle () {
 	uW.g_mapObject.getMoreSlots(); 
 }
 
+function SoundToggle () {
+	var dc = uW.jQuery('#btSoundOpts').attr('class');
+	if (Options.MonitorSound) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSoundOpts').attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSoundOpts').attr('class','divHide');}
+	ResetFrameSize('btMain',180,400);
+}
+
 function SacToggle () {
 	var dc = uW.jQuery('#btSacOpts').attr('class');
 	if (Options.DefaultSacrifice) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSacOpts').attr('class','');}
@@ -1435,6 +1457,116 @@ function isNaNCommas (n){
 	n = n.split(',');
 	n = n.join('');
 	return isNaN(n);
+}
+
+// value is 0 to 1.0
+function SliderBar (container, width, height, value, classPrefix, margin){
+  var self = this;
+  this.listener = null;
+  if (value==null)
+    value = 0;
+  if (!margin)
+    margin = parseInt(width*.05);
+  this.value = value;
+  if (width<20) width=20;
+  if (height<5) height=5;
+  if (classPrefix == null){
+    classPrefix = 'slider';
+    var noClass = true;
+  }    
+  var sliderHeight = parseInt(height/2);
+  var sliderTop = parseInt(height/4);
+  this.sliderWidth = width - (margin*2);
+    
+  this.div = document.createElement ('div');
+  this.div.style.height = height +'px';
+  this.div.style.width = width +'px';
+  this.div.className = classPrefix +'Cont';
+  if (noClass)
+    this.div.style.backgroundColor='#ddd';
+  
+  this.slider = document.createElement ('div');
+  this.slider.setAttribute ('style', 'position:relative;');
+  this.slider.style.height = sliderHeight + 'px'
+  this.slider.style.top = sliderTop + 'px';
+  this.slider.style.width = this.sliderWidth +'px';
+  this.slider.style.left = margin +'px';   /////
+  this.slider.className = classPrefix +'Bar';
+  this.slider.draggable = true;
+  if (noClass)
+    this.slider.style.backgroundColor='#fff';
+  
+  this.sliderL = document.createElement ('div');
+  this.sliderL.setAttribute ('style', 'width:100px; height:100%; position:relative;');
+  this.sliderL.className = classPrefix +'Part';
+  this.sliderL.draggable = true;
+  if (noClass)
+    this.sliderL.style.backgroundColor='#0c0';
+  
+  this.knob = document.createElement ('div');
+  this.knob.setAttribute ('style', 'width:3px; position:relative; left:0px; background-color:#222;');
+  this.knob.style.height = height +'px';
+  this.knob.style.top = (0-sliderTop) +'px';
+  this.knob.className = classPrefix +'Knob';
+  this.knob.draggable = true;
+  this.slider.appendChild(this.sliderL);
+  this.sliderL.appendChild (this.knob);
+  this.div.appendChild (this.slider);
+  container.appendChild (this.div);
+  this.div.addEventListener('mousedown',  mouseDown, false);
+
+  this.getValue = function (){
+    return self.value;
+  }
+
+  this.setValue = function (val){   // todo: range check
+    var relX = (val * self.sliderWidth);
+    self.sliderL.style.width = relX + 'px';
+    self.knob.style.left =  relX + 'px';
+    self.value = val;
+    if (self.listener)
+      self.listener(self.value);
+  }
+  
+  this.setChangeListener = function (listener){
+    self.listener = listener;
+  }
+
+  function moveKnob (me){
+    var relX = me.clientX - self.divLeft;
+    if (relX < 0)
+      relX = 0;
+    if (relX > self.sliderWidth)
+      relX = self.sliderWidth;
+    self.knob.style.left = (relX - (self.knob.clientWidth/2) ) +'px';   // - half knob width !?!?
+    self.sliderL.style.width = relX + 'px';
+    self.value =  relX / self.sliderWidth; 
+    if (self.listener)
+      self.listener(self.value);
+  }
+  function doneMoving (){
+    self.div.removeEventListener('mousemove', mouseMove, true);
+    document.removeEventListener('mouseup', mouseUp, true);
+  }
+  function mouseUp (me){
+    moveKnob (me);
+    doneMoving();
+  }
+  
+  function mouseDown(me){
+    var e = self.slider;
+    self.divLeft = 0;
+    while (e.offsetParent){   // determine actual clientX
+      self.divLeft += e.offsetLeft;
+      e = e.offsetParent;
+    }
+    moveKnob (me);
+    document.addEventListener('mouseup',  mouseUp, true);
+    self.div.addEventListener('mousemove',  mouseMove, true);
+  }
+  function mouseMove(me){
+    moveKnob (me);
+  }
 }
 
 // creates a 'popup' div
@@ -2910,7 +3042,7 @@ function ToggleCityDefence (Curr){
 		}	
 		
 		popDef.getMainDiv().innerHTML = m;
-		popDef.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;City Dashboard</B></DIV>';
+		popDef.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Battle Dashboard</B></DIV>';
 
 		if (Curr < 0) {	Curr = Cities.byID[uW.currentcityid].idx;}
 			
@@ -4338,6 +4470,7 @@ function eventPaintTRStats () {
 		AddToLog(userInfo.userId,userInfo.name,userInfo.allianceName);
 		if (Options.MonitorSound) {
 			AudioManager.setSource(SOUND_FILES.monitor);
+			AudioManager.setVolume(Options.Volume);
 			AudioManager.play();
 			setTimeout(function(){AudioManager.stop();}, 2500);
 		}	
@@ -4490,6 +4623,7 @@ function MonitorTRLoop () {
 			Options.MonitorStartState = false;
 			saveOptions ();
 			AudioManager.setSource(SOUND_FILES.timeout);
+			AudioManager.setVolume(Options.Volume);
 			AudioManager.play();
 			setTimeout(function(){AudioManager.stop();}, 2500);
 		}
