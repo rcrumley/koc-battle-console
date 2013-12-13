@@ -528,7 +528,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
 	m += '</table></div>';
-	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >BATTLE DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
+	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
