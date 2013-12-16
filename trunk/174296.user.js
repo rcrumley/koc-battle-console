@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131202g
+// @version        20131216a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131202g';
+var Version = '20131216a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -82,6 +82,7 @@ unsafeWindow.arthurCheck = function (a) {
 };
 
 unsafeWindow.actionLog = function(msg) { sendChat ("/a "+  msg); actionLog(msg); logit(msg);};
+
 
 var isAFK = false;
 
@@ -153,6 +154,7 @@ var Options = {
   DeleteRequest: false,
   DeletegAl    : false,
   MapShowExtra : false,
+  MapShowLevel : false,
   RaidRunning  : false,
   RaidReset    : 0,
   DeleteMsg    : false,
@@ -168,6 +170,7 @@ var Options = {
   MsgInterval  : 1,
   CrestMsgInterval  : 1,
   CrestYeddaTarget  : 999,
+
   foodreport   : false,
   crestreport  : true,
   Crest1Count  : 0,                            
@@ -284,6 +287,7 @@ var CrestOptions = {
   R2Huss       :  0,
   isWild       :  false,
   isMerc       :  false,
+
   Paused       :  false,
 };
 var GiftDB = {
@@ -345,6 +349,7 @@ var CrestData = new Array();
       this.R2Huss       =  Arr.R2Huss;
       this.isWild       =  Arr.isWild;
       this.isMerc       =  Arr.isMerc;
+
 	  this.Paused       =  Arr.Paused;
    };
 
@@ -819,6 +824,7 @@ function pbStartup (){
     table.pbTabPadNW tr td {border:none; background:none; white-space:nowrap; padding: 2px 4px 2px 8px;}\
     table.pbTabBR tr td {border:none; background:none;}\
     table.pbTabLined tr td {border:1px none none solid none; padding: 2px 5px; white-space:nowrap;}\
+    table.pbTabLined3 tr td {border:3px none none solid lightgreen; background:lightblue; padding: 2px 5px; white-space:nowrap;}\
     table.pbOptions tr td {border:1px none none solid none; padding: 1px 3px; white-space:nowrap;}\
     table.pbSrchResults tr td {border:1px none none solid none; padding: 1px 3px; white-space:nowrap;}\
     table.pbTabSome tr td {border:none; background:none; padding: 1px 3px; white-space:nowrap;}\
@@ -1817,7 +1823,7 @@ if (l_debug_on==1) actionLog('City-'+cityNum+'||FOOD-'+  Math.round(ret.reso[1]/
                     var y=Seed.cities[i-1]["3"];
                     for (j=0;j<t.FarmArray[i].length;j++){
                                 if (reports[k].side1XCoord == x && reports[k].side1YCoord == y && reports[k].side0XCoord == t.FarmArray[i][j]["x"] && reports[k].side0YCoord == t.FarmArray[i][j]["y"]&&(!(t.FarmArray[i][j]['lost']))
-								&&(t.FarmArray[i][j]['enabled']||(!(t.FarmArray[i][j]['enabled'])&&(now-t.FarmArray[i][j]['time']<10*60)))
+								&&(t.FarmArray[i][j]['enabled']||(!(t.FarmArray[i][j]['enabled'])&&(now-t.FarmArray[i][j]['time']<25*60)))
 								) {
 								deletes1.push(k.substr(2));
                     }
@@ -4845,9 +4851,9 @@ getpinauth : function () {
 	for (var k in Seed.queue_atkinc) {   // check each incoming march
 		var m = Seed.queue_atkinc[k];
 		if (m.marchType==3 || m.marchType==4) {
-			if(Options.alertConfig.lastatkarr.indexOf(m.mid) == -1) {
-				Options.alertConfig.lastatkarr.push(m.mid);
-				Options.alertConfig.lastarrtime.push(m.arrivalTime)
+			if(Options.alertConfig.lastatkarr.indexOf(Number(m.mid)) == -1) {
+				Options.alertConfig.lastatkarr.push(Number(m.mid));
+				Options.alertConfig.lastarrtime.push(m.arrivalTime);
 				if (m.arrivalTime > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = m.arrivalTime;//for tr toggle back
 				saveOptions();
 				t.newIncoming (m);
@@ -12216,6 +12222,7 @@ Tabs.Options = {
         <TR><TD><INPUT id=PubReq type=checkbox '+ (GlobalOptions.autoPublishGamePopups?'CHECKED ':'') +'/></td><TD>'+translate("Auto publish Facebook posts for")+' '+ htmlSelector({0:'----', 80:'Everyone', 50:'Friends of Friends', 40:'Friends Only', 10:'Only Me'},GlobalOptions.autoPublishPrivacySetting,'id=selectprivacymode') +' '+translate("(For all domains)")+'<span style="color:#800; font-weight:bold"><sup>'+translate("*Only select ONE of these")+'</sup></span></td>\
         <TR><TD><INPUT id=cancelReq type=checkbox '+ (GlobalOptions.autoCancelGamePopups?'CHECKED ':'') + '/></td><TD>'+translate("Auto cancel Facebook posts")+'<span style="color:#800; font-weight:bold"><sup>'+translate("*Only select ONE of these")+'</sup></span></td>\
         <TR><TD><INPUT id=MapExtra type=checkbox /></td><TD>'+translate("Show Player & Might in map")+'.</td></tr>\
+		<tr><TD><INPUT id=MapLevel type=checkbox /></td><TD>'+translate("Show Tile Level in map")+'.</td></tr>\
         <TR><TD><INPUT id=deletetoggle type=checkbox /></td><TD> '+translate("Auto delete barb/transport reports from you")+'</td></tr>\
         <TR><TD><INPUT id=deletes0toggle type=checkbox /></td><TD> '+translate("Auto delete transport reports to you")+'</td></tr>\
         <TR><TD><INPUT id=deletes1toggle type=checkbox /></td><TD> '+translate("Auto delete wild reports")+'</td></tr>\
@@ -12301,6 +12308,7 @@ Tabs.Options = {
       t.togOpt ('DelAC', 'DeletegAl');
       t.togOpt ('pbRaidBut', 'raidbtns');
       t.togOpt ('MapExtra', 'MapShowExtra');
+      t.togOpt ('MapLevel', 'MapShowLevel');
       t.togOpt ('deletetoggle', 'DeleteMsg');
       t.togOpt ('deletes0toggle', 'DeleteMsgs0');
       t.togOpt ('deletes1toggle', 'DeleteMsgs1');
@@ -14273,6 +14281,12 @@ var FairieKiller  = {
          [['popActionFeedModal()', 'popActionFeed();actionLog("Faire posted")']]);
 	mod2.setEnable(false);
    
+
+
+
+
+
+
     if (firefoxVersion.substring(0,4) == '4.0b')  // bug in firefox 4.0b10 causes syntax error with: "var func = eval ('function (){}');"
       return;
     FairieKiller.saveFunc = unsafeWindow.Modal.showModalUEP;
@@ -18362,11 +18376,11 @@ function DrawLevelIcons() {
     var maptileRe = /modal_maptile.([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)/;
     var mapwindow=document.getElementById('mapwindow');
     if(!mapwindow) return;
-    var levelIcons=document.getElementById('levelIcons');
-    if(levelIcons) return;
+    var mapinfo=document.getElementById('mapinfodone');
+    if(mapinfo) {return;};
 
     var ss=document.evaluate(".//a[contains(@class,'slot')]",mapwindow,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
-    var idDone=false;
+    var mapinfodone=false;
     for(var s=0; s<ss.snapshotLength; s++) {
         var a=ss.snapshotItem(s);
         var onclick=a.getAttribute('id');
@@ -18386,24 +18400,21 @@ function DrawLevelIcons() {
         var sp=a.getElementsByTagName('span');
         if(sp.length==0) continue;
 
-        if(!idDone) { a.id='levelIcons'; idDone=true; }
-        sp[0].style.color='#cc0';
+        if (!mapinfodone) { sp[0].id='mapinfodone'; mapinfodone=true; }
+        spancol='#cc0';
         
-        if (alliance == 'null' && tileinfo.type=="city") sp[0].style.color='#33CCFF';
-        if (dip == 'hostile' && tileinfo.type=="city") sp[0].style.color='#FF0000';
-        if (tileinfo.type!="city" &&  tileinfo.tileuserid!="null") sp[0].style.color='#FF9900';
-        if (tileinfo.type!="city" &&  tileinfo.tileuserid=="null") sp[0].style.color='#CC0033';
+        if (alliance == 'null' && tileinfo.type=="city") spancol='#33CCFF';
+        if (dip == 'hostile' && tileinfo.type=="city") spancol='#FF0000';
+        if (tileinfo.type!="city" &&  tileinfo.tileuserid!="null") spancol='#FF9900';
+        if (tileinfo.type!="city" &&  tileinfo.tileuserid=="null") spancol='#CC0033';
+		
         if (Options.MapShowExtra) {
             if (tileinfo.username!="null")
-            sp[0].innerHTML = tileinfo.type+': '+ tileinfo.level +'<br />'+owner+'<br />Might:'+addCommas(might); //+'<br />Alliance:'+tileinfo.alliance
-         else
-            sp[0].innerHTML = tileinfo.type+': '+ tileinfo.level;
+				sp[0].outerHTML = sp[0].outerHTML +'<div style="color:'+spancol+';font-size:11px;text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;'+owner+'</div><div style="color:'+spancol+';font-size:10px;text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;Might:'+addCommas(might)+'</div>';
         }
-        else {
-            // if (onclickM && onclickM[7]!='"null"' ) sp[0].innerHTML='&nbsp;';
-            // else sp[0].innerHTML='&nbsp;'+addCommas(owner);
-        }
-        
+        if (Options.MapShowLevel && (parseIntNan(tileinfo.level) != 0)) {
+			sp[0].outerHTML = sp[0].outerHTML+'<div style="color:'+spancol+';text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;'+tileinfo.level+'&nbsp;&nbsp;</div>';
+		}	
     }
 
 }
@@ -18600,6 +18611,7 @@ var DeleteReports = {
         }
         var lasttenmin = unixTime() -600;
         var reports = rslt.arReports;
+        var players = rslt.arPlayerNames;
         var totalPages = rslt.totalPages;
         if (rslt.totalPages > 30)
         var totalPages = 30;
@@ -18609,8 +18621,9 @@ var DeleteReports = {
         	//logit(lasttenmin+" and "+reports[k].reportUnixTime+" and it is "+(lasttenmin < Number(reports[k].reportUnixTime)));
         	var reportUnixTime = Number(reports[k].reportUnixTime);
         	if(Options.expinc) {
-        	if((reports[k].marchType==4 || reports[k].marchType==3) && (lasttenmin < reportUnixTime) && t.isMyself(reports[k].side0PlayerId) && (Options.alertConfig.lastarrtime.indexOf(String(reportUnixTime)) == -1)) {
+	        	if((reports[k].marchType==4 || reports[k].marchType==3) && (lasttenmin < reportUnixTime) && t.isMyself(reports[k].side0PlayerId) && (Options.alertConfig.lastarrtime.indexOf(reportUnixTime) == -1)) {
         		var x = {};
+   	     		var euid = reports[k].side1PlayerId;
         		x.knt = {};
         		x.kLv = 1;
         		x.fromCityId = reports[k].side1CityId;
@@ -18620,8 +18633,8 @@ var DeleteReports = {
         		x.cnt = "unknown";
         		x.pid = reports[k].side1PlayerId;
         		x.aid = reports[k].side1AllianceId
-        		x.arrivalTime = reports[k].reportUnixTime;
-        		x.departureTime = reports[k].reportUnixTime;
+        			x.arrivalTime = Number(reports[k].reportUnixTime);
+        			x.departureTime = Number(reports[k].reportUnixTime);
         		x.marchType = reports[k].marchType;
         		x.toCityId = reports[k].side0CityId;
         		if(reports[k].side0TileType > 50){
@@ -18635,10 +18648,14 @@ var DeleteReports = {
       			}
 				};
         		x.score = 9;
-        		x.mid = reports[k].reportId;
+        			x.mid = Number(reports[k].reportId);
         			x.reportId = x.mid;
-        			new t.faketower(x.reportId,x);
-        		}
+        		if(!Seed.players['u'+euid]) {
+        			Seed.players['u'+euid] = {};
+        			Seed.players['u'+euid].n = players['p'+euid];
+        		};
+        			new t.faketower(x.reportId,x)
+        		};
         	};
         	
             if(Options.DeleteMsg){
@@ -20353,6 +20370,7 @@ Tabs.Attack = {
 	msgtimer : null,
 	MercItem : "i30840",
 
+
 	/** window display **/
 	init : function (div) {
 		var t = Tabs.Attack;
@@ -20395,6 +20413,7 @@ Tabs.Attack = {
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will reduce wave 1 MM for subsequent attacks)</td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Emma target reached)</td><td align=right>Emma Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
    
+
 		var dude = unsafeWindow.unitnamedesctranslated;
 		m += '<TABLE class=ptTab><TR><TD><INPUT type=checkbox id=pbcrest_rnd1 CHECKED /></td><TD><b>Wave 1</b>&nbsp;(initial):</td><TD>&nbsp;&nbsp;<img src='+http+'kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_1_30.jpg alt='+dude.unt1[0]+'></td><TD><INPUT id=R1ST type=text size=7 maxlength=6 value=0></td>';
 		m += '<TD>&nbsp;&nbsp;<img src='+http+'kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_2_30.jpg alt='+dude.unt2[0]+'></td><TD><INPUT id=R1MM type=text size=7 maxlength=6 value=0></td>';
@@ -20459,6 +20478,15 @@ Tabs.Attack = {
 				unsafeWindow.jQuery('#curryedda').css('color', 'black');
 		},false);
 
+
+
+
+
+
+
+
+
+
 		$("pbcrestslots").addEventListener('change', function(e){
 			Options.CrestSlots = parseIntNan(e.target.value);
 			saveOptions();
@@ -20477,6 +20505,11 @@ Tabs.Attack = {
 		else	
 			unsafeWindow.jQuery('#curryedda').css('color', 'black');
         
+
+
+
+
+
 		t.tcp = new CdispCityPicker ('crestcityselect', document.getElementById('crestcity'), true, t.clickCitySelect, selbut);
     
 		if (CrestOptions.CrestCity == 0) {
@@ -20491,6 +20524,9 @@ Tabs.Attack = {
 			CrestOptions.isMerc = this.checked;
 		},false);
 		
+
+
+
 		$('pbRattacks').addEventListener('click', function(){
 			Options.CrestRand = this.checked;
 			saveOptions();
@@ -20512,6 +20548,7 @@ Tabs.Attack = {
 
 		document.getElementById('pbcrest_iswild').addEventListener('click', function(){CrestOptions.isWild = this.checked;} , false);
 		document.getElementById('pbcrest_ismerc').addEventListener('click', function(){CrestOptions.isMerc = this.checked;} , false);
+
 		document.getElementById('crestcity').addEventListener('click', function(){CrestOptions.CrestCity = t.tcp.city.id;} , false);
 		document.getElementById('Cresttoggle').addEventListener('click', function(){t.toggleCrestState(this)} , false);
 		document.getElementById('pbcrestx').addEventListener('change', function(){CrestOptions.X = document.getElementById('pbcrestx').value;;} , false);
@@ -20876,6 +20913,15 @@ Tabs.Attack = {
 			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
 			return;
 		}
+
+
+
+
+
+
+
+
+
 
 		if (!t.checkCityTroops(r,CrestDataNum)) {
 //			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
@@ -25059,7 +25105,8 @@ var OreAlert = {
 
 
 function GuardianTT () {
-	var z = new CalterUwFunc("showCityTooltip",[[/showTooltip/,'a += "<div>"+g_js_strings.guardian[seed.guardian[j].type+"_fullName"]+"</div>";showTooltip']]);
+	var z = new CalterUwFunc("showCityTooltip",[[/showTooltip/,'a += "<div>"+g_js_strings.guardian[seed.guardian[j].type+"_fullName"]+"</div>";showTooltip'],
+												['g_js_strings.showPopTooltip.currpop','provincenames[\'p\'+seed.cities[j][4]] + "</div><div>" + g_js_strings.showPopTooltip.currpop']]);
    z.setEnable(true); 
 };
 
