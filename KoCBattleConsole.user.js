@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131213a
+// @version			20131216a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Change name of dashboard panel</p><p>Volume control</p>
+// @releasenotes 	<p>Maximum Troop Sacrifice Limit Option</p><p>Remove Obsolete Functionality</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	December 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131213a';
+var Version = '20131216a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -46,10 +46,6 @@ var Options = {
 	IncPos        	  	: {},
 	DefPos        	  	: {},
 	LogPos        	  	: {},
-	ShowProvinceOnMap	: true,
-	ShowLevelOnMap  	: true,
-	ShowMistedOnMap     : true,
-	OverrideMapDisplay  : false,
 	OverrideAttackAlert : true,
 	MonitorColours      : true,
 	LastMonitored       : "",
@@ -67,9 +63,7 @@ var Options = {
 	IncYours            : false,
 	AutoUpdates         : true,
 	RefreshSeed         : false,
-	ShowProvinceTools   : true,
 	CurrentCity         : -1,
-	MoveFurniture       : true,
 	OverviewState       : true,
 	GuardianState       : false,
 	ThroneState         : false,
@@ -91,6 +85,7 @@ var Options = {
 	ChampionCompare     : false,
 	Transparent         : true,
 	Volume              : 100,
+	SacrificeLimit      : 1000000,
 };
 
 var JSON2 = JSON; 
@@ -386,7 +381,6 @@ uW.btSetMaxTroops = function () {SetMaxTroops();}
 uW.btSendHome = function (marchId) {SendHome(marchId);}
 uW.btShowDefenceWindow = function () {ShowWatchTower (Cities.byID[uW.currentcityid]);}
 uW.btMapMonitorTR = function(e) {if (e.user.id != "0") { initMonitor (e.user.id, false); }}
-uW.btGetProvince = function (N){return '<div class="thead" align="center"><b>'+uW.provincenames['p'+N.tileProvinceId]+'</b></div>';}	
 uW.btShowLog = function (entry) {ShowLog(entry);}
 uW.btDeleteLog = function (entry) {DeleteLog(entry);}
 uW.btPostLog = function (entry) {PostLog(entry);}
@@ -440,7 +434,7 @@ function btStartup (){
 	Seed = uW.seed;
 
 	Options.WinSize.x = 400;
-	Options.WinSize.y = 180;
+	Options.WinSize.y = 200;
 	DefaultWindowPos('WinPos','main_engagement_tabs');
 
 	if (Options.Transparent) { Opacity = 0.9; } else { Opacity = 1.0; }
@@ -482,14 +476,6 @@ function btStartup (){
 				.guardButSel     {border: 2px solid blue;}\
 				div.ErrText      {color:#FF0000;}';
 
-	var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:200px;}\
-					div#throneMainContainer div#trophyContainer{width:71px;height:86px;top:41px;left:381px;z-index:97;}\
-					div#throneMainContainer div#statueContainer{width:124px;height:296px;top:274px;left:300px;z-index:99;}\
-					div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:450px;z-index:99;}';
-
-//					div#throneMainContainer div#windowContainer{width:117px;height:182px;top:136px;left:410px;z-index:98;}\
-
-					
 	GM_addStyle(".castleBut.defending { border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: red;}");
 	GM_addStyle(".castleBut.hiding    { border-top: 2px; border-bottom: 2px; border-left: 2px; border-right: 2px; border-style: ridge; border-color: rgb(229, 221, 201);}");
 	GM_addStyle(".castleBut.attack    { opacity: 0.6;}");
@@ -501,10 +487,6 @@ function btStartup (){
 
 	m = '<STYLE>'+ styles +'</style>';
   
-	if (Options.MoveFurniture) {
-		m += '<STYLE>'+ trstyles +'</style>';
-	}
-  
 	m += '<div id="btMain_content">';
 	m += '<div style="height:36px;" align="center"><div id=btAttackAlert style="display:none;background-color:red;height:30px;" align="left">&nbsp;</div></div>';
 	m += '<div align="center">&nbsp;&nbsp;Enemy:&nbsp;<INPUT id=btPlayer size=20 type=text value="'+Options.LastMonitored+'"/>&nbsp;<a id=btPlayerSubmit class="inlineButton btButton blue20"><span>Monitor</span></a>&nbsp;<a id=btUIDSubmit class="inlineButton btButton blue20"><span>UID</span></a>&nbsp;<a id=btLogSubmit class="inlineButton btButton blue20"><span>Log</span></a></div>';
@@ -512,21 +494,20 @@ function btStartup (){
 	m += '<div align="center"><TABLE><TR><TD class=xtab><a id=btSleepButton class="inlineButton btButton blue20"><span style="width:50px"><center>Sleep</center></span></a></td><TD class=xtab><a id=btCityDefenceButton class="inlineButton btButton blue20"><span style="width:130px"><center>Battle Dashboard</center></span></a></td><TD class=xtab><a id=btIncomingButton class="inlineButton btButton blue20"><span style="width:130px"><center>Incoming Marches</center></span></a></td></tr></table></div>';
 	m += '<div class="divHeader" align="right"><a id=btOptionLink class=divLink >OPTIONS&nbsp;<img id=btOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btOption class=divHide><TABLE width="100%">';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
-    m += '<TR id=btSoundOpts class="divHide"><TD class=xtab>&nbsp;</td><TD colspan=2 align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider></span></td><TD align=right id=btVolOut style="width:30px;">0</td></tr></table></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show monitor throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=ProvinceToolsChk type=checkbox /></td><td class=xtab>Show province name on tooltips windows&nbsp;*</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MapOverrideChk type=checkbox /></td><td class=xtab>Display additional information on map</td></tr>';
-	m += '<TR id=btMapOpts class="divHide"><TD colspan="3" align=right class=xtab><table><tr><td align=right class=xtab>&nbsp;&nbsp;&nbsp;Provinces</td><td class=xtab><INPUT id=ProvinceChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Levels</td><td class=xtab><INPUT id=LevelChk type=checkbox /></td><TD align=right class=xtab>&nbsp;&nbsp;&nbsp;Alliance Mists</td><td class=xtab><INPUT id=MistedChk type=checkbox /></td></tr></table></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MoveFurnitureChk type=checkbox /></td><td class=xtab>Rearrange throne room furniture for better visibility&nbsp;*</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CompareChampChk type=checkbox /></td><td class=xtab>Compare champions in march tooltips windows</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
+	m += '</table></div>';
+	m += '<div class="divHeader" align="right"><a id=btMonOptionLink class=divLink >MONITOR OPTIONS&nbsp;<img id=btMonOptionArrow height="10" src="'+RightArrow+'"></a></div>';
+	m += '<div id=btMonOption class=divHide><TABLE width="100%">';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
+    m += '<TR id=btSoundOpts class="divHide"><TD colspan=2 class=xtab>&nbsp;</td><TD align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider></span></td><TD align=right id=btVolOut style="width:30px;">0</td></tr></table></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
@@ -536,6 +517,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
 	m += '<TD align=right class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
 	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec&nbsp;&nbsp;&nbsp;</span></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>Maximum number of troops to sacrifice:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;&nbsp;&nbsp;</td></tr>';
 	m += '</table></div>';
 	m += '<div align="center" style="font-size:10px;opacity:0.3;">Version '+Version+'</div></div>';
   
@@ -554,8 +536,9 @@ function btStartup (){
 	document.getElementById('btIncomingButton').addEventListener ('click', ToggleIncomingMarches, false);
 	document.getElementById('btSleepButton').addEventListener ('click', function () {ToggleSleep(true)}, false);
 
-	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",180,400,"btOption")}, false);
-	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",180,400,"btCityOption")}, false);
+	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btOption")}, false);
+	document.getElementById('btMonOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btMonOption")}, false);
+	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btCityOption")}, false);
 
 	document.getElementById('btPlayerSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit',popMon);}, true);  
 	document.getElementById('btCityDefenceButton').addEventListener('mousedown',function(me) {if (!Options.DashboardMode) {ResetWindowPos (me,'btCityDefenceButton',popDef);}}, true);  
@@ -563,20 +546,13 @@ function btStartup (){
 	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  //
   
 	ToggleOption ('TransparencyChk', 'Transparent');
-	ToggleOption ('MapOverrideChk', 'OverrideMapDisplay', MapToggle);
-	ToggleOption ('ProvinceChk', 'ShowProvinceOnMap', MapToggle);
-	ToggleOption ('LevelChk', 'ShowLevelOnMap', MapToggle);
-	ToggleOption ('MistedChk', 'ShowMistedOnMap', MapToggle);
 	ToggleOption ('AlertOverrideChk', 'OverrideAttackAlert');
 	ToggleOption ('SoundChk', 'MonitorSound', SoundToggle);
 	ToggleOption ('MonitorColoursChk', 'MonitorColours');
 	ToggleOption ('PVPOnlyChk', 'PVPOnly');
 	ToggleOption ('MonPresetChk', 'MonPresetChange', PaintTRPresets);
-	ToggleOption ('ProvinceToolsChk', 'ShowProvinceTools');
-	ToggleOption ('MoveFurnitureChk', 'MoveFurniture');
 	ToggleOption ('CompareChampChk', 'ChampionCompare');
 	ToggleOption ('AutoUpdateChk', 'AutoUpdates');
-	MapToggle ();
 	SoundToggle ();
 
 	ToggleOption ('PresetChk', 'PresetChange', PaintTRPresets);
@@ -586,6 +562,12 @@ function btStartup (){
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
 
+    document.getElementById('btSacrificeLimit').addEventListener('keyup', function () {
+		if (isNaN(document.getElementById('btSacrificeLimit').value)) { document.getElementById('btSacrificeLimit').value = 0; }
+		Options.SacrificeLimit = document.getElementById('btSacrificeLimit').value;
+		saveOptions();
+	}, false);
+	
 	VolSlider = new SliderBar (document.getElementById('btVolSlider'), 200, 21, 0);
 	VolSlider.setValue (Options.Volume/100);
 	VolSlider.setChangeListener(VolumeChanged);
@@ -703,17 +685,6 @@ function AlterUWFuncs() {
 		'd.push(b); break; ' +
 		'default: ']]);
 	mod.setEnable(true);
-
-	if (FFVersion.substring(0,4) > 16)
-		var mod2 = new CalterUwFunc ('MapObject.prototype.populateSlots', [[/var\s*g\s*=""/,'var g = ""; g+=btGetProvince(N);']]);
-	else	 
-		var mod2 = new CalterUwFunc ('MapObject.prototype.populateSlots', [['var g = "";','var g = "";g+=btGetProvince(N);']]);
-	mod2.setEnable(Options.ShowProvinceTools);
-
-	var mod3 = new CalterUwFunc("showCityTooltip",[['g_js_strings.showPopTooltip.currpop','provincenames[\'p\'+seed.cities[j][4]] + "</div><div>" + g_js_strings.showPopTooltip.currpop']]);
-	mod3.setEnable(Options.ShowProvinceTools);
-
-	uW.g_mapObject.getMoreSlots(); 
 
 	var mod4 = new CalterUwFunc("citysel_click",[['cm.PrestigeCityView.render()','cm.PrestigeCityView.render();btCityChanged();']]);
     unsafeWindow.btCityChanged = function () {if (popDef) uW.btShowDefenceWindow(); };
@@ -841,12 +812,6 @@ function EverySecond () {
 		if (Options.RefreshSeed && ((SecondLooper % RefreshSeedInterval) == 1) && !RefreshingSeed) {
 			setTimeout(function() {RefreshSeed();},250);
 		}
-	
-		/* Show extra info on map */
-	
-		if ((Options.ShowProvinceOnMap || Options.ShowLevelOnMap || Options.ShowMistedOnMap) && Options.OverrideMapDisplay) {
-			setTimeout(function() {ShowMapInformation();},500);
-		}	
 	
 		/* create and sort local copy of atkinc here - use this for all atkinc functions */
 
@@ -1069,27 +1034,18 @@ function ShowWatchTower (city) {
 //	}
 }
 
-function MapToggle () {
-	var dc = uW.jQuery('#btMapOpts').attr('class');
-	if (Options.OverrideMapDisplay) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btMapOpts').attr('class','');}
-	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btMapOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',180,400);
-
-	uW.g_mapObject.getMoreSlots(); 
-}
-
 function SoundToggle () {
 	var dc = uW.jQuery('#btSoundOpts').attr('class');
 	if (Options.MonitorSound) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSoundOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSoundOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',180,400);
+	ResetFrameSize('btMain',200,400);
 }
 
 function SacToggle () {
 	var dc = uW.jQuery('#btSacOpts').attr('class');
 	if (Options.DefaultSacrifice) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSacOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSacOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',180,400);
+	ResetFrameSize('btMain',200,400);
 }
 
 function getStyle(x,styleProp) {
@@ -1192,46 +1148,6 @@ function ToggleOption (checkboxId, optionName, callOnChange) {
 			callback (this.checked);
 		}	  
 	}
-}
-
-function ShowMapInformation() {
-    var mapwindow=document.getElementById('mapwindow');
-    if(!mapwindow) {return;};
-    var mapinfo=document.getElementById('btmapinfodone');
-    if(mapinfo) {return;};
-
-    var ss=document.evaluate(".//a[contains(@class,'slot')]",mapwindow,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
-    var mapinfodone=false;
-	// BOT doesn't play nice, so start at tile 1 not 0.. it doesn't really matter!
-    for(var s=1; s<ss.snapshotLength; s++) {
-        var a=ss.snapshotItem(s);
-        var onclick=a.getAttribute('id');
-        if(onclick) {
-         var tileinfo = uW.g_mapObject.model.getTileActions(onclick)["tileClick"];
-            if (tileinfo) {
-                var province = parseInt(tileinfo.province);
-                var level = parseInt(tileinfo.level);
-                var alliance = parseIntNan(tileinfo.allianceId);
-				var checkmisted = ((alliance == Seed.allianceDiplomacies.allianceId) && (!isMyself(tileinfo.tileuserid)) && Options.ShowMistedOnMap && Options.OverrideMapDisplay); 
-            }
-        }
-        var sp=a.getElementsByTagName('span');
-        if (sp.length==0) continue;
-
-        if (!mapinfodone) { sp[0].id='btmapinfodone'; mapinfodone=true; }
-		if (checkmisted) {
-			var divid = "T"+tileinfo.tileid;
-			var divheight = 6;
-			if (!Options.ShowProvinceOnMap) divheight += 15;
-			if (!Options.ShowLevelOnMap) divheight += 15;
-			sp[0].outerHTML = sp[0].outerHTML+'<div id='+divid+' style="padding-top:'+divheight+'px;color:#0ff;text-shadow: 2px 2px 2px #000;" align="center"></div>';
-			getMisted(tileinfo.tileuserid,divid);	  
-        }		
-        if (Options.ShowLevelOnMap && Options.OverrideMapDisplay && (level != 0)) 
-			sp[0].outerHTML = sp[0].outerHTML+'<div style="color:#cc0;text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;'+level+'&nbsp;&nbsp;</div>';
-        if (Options.ShowProvinceOnMap && Options.OverrideMapDisplay) 
-			sp[0].outerHTML = sp[0].outerHTML+'<div style="opacity:0.5;color:#cc0;text-shadow: 2px 2px 2px #000;" align="center">'+uW.provincenames['p'+province]+'</div>';
-    }
 }
 
 function getMisted (uid,divid){
@@ -2668,7 +2584,7 @@ function UIDClick() {
 function MonitorTRClick() {
 	setError('&nbsp;');
 	var name = document.getElementById('btPlayer').value;
-	name = name.replace(/\'/g,"_");
+    name = name.replace(/\'/g,"_").replace(/\,/g,"_").replace(/\-/g,"_");
 
 	if (name.toUpperCase() == Seed.player.name.toUpperCase()) {
 		initMonitor (uW.tvuid, false)
@@ -3741,6 +3657,7 @@ function SetMaxTroops () {
 	var elem = document.getElementById('btRitualAmount');
 	elem.value = SacSettings.max_amount;
 	if (elem.value > TotalTroops) {elem.value = TotalTroops;}
+	if ((elem.value > Options.SacrificeLimit) && (parseIntNan(Options.SacrificeLimit) > 0)) {elem.value = Options.SacrificeLimit;}
 	SetRitualLength(elem);	
 }
 
@@ -3777,6 +3694,7 @@ function SetRitualLength (sel) {
 
 	if (trp > TotalTroops) {trp = TotalTroops;}
 	if (trp > parseInt(SacSettings.max_amount)) {trp = SacSettings.max_amount;}
+	if ((trp > Options.SacrificeLimit) && (parseIntNan(Options.SacrificeLimit) > 0)) {trp = Options.SacrificeLimit;}
 		
 	sec = parseIntNan(trp / (SacSpeed / SacSpeedBuff), 10); // seconds
 	min = parseIntNan( sec / 60 );

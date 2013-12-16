@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20131202a
+// @version        20131216a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20131202a';
+var Version = '20131216a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -166,6 +166,7 @@ var Options = {
   fixChatTime : true,
   togRaidPatch: false,
   marchRaidState: {0:false,1:false,2:false,3:false,4:false,5:false,6:false,7:false},
+  MoveFurniture       : true,
 };
 
 var Colors ={
@@ -282,6 +283,11 @@ function ptStartup (){
     .ptcastleButNon {background-image:url("'+ URL_CASTLE_BUT +'")}\
     .ptcastleButSel {background-image:url("'+ URL_CASTLE_BUT_SEL +'")}\
   ';
+
+	var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:200px;}\
+					div#throneMainContainer div#trophyContainer{width:71px;height:86px;top:41px;left:381px;z-index:97;}\
+					div#throneMainContainer div#statueContainer{width:124px;height:296px;top:274px;left:300px;z-index:99;}\
+					div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:450px;z-index:99;}';
   
   var styles = '\
     .ptdivHeader       {transparent;height: 16px;border-bottom:0px solid #000000;font-weight:bold;font-size:11px;opacity:0.75;margin-left:0px;margin-right:0px;margin-top:1px;margin-bottom:0px;padding-top:4px;padding-right:10px;vertical-align:text-top;align:left}\
@@ -338,6 +344,7 @@ function ptStartup (){
     input.ptButCancel {background-color:#a00; font-weight:bold; color:#fff}\
     .CPopMain { border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px;}\
     .CPopup  {border:5px ridge #666; opacity:'+Colors.Opacity+'; -moz-border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}';
+
       
   logit ("* KOCpowerTools v"+ Version +" Loaded");
   
@@ -372,6 +379,10 @@ if (TEST_WIDE){
       });
 
   GM_addStyle (gmstyles);  
+  	if (Options.MoveFurniture) {
+		GM_addStyle (trstyles);
+	}
+
   mainPop.getMainDiv().innerHTML = '<STYLE>'+ styles +'</style>';
 //  FoodAlerts.init();
   TowerAlerts.init();
@@ -867,9 +878,15 @@ var mapinfoFix = {
 	    uW.calcCityTypeFix = t.calcCityType_hook;
 
 	    // add the city status (Normal/Truce) to the tooltips
-	    t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots',
-		    [[ /var\s*Q\s*=\s*"";/,  ' var Q = "";' +
-		       ' if (G) g += "<div>Status: " + G + "</div>";']]);
+		uW.ptGetProvince = function (N){return '<div class="thead" align="center"><b>'+uW.provincenames['p'+N.tileProvinceId]+'</b></div>';}	
+		if (FFVersion.substring(0,4) > 16) {
+			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots',
+				[[ /var\s*Q\s*=\s*"";/,  ' var Q = ""; if (G) g += "<div>Status: " + G + "</div>";'],
+				[/var\s*g\s*=""/,'var g = ""; g+=ptGetProvince(N);']]); }
+		else {
+			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots',
+				[[ /var\s*Q\s*=\s*"";/,  ' var Q = ""; if (G) g += "<div>Status: " + G + "</div>";'],
+				['var g = "";','var g = "";g+=ptGetProvince(N);']]); }
 	    t.dispStatusMod.setEnable(Options.dispStatus);
 	},
 	setEnable : function(tf){
@@ -5326,7 +5343,7 @@ return 0;
     document.getElementById('CompareTR').addEventListener ('click', function (){t.TRStats(rslt.playerInfo.userId,rslt.playerInfo.displayName,"Compare")},false);
     document.getElementById('CalcTR').addEventListener ('click', function (){t.TRStats(rslt.playerInfo.userId,rslt.playerInfo.displayName,"Calc")},false);
 	if (uW.btLoaded)
-		document.getElementById('MonitorTR').addEventListener ('click', function (){uW.btMonitorExternalCall(rslt.playerInfo.displayName)},false);
+		document.getElementById('MonitorTR').addEventListener ('click', function (){uW.btMonitorExternalCallUID(rslt.playerInfo.userId)},false);
     document.getElementById('clickCol'+t.sortColNum).className = 'clickable clickableSel';
 
     t.PaintGlory(rslt.playerInfo.userId);
@@ -6322,7 +6339,7 @@ Tabs.Options = {
 	  m+='<TR><TD><INPUT id=togBatRounds type=checkbox /></td><TD>Display # of rounds in battle reports</td></tr>';
 	  m+='<TR><TD><INPUT id=togAtkDelete type=checkbox /></td><TD>Enable delete button when displaying battle report</td></tr>';
 	  m+='<TR><TD><INPUT id=togRptGift type=checkbox /></td><TD>Enable delete gifts report button in inbox</td></tr>';
-	  m+='<TR><TD><INPUT id=togMapInfo4 type=checkbox /></td><TD>Display truce status in map tooltips</td></tr>';
+	  m+='<TR><TD><INPUT id=togMapInfo4 type=checkbox /></td><TD>Display Province and Truce Status in map tooltips</td></tr>';
 	  m+='<TR><TD><INPUT id=togCV type=checkbox /></td><TD>Enable enhanced city buttons currently alpha WIP</td></tr>';
 	  m+='<TR><TD></td><TD><INPUT id=togDbClkDef type=checkbox /> Enable hide/defend by double clicking city icon <INPUT id=togColrCty type=checkbox /> Enable color icon for city type (refresh required)</td></tr>';
 	  m+='<TR><TD colspan=2><BR><BR><B>KofC Bug Fixes:</b></td></tr>';
@@ -6340,6 +6357,7 @@ Tabs.Options = {
  	  m+='<TR><TD><INPUT id=togChatTimeFix type=checkbox /></td><TD>Always show local time on chat posts</td></tr>';
 	  m+='<TR><TD><INPUT id=togAllowMulti type=checkbox /></td><TD>Disable Multi-Browser check v2 (experimental)</td></tr>';
 	  m+='<TR><TD><INPUT id=togRaidPatch type=checkbox /></td><TD>Fix stuck raid marches (experimental)</td></tr>';
+	  m += '<TR><td><INPUT id=MoveFurnitureChk type=checkbox /></td><td>Rearrange throne room furniture for better visibility&nbsp;(needs refresh)</td></tr>';
 	  m+='<TR><TD colspan=2><B>Auto Training:</b></td></tr>';
 	  m+='<TR><TD></TD><TD><INPUT id=optAutoTrainMins type=text size=1 value="'+ parseInt(AutoTrainOptions.intervalSecs/60) +'"> minutes between auto-training.</td></tr>';
 	  m+='</table><BR><BR><HR>Note that if a checkbox is greyed out there has probably been a change of KofC\'s code, rendering the option inoperable.';
@@ -6379,6 +6397,7 @@ Tabs.Options = {
       t.togOpt ('togAtkDelete', 'reportDeleteButton', null, battleReports.isRoundsAvailable);
       t.togOpt ('togAllowMulti', 'allowMultiBroswer', bypassMulti.setEnable, bypassMulti.isAvailable);
       t.togOpt ('togRaidPatch', 'raidPatch', BarbRaidMarchPatch.setEnable, BarbRaidMarchPatch.isAvailable);
+	  t.togOpt ('MoveFurnitureChk', 'MoveFurniture');
       
       document.getElementById('ptupdate').addEventListener ('change', t.e_updateChanged, false);
       document.getElementById('ptEnableMiniRefresh').addEventListener ('change', t.e_miniRefreshChanged, false);
@@ -11996,6 +12015,7 @@ Tabs.Marches = {
 				var now = unixTime();
 				var icon, status, FROM, cityname, FROMmight, marchdir, marchtime;
 				var marchType = parseInt(Seed.queue_atkinc[k]["marchType"]);
+				if (marchType==10) marchType=4; //MARCH_TYPE_DARK_FOREST: 10
 				var marchStatus = parseInt(Seed.queue_atkinc[k]["marchStatus"]);
 				
 				for (var i=0; i<Seed.cities.length;i++) {
@@ -12122,6 +12142,7 @@ Tabs.Marches = {
                     //marchType 4 = attacking
                     //marchType 9 = barb raid
                     var marchType = parseInt(Seed.queue_atkp[cityID][k]["marchType"]);
+					if (marchType==10) marchType=4; //MARCH_TYPE_DARK_FOREST: 10
                     //marchStatus 1 = marching
                     //marchStatus 2 = encamped
                     //marchStatus 5 = waiting for report
