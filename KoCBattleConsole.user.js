@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20131216a
+// @version			20131219a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Maximum Troop Sacrifice Limit Option</p><p>Remove Obsolete Functionality</p>
+// @releasenotes 	<p>Maximum Troops to Sacrifice Option</p><p>Remove Obsolete Functionality</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	December 2013 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20131216a';
+var Version = '20131219a';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -515,9 +515,9 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
-	m += '<TD align=right class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
-	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec&nbsp;&nbsp;&nbsp;</span></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan=2 class=xtab>Maximum number of troops to sacrifice:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;&nbsp;&nbsp;</td></tr>';
+	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
+	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec</span></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab>Maximum troops to sacrifice</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;troops</td></tr>';
 	m += '</table></div>';
 	m += '<div align="center" style="font-size:10px;opacity:0.3;">Version '+Version+'</div></div>';
   
