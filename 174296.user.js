@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20131216a
+// @version        20131230b
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20131216a';
+var Version = '20131230b';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -3233,6 +3233,7 @@ paintEquipInfo : function (z,what){
             level = y["level"];
 	    if (y["unique"]==30286 && id==9) p = unsafeWindow.cm.thronestats.tiers[id][4]; else  // temporary patch
             p = unsafeWindow.cm.thronestats.tiers[id][tier];
+              if(!p) p = {base:0,growth:0};//solution for kabam errors where they forgot to add info.
             Current = String(p.base + ((level * level + level) * p.growth * 0.5)).slice(0,6);
             var quality = parseInt(y["quality"]);
             if (i<=quality) m+='<TR><TD><FONT color=black>' + Current + "% " + unsafeWindow.cm.thronestats["effects"][id]["1"] + '</font></td></tr>';
@@ -4853,8 +4854,8 @@ getpinauth : function () {
 		if (m.marchType==3 || m.marchType==4) {
 			if(Options.alertConfig.lastatkarr.indexOf(Number(m.mid)) == -1) {
 				Options.alertConfig.lastatkarr.push(Number(m.mid));
-				Options.alertConfig.lastarrtime.push(m.arrivalTime);
-				if (m.arrivalTime > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = m.arrivalTime;//for tr toggle back
+				Options.alertConfig.lastarrtime.push(Number(m.arrivalTime));
+				if (Number(m.arrivalTime) > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = Number(m.arrivalTime);//for tr toggle back
 				saveOptions();
 				t.newIncoming (m);
 			};
@@ -22158,12 +22159,16 @@ Tabs.gifts = {
       };
       m+='<option value="-1">Delete</option>';
         m+='</select> </td><td> <INPUT id=pbaugift type=checkbox '+ (GiftDB.agift?' CHECKED':'') +'\>Auto gift when available </td><td> <INPUT id=pbadgift type=checkbox '+ (GiftDB.adgift?' CHECKED':'') +'\> Scan and delete gift messages</td><td> Total sent:</td><td id=giftnumber></td></tr></table></DIV>';
+	m+='<table><TR><TD><INPUT id=resetlist type=submit value="Reset Gift List"> Reset gifting list (may take a day to re-populate)</td></tr></table></DIV>';
         m += '<DIV class=pbStat></DIV>';
         m+= '<DIV>For reasons unknown the server picks and chooses the recipients.  You will find the counter is an accurate representation of who kabam says they sent the gifts to.  I invite you to try theories, gift combinations and see if you can get the numbers higher.  each type of gift sent is a separate request to the server.  You may update us on working scenarios <a href=https://userscripts.org/scripts/discuss/101052>here</a></DIV>';
         m += '<DIV class=pbStat></DIV>';
         m += '<DIV style="height:250px; max-height:250px; overflow-y:auto" id=GiftsTAB></DIV>';
         div.innerHTML = m;
       t.populatepeople();
+      document.getElementById('resetlist').addEventListener('click', function(){
+         t.clearGiftsdb();
+                  } , false);
       document.getElementById('giftssend').addEventListener('click', function(){
          t.sendgifts();
          setTimeout(t.populatepeople,1000);
@@ -22361,6 +22366,12 @@ Tabs.gifts = {
             },
             onFailure: function () {}
         });
+   },
+   clearGiftsdb : function (){
+        var t = Tabs.gifts;
+	GiftDB={};
+	t.saveGiftsdb();
+        t.populatepeople;
    },
    saveGiftsdb : function (){
         var t = Tabs.gifts;
@@ -23794,9 +23805,12 @@ PaintSalvageHistory : function() {
         if(document.getElementById('chShowQueueDiv')) {
         document.getElementById('chShowQueueDiv').innerHTML = '<TABLE id=chShowQueue class=pbStat align="center" width=90%></table>';
         for (k=(ChampionOptions.Items.length-1);k>=0;k--){
-            if (typeof(unsafeWindow.kocChampionItems[ChampionOptions.Items[k]["id"]]) == 'object') t._addTab(k,ChampionOptions.Items[k]["name"]+' ['+ChampionOptions.Items[k]["id"]+']',ChampionOptions.Items[k]["qualityfrom"],ChampionOptions.Items[k]["qualityto"],ChampionOptions.Items[k]["levelfrom"],ChampionOptions.Items[k]["levelto"],ChampionOptions.Items[k]["action"],ChampionOptions.Items[k]["active"],ChampionOptions.Items[k]["cost"]);
-            else ChampionOptions.Items.splice (k,1);
+            if (typeof(unsafeWindow.kocChampionItems[ChampionOptions.Items[k]["id"]]) == 'object') {
+		ChampionOptions.Items[k]["name"] = unsafeWindow.kocChampionItems[ChampionOptions.Items[k]["id"]]["name"];
+		t._addTab(k,ChampionOptions.Items[k]["name"]+' ['+ChampionOptions.Items[k]["id"]+']',ChampionOptions.Items[k]["qualityfrom"],ChampionOptions.Items[k]["qualityto"],ChampionOptions.Items[k]["levelfrom"],ChampionOptions.Items[k]["levelto"],ChampionOptions.Items[k]["action"],ChampionOptions.Items[k]["active"],ChampionOptions.Items[k]["cost"]);
+            } else ChampionOptions.Items.splice (k,1);
         }
+    	saveChampionOptions();
         t._addTabHeader();
    }
   },
