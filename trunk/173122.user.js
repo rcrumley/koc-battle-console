@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140104b
+// @version        20140112c
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20140104b';
+var Version = '20140112c';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -4748,7 +4748,7 @@ logit ("ajax/allianceGetMembersInfo.php:\n"+ inspect (rslt, 5, 1));
         cl = 'class=ptOddrow ';
       else
         cl = '';
-      m += '<TR '+ cl +'valign=top><TD>'+ u.genderAndName +'</td><TD><A target="_tab" href="https://kocscripters.com/player/server/'+GetServerId()+'/tvuid/'+ u.userId +'/">' + u.userId + '</a></td><TD align=right>'+ addCommasInt(u.might) +'</td>\
+      m += '<TR '+ cl +'valign=top><TD>'+ u.genderAndName +'</td><TD><A target="_tab" href="https://kocscripters.com/player/server/'+GetServerId()+'/tvuid/'+ u.userId +'/">' + u.userId + '</a></td><TD align=right>'+ addCommas(u.might) +'</td>\
           <TD>'+ (rslt.data[u.userId]?"&nbsp;<SPAN class=boldDarkRed>"+uW.g_js_strings.commonstr.online+"</span>":"") +'</td>\
           <TD align=center><A target="_tab" href="https://www.facebook.com/profile.php?id='+ u.fbuid +'">'+uW.g_js_strings.commonstr.profile+'</a></td>\
           <TD><SPAN onclick="PTpd(this, '+ u.userId +')"><A>'+uW.g_js_strings.modaltitles.memberdetails+'</a> &nbsp; <BR></span><SPAN onclick="PTpl2(this,'+ u.userId+','+rslt.data[u.userId]+')"><A>'+uW.g_js_strings.modaltitles.leaderboard+'</a><BR></span><SPAN onclick="PCplo(this, \''+ u.userId +'\')"><A>'+uW.g_js_strings.modal_messages_viewreports_view.lastlogin+'</a></span></td></tr>';
@@ -14985,7 +14985,7 @@ function matTypeof (v){
 }
 
 function addCommasInt(n){
-  nStr = parseInt(n) + '';
+  nStr = Number(n,10) + '';
   var rgx = /(\d+)(\d{3})/;
   while (rgx.test(nStr)) {
     nStr = nStr.replace(rgx, '$1' + ',' + '$2');
