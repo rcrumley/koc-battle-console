@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140112c
+// @version        20140125a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20140112c';
+var Version = '20140125a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -148,6 +148,15 @@ var Options = {
   AttackCibleX : 0,
   AttackCibleY : 0,
   AttackKnight : 0,
+  DefendHorloge:"21:00:00",
+  DefendGoHorloge:null,
+  DefendOnOff:false,
+  DefendUnits : {},
+  DefendFav : {0:{0:"200K miliciens",1:0,2:2e5,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0,11:0,12:0,13:0},1:{0:"200K dada",1:0,2:0,3:0,4:0,5:0,6:0,7:2e5,8:0,9:0,10:0,11:0,12:0,13:0}},
+  DefendFromCity : 0,
+  DefendCibleX : 0,
+  DefendCibleY : 0,
+  DefendKnight : 0,
   enhancedinbox : true,
   EnhCBtns	:	false,
   DbClkDefBtns 	: true,
@@ -427,7 +436,7 @@ if (TEST_WIDE){
     TowerAlerts.enableFixFalseReports(true);
   
   AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
-  AddMainTabLink('DEBUG', debugWin.doit);
+  if (uW.tvuid == "6046539") AddMainTabLink('DEBUG', debugWin.doit);
   
 //  var ss_onload = unsafeWindow.seed.ss;
 //  multiBrowserOverride();
@@ -2311,32 +2320,32 @@ var Rpt = {
                 m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Loot:</div><TABLE style="width:100%;" class=ptTab>';
                 m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
                 if (rslt['loot'][0] > 0)
-                    m+=addCommas(rslt['loot'][0])+'</TD>';
+                    m+=addCommas(rslt['loot'][0].toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
                 if (rslt['loot'][1] > 0)
-                    m+=addCommas(rslt['loot'][1])+'</TD>';
+                    m+=addCommas(rslt['loot'][1].toFixed(0))+'</TD>';
                 else
                     m+= '0</TD>';
                 m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
                 if (rslt['loot'][2] > 0)
-                    m+=addCommas(rslt['loot'][2])+'</TD>';
+                    m+=addCommas(rslt['loot'][2].toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
                 if (rslt['loot'][3] > 0)
-                    m+=addCommas(rslt['loot'][3])+'</TD>';
+                    m+=addCommas(rslt['loot'][3].toFixed(0))+'</TD>';
                 else
                     m+= '0</TD>';
                 m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
                 if (rslt['loot'][4] > 0)
-                    m+=addCommas(rslt['loot'][4])+'</TD>';
+                    m+=addCommas(rslt['loot'][4].toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
                 if (rslt['loot'][6] > 0)
-                    m+=addCommas(rslt['loot'][6])+'</TD>';
+                    m+=addCommas(rslt['loot'][6].toFixed(0))+'</TD>';
                 else
                     m+= '0 </TD>';
                 m+='</tr>'
@@ -2469,32 +2478,32 @@ var Rpt = {
                         m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Goodies Found:</div><TABLE style="width:100%;" class=ptTab>';
                     m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
                     if (rslt['gld'] > 0)
-                        m+=addCommasInt(rslt['gld'])+'</TD>';
+                        m+=addCommasInt(rslt['gld'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
                     if (rslt['rsc']['r1'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r1'])+'</TD>';
+                        m+=addCommasInt(rslt['rsc']['r1'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
                     if (rslt['rsc']['r2'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r2'])+'</TD>';
+                        m+=addCommasInt(rslt['rsc']['r2'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
                     if (rslt['rsc']['r3'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r3'])+'</TD>';
+                        m+=addCommasInt(rslt['rsc']['r3'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
                     if (rslt['rsc']['r4'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r4'])+'</TD>';
+                        m+=addCommasInt(rslt['rsc']['r4'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
                     if (rslt['rsc']['r5'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r5'])+'</TD>';
+                        m+=addCommasInt(rslt['rsc']['r5'].toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='</TABLE>';
@@ -10149,7 +10158,7 @@ Tabs.Attaque = {
 	   if(!ById("RAAstatsource"))return;
      var t = Tabs.Attaque;
 	   var cityID = 'city'+ t.sourceCity.id;
-	   for (r=1; r<16; r++)
+	   for (r=1; r<nTroopType+1; r++)
 	   ById('RAAdestunit'+r).value = parseInt(Seed.units[cityID]['unt'+r]);
 	   setTimeout(t.Refreshtroops,1000);
    },
@@ -11910,6 +11919,411 @@ Tabs.Accuracy = {
   
 }
 
+/*************** Defend Tab **********/
+Tabs.Defend = {
+ cont : null,
+ displayTimer : null,
+ tabLabel : 'Defend',
+ state : null,
+ curTabBut : null,
+ curTabName : null,
+ BOAttackTimer: null,
+ sourceCity : {},
+ destinationCity : {},
+ champion : {},
+ rows : [],
+ iused : new Array(),
+ init : function (div){
+   var t = Tabs.Defend;
+   t.cont = div;
+   t.state = null;
+   clearTimeout (t.displayTimer);
+ },
+  getContent : function (){
+    var t = Tabs.Defend;
+    return t.cont;
+  },
+  hide : function (){
+    var t = Tabs.Defend;
+    t.state = null;
+    clearTimeout (t.displayTimer);
+  },
+  show : function (){  
+    var t = Tabs.Defend;
+    setTimeout(t.Refreshtroops,10000);
+    var rownum = 0;
+    var ModelCity = {};
+
+    if (t.state == null) {  
+         m = "<DIV class=ptstat><b>QUICK MARCH TOOL</b></div>";
+         m +="<div id='statpourDAA'></div>";       
+         m += "<TABLE width=600 class=ptTab border=0 align=center>\
+           <tr><td colspan=4 align=center><input type=button id=DAAaction value='Set Defense'>&nbsp</td></tr>\
+	   <tr align=center valign=top><td width=130><b><u>City Select</b></u><br><span id=DAAsrcRptspeedcity></span></td>\
+           </tr><tr align=center valign=top>\
+           <td colspan=4 align=left>\
+	   <table border=0 bordercolor=black cellspacing=0 cellpadding=0 width=100% style='text-align:center'>\
+	   <tr><td rowspan="+nTroopType+1+"><div id=DAAstatsource></div></td><td colspan=2></td></tr>";
+
+        m += "</table></td></tr>";
+
+        m += "</td></tr></table>\
+              <DIV class=ptstat>Saved Unit Configuration :</div><TABLE><tr><td colspan=2><select id=DBO_AT_Fav></select><input type=button value='Reset' id=DBO_AT_Fav_Sup><input type=button value='Reset All' id=DBO_AT_Fav_RESET></td><td colspan=2>New : <input type=type id=DBO_AT_Fav_Nom size=10 maxlength=12>&nbsp;<input type=button value='Save Troops' id=DBO_AT_Fav_ajou>\
+              <tr><td colspan=4><div id=ptDAAStatus style='overflow-y:auto; max-height:50px; height: 50px;'></div></td></tr></table>";
+
+        t.cont.innerHTML = m; 
+        t.statpourRAA = ById ('statpourDAA');
+        //Gestion des favoris  
+        t.Favoris = ById ('DBO_AT_Fav');
+	function metajourfavori() {
+	       t.Favoris.innerHTML="<option value=''>...</option>";
+	       var lisf = Options.DefendFav;
+	       for (var m in lisf) {
+	         var lis = lisf[m];
+	          t.Favoris.innerHTML+="<option value='"+m+"'>"+lis[0]+"</option>";
+      	       }  
+	}
+ 
+       ById("DBO_AT_Fav_RESET").addEventListener ('click', function() {
+		 Options.DefendFav={};
+		 saveOptions(); 
+         metajourfavori();
+       }, false); 
+       ById("DBO_AT_Fav_Sup").addEventListener ('click', function() {
+       numfav=ById("DBO_AT_Fav").value;
+       if (numfav!="") {
+        Options.DefendFav[numfav]={};
+        delete Options.DefendFav[numfav];
+        saveOptions(); 
+        metajourfavori();
+       }
+       }, false); 
+       ById("DBO_AT_Fav_ajou").addEventListener ('click', function() {
+        if (ById("DBO_AT_Fav_Nom").value=="") {
+         alert("Please fill in a name!");
+         return;
+        }
+        var a =ById("DBO_AT_Fav_Nom").value;
+        Options.DefendFav[a]={};
+        var lisf = Options.DefendFav[a];
+        lisf[0]=ById("DBO_AT_Fav_Nom").value;
+        for (r=1; r<nTroopType+1; r++) lisf[r]=ById("DAAnbunit"+r).value;
+        ById("DBO_AT_Fav_Nom").value="";
+        saveOptions(); 
+	metajourfavori();
+       }, false); 
+       ById("DBO_AT_Fav").addEventListener ('change', function() {
+         numfav=ById("DBO_AT_Fav").value;
+         if (numfav=="") {
+          for (r=1; r<nTroopType+1; r++) ById("DAAnbunit"+r).value=0; 
+         }else {
+          var lisf = Options.DefendFav[numfav];
+          for (var m in lisf) {
+           if(m>0)
+	    if (ById("DAAnbunit"+m)) ById("DAAnbunit"+m).value=lisf[m];
+	  }
+         }
+       }, false); 
+       // Fin gestion des favoris
+
+        t.statutRAA = ById ('ptDAAStatus');
+	t.destinationCityx=0;
+	t.destinationCityy=0;
+	t.destinationCityx.value=0;
+	t.destinationCityy.value=0;
+
+        t.actionRAA = ById ('DAAaction');
+
+        t.actionRAA.addEventListener ('click',  function () { t.clickATTAQUEDo(4,0); }, false);
+        var dcp0 = new CdispCityPicker ('ptDAA0', ById('DAAsrcRptspeedcity'), false, t.clickRAACitySourceSelect, Cities.byID[unsafeWindow.currentcityid].idx);
+       
+        metajourfavori();
+
+        t.clickRAACitySourceSelect(t.sourceCity);
+//        var closestNum = t.getclosestcity();
+//		t.dcp1 = new CdispCityPicker ('ptmarch_citydest', ById('DBOVilleProche'), false, t.estimerRes, null).bindToXYboxes(ById("DAAtypetrpx"),ById("DAAtypetrpy"));
+       }
+
+    },
+
+    getclosestcity : function (){
+     var t = Tabs.Defend;
+	 var x1 = parseInt(t.sourceCity.x);
+	 var x2 = parseInt(t.destinationCityx.value);
+	 var y1 = parseInt(t.sourceCity.y);
+	 var y2 = parseInt(t.destinationCityy.value);
+	 var dist = distance (x1, y1, x2, y2);
+	 var closestDist=999999;
+	 var closestLoc=null;
+	 var closestNum=1;
+	 for (var c=0; c<Cities.numCities; c++){
+		var city = Cities.cities[c];
+		var dist=distance(city.x,city.y,x2,y2);
+		if(dist<closestDist) {
+		 closestDist=dist;
+		 closestLoc=city.x +','+ city.y;
+		 closestNum=c;
+		}
+	 }
+	 return closestNum;
+	},
+
+    enregistreAttack : function() {
+     var t = Tabs.Defend; 
+     if (t.BOHorloge.value.match("^[0-9]{2}:[0-9]{2}:[0-9]{2}$")) {
+       var horloge = t.BOHorloge.value;
+       Options.DefendHorloge = horloge;
+       
+       var ndate=new Date();
+       ndate.setHours(horloge.substr(0,2));
+       ndate.setMinutes(horloge.substr(3,2));
+       ndate.setSeconds(0);
+       var atunits=new Array();
+       for (r=1; r<nTroopType+1; r++) {
+          atunits.push(parseInt(ById("DAAnbunit"+r).value));
+       }
+       Options.DefendUnits = atunits;
+       Options.DefendFromCity = t.sourceCity.id;
+       Options.DefendKnight = ById("DAApiKnight").value;
+       Options.DefendCibleX = t.destinationCityx.value;
+       Options.DefendCibleY = t.destinationCityy.value;
+       
+       var x1 = parseInt(t.sourceCity.x);
+       var x2 = parseInt(t.destinationCityx.value);
+       var y1 = parseInt(t.sourceCity.y);
+       var y2 = parseInt(t.destinationCityy.value);
+       var dist = distance (x1, y1, x2, y2);  
+       var tempplusgrand=0;
+       for (r=1; r<nTroopType+1; r++){
+         if (parseInt(ById("DAAnbunit"+r).value)>0) {
+               var m = estETA(dist, r, t.sourceCity.id);
+               if (tempplusgrand<m.ETA) tempplusgrand=m.ETA;   
+         }
+       }
+       var departtime=ndate.getTime() - (tempplusgrand*1000);
+       var depart=new Date()
+       depart.setTime(departtime);
+       
+       var now = unixTime()*1000;
+       if (now > depart.getTime()) {
+        t.BOAttackProg.innerHTML = "Depart impossible !";
+        return false;
+       }
+       Options.DefendGoHorloge =  depart.getTime();
+       saveOptions ();
+       t.BOAttackProg.innerHTML = "Attaque sur " + Options.DefendCibleX + ","+ Options.DefendCibleY +" enregistr&eacute;e";
+       t.BOEditAttack.disabled=false;
+     } else {
+      t.BOAttackProg.innerHTML = "Mauvais format de l'horloge.";
+     }     
+    
+    },
+
+    clickATTAQUEDo: function(typemarche, bouffe) {
+      var t = Tabs.Defend;  
+      var totalunit=0;
+      if (typemarche==3 && ById("DAAnbunit3").value==0) ById("DAAnbunit3").value=1;
+      for (r=1; r<nTroopType+1; r++){
+         if (typemarche==3 && r!=3) {
+          ById("DAAnbunit"+r).value=0;
+         }
+          if (parseInt(ById("DAAnbunit"+r).value) > parseInt(ById("DAAdestunit"+r).value)) {
+            ById("DAAnbunit"+r).style.backgroundColor="red";
+            return false;
+          }
+          totalunit=totalunit+parseInt(ById("DAAnbunit"+r).value);
+          ById("DAAnbunit"+r).style.backgroundColor="";
+      }
+      var errMsg = "";
+      
+      if (errMsg != "") {
+           t.statutRAA.innerHTML = "<FONT COLOR=#550000>"+ errMsg +"</font>";
+           return;
+      }
+      
+     
+      var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+      
+         params.cid= t.sourceCity.id;
+ 
+	 for (var i=1;i<nTroopType+1;i++) {
+	   params["u"+i] = 0;
+	 }
+         if (typemarche!=3) {
+	   for (var i=1;i<nTroopType+1;i++) {
+  	     if (ById("DAAnbunit"+i).value>0) params["u"+i] = ById("DAAnbunit"+i).value;
+	   }
+	 } else {
+	   params.u3 = ById("DAAnbunit3").value;
+	   ById("DAAnbunit3").value=0;
+	 }
+
+  	t.actionRAA.disabled=true;
+	t.statutRAA.innerHTML = "<i><b>Setting defense ....</b></i>";
+	 new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/cityDefenseSet.php" + unsafeWindow.g_ajaxsuffix, {
+	              method: "post",
+	              parameters: params,
+	              loading: true,
+	              onSuccess: function (transport) {
+	                  var t = Tabs.Defend;  
+	                  var rslt = transport;
+	                  if (rslt.ok) {
+
+			   var unitsarr = [];
+			   for (j in unsafeWindow.unitcost)
+				unitsarr.push(0);
+			   for(i = 0; i <= unitsarr.length; i++)
+				if(params["u"+i])
+					unitsarr[i] = params["u"+i];
+
+	                   if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
+
+            if(rslt.def != null)
+            {
+               var unitlist = unsafeWindow.seed.defunits["city" + t.sourceCity.id];
+               uW.jQuery.each(rslt.def, function(key, val)
+               {
+                  var key1 = key.replace("u", "unt");
+                  unitlist[key1] = val
+               }
+               )
+            }
+            if(rslt.res != null)
+            {
+               var unitlist = unsafeWindow.seed.units["city" + t.sourceCity.id];
+               uW.jQuery.each(rslt.res, function(key, val)
+               {
+                  var key1 = key.replace("u", "unt");
+                  unitlist[key1] = val
+               }
+               )
+            }
+			   var typeattaque="Defense set successful";
+     	 		   t.statutRAA.innerHTML = "<center><font size='3px'><b>"+typeattaque+"</b></font></center>";
+      			   t.clickRAACitySourceSelect(t.sourceCity);
+	                  } else {
+						 t.statutRAA.innerHTML ="<font color=red size='3px'><b>Error setting defense!<b></font>";
+						 if (rslt.msg) {
+						   t.statutRAA.innerHTML +="<br><font color=black size='2px'>" + rslt.msg +"</font>";
+						 }else{
+						   t.statutRAA.innerHTML +="<br>Waiting for 2 seconds!</font>";
+						   //setTimeout(function() { t.clickATTAQUEDo(); }, 2000);
+						 }
+	                 }
+	                 t.actionRAA.disabled=false;
+	              },
+	                  onFailure: function () {
+	                    var t = Tabs.Defend;
+	                    t.statutRAA.innerHTML ="<font color=red size='3px'><b>Error communicating with server!<b></font>";
+	                    t.actionRAA.disabled=false;
+	                  }
+	          });
+    },
+
+    SelectFavoris:function() {
+      var t = Tabs.Defend;
+      if (t.listeFavoris.value!='') {
+       var valeur=t.listeFavoris.value;
+       var x=valeur.substr(0, valeur.lastIndexOf(','));
+       var y=valeur.substr(valeur.lastIndexOf(',')+1, valeur.length);
+       t.destinationCityx.value = x;
+       t.destinationCityy.value = y;
+      }
+     },
+      chercherFavoris: function() {
+      var t = Tabs.Defend;
+      var myA = getMyAlliance ();
+      if (myA[0]!=0) {
+         var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+         params.perPage = 100;
+         params.allianceId = myA[0];
+             new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getUserLeaderboard.php" + unsafeWindow.g_ajaxsuffix, {
+   	        method: "post",
+   	        parameters: params,
+   	        onSuccess: function (rslt) {
+   	          // on vide la liste
+   	          //t.listeFavoris.innerHTML=null;
+   	          if (rslt.ok){
+   	           var z=0;
+   	           var m="";
+   	           for (var i=0; i<rslt.results.length; i++){
+        		      p = rslt.results[i];
+   		      if (p.userId != 0){
+   		       for (var c=0; c<p.cities.length; c++){
+   		         if (Seed.player.name!=p.displayName) {
+   		          m += "<option value='" + p.cities[c].xCoord + ","+ p.cities[c].yCoord+"'>" + p.displayName + " - City " + (c+1) + " - " + p.cities[c].xCoord + "," + p.cities[c].yCoord+"</option>";
+   		         }
+   		       }  //fin for cities  	       
+   		      }   //fin if user 
+         	            } //fin for resultat
+         	    t.listeFavoris.innerHTML="<option value=''>Selection...</option>"+m;
+   	          }// fin
+   	        },
+   	        onFailure: function (rslt) {
+   	          t.listeFavoris.innerHTML="<option>Error getting info</option>";
+   	        },
+       	});
+             
+      } else {
+        // Si pas d'alliance !
+        t.listeFavoris.innerHTML="<option>Pas d'alliance !</option>";
+      }
+         
+  },
+   SaveCoordsOptions: function(x,y) {
+       Options.Xrenfort = x;
+       Options.Yrenfort = y;
+       saveOptions ();
+  },
+   
+   Refreshtroops : function (){
+	   if(!ById("DAAstatsource"))return;
+     var t = Tabs.Defend;
+	   var cityID = 'city'+ t.sourceCity.id;
+	   for (r=1; r<nTroopType+1; r++)
+	   ById('DAAdestunit'+r).value = parseInt(Seed.units[cityID]['unt'+r])+parseInt(Seed.defunits[cityID]['unt'+r]);
+	   setTimeout(t.Refreshtroops,1000);
+   },
+   
+   
+  clickRAACitySourceSelect : function (city){
+     var t = Tabs.Defend;
+    
+     if (t.sourceCity!=city) {
+      t.sourceCity = city; 
+     }
+     var m="";
+     m="<table cellspacing=0 cellpadding=0 width=80%><tr><td colspan=2>Total Units Available</td><td colspan=2>Current Defending Units</td><td><a href='javascript:void(0)' id=BO_DAZ_Units title='Clear' >Units Selected</a></td></tr>";
+     var cityID = 'city'+ t.sourceCity.id;
+     for (r=1; r<nTroopType+1; r++){   
+       m += '<tr><td align=right><img title="'+unsafeWindow.unitcost['unt'+r][0]+'" height=20 src=http://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_'+r+'_30.jpg></td>\
+             <td align=left><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAdestunit'+r+'" type=text size=10 readonly value="'+(parseInt(Seed.units[cityID]['unt'+r])+parseInt(Seed.defunits[cityID]['unt'+r]))+'">&nbsp;</td>\
+             <td ><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAdefunit'+r+'" type=text size=10 readonly value="'+parseInt(Seed.defunits[cityID]['unt'+r])+'">&nbsp;\
+             <input type=button value="--->" id="DAApdestunit'+r+'"  style="border:1px solid black;height:16px;font-size:11px;"></td>';
+       m += '<td align=right><img height=20 title="'+unsafeWindow.unitcost['unt'+r][0]+'" src=http://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_'+r+'_30.jpg></td>\
+	     <td ><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAnbunit'+r+'" type=text size=10 value="'+parseInt(Seed.defunits[cityID]['unt'+r])+'" ></td></tr>';
+
+     }
+     m += "</table>";
+     ById("DAAstatsource").innerHTML = m;
+
+
+     for (r=1; r<nTroopType+1; r++){
+       ById("DAApdestunit"+r).addEventListener ('click', function() {
+         var nomcha=this.id.replace("DAApdest","DAAdest");
+         var nomcha2=this.id.replace("DAApdestunit","DAAnbunit");
+         ById(nomcha2).value=0; 
+         ById(nomcha2).value= ById(nomcha).value;
+       }, false);
+     }
+
+     ById("BO_DAZ_Units").addEventListener ('click', function() {
+  	for (r=1; r<nTroopType+1; r++) ById("DAAnbunit"+r).value=0; 
+     }, false); 
+
+   }, 
+}
+
 /*************************************** MARCHES TAB ************************************************/
 
 Tabs.Marches = {
@@ -13169,37 +13583,8 @@ function ShowExtraInfo(){
 }
 
 var MarchUnitsFix = {
-//  modalAttackFunc : null,  
-//  
-//  init : function (){
-//    var t = MarchUnitsFix;
-//    t.modalAttackFunc = new CalterUwFunc ('modal_attack', [[/var\s*e\s*=\s*0;/im, 'w = modalAttack_hook(w); var e = 0;']]);
-//    uW.modalAttack_hook = t.hook;
-//    t.modalAttackFunc.setEnable(Options.fixMarchUnits);
-//  },
-//   
-//  setEnable : function (tf){
-//    var t = MarchUnitsFix;
-//    t.modalAttackFunc.setEnable (tf);
-//  },
-//  
-//  isAvailable : function (){
-//    var t = MarchUnitsFix;
-//    return t.modalAttackFunc.isAvailable();
-//  },
-//    
-//  hook : function (w){
-//    var t = MarchUnitsFix;
-//    if (w > uW.cm.thronestats.boosts.MarchSize){
-//		w = uW.cm.thronestats.boosts.MarchSize;
-//	}
-//	return w;
-//  },
-  
   init : function (){
     var t = MarchUnitsFix;
-//    t.fixrallymarchsize = new CalterUwFunc ('modal_attack_update_unt_max', 
-//      [['\}\)\)\;', '})-0.001); var x = 1 + Math.min(cm.ThroneController.effectBonus(66),150)/100; f = Math.round(f*x-0.001);']]);
     t.fixrallymarchsize = new CalterUwFunc ('modal_attack_update_unt_max', 
       [['\}\)\)\;', '})*(1 + Math.min(cm.ThroneController.effectBonus(66),150)/100)-0.001);']]);
     t.fixrallymarchsize.setEnable(Options.fixMarchUnits);
