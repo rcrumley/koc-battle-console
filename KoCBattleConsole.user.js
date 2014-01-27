@@ -28,7 +28,7 @@
 //	│	January 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = GM_info.script.version; 
+var Version = '20140127a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
