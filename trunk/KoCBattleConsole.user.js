@@ -3087,7 +3087,7 @@ function SetCurrentCity(cityId) {
 				o.push(oo[y]); // contains array of troop types this city is allowed to sacrifice :)
 			}	
 		}
-		o.push(18); // can always sacrifice Halberdiers (crappy kabam code, will need to check array for each new troop type from now on)
+		o.push("18"); // can always sacrifice Halberdiers (crappy kabam code, will need to check array for each new troop type from now on)
 
 		m = '<TABLE cellSpacing=0 width=100% height=0%><tr><TD width="120" class=xtabBR><span class=xtab>';
 		m +='<SELECT class="btSelector" id="btRitualTroops" onchange="btSelectTroopType(this);"><option value="0">--Troop Type--</option>';

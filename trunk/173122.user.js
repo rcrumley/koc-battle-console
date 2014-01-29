@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140125a
+// @version        20140128a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20140125a';
+var Version = '20140128a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -498,7 +498,7 @@ var knightRoles = [
   ['Steward', 'resourcefulness', 'Res'],
 ];
 
-var rats = ["2466324","5801935","14737553"];//people who openly tried to destroy script development including reporting scripters to kabam.  now the joke is on them.
+var rats = ["2466324","5801935","14737553","6494163"];//people who openly tried to destroy script development including reporting scripters to kabam.  now the joke is on them.
 var scripters = ["7552815","10681588","1747877","2865067","10153485","15182839","1550996","1617431819","9688786","8184813","9863346","11107993","9751486","5614388","424090","14845619","8480468","7042380","731589"];
 
 
@@ -2039,7 +2039,8 @@ var Rpt = {
             m+='<div style="width:50%;float:left;">';
             if (rslt['fght']["s0"]) {
                 for (var i=1;i<nTroopType+1;i++) {
-                    if (rslt['fght']["s0"]['u'+i]) {
+//                    if (rslt['fght']["s0"]['u'+i]) {
+                    if (rslt['fght']["s0"]['u'+i] && rslt['bonus']['mod']["s0"]['u'+i]) {
                         m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
                         m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['hp'][1])+'</font></td>';
                         m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s0']['u'+i]['atk'][1])+'</font></td>';
@@ -2345,7 +2346,7 @@ var Rpt = {
                     m+='0</td>'
                 m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
                 if (rslt['loot'][6] > 0)
-                    m+=addCommas(rslt['loot'][6].toFixed(0))+'</TD>';
+                    m+=addCommas(parseInt(rslt['loot'][6]))+'</TD>';
                 else
                     m+= '0 </TD>';
                 m+='</tr>'
@@ -5413,7 +5414,6 @@ return 0;
 					   			   id = y["effects"]["slot"+i]["id"];
 								   tier = parseInt(y["effects"]["slot"+i]["tier"]);
 								   level = y["level"];
-								if (y["unique"]==30286 && id==9) p = uW.cm.thronestats.tiers[id][4]; else  // temporary patch
 								   p = uW.cm.thronestats.tiers[id][tier];
 								   Current = p.base + ((level * level + level) * p.growth * 0.5);
 								   if (i<=parseInt(y["quality"])) t.HisStatEffects[id] += Current;
@@ -5427,7 +5427,6 @@ return 0;
 				   			id = y["effects"]["slot"+i]["id"];
 				   			tier = parseInt(y["effects"]["slot"+i]["tier"]);
 				   			level = y["level"];
-						if (y["unique"]==30286 && id==9) p = uW.cm.thronestats.tiers[id][4]; else  // temporary patch
 				   			p = uW.cm.thronestats.tiers[id][tier];
 				   			Current = p.base + ((level * level + level) * p.growth * 0.5);
 				   			if (y.isEquipped && i<=y["quality"]) t.MyStatEffects[id] += Current
@@ -7004,7 +7003,6 @@ Tabs.Train = {
 				if(id == StatID){
 					var tier = parseInt(item["effects"]["slot"+i]["tier"]);
 					var level = item["level"];
-					if (item.unique==30286 && id==9) var p = unsafeWindow.cm.thronestats.tiers[id][4]; else
 					  var p = unsafeWindow.cm.thronestats.tiers[id][tier];
 					var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 					total += Percent;
@@ -10299,7 +10297,6 @@ function equippedthronestats (stat_id){
 			if(id == stat_id){
 				var tier = parseInt(item["effects"]["slot"+i]["tier"]);
 				var level = item["level"];
-				if (item.unique==30286 && id==9) var p = uW.cm.thronestats.tiers[id][4]; else
 				  var p = uW.cm.thronestats.tiers[id][tier];
 				var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 				total += Percent;
