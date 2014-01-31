@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140131a
+// @version			20140131b
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -28,7 +28,7 @@
 //	│	January 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140131a'; 
+var Version = '20140131b'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -3469,6 +3469,9 @@ function PaintCityInfo(cityId) {
 		if (DefOptionsString != CheckOptionsString) {
 			SetCurrentCity(Seed.cities[Curr][0]);
 		}	
+		else {
+			SelectDefTroopType (document.getElementById("btDefendTroops"));
+		}
 	}
 	
 	// reinforcements
@@ -3910,6 +3913,7 @@ function ChangeDefendingTroops (cityId, MoveArray, notify) {
 					})
 				}
 				setTroopMessage('&nbsp;');
+				SelectDefTroopType (document.getElementById("btDefendTroops"));
 				PaintCityInfo(cityId);
 				if (notify != null)
 				notify();
@@ -3939,7 +3943,7 @@ function SelectDefTroopType (sel) {
 		document.getElementById('btMaxDefTroops').innerHTML = '<a id="btMaxDefButton" onclick="btSetMaxDefTroops()"><span style="font-size:9px;" align="center">max</span></a>';
 		// set default defender amount
 		var elem = document.getElementById('btDefendAmount');
-		elem.value = Options.DefaultDefenceNum;
+		if ((elem.value == 0) || (elem.value == "")) { elem.value = Options.DefaultDefenceNum; }
 		if (parseInt(elem.value) > TotalSanctuaryTroops) {
 			elem.value = TotalSanctuaryTroops; 
 		}	
