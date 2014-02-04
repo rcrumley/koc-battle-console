@@ -86,6 +86,12 @@ var Options = {
 	SacrificeLimit      : 1000000,
 	DefaultDefenceNum   : 200000,
 	MonitorChampions    : false,
+	OverviewShow        : true,
+	SacrificeShow       : true,
+	ReinforceShow       : true,
+	TroopShow           : true,
+	FortificationShow   : true,
+	AttackShow          : true,
 };
 
 var JSON2 = JSON; 
@@ -543,6 +549,8 @@ function btStartup (){
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=FortificationChk type=checkbox /></td><td colspan="2" class=xtab>Show Fortifications Section</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=ReinforcementChk type=checkbox /></td><td colspan="2" class=xtab>Show Reinforcements Section</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
 	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
@@ -589,6 +597,8 @@ function btStartup (){
 	ToggleOption ('PresetChk', 'PresetChange', PaintTRPresets);
 	ToggleOption ('DashboardChk', 'DashboardMode', DashboardToggle);
 	DashboardToggle ();
+	ToggleOption ('FortificationChk', 'FortificationShow');
+	ToggleOption ('ReinforcementChk', 'ReinforceShow');
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
@@ -752,6 +762,10 @@ function ToggleDivDisplay(form,h,w,div) {
 			uW.jQuery('#'+div).attr('class','');
 			uW.jQuery('#'+div+'Arrow').attr('src',DownArrow);
 		}	
+		else {
+			uW.jQuery('#'+div).attr('class','divHide');
+			uW.jQuery('#'+div+'Arrow').attr('src',RightArrow);
+		}
 	}
 	else
 	{
@@ -759,6 +773,14 @@ function ToggleDivDisplay(form,h,w,div) {
 		uW.jQuery('#'+div+'Arrow').attr('src',RightArrow);
 	}
 	ResetFrameSize(form,h,w);
+}
+
+function ShowHideSection(div,tf) {
+	var dh = document.getElementById(div+'Header');
+	if (dh) {
+		if (tf) { uW.jQuery('#'+div+'Header').removeClass('divHide'); }
+		if (!tf) { uW.jQuery('#'+div+'Header').addClass('divHide'); }
+	}
 }
 
 function RefreshSeed() {
@@ -946,12 +968,17 @@ function CheckForIncoming () {
 	for(n in inc) {
 		var a = inc[n];
 		if (!a.score) continue;
-		if (a.arrivalTime < unixTime()) continue; // don't display arrival times already happened
+		if (a.arrivalTime < unixTime()) {
+			continue; // don't display arrival times already happened
+		}
 		StillComing = true;
 		if ((a.arrivalTime && (a.arrivalTime < soonest.arrivalTime)) || (soonest.arrivalTime == -1)) {
 			soonest = a;
 			if (!soonest.arrivalTime) soonest.arrivalTime = -1;
-			if (soonest.arrivalTime > 0) break;
+			if (soonest.arrivalTime >= 0) {
+				if (a.arrivalTime - unixTime() < 2) { logit('post-attack update troops request'); setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('post-attack update troops response');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 2250); } // force update defending troops immediately after attacks land
+				break;
+			}
 		}  
 	}
 
@@ -2959,24 +2986,24 @@ function ToggleCityDefence (Curr){
 
 		m = '<div id="btDefence_content"><div><table width="100%"><tr><td class=xtab align="right"><b>City : </b></td><td class=xtab><span id=btCastlesContainer></span></td><td class=xtab align="right"><span id="btCityAlert">&nbsp;</span></td></tr>';
 		m += '<tr><td class=xtab colspan="2">&nbsp;</td><td class=xtab align="right"><a id=btRefreshSeed2 class="inlineButton btButton blue14"><span>Refresh</span></a>&nbsp;<span id=btAutoSpan class="divHide"><a id=btAutoRefresh class="inlineButton btButton blue14"><span style="width:30px;display:inline-block;text-align:center;">Auto</span></a></span></td></tr></table></div>';
-		m += '<div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
-		m += '</table></div>';
-		m += '<div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '</table></div></div>';
+		m += '<div id=btSacrificeHeader><div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr></table></div>';
-		m += '<div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr></table></div></div>';
+		m += '<div id=btTroopHeader><div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr></table></div>';
-		m += '<div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr></table></div></div>';
+		m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
-		m += '</table></div>';
-		m += '<div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '</table></div></div>';
+		m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
-		m += '</table></div>';
-		m += '<div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
+		m += '</table></div></div>';
+		m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
-		m += '</table></div><br>';
+		m += '</table></div></div><br>';
 		m += '</div>';
 
 		popDef = new CPopup('btDefence', Options.DefPos.x, Options.DefPos.y, DashWidth, 100, (!Options.DashboardMode), function () {Options.DefenceStartState = false; Options.CurrentCity = -1; if (!Options.DashboardMode) {Options.DefPos = popDef.getLocation();} else {document.body.appendChild(popDef.div); popDef.destroy();} saveOptions(); popDef = null});
@@ -3152,7 +3179,7 @@ function PaintCityInfo(cityId) {
 	
 	Curr = Cities.byID[cityId].idx;
     CityTag = '<div class="divHide">'+cityId+'</div>';
-	
+
 	// overview
 
 	Status = '';
@@ -3184,6 +3211,7 @@ function PaintCityInfo(cityId) {
 		CityFaction += ' (Level '+cityPrestigeLevel+')';	
 	}
 
+	
 	DefState = parseInt(Seed.citystats["city" + cityId].gate);
 	if (DefState) DefButton = '<a id=btCityStatus class="inlineButton btButton red20"><span style="width:150px"><center>Troops are Defending!</center></span></a>';
 	else DefButton = '<a id=btCityStatus class="inlineButton btButton blue20"><span style="width:150px"><center>Troops are Hiding!</center></span></a>';	
@@ -3381,7 +3409,7 @@ function PaintCityInfo(cityId) {
 	}
 	else
 	{
-		z = '<div><br><div style="opacity:0.3;">No fey altars or not a fey city!</div><br></div>';
+		z = '<div><br><div style="opacity:0.3;">No fey altars!</div><br></div>';
 		ShowNewSacrifice(false);
 	}
 	
@@ -3658,7 +3686,15 @@ function PaintCityInfo(cityId) {
 	Defences += '<br></div>';
 
 	CheckForHTMLChange('btWallDefenceCell',CityTag+Defences);
+
+	// toggle section displays
 	
+	ShowHideSection("btStatus",Options.OverviewShow);
+	ShowHideSection("btSacrifice",Options.SacrificeShow && (cityPrestigeType == "2"));
+	ShowHideSection("btTroop",Options.TroopShow);
+	ShowHideSection("btReinforce",Options.ReinforceShow);
+	ShowHideSection("btWallDefence",Options.FortificationShow);
+	ShowHideSection("btAttack",Options.AttackShow);
 	ResetFrameSize('btDefence',100,DashWidth);
 }
 
