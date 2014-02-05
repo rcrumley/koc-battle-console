@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140204a
+// @version        20140205a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,7 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20140204a';
+var Version = '20140205a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -1554,25 +1554,37 @@ var Rpt = {
 	GetNames : function(rpId,rpt) {
 		var t = Rpt;
 		var params = uW.Object.clone(uW.g_ajaxparams);
-			params.uid=rpt.Side0PlayerId;
+			params.uid=rpt.Side1PlayerId;
 			new MyAjaxRequest(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
 				method: "post",
 				parameters: params,
 				onSuccess: function (rslt) {
-					rpt.side0Name = rslt['userInfo']['0']['name'];
-					var params = uW.Object.clone(uW.g_ajaxparams);
-						params.uid=rpt.Side1PlayerId;
-						new MyAjaxRequest(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
-							method: "post",
-							parameters: params,
-							onSuccess: function (rslt) {
-								rpt.side1Name = rslt['userInfo']['0']['name'];
-								t.GetReport(rpId,rpt);					
-							},
-							onFailure: function () {
-								alert('kabam is having issues');
-							},
-						}, false);
+					rpt.side1Name = rslt['userInfo']['0']['name'];
+					if (rpt.Side0PlayerId) {
+						if (rpt.Side0PlayerId != 0) {
+							var params = uW.Object.clone(uW.g_ajaxparams);
+							params.uid=rpt.Side0PlayerId;
+							new MyAjaxRequest(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
+								method: "post",
+								parameters: params,
+								onSuccess: function (rslt) {
+									rpt.side0Name = rslt['userInfo']['0']['name'];
+									t.GetReport(rpId,rpt);					
+								},
+								onFailure: function () {
+									alert('kabam is having issues');
+								},
+							}, false);
+						}
+						else { 
+							rpt.side0Name = "Enemy";
+							t.GetReport(rpId,rpt);		
+						}			
+					}			
+					else { 
+						rpt.side0Name = "Enemy";
+						t.GetReport(rpId,rpt);		
+					}			
 				},					
 				onFailure: function () {
 					alert('kabam is having issues');
@@ -4033,6 +4045,8 @@ var DispReport = {
   
   ModalReportListHook : function (rslt, msghtml){
 	var t = DispReport;
+	unsafeWindow.makeReportLink = makeReportLink;
+	unsafeWindow.makeReportPopup = makeReportPopup;
     if(rslt.ok){
 		msgBody = document.getElementById('modal_msg_reports_tablediv');
 		var a = document.createElement('a');
@@ -4044,8 +4058,27 @@ var DispReport = {
 		div.appendChild(a);
 		msgBody.appendChild(div);
 		var mml = document.getElementById('modal_msg_list');
-		if (mml != null)
-			mml.style.minHeight = '400px';
+		if (mml != null) mml.style.minHeight = '400px';
+		var trs=msgBody.getElementsByTagName('tr');
+		for(var i=0; i<trs.length; i++) {
+			var tds = trs[i].getElementsByTagName('td');
+			for(var j=0; j<tds.length; j++) {
+				if(tds[j].className == 'subjcol') {
+					var original = tds[j].innerHTML;
+					original = original.replace("<div>","");
+				  	original = original.replace("</div>","");
+				  	var popup = original.replace("View Report","Pop-up");
+					popup = popup.replace("View","Pop-up");
+				  	popup = popup.replace("Messages.viewMarchReport","makeReportPopup");       
+				  	var makelink = original.replace("View Report","Link");
+					makelink = makelink.replace("View","Link to FB&nbsp;&nbsp;<a href='https://apps.facebook.com/kocreportview/' target='_blank'><img style='vertical-align:text-top;' width=16 src='http://nicodebelder.eu/favicon.ico'></a>");
+				  	makelink = makelink.replace("Messages.viewMarchReport","makeReportLink");       
+				  	var newContent = original + " | " + popup + " | " + makelink;
+				  	tds[j].innerHTML = "<DIV>" + newContent + "</div>";
+
+				}
+			}
+		}
 	}
   },
   
@@ -4091,6 +4124,44 @@ var DispReport = {
 	uW.Messages.deleteCheckedReports();
   }
 
+}
+
+function makeReportLink (rptid, side, tiletype, tilelv, defid, defnm, defgen, atknm, atkgen, marchtype, xcoord, ycoord, timestamp, unread, atkxcoord, atkycoord,side0AllianceName,side1AllianceName,link){
+	var domain = GetServerId();
+	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+	var Sname = "";
+	var Sversion = "";
+	var tvuid = parseInt(unsafeWindow.tvuid);
+	params.rid=rptid;
+	if (tiletype != 999) params.side = side;
+	new AsyncAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchReport.php" + unsafeWindow.g_ajaxsuffix, {
+				method: "post",
+				parameters: params,
+				onSuccess: function (transport) {
+					var rslt = eval("(" + transport.responseText + ")");
+					if (rslt.ok == false) {alert(rslt.msg);return;}
+					if (!rslt.error){
+						if (typeof GM_getMetadata !== "undefined"){
+							Sname = JSON.stringify(GM_getMetadata("name",true));
+							Sversion = JSON.stringify(GM_getMetadata("version",true));
+						}
+						if (typeof GM_info !== "undefined"){
+							Sname = JSON.stringify(GM_info.script.name);
+							Sversion = JSON.stringify(GM_info.script.version);
+						}
+						params = {Sname:Sname,Sversion:Sversion,domain:domain,reportUnixTime:timestamp,tvuid:tvuid,side0Player:defnm,side1Player:atknm,marchType:marchtype,tileType:tiletype,report:JSON.stringify(rslt)};
+						var url = '//nicodebelder.eu/kocReportView/putData.php?Sname='+Sname+'&Sversion='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
+						window.open(url,'_blank');
+					} else alert('kabam is having issues with reports...');	
+				},
+				onFailure: function () {
+					alert('kabam is having issues with reports...');
+				},
+	}, false);
+}
+
+function makeReportPopup (rptid, side, tiletype, tilelv, defid, defnm, defgen, atknm, atkgen, marchtype, xcoord, ycoord, timestamp, unread, atkxcoord, atkycoord,side0AllianceName,side1AllianceName,link){
+	Rpt.FindReport(rptid,0);
 }
 
 var AllianceReports = {
@@ -14379,8 +14450,67 @@ if (DEBUG_TRACE) logit (" 1b myAjaxRequest.mySuccess() !ok : "+ inspect(rslt, 3,
 }
 
 
-
-
+function AsyncAjaxRequest (url, opts){
+ var headers = {
+    'X-Requested-With': 'XMLHttpRequest',
+    'X-Prototype-Version': '1.6.1',
+    'Accept': 'text/javascript, text/html, application/xml, text/xml, */*'
+  };
+  var ajax = null;
+  
+  if (window.XMLHttpRequest)
+    ajax=new XMLHttpRequest();
+  else
+    ajax=new ActiveXObject("Microsoft.XMLHTTP");
+  
+  if (opts.method==null || opts.method=='')
+    method = 'GET';
+  else
+    method = opts.method.toUpperCase();  
+    
+  if (method == 'POST'){
+    headers['Content-type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+  } else if (method == 'GET'){
+    addUrlArgs (url, opts.parameters);
+  }
+  ajax.onreadystatechange = function(){
+//  ['Uninitialized', 'Loading', 'Loaded', 'Interactive', 'Complete']; states 0-4
+    if (ajax.readyState==4) {
+     if (ajax.status == 500)
+        if (opts.onFailure) opts.onFailure(ajax);
+      if (ajax.status >= 200 && ajax.status < 305)
+        if (opts.onSuccess) opts.onSuccess(ajax);
+      else
+        if (opts.onFailure) opts.onFailure(ajax);
+      
+      Options.ResponseSize += parseInt(ajax.getResponseHeader ("Content-Length"));
+    } else {
+      if (opts.onChange) opts.onChange (ajax);
+    }  
+  }  
+    
+  ajax.open(method, url, false);  
+  for (var k in headers)
+    ajax.setRequestHeader (k, headers[k]);
+  if (matTypeof(opts.requestHeaders)=='object')
+    for (var k in opts.requestHeaders)
+      ajax.setRequestHeader (k, opts.requestHeaders[k]);
+      
+  
+  if (method == 'POST'){
+    var a = [];
+    for (k in opts.parameters){
+      if(matTypeof(opts.parameters[k]) == 'object')
+        for(var h in opts.parameters[k])
+            a.push (k+'['+h+'] ='+ opts.parameters[k][h] );
+      else
+        a.push (k +'='+ opts.parameters[k] );
+    }
+    ajax.send (a.join ('&'));
+  } else               {
+    ajax.send();
+  }
+}
 
 // returns: 'neutral', 'friendly', or 'hostile'
 function getDiplomacy (aid) {
