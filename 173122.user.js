@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140205a
+// @version        20140206a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,7 +14,11 @@ if(window.self.location != window.top.location){
 	}
 }
 
-var Version = '20140205a';
+//This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
+//Please change it to your Userscript project name.
+var SourceName = "Barbarossa's Power Tools";
+
+var Version = '20140206a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -4129,7 +4133,6 @@ var DispReport = {
 function makeReportLink (rptid, side, tiletype, tilelv, defid, defnm, defgen, atknm, atkgen, marchtype, xcoord, ycoord, timestamp, unread, atkxcoord, atkycoord,side0AllianceName,side1AllianceName,link){
 	var domain = GetServerId();
 	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-	var Sname = "";
 	var Sversion = "";
 	var tvuid = parseInt(unsafeWindow.tvuid);
 	params.rid=rptid;
@@ -4141,16 +4144,9 @@ function makeReportLink (rptid, side, tiletype, tilelv, defid, defnm, defgen, at
 					var rslt = eval("(" + transport.responseText + ")");
 					if (rslt.ok == false) {alert(rslt.msg);return;}
 					if (!rslt.error){
-						if (typeof GM_getMetadata !== "undefined"){
-							Sname = JSON.stringify(GM_getMetadata("name",true));
-							Sversion = JSON.stringify(GM_getMetadata("version",true));
-						}
-						if (typeof GM_info !== "undefined"){
-							Sname = JSON.stringify(GM_info.script.name);
-							Sversion = JSON.stringify(GM_info.script.version);
-						}
-						params = {Sname:Sname,Sversion:Sversion,domain:domain,reportUnixTime:timestamp,tvuid:tvuid,side0Player:defnm,side1Player:atknm,marchType:marchtype,tileType:tiletype,report:JSON.stringify(rslt)};
-						var url = '//nicodebelder.eu/kocReportView/putData.php?Sname='+Sname+'&Sversion='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
+						if (typeof GM_getMetadata !== "undefined") Sversion = JSON.stringify(GM_getMetadata("version",true));
+						if (typeof GM_info !== "undefined") Sversion = JSON.stringify(GM_info.script.version);
+						var url = '//nicodebelder.eu/kocReportView/putData.php?Name='+JSON.stringify(SourceName)+'&Version='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
 						window.open(url,'_blank');
 					} else alert('kabam is having issues with reports...');	
 				},
