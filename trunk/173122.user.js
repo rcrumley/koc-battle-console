@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140206a
+// @version        20140207a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140206a';
+var Version = '20140207a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -1879,6 +1879,9 @@ var Rpt = {
                     }
                 }
             }
+            if (rslt['s1spell'] && (rslt['s1spell'] != "0")) {
+				m+='Spell Used: <b>'+eval('uW.g_js_strings.spells.name_'+rslt['s1spell'])+'</b><br>';
+			}
             m+='Might Lost: '+addCommas(atkmight)+'</div>';
             //summary - defender
             m+='<div style="width:50%;float:left;">';
@@ -1888,6 +1891,9 @@ var Rpt = {
             m+='<br>';
             if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
                 m+='Knight Combat Skill: ' + rslt['s0KCombatLv'] + '<br>';
+            if (rslt['s0spell'] && (rslt['s0spell'] != "0")) {
+				m+='Spell Used: <b>'+eval('uW.g_js_strings.spells.name_'+rslt['s0spell'])+'</b><br>';
+			}
             if (rslt['fght']["s0"]) {
                 var defmight = 0;
                 if (rslt.overwhelmed) {
@@ -1986,7 +1992,7 @@ var Rpt = {
                 if (rslt.overwhelmed) {
                     m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
                     for (var i=1;i<nTroopType+1;i++) {
-                        if (rslt['fght']["s0"]['u'+i]) {
+                        if (rslt['fght']["s0"]['u'+i] && (rslt['fght']["s0"]['u'+i][0] != null)) {
                             m+='<TR><TD>' + unitImg[i] + '</td>';
                             m+='<TD align=center>???</td>';
                             m+='<TD align=center>???</td>';
@@ -2025,7 +2031,7 @@ var Rpt = {
                 } else {
                     m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
                     for (var i=1;i<nTroopType+1;i++) {
-                        if (rslt['fght']["s0"]['u'+i]) {
+                        if (rslt['fght']["s0"]['u'+i] && (rslt['fght']["s0"]['u'+i][0] != null)) {
                             if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
                                 m+='<TR><TD>' + unitImg[i] + '</td>';
                                 m+='<TD align=center>'+addCommas(rslt['fght']["s0"]['u'+i][0])+'</td>';
