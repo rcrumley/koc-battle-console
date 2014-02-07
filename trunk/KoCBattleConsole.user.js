@@ -138,6 +138,7 @@ var GemContainer;
 var GemContainer2;
 var oldchamp = 0;
 var DefOptionsString = "";
+var ForceTries = 0;
   
 var	SacSettings;
 var SacSpeed;
@@ -848,6 +849,16 @@ function RefreshSeed() {
 	});
 }
 
+function ForceUpdateSeed() {
+	if (uW.g_update_seed_ajax_do && (ForceTries < 10)) { // refresh seed is occurring? But we need to make sure this runs, so delay for 1 second  and try up to 10 times ...
+		ForceTries = ForceTries + 1;
+		logit('force update seed - waiting for server to be ready ('+ForceTries+')');
+		setTimeout(function() {ForceUpdateSeed();}, 1000);
+	}
+	logit('force update seed - request sent to server');
+	setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('force update seed - response received from server');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 250);
+}
+
 function EverySecond () {
 // handle exceptions so not to lose timer to script crashing out?
 	try {
@@ -976,7 +987,7 @@ function CheckForIncoming () {
 			soonest = a;
 			if (!soonest.arrivalTime) soonest.arrivalTime = -1;
 			if (soonest.arrivalTime >= 0) {
-				if (a.arrivalTime - unixTime() < 2) { logit('post-attack update troops request'); setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('post-attack update troops response');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 2250); } // force update defending troops immediately after attacks land
+				if (a.arrivalTime - unixTime() < 2) { setTimeout(function() {ForceTries = 0;ForceUpdateSeed();},2000); } // force update defending troops immediately after attacks land
 				break;
 			}
 		}  
@@ -3908,16 +3919,17 @@ function SelectDefenders (sel,def) {
 			MoveArray[sel] = parseIntNan(Seed.units['city' + CurrentCityId]['unt'+sel]);
 		}
 	}
-	ChangeDefendingTroops (CurrentCityId, MoveArray);
+	ChangeDefendingTroops (CurrentCityId, MoveArray, false);
 }
 
-function ChangeDefendingTroops (cityId, MoveArray, notify) {
+function ChangeDefendingTroops (cityId, MoveArray, Replace, notify) {
 	setTroopMessage('Sending Request...');
 	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams)
 	params.cid = cityId;
-	// set params initially to current defenders, because we're only dealing with troop movements in MoveArray ...
 	for (var i=1;i<nTroopType+1;i++) {
-		params["u"+i] = parseIntNan(Seed.defunits['city' + cityId]['unt'+i]) + parseIntNan(MoveArray[i]);
+		if (Replace) { params["u"+i] = parseIntNan(MoveArray[i]); }
+		// set params initially to current defenders, because we're only dealing with troop movements in MoveArray ...
+		else { params["u"+i] = parseIntNan(Seed.defunits['city' + cityId]['unt'+i]) + parseIntNan(MoveArray[i]); }
 	}
 
 	new MyAjaxRequest(uW.g_ajaxpath + "ajax/cityDefenseSet.php" + uW.g_ajaxsuffix, {
@@ -3950,9 +3962,8 @@ function ChangeDefendingTroops (cityId, MoveArray, notify) {
 				}
 				setTroopMessage('&nbsp;');
 				SelectDefTroopType (document.getElementById("btDefendTroops"));
-				PaintCityInfo(cityId);
-				if (notify != null)
-				notify();
+				if (notify != null) { notify();} 
+				else { PaintCityInfo(cityId); }
 			}
 			else { // error handling
 				if (rslt.msg) { setTroopMessage('<span style="color:#f00">'+rslt.msg+'</span>'); }
@@ -4004,7 +4015,7 @@ function AddDefenders () {
 	uW.jQuery('#btAddDefendButton').addClass("disabled");
 
 	MoveArray[TT.value] = AM.value;
-	ChangeDefendingTroops (CurrentCityId, MoveArray);
+	ChangeDefendingTroops (CurrentCityId, MoveArray, false);
 }
   
 function SendHome (marchId) {
@@ -4067,7 +4078,7 @@ function StartRitual () {
 	if (clawback < 0) {
 		var MoveArray = [];
 		MoveArray[unitid] = clawback;
-		ChangeDefendingTroops (CurrentCityId, MoveArray, StartRitual);return;
+		ChangeDefendingTroops (CurrentCityId, MoveArray, false, StartRitual);return;
 	}
 	
 	var params = uW.Object.clone(uW.g_ajaxparams);
