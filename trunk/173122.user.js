@@ -5580,9 +5580,11 @@ return 0;
 	    	 			if (y != undefined) {
 		    	 			for (i=1;i<=5;i++) {
 					   			   id = y["effects"]["slot"+i]["id"];
-								   tier = parseInt(y["effects"]["slot"+i]["tier"]);
-								   level = y["level"];
-								   p = uW.cm.thronestats.tiers[id][tier];
+									tier = parseInt(y["effects"]["slot"+i]["tier"]);
+									level = y["level"];
+									p = unsafeWindow.cm.thronestats.tiers[id][tier];
+									while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
+									if (!p) continue; // can't find stats for tier
 								   Current = p.base + ((level * level + level) * p.growth * 0.5);
 								   if (i<=parseInt(y["quality"])) t.HisStatEffects[id] += Current;
 							}
@@ -5593,9 +5595,11 @@ return 0;
     		 			y = uW.kocThroneItems[k];
 	    	 			for (i=1;i<=5;i++) {
 				   			id = y["effects"]["slot"+i]["id"];
-				   			tier = parseInt(y["effects"]["slot"+i]["tier"]);
-				   			level = y["level"];
-				   			p = uW.cm.thronestats.tiers[id][tier];
+							tier = parseInt(y["effects"]["slot"+i]["tier"]);
+							level = y["level"];
+							p = unsafeWindow.cm.thronestats.tiers[id][tier];
+							while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
+							if (!p) continue; // can't find stats for tier
 				   			Current = p.base + ((level * level + level) * p.growth * 0.5);
 				   			if (y.isEquipped && i<=y["quality"]) t.MyStatEffects[id] += Current
 						}
@@ -7171,9 +7175,11 @@ Tabs.Train = {
 			for(var i = 1; i<=maxline; i++){
 				var id = item['effects']['slot'+i]['id'];
 				if(id == StatID){
-					var tier = parseInt(item["effects"]["slot"+i]["tier"]);
-					var level = item["level"];
-					  var p = unsafeWindow.cm.thronestats.tiers[id][tier];
+					tier = parseInt(item["effects"]["slot"+i]["tier"]);
+					level = item["level"];
+					p = unsafeWindow.cm.thronestats.tiers[id][tier];
+					while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
+					if (!p) continue; // can't find stats for tier
 					var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 					total += Percent;
 				}
@@ -10465,9 +10471,11 @@ function equippedthronestats (stat_id){
 		for(var i = 1; i<=maxline; i++){
 			var id = item["effects"]["slot"+i]["id"];
 			if(id == stat_id){
-				var tier = parseInt(item["effects"]["slot"+i]["tier"]);
-				var level = item["level"];
-				  var p = uW.cm.thronestats.tiers[id][tier];
+				tier = parseInt(item["effects"]["slot"+i]["tier"]);
+				level = item["level"];
+				p = unsafeWindow.cm.thronestats.tiers[id][tier];
+				while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
+				if (!p) continue; // can't find stats for tier
 				var Percent = p.base + ((level * level + level) * p.growth * 0.5);
 				total += Percent;
 			}
