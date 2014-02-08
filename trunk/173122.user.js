@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140207a
+// @version        20140207b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140207a';
+var Version = '20140207b';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -4152,7 +4152,7 @@ function makeReportLink (rptid, side, tiletype, tilelv, defid, defnm, defgen, at
 					if (!rslt.error){
 						if (typeof GM_getMetadata !== "undefined") Sversion = JSON.stringify(GM_getMetadata("version",true));
 						if (typeof GM_info !== "undefined") Sversion = JSON.stringify(GM_info.script.version);
-						var url = '//nicodebelder.eu/kocReportView/putData.php?Name='+JSON.stringify(SourceName)+'&Version='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
+						var url = '//apps.facebook.com/kocreportview/putData.php?Sname='+Sname+'&Sversion='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
 						window.open(url,'_blank');
 					} else alert('kabam is having issues with reports...');	
 				},
