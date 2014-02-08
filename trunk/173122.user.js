@@ -2091,23 +2091,23 @@ var Rpt = {
             //troops - attacker - stats
             m+='<div style="width:50%;float:left;">';
             
-            if (rslt['fght']["s1"]) {
+            if (rslt['fght']["s1"] && rslt['bonus']) {
                 for (var i=1;i<nTroopType+1;i++) {
                     if (rslt['fght']["s1"]['u'+i]) {
                         m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
                         m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['hp'][1])+'</font></td>';
-                        m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['atk'][1])+'</font></td>';
-                        m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['def'][1])+'</font></td></tr><tr>';
-                        m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['spd'][1])+'</font></td>';
-                        m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['rng'][1])+'</font></td>';
-                        m+='<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['ld'][1])+'</font></td></tr></table></div>';
+                        if (rslt['bonus']['mod']['s1']['u'+i]['atk']) m+='<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['atk'][1])+'</font></td>';
+                        if (rslt['bonus']['mod']['s1']['u'+i]['def']) m+='<TD style="width:33%;" align=left><font size="1"><b>Def: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['def'][1])+'</font></td></tr><tr>';
+                        if (rslt['bonus']['mod']['s1']['u'+i]['spd']) m+='<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['spd'][1])+'</font></td>';
+                        if (rslt['bonus']['mod']['s1']['u'+i]['rng']) m+='<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['rng'][1])+'</font></td>';
+                        if (rslt['bonus']['mod']['s1']['u'+i]['ld']) m+='<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['ld'][1])+'</font></td></tr></table></div>';
                     }
                 }
             }
             m+='</div>';
             //troops - defender - stats
             m+='<div style="width:50%;float:left;">';
-            if (rslt['fght']["s0"]) {
+            if (rslt['fght']["s0"] && rslt['bonus']) {
                 for (var i=1;i<nTroopType+1;i++) {
 //                    if (rslt['fght']["s0"]['u'+i]) {
                     if (rslt['fght']["s0"]['u'+i] && rslt['bonus']['mod']["s0"]['u'+i]) {
@@ -2328,91 +2328,95 @@ var Rpt = {
 				m+='<div style="clear:both">&nbsp;</div>';
 			}	
 
-			if (rslt.bonus['tch'] || rslt.bonus['tch2']) {
-				m+='<div style="width:50%;float:left;">';
-				m+='<b>Research</b><br>';
-				if (rslt.bonus['tch']) {
-					for (var t1l in rslt.bonus.tch.s1) {
-						if (t1l == 'hp') var normaltech = 'Health'; 
-						if (t1l == 'atk') var normaltech = 'Attack'; 
-						if (t1l == 'def') var normaltech = 'Defense'; 
-						if (t1l == 'spd') var normaltech = 'Speed'; 
-						if (t1l == 'rng') var normaltech = 'Range'; 
-						if (t1l == 'ld') var normaltech = 'Load'; 
-						m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s1[t1l]*100).toFixed(0) + '%<br>';
+			if (rslt.bonus) {
+				if (rslt.bonus['tch'] || rslt.bonus['tch2']) {
+					m+='<div style="width:50%;float:left;">';
+					m+='<b>Research</b><br>';
+					if (rslt.bonus['tch']) {
+						for (var t1l in rslt.bonus.tch.s1) {
+							if (t1l == 'hp') var normaltech = 'Health'; 
+							if (t1l == 'atk') var normaltech = 'Attack'; 
+							if (t1l == 'def') var normaltech = 'Defense'; 
+							if (t1l == 'spd') var normaltech = 'Speed'; 
+							if (t1l == 'rng') var normaltech = 'Range'; 
+							if (t1l == 'ld') var normaltech = 'Load'; 
+							m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s1[t1l]*100).toFixed(0) + '%<br>';
+						}
 					}
-				}
-				if (rslt.bonus['tch2']) {
-					for (var t2l in rslt.bonus.tch2.s1) {
-						if (t2l == 'ic') var britontech = 'Improved Cartography'; 
-						if (t2l == 'id') var britontech = 'Improved Defenses'; 
-						if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
-						if (t2l == 'if') var britontech = 'Improved Fletching'; 
-						m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s1[t2l]*100).toFixed(0) + '%<br>';
+					if (rslt.bonus['tch2']) {
+						for (var t2l in rslt.bonus.tch2.s1) {
+							if (t2l == 'ic') var britontech = 'Improved Cartography'; 
+							if (t2l == 'id') var britontech = 'Improved Defenses'; 
+							if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
+							if (t2l == 'if') var britontech = 'Improved Fletching'; 
+							m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s1[t2l]*100).toFixed(0) + '%<br>';
+						}
 					}
-				}
 					
-				m += '</div>';//attacker
-				m+='<div style="width:50%;float:left;">';
-				m+='<b>Research</b><br>';
-				if (rslt.bonus['tch']) {
-					for (var t1l in rslt.bonus.tch.s0) {
-						if (t1l == 'hp') var normaltech = 'Health'; 
-						if (t1l == 'atk') var normaltech = 'Attack'; 
-						if (t1l == 'def') var normaltech = 'Defense'; 
-						if (t1l == 'spd') var normaltech = 'Speed'; 
-						if (t1l == 'rng') var normaltech = 'Range'; 
-						m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s0[t1l]*100).toFixed(0) + '%<br>';
+					m += '</div>';//attacker
+					m+='<div style="width:50%;float:left;">';
+					m+='<b>Research</b><br>';
+					if (rslt.bonus['tch']) {
+						for (var t1l in rslt.bonus.tch.s0) {
+							if (t1l == 'hp') var normaltech = 'Health'; 
+							if (t1l == 'atk') var normaltech = 'Attack'; 
+							if (t1l == 'def') var normaltech = 'Defense'; 
+							if (t1l == 'spd') var normaltech = 'Speed'; 
+							if (t1l == 'rng') var normaltech = 'Range'; 
+							m+=normaltech+': ' + parseFloat(rslt.bonus.tch.s0[t1l]*100).toFixed(0) + '%<br>';
+						}
+					}
+					if (rslt.bonus['tch2']) {
+						for (var t2l in rslt.bonus.tch2.s0) {
+							if (t2l == 'ic') var britontech = 'Improved Cartography'; 
+							if (t2l == 'id') var britontech = 'Improved Defenses'; 
+							if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
+							if (t2l == 'if') var britontech = 'Improved Fletching'; 
+							m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s0[t2l]*100).toFixed(0) + '%<br>';
+						}	
 					}
 				}
-				if (rslt.bonus['tch2']) {
-					for (var t2l in rslt.bonus.tch2.s0) {
-						if (t2l == 'ic') var britontech = 'Improved Cartography'; 
-						if (t2l == 'id') var britontech = 'Improved Defenses'; 
-						if (t2l == 'sr') var britontech = 'Strengthen Ranks'; 
-						if (t2l == 'if') var britontech = 'Improved Fletching'; 
-						m+=britontech+': ' + parseFloat(rslt.bonus.tch2.s0[t2l]*100).toFixed(0) + '%<br>';
-					}
-				}
-				
+
 				m+='</div>';//defender
 				m+='<div style="clear:both">&nbsp;</div>';
 			}	
 
-            if (rslt.bonus['cmp']) {
-				m+='<div id=ChampAdjContainer style="clear:both">';
-				m+='<div style="width:50%;float:left;">';
-				// rather than fix the index for life, kabam remapped efects
-				// 0:g_js_strings.effects.name_3,
-				// 1:g_js_strings.effects.name_1,
-				// 2:g_js_strings.effects.name_2,
-				// 3:g_js_strings.commonstr.speed,
-				// 4:g_js_strings.effects.name_5,
-				// 5:g_js_strings.effects.name_6,
-				// 6:g_js_strings.effects.name_7
-                m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
-                for (var i=0;i<24;i++) {
-                    if (rslt.bonus['cmp']['s1'][i]) {
-                        if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>'; 
-                        else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-                             else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-                    }
-                }
-                m+='</table></br>'
-				m+='</div>';//attacker
-				m+='<div style="width:50%;float:left;">';
-                m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
-                for (var i=0;i<24;i++) {
-                    if (rslt.bonus['cmp']['s0'][i]) {
-                        if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-                        else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-                             else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-                    }
-                }
-                m+='</table></br>'
-				m+='</div>';//defender
-				m+='</div>';//ChampAdjContainer
-				m+='<div style="clear:both">&nbsp;</div>';
+			if (rslt.bonus) {
+				if (rslt.bonus['cmp']) {
+					m+='<div id=ChampAdjContainer style="clear:both">';
+					m+='<div style="width:50%;float:left;">';
+					// rather than fix the index for life, kabam remapped efects
+					// 0:g_js_strings.effects.name_3,
+					// 1:g_js_strings.effects.name_1,
+					// 2:g_js_strings.effects.name_2,
+					// 3:g_js_strings.commonstr.speed,
+					// 4:g_js_strings.effects.name_5,
+					// 5:g_js_strings.effects.name_6,
+					// 6:g_js_strings.effects.name_7
+					m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
+					for (var i=0;i<24;i++) {
+						if (rslt.bonus['cmp']['s1'][i]) {
+							if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>'; 
+							else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
+								else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
+						}
+					}
+					m+='</table></br>'
+					m+='</div>';//attacker
+					m+='<div style="width:50%;float:left;">';
+					m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
+					for (var i=0;i<24;i++) {
+						if (rslt.bonus['cmp']['s0'][i]) {
+							if (i==0) m+='<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+							else if (i < 3 ) m+='<TR><TD colspan=4>' + trEffect[i] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+								else m+='<TR><TD colspan=4>' + trEffect[i+1] +': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
+						}
+					}
+					m+='</table></br>'
+					m+='</div>';//defender
+					m+='</div>';//ChampAdjContainer
+					m+='<div style="clear:both">&nbsp;</div>';
+				}	
 			}	
 
             m+='</div>';//boosts
@@ -2426,32 +2430,32 @@ var Rpt = {
                 m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Loot:</div><TABLE style="width:100%;" class=ptTab>';
                 m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
                 if (rslt['loot'][0] > 0)
-                    m+=addCommas(rslt['loot'][0].toFixed(0))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][0]).toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
                 if (rslt['loot'][1] > 0)
-                    m+=addCommas(rslt['loot'][1].toFixed(0))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][1]).toFixed(0))+'</TD>';
                 else
                     m+= '0</TD>';
                 m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
                 if (rslt['loot'][2] > 0)
-                    m+=addCommas(rslt['loot'][2].toFixed(0))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][2]).toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
                 if (rslt['loot'][3] > 0)
-                    m+=addCommas(rslt['loot'][3].toFixed(0))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][3]).toFixed(0))+'</TD>';
                 else
                     m+= '0</TD>';
                 m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
                 if (rslt['loot'][4] > 0)
-                    m+=addCommas(rslt['loot'][4].toFixed(0))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][4]).toFixed(0))+'</TD>';
                 else
                     m+='0</td>'
                 m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
                 if (rslt['loot'][6] > 0)
-                    m+=addCommas(parseInt(rslt['loot'][6]))+'</TD>';
+                    m+=addCommas(parseFloat(rslt['loot'][6]).toFixed(0))+'</TD>';
                 else
                     m+= '0 </TD>';
                 m+='</tr>'
