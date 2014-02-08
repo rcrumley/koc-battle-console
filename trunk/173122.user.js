@@ -4152,7 +4152,7 @@ function makeReportLink (rptid, side, tiletype, tilelv, defid, defnm, defgen, at
 					if (!rslt.error){
 						if (typeof GM_getMetadata !== "undefined") Sversion = JSON.stringify(GM_getMetadata("version",true));
 						if (typeof GM_info !== "undefined") Sversion = JSON.stringify(GM_info.script.version);
-						var url = '//apps.facebook.com/kocreportview/putData.php?Sname='+Sname+'&Sversion='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
+						var url = '//apps.facebook.com/kocreportview/putData.php?Sname='+JSON.stringify(SourceName)+'&Sversion='+Sversion+'&domain='+domain+'&reportUnixTime='+timestamp+'&tvuid='+tvuid+'&side0Player='+defnm+'&side1Player='+atknm+'&marchType='+marchtype+'&tileType='+tiletype+'&report='+JSON.stringify(rslt);
 						window.open(url,'_blank');
 					} else alert('kabam is having issues with reports...');	
 				},
