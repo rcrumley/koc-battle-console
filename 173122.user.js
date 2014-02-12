@@ -1977,12 +1977,17 @@ var Rpt = {
 				m+='Might Lost: '+addCommas(defmight)+'<br>';
             }
             m+='Rounds: ' + rslt['rnds'] + '<br>';
-            if (rslt['wall']) {
-                if (rslt['wall'] == 100)
-                    m+='Attackers breached the walls.';
-                else
-                    m+='Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged';
-            }
+			if (rslt['darkForestConflict']) {
+				m+='The forests twisted and changed.';
+			}
+			else {
+				if (rslt['wall']) {
+					if (rslt['wall'] == 100)
+						m+='Attackers breached the walls.';
+					else
+						m+='Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged';
+				}
+			}	
             m+='</div>';            
             m+='</div>'; //end battlesummary div
             //troops
