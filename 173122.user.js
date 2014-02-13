@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140212b
+// @version        20140213a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140212b';
+var Version = '20140213a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -1643,8 +1643,10 @@ var Rpt = {
         //need the info from the list query
         var m = '';
         var unitImg = [];
-        for (var i=1;i<nTroopType+1;i++)
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
             unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>' + uW.unitcost['unt'+i][0];
+		}	
         unitImg[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>Crossbows';
         unitImg[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>Trebuchet';
         unitImg[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>Trap';
@@ -1660,8 +1662,10 @@ var Rpt = {
         astoneImg = GameIcons.astoneImg + '</TD><TD>Aetherstone';
 
         var unitImg2 = [];
-        for (var i=1;i<nTroopType+1;i++)
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
             unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>';
+		}	
         unitImg2[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>';
         unitImg2[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>';
         unitImg2[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>';
@@ -1894,11 +1898,11 @@ var Rpt = {
                 m+='Knight Combat Skill: ' + rslt['s1KCombatLv'] + '<br>';
             if (rslt['fght']["s1"]) {
                 var atkmight = 0;
-                for (var i=1;i<nTroopType+1;i++) {
+				for (var ui in uW.cm.UNIT_TYPES){
+					i = uW.cm.UNIT_TYPES[ui];
                     if (rslt['fght']["s1"]['u'+i]) {
                         if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
-                            for (ix=1;ix<nTroopType+1;ix++)
-                                if (i == ix) {atkmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s1"]['u'+ix][0]) - parseInt(rslt['fght']["s1"]['u'+ix][1])))};
+							atkmight += parseInt(uW.unitmight['unt'+i]*(parseInt(rslt['fght']["s1"]['u'+i][0]) - parseInt(rslt['fght']["s1"]['u'+i][1])));
                         } else {atkmight += 0;}
                     }
                 }
@@ -1921,12 +1925,11 @@ var Rpt = {
             if (rslt['fght']["s0"]) {
                 var defmight = 0;
                 if (rslt.overwhelmed) {
-                    for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
                         if (rslt['fght']["s0"]['u'+i]) {
                             if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
-                                for (ix=1;ix<nTroopType+1;ix++)
-                                    if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*parseInt(rslt['fght']["s0"]['u'+ix][0]))};
-
+								defmight += parseInt(uW.unitmight['unt'+i]*parseInt(rslt['fght']["s0"]['u'+i][0]));
                             } else {defmight += 0;}
                         }
                     }
@@ -1948,11 +1951,11 @@ var Rpt = {
                         }
                     }
                 } else {
-                    for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
                         if (rslt['fght']["s0"]['u'+i]) {
                             if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
-                                for (ix=1;ix<nTroopType+1;ix++)
-                                    if (i == ix) {defmight += parseInt(uW.unitmight['unt'+ix]*(parseInt(rslt['fght']["s0"]['u'+ix][0]) - parseInt(rslt['fght']["s0"]['u'+ix][1])))};
+								defmight += parseInt(uW.unitmight['unt'+i]*(parseInt(rslt['fght']["s0"]['u'+i][0]) - parseInt(rslt['fght']["s0"]['u'+i][1])));
                             } else {defmight += 0;}
                         }
                     }
@@ -1997,7 +2000,8 @@ var Rpt = {
             m+='<div style="width:50%;float:left;"><TABLE class=ptTab width=100%>';
             if (rslt['fght']["s1"]) {
                 m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-                for (var i=1;i<nTroopType+1;i++) {
+				for (var ui in uW.cm.UNIT_TYPES){
+					i = uW.cm.UNIT_TYPES[ui];
                     if (rslt['fght']["s1"]['u'+i]) {
                         if (rslt['fght']["s1"]['u'+i][0] > rslt['fght']["s1"]['u'+i][1]) {
                             m+='<TR><TD>' + unitImg[i] + '</td>';
@@ -2020,7 +2024,8 @@ var Rpt = {
             if (rslt['fght']["s0"]) {
                 if (rslt.overwhelmed) {
                     m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-                    for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
                         if (rslt['fght']["s0"]['u'+i] && (rslt['fght']["s0"]['u'+i][0] != null)) {
                             m+='<TR><TD>' + unitImg[i] + '</td>';
                             m+='<TD align=center>???</td>';
@@ -2072,7 +2077,8 @@ var Rpt = {
                     }
                 } else {
                     m+='<TR><TH></TH><TH align=left>Troops</TH><TH align=center>Fought</TH><TH align=center>Survived</TH><TH align=center>Killed</TH></TR>';
-                    for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
                         if (rslt['fght']["s0"]['u'+i] && (rslt['fght']["s0"]['u'+i][0] != null)) {
                             if (rslt['fght']["s0"]['u'+i][0] > rslt['fght']["s0"]['u'+i][1]) {
                                 m+='<TR><TD>' + unitImg[i] + '</td>';
@@ -2149,7 +2155,8 @@ var Rpt = {
 				m+='<div style="width:50%;float:left;">';
             
 				if (rslt['fght']["s1"]) {
-					for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
 						if (rslt['fght']["s1"]['u'+i]) {
 							m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
 							m+='<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>'+addCommas(rslt['bonus']['mod']['s1']['u'+i]['hp'][1])+'</font></td>';
@@ -2166,7 +2173,8 @@ var Rpt = {
 				//troops - defender - stats
 				m+='<div style="width:50%;float:left;">';
 				if (rslt['fght']["s0"]) {
-					for (var i=1;i<nTroopType+1;i++) {
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
 						if (rslt['fght']["s0"]['u'+i]) {
 							if (rslt['fght']["s0"]['u'+i] && rslt['bonus']['mod']["s0"]['u'+i]) {
 								m+='<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
@@ -2605,9 +2613,11 @@ var Rpt = {
                 m+='<B>Ally:</B> '+MonitorLink(rpt.side1Name)+' (<A onclick="ptGotoMap('+ rpt.side1XCoord +','+ rpt.side1YCoord +')">'+ rpt.side1XCoord +','+ rpt.side1YCoord +'</a>)<br>';
             if (rslt['unts'] != undefined) {
                 m+='<TABLE class=ptTab>';
-                for (var i=1;i<nTroopType+1;i++)
+				for (var ui in uW.cm.UNIT_TYPES){
+					i = uW.cm.UNIT_TYPES[ui];
                     if (rslt['unts']['u'+i] != undefined)
                         m+='<TR><TD>' + unitImg[i] + '</TD><TD align=right>'+addCommas(rslt['unts']['u'+i])+'</TD></TR>';
+				}		
                 m+='</TABLE>';
             }
             if (rpt.marchName != 'Reinforce')
@@ -7037,7 +7047,8 @@ Tabs.Train = {
 	  <TABLE class=ptTab width=100%><TR valign=top><TD width=50%>\
       <TABLE align=center><TR><TD align=right>"+uW.g_js_strings.modal_messages_viewdesertionreports.trooptypes+": </td><TD colspan=2>\
       <SELECT id=ptttType>";
-     for (i=1;i<=nTroopType;i++){
+      for (var ui in uW.cm.UNIT_TYPES){
+	      i = uW.cm.UNIT_TYPES[ui];
       	  s+='<option value='+i+'>'+uW.unitcost['unt'+i][0]+'</option>';
       }
       s+="</select> &nbsp; ("+uW.g_js_strings.commonstr.max+" <span id=ptttSpMax></span>)</td></tr>\
@@ -8723,8 +8734,8 @@ Tabs.OverView = {
            for(i=0; i<Cities.numCities; i++) {
              n += "<TD width=81 style='background: #FFFFFF'><B>"+ Cities.cities[i].name.substring(0,11) +'</b><BR>'+ coordLink (Cities.cities[i].x, Cities.cities[i].y) +"<BR>"+ uW.provincenames['p'+ Cities.cities[i].provId] +"</td>";
            }
-   	  for(a=1;a<nTroopType+1;a++) {
-   	        var total=0;
+		   for(a=1;a<nTroopType+1;a++) {
+  		    var total=0;
    	        var marching = 0;
    	        var raiding = 0;
    	        var tottraining = 0;
@@ -9319,15 +9330,16 @@ Tabs.OverView = {
 	          <TD class=xtabH>Ore</td><TD class=xtabH>Pop</td><TD class=xtabHL>Might</td><TD class=xtabH>Life</td><TD class=xtabH>Atk</td><TD class=xtabH>Def</td><TD class=xtabH>Speed</td><TD class=xtabH>Range</td><TD class=xtabH>Load</td>\
 	          <TD class=xtabHL>Food</td></tr>\
 	          <TR style="height:1px;"><TD style="padding:0px; spacing:0px; height:1px; border-color:black; border-width: 1px; border-style: none none solid none" colspan=14></td></tr>';
- 	      for (ui=1; ui<nTroopType+1; ui++){
+		  for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
 	        if (++rownum % 2)
 	          rsty = '';
 	        else
 	          rsty = ' style="background: #e8e8e8" ';
-	        cost = uW.unitcost['unt'+ui];     //  NAME, Food, Wood, Stone, Ore, ?, IdlePop, Time
-	        stats = uW.unitstats['unt'+ui];   //  Life, Attack, Defense, Speed, Range, Load
-	        food = uW.unitupkeeps[ui];
-	        might = uW.unitmight['unt'+ui];
+	        cost = uW.unitcost['unt'+i];     //  NAME, Food, Wood, Stone, Ore, ?, IdlePop, Time
+	        stats = uW.unitstats['unt'+i];   //  Life, Attack, Defense, Speed, Range, Load
+	        food = uW.unitupkeeps[i];
+	        might = uW.unitmight['unt'+i];
 	        u += '<TR '+ rsty +'align=right><TD class=xtab align=left><B>'+ cost[0].substr(0,16) +'</b></td><TD class=xtabL>'+ cost[1] +'</td><TD class=xtab>'+ cost[2] +'</td>\
 	            <TD class=xtab>'+ cost[3] +'</td><TD class=xtab>'+ cost[4] +'</td><TD class=xtab>'+ cost[6] +'</td><TD class=xtabL>'+ might +'</td>\
 	            <TD class=xtab>'+ stats[0] +'</td><TD class=xtab>'+ stats[1] +'</td><TD class=xtab>'+ stats[2] +'</td><TD class=xtab>'+ stats[3] +'</td>\
@@ -9426,10 +9438,10 @@ Tabs.OverView = {
       		_displayrow ("Halberdier", infoRows[24]);
       		u += "<TR><TD></TD><TD nowrap align=center colspan="+(Cities.numCities)+"><B>Wall Defense Hourly Production</B></TD></TR>";
       		_displayrow ("XBow", infoRows[nTroopType+7]);
-      		_displayrow ("Trebuchet", infoRows[nTroopType+7]);
-      		_displayrow ("Spike", infoRows[nTroopType+7]);
-      		_displayrow ("Trap", infoRows[nTroopType+7]);
-      		_displayrow ("Caltrop", infoRows[nTroopType+7]);
+      		_displayrow ("Trebuchet", infoRows[nTroopType+8]);
+      		_displayrow ("Spike", infoRows[nTroopType+9]);
+      		_displayrow ("Trap", infoRows[nTroopType+10]);
+      		_displayrow ("Caltrop", infoRows[nTroopType+11]);
 		  u += '</tr></table>';
 	      u += '<DIV class=ptstat>MISC INFO</div><TABLE><TR><TD width="200px" style="background-color:#FFFFFF; border:none">KofC client version: '+ KOCversion +'</td>';
 	      u += '<TD style="background-color:#FFFFFF; border:none"><INPUT id=ptButDebug type=submit name="SEED" value="DEBUG"></tr></td></table></div>';
