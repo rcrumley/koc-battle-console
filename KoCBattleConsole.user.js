@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Defensive Presets</p><p>New troop type - Heavy Onagers</p><p>Refresh troop numbers in city just after attack lands</p>p>bugfix for sacrifice defending troop clawback</p>
+// @releasenotes 	<p>Defensive Presets</p><p>New troop type - Heavy Onagers</p><p>Refresh troop numbers in city just after attack lands</p><p>bugfix for sacrifice defending troop clawback</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
