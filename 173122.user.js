@@ -12221,6 +12221,8 @@ Tabs.Defend = {
    t.cont = div;
    t.state = null;
    clearTimeout (t.displayTimer);
+   uW.ptDefendFav = Options.DefendFav;
+   
  },
   getContent : function (){
     var t = Tabs.Defend;
