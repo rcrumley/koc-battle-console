@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140205a
+// @version        20140217a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140205a';
+var Version = '20140217a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -193,7 +193,7 @@ var Options = {
   mklag  :  false,
   amain  :  false,
   smain  :  0,
-  MAP_DELAY :  4000,
+  MAP_DELAY :  20000,
   fchar: "Null",
   toprank:  0,
   botrank:  0,
@@ -2440,10 +2440,11 @@ Tabs.Throne = {
             Banners : {
                 "Pendragons Banner"     : "http://i.imgur.com/lQ1iSSD.png",
                 "Relief Banner"         : "http://i.imgur.com/A60lVgd.png",
-                "Champions Shroud"      : "http://community.kabam.com/forums/attachment.php?attachmentid=60451&d=1372433759",
+                "Champions Shroud"      : "http://i.imgur.com/zP3Zhhs.jpg",
                 "Banner of Magnitude"   : "http://i.imgur.com/IoIEG95.png",
                 "Banner Of The Cause"   : "http://i40.tinypic.com/o0wg42.jpg",
                 "Unyielding Banner"     : "http://imageshack.us/a/img138/3130/ykgb.png",
+                "Banner of Arms"     	: "http://i.imgur.com/cknAh6y.png",
             
             },
             Windows : {
@@ -2455,6 +2456,7 @@ Tabs.Throne = {
                 "Persevering Window"    : "http://i.imgur.com/HGGbe5Q.jpg",
                 "Warfarers Portal"      : "http://i.imgur.com/8z4wNcn.jpg",
                 "Window of Chalice"     : "http://i.imgur.com/ZelfCuL.png",
+                "Beacon of Rosmerta"    : "http://imagizer.imageshack.us/v2/800x600q90/836/y78c.png",
             },
             Candles : {
                 "Merry Chandelier"                  : "http://i.imgur.com/iBzYUh5.png",
@@ -2468,7 +2470,7 @@ Tabs.Throne = {
                 "Healers Shrine"        : "http://i.imgur.com/clPMfAQ.png",
                 "Skillful Table"        : "http://i.imgur.com/zk18k12.png",
                 "Bombardment Table"     : "http://i.imgur.com/o4slc5U.png",
-                "Catellans Table"       : "http://http://i.imgur.com/mQ8s7RS.gif",
+                "Catellans Table"       : "http://i.imgur.com/mQ8s7RS.gif",
             },
             Trophies : {
                 "Courageous Trophy"     : "http://i.imgur.com/ODDVqwD.png",
@@ -2481,9 +2483,10 @@ Tabs.Throne = {
                 "Robin The Courageous"  : "http://i.imgur.com/wWxlfWv.png",
             },
             Statues : {
-//                "Monument to Llamrei" : "http://i.imgur.com/xxxxxx.jpg",
-//                "The Huntress"     	: "http://i.imgur.com/xxxxxx.jpg",
-//                "Castle Tauroc"       : "http://i.imgur.com/xxxxxx.jpg",
+                "Monument to Llamrei" 	: "http://i.imgur.com/yxe5FM9.jpg",
+                "The Huntress"     	: "http://i.imgur.com/ddzF7Q2.jpg",
+                "Castle Tauroc"       	: "http://i.imgur.com/OI6UP85.jpg",
+                "Effigy of Wasting"    	: "http://i.imgur.com/t8uIVP3.jpg",
             },
         }
 
@@ -4891,11 +4894,13 @@ getpinauth : function () {
 						if(Options.alertConfig.AFK) {
 							if(isAFK) {
 								Tabs.Throne.doPreset(Options.SaveState.trset);
+		     if(Options.alertConfig.guardian) {
 								for (var cityId in Cities.byID){
 									if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
 										t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
 									Options.alertConfig.guardautoswitch[cityId] = false;
 								}
+	          };
 							}
 						} else {
 							Tabs.Throne.doPreset(Options.SaveState.trset);
@@ -5018,7 +5023,7 @@ getpinauth : function () {
                if(Options.SaveState.crest)Tabs.Attack.toggleCrestState();
             };
             Options.SaveState.trset = Seed.throne.activeSlot;
-            if(Seed.buildings["city"+ m.toCityId].pos500 && Seed.buildings["city"+ m.toCityId].pos500[0] !=50) Options.SaveState.guardian[m.toCityId]=Seed.buildings["city"+ m.toCityId].pos500[0];
+            if(Options.alertConfig.guardian && Seed.buildings["city"+ m.toCityId].pos500 && Seed.buildings["city"+ m.toCityId].pos500[0] !=50) Options.SaveState.guardian[m.toCityId]=Seed.buildings["city"+ m.toCityId].pos500[0];
          };
          Options.alertConfig.RecentActivity = true;
          saveOptions();
