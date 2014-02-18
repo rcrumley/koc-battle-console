@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140214a
+// @version        20140218a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140214a';
+var Version = '20140218a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -1615,11 +1615,21 @@ var Rpt = {
 	GetReport: function(rpId, rpt){
 		var t = Rpt;
 		var params = uW.Object.clone(uW.g_ajaxparams);
-		if (parseInt(rpt.side0AllianceId) == parseInt(Seed.allianceDiplomacies.allianceId)) {
-			params.side = 0;
-		} else {
-			params.side = 1;
-		}
+		params.side = 1;
+		if (rpt.Side0PlayerId == uW.tvuid) { params.side = 0; }
+		else {
+			if (rpt.Side1PlayerId == uW.tvuid) { params.side = 1; }
+			else {
+				if (Seed.allianceDiplomacies) {
+					if (parseInt(rpt.side0AllianceId) == parseInt(Seed.allianceDiplomacies.allianceId)) {
+						params.side = 0;
+					} else {
+						params.side = 1;
+					}
+				}
+			}	
+		}	
+        rpt.sideId = params.side;
 		params.rid=rpId;
 			new MyAjaxRequest(uW.g_ajaxpath + "ajax/fetchReport.php" + uW.g_ajaxsuffix, {
 				method: "post",
@@ -1674,12 +1684,6 @@ var Rpt = {
         for (var i=101;i<111;i++)
             unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_30.jpg></TD><TD>';
 
-        if (parseInt(rpt.side0AllianceId) == parseInt(Seed.allianceDiplomacies.allianceId)) {
-            rpt.sideId = 0;
-        } else {
-            rpt.sideId = 1;
-        }
-        
         var trEffect = [];
 /*
         trEffect[1] = 'Attack';
@@ -1984,12 +1988,20 @@ var Rpt = {
 				m+='The forests twisted and changed.';
 			}
 			else {
-				if (rslt['wall']) {
-					if (rslt['wall'] == 100)
-						m+='Attackers breached the walls.';
-					else
-						m+='Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged';
+				if (rpt.side0TileTypeText != 'City' && rpt.sideId==0) {
+					if (rslt['conquered']==1)
+						m+='Attackers conquered the wilderness.';
+					else if (rslt['conquered']==0)
+						m+='Attackers did not conquer the wilderness.';
 				}
+				else {
+					if (rslt['wall']) {
+						if (rslt['wall'] == 100)
+							m+='Attackers breached the walls.';
+						else
+							m+='Attackers did not breach the walls. The walls are '+rslt['wall']+'% damaged';
+					}
+				}	
 			}	
             m+='</div>';            
             m+='</div>'; //end battlesummary div
@@ -2598,13 +2610,16 @@ var Rpt = {
             return m;
         }
         
-        function handleunts () { // Troops sent to Reinforce or troops found on a Scout
+        function handleunts () { // Troops sent to Reinforce or troops found on a Scout (also show destination for transports)
             var m = '';
             //header
             if (rpt.marchName == 'Reinforce')
                 m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Reinforcement:</div>';
             else
-                m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Scout Report:</div>';
+				if (rpt.marchName == 'Transport')
+					m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Destination:</div>';
+				else
+					m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Scout Report:</div>';
             //summary
             m+='<div id=battleSummaryContainer>';
             //summary - attacker
@@ -2625,9 +2640,9 @@ var Rpt = {
             m+='&nbsp;</div>';
             //summary - defender
             m+='<div style="width:50%;float:left;">';
-            if (rpt.marchName == 'Reinforce')
-                m+='<B>Defenders</B> '+MonitorLink(rpt.side0Name)+' (<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>)<br>';
-            if (rpt.marchName != 'Reinforce') {
+            if ((rpt.marchName == 'Reinforce') || (rpt.marchName == 'Transport'))
+                m+='<B>Destination</B> '+MonitorLink(rpt.side0Name)+' (<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>)<br>';
+            else {
                 m+='<TABLE class=ptTab width=100%>';
 				m+='<TR><TD>'+MonitorLink(rpt.side0Name)+' (<A onclick="ptGotoMap('+ rpt.side0XCoord +','+ rpt.side0YCoord +')">'+ rpt.side0XCoord +','+ rpt.side0YCoord +'</a>)</td></tr>';
                 if (rslt['lstlgn']) {
@@ -2681,32 +2696,32 @@ var Rpt = {
                         m+='<div class="ptdivHeader" style="background: #99CCFF;" align=left>Goodies Found:</div><TABLE style="width:100%;" class=ptTab>';
                     m+='<TR><TD style="width:18%">'+GameIcons.goldImgTiny;
                     if (rslt['gld'] > 0)
-                        m+=addCommasInt(rslt['gld'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['gld']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.foodImgTiny;
                     if (rslt['rsc']['r1'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r1'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['rsc']['r1']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.woodImgTiny;
                     if (rslt['rsc']['r2'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r2'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['rsc']['r2']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.stoneImgTiny;
                     if (rslt['rsc']['r3'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r3'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['rsc']['r3']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:18%">'+GameIcons.oreImgTiny;
                     if (rslt['rsc']['r4'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r4'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['rsc']['r4']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='<TD style="width:15%">'+GameIcons.astoneImgTiny;
                     if (rslt['rsc']['r5'] > 0)
-                        m+=addCommasInt(rslt['rsc']['r5'].toFixed(0))+'</TD>';
+                        m+=addCommas(parseFloat(rslt['rsc']['r5']).toFixed(0))+'</TD>';
                     else
                         m+='0</td>';
                     m+='</TABLE>';
@@ -2789,6 +2804,7 @@ var Rpt = {
 
         if (rpt.marchName == 'Transport') { // Transport
             m+=handleTransportLoot();
+            m+=handleunts();
         }
 
         m+=handleLoot();
