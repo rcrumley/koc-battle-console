@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140218a
+// @version        20140219a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140218a';
+var Version = '20140219a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -11670,7 +11670,10 @@ Tabs.UnitCalc = {
         msg += '<div class="ptdivHeader" style="background: #99CCFF;" align=left>Unit Stat</div>';
         msg += '<div>';
         msg += '<table border=1><tr><td><b>Unit</b></td><td><b>Life</b></td><td><b>Atk</b></td><td><b>Def</b></td><td><b>Speed</b></td><td><b>Range</b></td></tr>'
-        for (ui=1; ui<nTroopType+1; ui++){
+
+	var ui;
+	for (var iu in uW.cm.UNIT_TYPES){
+	    ui = uW.cm.UNIT_TYPES[iu];
             cost = uW.unitcost['unt'+ui];     //  NAME, Food, Wood, Stone, Ore, ?, IdlePop, Time
             stats = uW.unitstats['unt'+ui];   //  Attack, Defense, Speed, Range, Life
             msg += '<tr><td>'+ cost[0].substr(0,16) +'</td><td id=ptucTrp'+(ui)+'Life>'+ stats[0] +'</td>\
@@ -12032,7 +12035,9 @@ Tabs.UnitCalc = {
             }            
         }
 
-        for (ui=1; ui<nTroopType+1; ui++){
+	var ui;
+	for (var iu in uW.cm.UNIT_TYPES){
+	    ui = uW.cm.UNIT_TYPES[iu];
             switch(unsafeWindow.cm.unitFrontendType[ui]) {
                 case "infantry" :
                     if(ui < 10) {
@@ -12180,26 +12185,31 @@ Tabs.Accuracy = {
     t.cont = div;
 
     var main = '<DIV class=ptstat>ACCURACY MATRIX<TABLE align=center cellpadding=1 cellspacing=0></table></div>';  
-    main +='<DIV style="height:420px; width:720px; overflow-x:scroll;"><TABLE class=ptTab align=left><TR>';
+    main +='<DIV style="height:450px; width:720px; overflow-x:scroll;"><TABLE class=ptTab align=left><TR>';
     main +='<TD></td><TD>Target</td></tr>';
     main +='<TR><TD></td>';
 
     var z = uW.cm.WorldSettings.getSettingAsObject("UNIT_ACCURACY_MODIFIER");
     var keyz = unsafeWindow.Object.keys(z);
     var troopa,troopb;
+    var unitsarr = [];
+    for (j in unsafeWindow.unitcost)
+	unitsarr.push(0);
 
-    for (iu=1; iu < nTroopType+2; iu++) 
+    for (iu=1; iu < unitsarr.length+2; iu++) 
 	if (iu < 13) main +='<TD>' +uW.unitcost['unt'+iu][0]+ '</td>';
 	else if (iu == 13) main +='<TD>WM Crossbow</td>';
+	else if (iu > 19) main +='<TD>' +uW.unitcost['unt'+(iu+1)][0]+ '</td>';
 	else main +='<TD>' +uW.unitcost['unt'+(iu-1)][0]+ '</td>';
     main +='</tr>';
 
-    for (iu=1; iu < nTroopType+2; iu++) {
+    for (iu=1; iu < unitsarr.length+2; iu++) {
 	if (iu < 13) main +='<TR><TD>' +uW.unitcost['unt'+iu][0]+ '</td>';
 	else if (iu == 13) main +='<TR><TD>WM Crossbow</td>';
+	else if (iu > 19) main +='<TR><TD>' +uW.unitcost['unt'+(iu+1)][0]+ '</td>';
 	else main +='<TR><TD>' +uW.unitcost['unt'+(iu-1)][0]+ '</td>';
 	troopa = keyz[iu-1];
-    	for (ju=1; ju < nTroopType+2; ju++) {
+    	for (ju=1; ju < unitsarr.length+2; ju++) {
 	    troopb = keyz[ju-1];
 	    main +='<TD>' +z[troopa][troopb]+ '</td>';
 	}
