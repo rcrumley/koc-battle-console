@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140219a
+// @version        20140219b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140219a';
+var Version = '20140219b';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -8431,7 +8431,7 @@ function getWallInfo (cityId, objOut){
   objOut.wallLevel = parseInt(b.pos1[1]);
   var spots = 0;
   for (var i=1; i<(objOut.wallLevel+1); i++)
-    spots += (i * 500);
+    spots += (i * 1500);
   objOut.wallSpace = spots;     
   objOut.fieldSpace = spots;  
      
