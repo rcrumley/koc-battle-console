@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140214a
+// @version			20140219a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Defensive Presets</p><p>New troop type - Heavy Onagers</p><p>Refresh troop numbers in city just after attack lands</p><p>bugfix for sacrifice defending troop clawback</p>
+// @releasenotes 	<p>Choice of Upper or Lower Defend Button</p><p>Incoming march time bugfix</p><p>Minor cosmetic changes to Options</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -28,7 +28,7 @@
 //	│	February 2014 Barbarossa69 (http://userscripts.org/users/272942)									│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140214a'; 
+var Version = '20140219a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -95,6 +95,8 @@ var Options = {
 	DefAddTroopShow     : true,
 	DefPresetShow       : true,
 	DefPresets          : {},
+	UpperDefendButton   : false,
+	LowerDefendButton   : true,
 };
 
 var JSON2 = JSON; 
@@ -561,18 +563,18 @@ function btStartup (){
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="2" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td class=xtab>Battle button next to overview button&nbsp;*</td><td width="120" class=xtab>&nbsp;</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=FortificationChk type=checkbox /></td><td colspan="2" class=xtab>Show Fortifications Section</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=ReinforcementChk type=checkbox /></td><td colspan="2" class=xtab>Show Reinforcements Section</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td class=xtab>Default sacrifice duration</td>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="3" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td colspan="3" class=xtab>Battle button next to overview button&nbsp;*</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=FortificationChk type=checkbox /></td><td class=xtab>Fortifications Section</td><td class=xtab><INPUT id=ReinforcementChk type=checkbox /></td><td class=xtab>Reinforcements Section</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Upper Defend Button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Lower Defend Button</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td colspan="3" class=xtab>Show throne room preset changer</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td colspan="2" class=xtab>Default sacrifice duration</td>';
 	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
 	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec</span></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab>Maximum troops to sacrifice</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;troops</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="2" class=xtab>Show Defence Add Troops</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="2" class=xtab>Show Defensive Presets</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Maximum troops to sacrifice</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;troops</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
+	m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
 	m += '</table></div>';
 	m += '<div align="center" style="font-size:10px;opacity:0.3;">Version '+Version+'</div></div>';
   
@@ -615,7 +617,10 @@ function btStartup (){
 	DashboardToggle ();
 	ToggleOption ('FortificationChk', 'FortificationShow');
 	ToggleOption ('ReinforcementChk', 'ReinforceShow');
-	ToggleOption ('DefAddTroopChk', 'DefAddTroopShow');
+	ToggleOption ('UpperDefChk', 'UpperDefendButton');
+	ToggleOption ('LowerDefChk', 'LowerDefendButton');
+	ToggleOption ('DefAddTroopChk', 'DefAddTroopShow', DefToggle);
+	DefToggle ();
 	ToggleOption ('DefPresetChk', 'DefPresetShow');
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
@@ -1146,6 +1151,13 @@ function SacToggle () {
 	var dc = uW.jQuery('#btSacOpts').attr('class');
 	if (Options.DefaultSacrifice) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSacOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSacOpts').attr('class','divHide');}
+	ResetFrameSize('btMain',200,400);
+}
+
+function DefToggle () {
+	var dc = uW.jQuery('#btDefOpts').attr('class');
+	if (Options.DefAddTroopShow) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btDefOpts').attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btDefOpts').attr('class','divHide');}
 	ResetFrameSize('btMain',200,400);
 }
 
@@ -2991,7 +3003,9 @@ function BuildIncomingDisplay() {
 		CheckForHTMLChange('btIncomingMain',z);
 		for (var m in inctimes) {
 			mt = inctimes[m];
-			document.getElementById('marchtime'+m).innerHTML = mt;
+			if (document.getElementById('marchtime'+m)) {
+				document.getElementById('marchtime'+m).innerHTML = mt;
+			}	
 		}
 		if (Options.RefreshSeed) uW.jQuery('#btRefreshSeed').addClass("disabled");
 		else document.getElementById('btRefreshSeed').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
@@ -3047,7 +3061,7 @@ function ToggleCityDefence (Curr){
 		popDef = new CPopup('btDefence', Options.DefPos.x, Options.DefPos.y, DashWidth, 100, (!Options.DashboardMode), function () {Options.DefenceStartState = false; Options.CurrentCity = -1; if (!Options.DashboardMode) {Options.DefPos = popDef.getLocation();} else {document.body.appendChild(popDef.div); popDef.destroy();} saveOptions(); popDef = null});
 		
 		if (Options.DashboardMode) {
-			popDef.BASE_ZINDEX = 56;
+			popDef.BASE_ZINDEX = 100410; // keep above throne room blackout curtain
 			elem = document.getElementById('btDefence_outer');
 			elem.style.left = '0px';
 			elem.style.top = '0px';
@@ -3224,7 +3238,7 @@ function SetCurrentCity(cityId) {
 	m +='<tr><td colspan=2 class=xtabBR style="padding-right:0px;">';
 	for (var ui in uW.cm.UNIT_TYPES){
 		i = uW.cm.UNIT_TYPES[ui];
-		m += '<span class=xtab>'+TroopImage(i)+'<INPUT class="btInput" id="btPresetTroop'+i+'" type=text style="width:55px;" size=10 maxlength=9 value=""></span> ';
+		m += '<span class=xtab>'+TroopImage(i)+'<INPUT class="btInput" id="btPresetTroop'+i+'" type=text style="width:53px;" size=10 maxlength=9 value=""></span> ';
 	}
 	m +='</td></tr><tr><TD colspan=2 class=xtabHD align=right style="padding-right:0px;"><a id="btDelDefPreset" class="inlineButton btButton brown8 disabled" onclick="btDelDefPreset()"><span>Delete</span></a>&nbsp;<a id="btCancelDefPreset" class="inlineButton btButton brown8" onclick="btCancelDefPreset()"><span>Cancel</span></a></td></tr></table>';	
 	m +='</div></td></tr>';
@@ -3284,7 +3298,7 @@ function PaintCityInfo(cityId) {
 	else DefButton = '<a id=btCityStatus class="inlineButton btButton green20"><span style="width:150px"><center>Troops are Hiding!</center></span></a>';	
 	
 	Status += '<table cellSpacing=0 width="100%">';
-	Status += '<tr><td class=xtab width=70>Name</a></td><td class=xtab><b>'+Seed.cities[Curr][1]+'</b></td><td class=xtab rowspan=2 align=right><span class=divHide>'+DefButton+'</span></td></tr>';
+	Status += '<tr><td class=xtab width=70>Name</a></td><td class=xtab><b>'+Seed.cities[Curr][1]+'</b></td><td class=xtab rowspan=2 align=right><span class='+((Options.UpperDefendButton==false)?'divHide':'')+'>'+DefButton+'</span></td></tr>';
 	Status += '<tr><td class=xtab>Location</a></td><td class=xtab><b>'+uW.provincenames['p'+Seed.cities[Curr][4]]+'&nbsp;'+coordLink(Seed.cities[Curr][2],Seed.cities[Curr][3])+'</b></td></tr>';
 	Status += '<tr><td class=xtab>Faction</a></td><td class=xtab><b>'+CityFaction+'</b></td><td class=xtab><b>'+prestigeexp+'</b></td></tr>';
 	
@@ -3496,7 +3510,7 @@ function PaintCityInfo(cityId) {
 	if (DefState) DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton red20"><span style="width:75px"><center>Defending!</center></span></a>';
 	else DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton green20"><span style="width:75px"><center>Hiding!</center></span></a>';	
 	
-	TroopCell = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=2 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right>'+DefButton2+'</td></tr>';
+	TroopCell = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=2 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
 	Troops = '<tr><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td></tr>';
 	Troops += '<tr><td class="xtabBRTop">';
 	for(c=0; c<Infantry.length; c++){
@@ -3728,7 +3742,9 @@ function PaintCityInfo(cityId) {
 	CheckForHTMLChange('btAttackCell',CityTag+z);
 	for (var m in cityinctimes) {
 		mt = cityinctimes[m];
-		document.getElementById('citymarchtime'+m).innerHTML = mt;
+		if (document.getElementById('citymarchtime'+m)) {
+			document.getElementById('citymarchtime'+m).innerHTML = mt;
+		}	
 	}
 
 	// fortifications
@@ -4183,6 +4199,7 @@ function SelectDefPreset(sel) {
 	} else {
 		uW.jQuery('#btChgDefPreset').removeClass("disabled");
 	}
+	InitPresetNumber = sel.value;
 }
 
 function SetPresetDefenders(Replace) {
