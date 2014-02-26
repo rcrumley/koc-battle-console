@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140226a
+// @version        20140226b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140226a';
+var Version = '20140226b';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -6700,7 +6700,7 @@ Tabs.Options = {
       t.togOpt ('togKnightSelect', 'fixKnightSelect', AttackDialog.setEnable, AttackDialog.isKnightSelectAvailable);
       t.togOpt ('togAttackPicker', 'attackCityPicker', AttackDialog.setEnable, AttackDialog.isCityPickerAvailable);
       t.togOpt ('togRptGift', 'enhancedinbox', DispReport.setEnable, DispReport.isDispReportAvailable);
-      t.togOpt ('togCV', 'EnhCBtns');
+      t.togOpt ('togCV', 'EnhCBtns',t.e_WarnAscensionChanged);
       t.togOpt ('togDbClkDef', 'DbClkDefBtns');
       t.togOpt ('togColrCty', 'ColrCityBtns');
       t.togOpt ('togCoordBox', 'mapCoordsTop', CoordBox.setEnable, CoordBox.isAvailable);
@@ -6767,7 +6767,7 @@ Tabs.Options = {
 			saveOptions();
 		}, false);   
 
-		if (Options.WarnAscension) {
+		if (Options.EnhCBtns && Options.WarnAscension) {
 			Tabs.Options.checkAscension();
 			clearInterval(t.WarnAscensionTimer);
 			t.WarnAscensionTimer = setInterval (function(){Tabs.Options.checkAscension();}, 60*1000);
@@ -6920,7 +6920,7 @@ Tabs.Options = {
 
       clearInterval(t.WarnAscensionTimer);
 	  
-     if (Options.WarnAscension) {
+     if (Options.EnhCBtns && Options.WarnAscension) {
 		t.WarnAscensionTimer = setInterval (function(){Tabs.Options.checkAscension();}, 60*1000); // every min?
      }
  	Tabs.Options.checkAscension();
@@ -6932,7 +6932,7 @@ Tabs.Options = {
 		var cityidx = i+1;
 		var city = document.getElementById('citysel_'+cityidx);
 		if(!city) {	setTimeout(t.checkAscension,2000); return; }
-		if (!Options.WarnAscension) {
+		if (!Options.WarnAscension || !Options.EnhCBtns) {
 			uW.jQuery('#citysel_'+cityidx).removeClass('city_warning');
 		} 
 		else {
