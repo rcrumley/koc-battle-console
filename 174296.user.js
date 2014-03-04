@@ -20440,7 +20440,7 @@ Tabs.Attack = {
 	nTroopType: 17,
 	trooparray:{1:"ST",2:"MM",3:"Scout",4:"Pike",5:"Sword",6:"Arch",7:"LC",8:"HC",9:"SW",10:"Ball",11:"Ram",12:"Cat",13:"Blood",14:"Exec",15:"Siege",16:"Flame",17:"Huss",},
 	msgtimer : null,
-	MercItem : "i30722",
+	MercItem : "i3196",
 
 
 	/** window display **/
@@ -20483,7 +20483,7 @@ Tabs.Attack = {
 		m += '<TABLE class=ptTab><TR><TD>Target Co-ords:&nbsp;&nbsp;X:&nbsp;<INPUT id=pbcrestx type=text size=3 maxlength=3 value=""></td>';
 		m += '<TD>Y:&nbsp;<INPUT id=pbcresty type=text size=3 maxlength=3 value=""></td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will reduce wave 1 MM for subsequent attacks)</td></tr>';
-		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Winter target reached)</td><td align=right>Winter Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Winter target reached)</td><td align=right>Thane Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
    
 
 		var dude = unsafeWindow.unitnamedesctranslated;
