@@ -25468,4 +25468,284 @@ contentEval(addWatchFunctions);
 // add the new functions to this script
 addWatchFunctions();
 
+/**********************************************************************************/
+
+Tabs.farmreports = {
+    tabLabel: 'Scout reports',
+    tabOrder: 999999,
+    deleting: false,
+    tabDisabled: false,
+    pageNo: 0,
+    FROptions: {
+        r1: 0,
+        r2: 0,
+        r3: 0,
+        r4: 0,
+        On: false,
+        lost: false
+    },
+    rptstimer: null,
+    delrptstimer: null,
+    lrpts: null,
+    myDiv: null,
+    tocheck: new Array(),
+    todelete: new Array(),
+    init: function(div) {
+        var t = Tabs.farmreports;
+        t.readSROpts();
+        t.myDiv = div;
+        var m = '<DIV class=pbStat>DELETE SCOUT REPORTS</div><br><div align=center>';
+        if (t.FROptions.On) {
+            m += '<INPUT id=FSrpts type=submit value="Delete = ON">';
+        } else {
+            m += '<INPUT id=FSrpts type=submit value="Delete = OFF">';
+        }
+        m += '<br>&nbsp;</div><DIV class=pbStat>OPTIONS</div><br>';
+        m += '&nbsp;&nbsp;&nbsp;DON\'T Delete Scout Reports if...';
+        m += '<br><table><tr><td>&nbsp;&nbsp;</td><td align="right"> Food is more than :&nbsp;</td><td><INPUT id=frR1 type=text value=' + t.FROptions.r1 + '></td></tr>';
+        m += '<tr><td>&nbsp;&nbsp;<b>OR</b></td><td align="right">Wood is more than :&nbsp;</td><td><INPUT id=frR2 type=text value=' + t.FROptions.r2 + '></td></tr>';
+        m += '<tr><td>&nbsp;&nbsp;<b>OR</b></td><td align="right">Stone is more than :&nbsp;</td><td><INPUT id=frR3 type=text value=' + t.FROptions.r3 + '></td></tr>';
+        m += '<tr><td>&nbsp;&nbsp;<b>OR</b></td><td align="right">Ore is more than :&nbsp;</td><td><INPUT id=frR4 type=text value=' + t.FROptions.r4 + '></td></tr></table>';
+        m += '&nbsp;&nbsp; (NB - Set amount to zero to disable the check for that particular resource)';
+        m += '<br><br>&nbsp;&nbsp;<input id=overwhelmed type=checkbox ' + (t.FROptions.lost ? 'CHECKED' : '') + '> Delete Scout Reports where you were Overwhelmed in Battle';
+        m += '<br>&nbsp;&nbsp;';
+        t.myDiv.innerHTML = m;
+        document.getElementById('frR1').addEventListener('change', function() {
+            t.FROptions.r1 = this.value;
+            t.saveSROpts();
+        }, false);
+        document.getElementById('frR2').addEventListener('change', function() {
+            t.FROptions.r2 = this.value;
+            t.saveSROpts();
+        }, false);
+
+        document.getElementById('frR3').addEventListener('change', function() {
+            t.FROptions.r3 = this.value;
+            t.saveSROpts();
+        }, false);
+
+        document.getElementById('frR4').addEventListener('change', function() {
+            t.FROptions.r4 = this.value;
+            t.saveSROpts();
+        }, false);
+        document.getElementById('overwhelmed').addEventListener('click', function() {
+            t.FROptions.lost = this.checked;
+            t.saveSROpts();
+        }, false);
+        document.getElementById('FSrpts').addEventListener('click', function() {
+            t.e_toggleswitch(this)
+        }, false);
+        setTimeout(t.startdeletereports, 10);
+    },
+    e_toggleswitch: function(obj) {
+        var t = Tabs.farmreports;
+        if (t.FROptions.On) {
+            obj.value = "Delete = OFF";
+            t.deleting = false;
+            t.FROptions.On = false;
+            clearInterval(t.rptstimer);
+            // clearInterval(t.delrptstimer);
+            clearInterval(t.lrpts);
+        } else {
+            obj.value = "Delete = ON";
+            t.FROptions.On = true;
+            t.startdeletereports();
+        }
+        t.saveSROpts();
+    },
+    startdeletereports: function() {
+        var t = Tabs.farmreports;
+        if (!t.deleting && t.FROptions.On) {
+            t.deleting = true;
+            t.pageNo = 0;
+            t.listreport(t.checkreports);
+            t.lrpts = setInterval(function() {
+                t.listreport(t.checkreports)
+            }, 10 * 60000);
+            t.rptstimer = setInterval(t.fetchreports, 6000)
+        }
+    },
+
+    listreport: function(callback) {
+        var t = Tabs.farmreports;
+        var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+        if (t.pageNo > 1) params.pageNo = t.pageNo;
+        else t.tocheck = new Array();
+        new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/listReports.php" + unsafeWindow.g_ajaxsuffix, {
+            method: "post",
+            parameters: params,
+            onSuccess: function(rslt) {
+                callback(rslt);
+            },
+            onFailure: function() {
+                callback();
+            },
+        });
+    },
+
+    checkreports: function(rslt) {
+        var t = Tabs.farmreports;
+        if (!rslt.ok) {
+            t.pageNo = 0;
+            t.deleting = false;
+            return;
+        }
+        if (rslt.arReports.length < 1) {
+            t.pageNo = 0;
+            t.deleting = false;
+            return;
+        }
+        var reports = rslt.arReports;
+        var totalPages = rslt.totalPages;
+        if (rslt.totalPages > 30) var totalPages = 30;
+        for (k in reports) {
+            if (t.FROptions.On) {
+                if (reports[k].marchType == 3 && t.isMyself(reports[k].side1PlayerId)) {
+                    t.tocheck.push(k.substr(2));
+                };
+                if (reports[k].side0PlayerId == 0) {
+                    logit('side0player 0 detected');
+                };
+            }
+        };
+        if (t.pageNo < 30 && t.pageNo < totalPages) {
+            t.pageNo++;
+            setTimeout(function() {
+                t.listreport(t.checkreports)
+            }, 7000);
+        } else {
+            t.pageNo = 0;
+            t.deleting = false;
+        };
+    },
+
+    deleteCheckedReports: function() {
+        var t = Tabs.farmreports;
+        if (t.todelete.length > 0) {
+            var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+            params.s0rids = '';
+            params.s1rids = t.todelete.join(",");
+            params.cityrids = '';
+            new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/deleteCheckedReports.php" + unsafeWindow.g_ajaxsuffix, {
+                method: "post",
+                parameters: params,
+                onSuccess: function(rslt) {},
+            });
+        };
+    },
+    deleteCheckedReport: function(rpt) {
+        var t = Tabs.farmreports;
+        var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+        params.s0rids = '';
+        params.s1rids = rpt;
+        t.todelete = new Array();
+        params.cityrids = '';
+        new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/deleteCheckedReports.php" + unsafeWindow.g_ajaxsuffix, {
+            method: "post",
+            parameters: params,
+            onSuccess: function(rslt) {},
+        });
+    },
+    isMyself: function(userID) {
+        var t = Tabs.farmreports;
+        if (!Seed.players["u" + userID]) return false;
+        if (Seed.players["u" + userID].n == Seed.player.name) return true;
+        else return false;
+        return false;
+    },
+
+
+    fetchreports: function() {
+        var t = Tabs.farmreports;
+        if (t.tocheck.length > 0) {
+            rpId = t.tocheck.shift();
+            var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+            params.rid = rpId;
+            params.side = 1;
+            new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchReport.php" + unsafeWindow.g_ajaxsuffix, {
+                method: "post",
+                parameters: params,
+                onSuccess: function(rslt) {
+                    var x = {};
+                    if (rslt.overwhelmed == true && t.FROptions.lost == true) {
+                        logit('deleting ' + rpId);
+                        t.deleteCheckedReport(rpId);
+                        return;
+                    };
+                    if (rslt.rsc) {
+                        var rsc = rslt.rsc;
+                        var topush = true;
+                        if (Number(t.FROptions.r1) > 0) {
+                            if (Number(rsc.r1) > Number(t.FROptions.r1)) {
+                                logit("food is more than " + rpId);
+                                logit(Number(rsc.r1) + ' > ' + Number(t.FROptions.r1));
+                                topush = false;
+                            };
+                        };
+
+                        if (Number(t.FROptions.r2) > 0) {
+                            if (Number(rsc.r2) > Number(t.FROptions.r2)) {
+                                logit("wood is more than " + rpId);
+                                logit(Number(rsc.r2) + ' > ' + Number(t.FROptions.r2));
+                                topush = false;
+                            };
+                        };
+                        if (Number(t.FROptions.r3) > 0) {
+                            if (Number(rsc.r3) > Number(t.FROptions.r3)) {
+                                logit("stone is more than " + rpId);
+                                logit(Number(rsc.r3) + ' > ' + Number(t.FROptions.r3));
+                                topush = false;
+                            };
+                        };
+
+                        if (Number(t.FROptions.r4) > 0) {
+                            if (Number(rsc.r4) > Number(t.FROptions.r4)) {
+                                logit("ore is more than " + rpId);
+                                logit(Number(rsc.r4) + ' > ' + Number(t.FROptions.r4));
+                                topush = false;
+                            };
+                        };
+
+                        if (topush == true) {
+                            t.deleteCheckedReport(rpId);
+                            logit('deleting ' + rpId);
+                        } else logit(' found a good one ' + rpId);
+                    };
+                },
+                onFailure: function(rslt) {
+                },
+            }, false);
+        };
+    },
+
+    saveSROpts: function() {
+        var t = Tabs.farmreports;
+        var serverID = getServerId();
+        setTimeout(function() {
+            GM_setValue('SROpts_' + Seed.player['name'] + '_' + serverID, JSON2.stringify(t.FROptions));
+        }, 0);
+    },
+    readSROpts: function() {
+        var t = Tabs.farmreports;
+        var serverID = getServerId();
+        s = GM_getValue('SROpts_' + Seed.player['name'] + '_' + serverID);
+        if (s != null) {
+            opts = JSON2.parse(s);
+            for (k in opts) {
+                if (matTypeof(opts[k]) == 'object') for (kk in opts[k])
+                t.FROptions[k][kk] = opts[k][kk];
+                else t.FROptions[k] = opts[k];
+            }
+        }
+    },
+    show: function() {
+        var t = Tabs.farmreports;
+    },
+    hide: function() {
+        var t = Tabs.farmreports;
+    },
+};
+
+/**********************************************************************************/
+
 pbStartup ();
