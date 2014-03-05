@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
-// @version         20140114a
+// @version         20140305a
 // @namespace       kba
 // @homepage        https://userscripts.org/scripts/show/285996
 // @downloadURL     https://userscripts.org/scripts/source/285996.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Initial Release</p>
+// @releasenotes 	<p>Allow for 6 or more TR Card Rows</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -24,11 +24,11 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	January 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
+//	│	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version   = GM_info.script.version; 
-var NameSpace = GM_info.script.namespace; 
+var Version = '20140305a';
+var NameSpace = 'kba';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -1700,7 +1700,8 @@ function TRStats (notify) {
 					for (kk in rslt.items){
     		 			y = rslt.items[kk];
 	    	 			if (y != undefined) {
-		    	 			for (i=1;i<=5;i++) {
+							for (var O in y["effects"]) {
+								var i = +(O.split("slot")[1]);
 								id = y["effects"]["slot"+i]["id"];
 								tier = parseInt(y["effects"]["slot"+i]["tier"]);
 								level = y["level"];
