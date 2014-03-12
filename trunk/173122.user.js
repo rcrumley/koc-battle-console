@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140304a
+// @version        20140310a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140304a';
+var Version = '20140310a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -1853,7 +1853,25 @@ var Rpt = {
 			}	
 			return m.join('');
 		}
-					
+
+		function MonitorLinkUID (n,cl){
+			var m = [];
+			if (uW.btLoaded) {
+				if (cl)
+					m.push ('<a class="'+cl+'" onclick="btMonitorExternalCallUID (\'');
+				else	
+					m.push ('<a onclick="btMonitorExternalCallUID (\'');
+				m.push (n);
+				m.push ('\'); return false">');
+				m.push (n);
+				m.push ('</a>');  
+			}
+			else {			
+				m.push (n);
+			}	
+			return m.join('');
+		}
+		
         function buildHeader () {
             var h='<div id=reportHeader style="width:100%;">';
             h+='<div id=reportHeaderLeft style="float:left;width:30%;text-align:left;">';
@@ -1906,6 +1924,7 @@ var Rpt = {
             if (rslt['winner']==1)
                 m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
             m+='<br>';
+			if (rpt.side1PlayerId && (rpt.side1PlayerId != 0)) m+='UID:'+MonitorLinkUID(rpt.side1PlayerId)+'<br>';
             if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
                 m+='Knight Combat Skill: ' + rslt['s1KCombatLv'] + '<br>';
             if (rslt['fght']["s1"]) {
@@ -1929,6 +1948,7 @@ var Rpt = {
             if (rslt['winner']==0)
                 m+='<FONT color="#CC0000"><B> Winner</B></FONT>';
             m+='<br>';
+			if (rpt.side0PlayerId && (rpt.side0PlayerId != 0)) m+='UID:'+MonitorLinkUID(rpt.side0PlayerId)+'<br>';
             if (rpt.marchName == 'Attack' || rpt.marchName == 'Defend')
                 m+='Knight Combat Skill: ' + rslt['s0KCombatLv'] + '<br>';
             if (rslt['s0spell'] && (rslt['s0spell'] != "0")) {
@@ -9988,7 +10008,7 @@ Tabs.Attaque = {
 		 BOitems += "<img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/30/"+itemlist[i]+".jpg' /><input type=checkbox id='BOitem_"+itemlist[i]+"'><span id='BOitemSpan_"+itemlist[i]+"'>" + unsafeWindow.ksoItems[itemlist[i]].count + "</span>&nbsp;";
         }
         m += "</table></td></tr>\
-              <tr><td colspan=4>Knight : <SELECT id='RAApiKnight' type=list></select> <br>"+BOitems+"</td></tr></table>\
+              <tr><td colspan=4>Knight : <SELECT id='RAApiKnight' type=list></select>  Champion : <SELECT id='RAApiChampion' type=list></select> (use only for Attack) <br>" + BOitems + "</td></tr></table>\
               <DIV class=ptstat>Saved Unit Configuration :</div><TABLE><tr><td colspan=2><select id=BO_AT_Fav></select><input type=button value='Reset' id=BO_AT_Fav_Sup><input type=button value='Reset All' id=BO_AT_Fav_RESET></td><td colspan=2>New : <input type=type id=BO_AT_Fav_Nom size=10 maxlength=12>&nbsp;<input type=button value='Save Troops' id=BO_AT_Fav_ajou>\
               <tr><td colspan=4><div id=ptRAAStatus style='overflow-y:auto; max-height:50px; height: 50px;'></div></td></tr></table>\
               <DIV class=ptstat>Auto Attack - Work in Progress</div><table></tr><tr><td><input type=button id='BOActiveAttack' value='ACTIVER : OFF' ></td><td colspan=3><span id='BOCompAttack'></span></tr>\
@@ -10132,6 +10152,7 @@ Tabs.Attaque = {
           t.destinationCityx.value = Options.AttackCibleX;
           t.destinationCityy.value = Options.AttackCibleY;
           ById("RAApiKnight").value=Options.AttackKnight;
+		ById("RAApiChampion").value = Options.AttackChampion;
           nHtml.Click(ById("ptRAA0_"+Cities.byID[Options.AttackFromCity].idx)); 
                 for (var ui in uW.cm.UNIT_TYPES) ById("RAAnbunit" + uW.cm.UNIT_TYPES[ui]).value = Options.AttackUnits[parseInt(uW.cm.UNIT_TYPES[ui]) - 1];
         }, false);
@@ -10197,6 +10218,7 @@ Tabs.Attaque = {
 	t.destinationCityx.value = Options.AttackCibleX;
 	t.destinationCityy.value = Options.AttackCibleY;
 	ById("RAApiKnight").value=Options.AttackKnight;
+		ById("RAApiChampion").value = Options.AttackChampion;
 	nHtml.Click(ById("ptRAA0_"+Cities.byID[Options.AttackFromCity].idx));
                 for (var ui in uW.cm.UNIT_TYPES) ById("RAAnbunit" + uW.cm.UNIT_TYPES[ui]).value = Options.AttackUnits[parseInt(uW.cm.UNIT_TYPES[ui]) - 1];
       t.clickATTAQUEDo(4,0);
@@ -10238,6 +10260,7 @@ Tabs.Attaque = {
        Options.AttackUnits = atunits;
        Options.AttackFromCity = t.sourceCity.id;
        Options.AttackKnight = ById("RAApiKnight").value;
+	    Options.AttackChampion = ById("RAApiChampion").value;
        Options.AttackCibleX = t.destinationCityx.value;
        Options.AttackCibleY = t.destinationCityy.value;
        
@@ -10388,6 +10411,7 @@ Tabs.Attaque = {
 	 params.r3 = 0; 
 	 params.r4 = 0; 
 	 params.gold = 0;
+	params.champid = 0;
  
         for (var ui in uW.cm.UNIT_TYPES) {
             i = uW.cm.UNIT_TYPES[ui];
@@ -10402,6 +10426,15 @@ Tabs.Attaque = {
 	 params.u3 = ById("RAAnbunit3").value;
 	 ById("RAAnbunit3").value=0;
 	}
+
+	if (typemarche==4)
+	    if (ById('RAApiChampion').value != "") {
+		var championidx = "";
+		for (i=0; i<Seed.champion.champions.length; i++) {
+		   if (Seed.champion.champions[i].championId == ById('RAApiChampion').value) championidx = i;
+		}
+		params.champid = ById('RAApiChampion').value;
+	    }
 
          t.actionRAA.disabled=true;
          t.actionREN.disabled=true;
@@ -10459,6 +10492,7 @@ Tabs.Attaque = {
                         typeattaque="March successful";
                   }
                   t.statutRAA.innerHTML = "<center><font size='3px'><b>"+typeattaque+"</b></font></center>";
+		    if (params.champid) uW.cm.ChampionManager.setIsMarching(championidx,true);
                   t.clickRAACitySourceSelect(t.sourceCity);
                } else {
                   t.statutRAA.innerHTML ="<font color=red size='3px'><b>Error sending march!<b></font>";
@@ -10622,6 +10656,24 @@ Tabs.Attaque = {
 			ById('RAApiKnight').selectedIndex=1;
       } 
       
+	ById('RAApiChampion').options.length=0;
+	var o = document.createElement("option");
+	o.text = "--Select a Champion--";
+	o.value = 0;
+	ById("RAApiChampion").options.add(o);
+	var c = uW.cm.ChampionModalController.getCastleViewData();
+	var d = uW.cm.ChampionManager.getCityChampion(t.sourceCity.id);
+	if((c != null) && (d != null)) {
+	    champname = c.champions[d].name;
+	    champstatus = c.champions[d].status;
+	    if (champstatus=="Defending"){
+		var o = document.createElement("option");
+		o.text = champname;
+		o.value = c.champions[d].id;
+		ById("RAApiChampion").options.add(o);
+	    }
+	}
+ 
       var itemlist=[55,57,931,932];
       for(var i=0;i<itemlist.length;i++){
         ById('BOitemSpan_'+itemlist[i]).innerHTML = unsafeWindow.ksoItems[itemlist[i]].count;
@@ -13747,14 +13799,14 @@ function display_confirm(confirm_msg,ok_function,cancel_function){
 // The following code is released under public domain.
 
 var AutoUpdater_103659 = {
-    id: 103659,
+    id: 173122,
     days: 1,
     name: "KOC Power Tools",
     version: Version,
 	beta: GlobalOptions.ptupdatebeta,
-	betaUrl: 'https://koc-power-tools.googlecode.com/svn/trunk/koc_power_tools.user.js',
+	betaUrl: 'https://code.google.com/p/koc-battle-console/source/browse/trunk/173122.user.js',
     time: new Date().getTime(),
-    call: function(response, secure) { return;
+    call: function(response, secure) { 
         GM_xmlhttpRequest({
             method: 'GET',
 	     url: this.beta ? this.betaUrl : 'http'+(secure ? 's' : '')+'://userscripts.org/scripts/source/'+this.id+'.meta.js',

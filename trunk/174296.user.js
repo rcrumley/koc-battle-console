@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140306a
+// @version        20140310a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140306a';
+var Version = '20140310a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -9073,7 +9073,7 @@ Tabs.transport = {
         var queueId = parseInt(queueId);
         var cityname = Cities.byID[r[queueId].city].name;
         var citynameTo, TO;
-        if (typeof r[queueId].target_city != 'undefined' || parseInt(r[queueId].target_city) > 0) citynameTo = Cities.byID[r[queueId].target_city].name;
+        if (typeof r[queueId].target_city != 'undefined' && parseInt(r[queueId].target_city) > 0) citynameTo = Cities.byID[r[queueId].target_city].name;
         var Types = ['food', 'wood', 'stone', 'iron', 'aetherstone', 'gold'];
         if (citynameTo == null) TO = r[queueId].target_x + ',' + r[queueId].target_y;
         else TO = citynameTo;
@@ -20456,7 +20456,7 @@ Tabs.Attack = {
 	nTroopType: 17,
 	trooparray:{1:"ST",2:"MM",3:"Scout",4:"Pike",5:"Sword",6:"Arch",7:"LC",8:"HC",9:"SW",10:"Ball",11:"Ram",12:"Cat",13:"Blood",14:"Exec",15:"Siege",16:"Flame",17:"Huss",},
 	msgtimer : null,
-	MercItem : "i3196",
+	MercItem : "i31696",
 
 
 	/** window display **/
@@ -20499,7 +20499,7 @@ Tabs.Attack = {
 		m += '<TABLE class=ptTab><TR><TD>Target Co-ords:&nbsp;&nbsp;X:&nbsp;<INPUT id=pbcrestx type=text size=3 maxlength=3 value=""></td>';
 		m += '<TD>Y:&nbsp;<INPUT id=pbcresty type=text size=3 maxlength=3 value=""></td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will reduce wave 1 MM for subsequent attacks)</td></tr>';
-		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when Winter target reached)</td><td align=right>Thane Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when target amount reached)</td><td align=right>Thane Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
    
 
 		var dude = unsafeWindow.unitnamedesctranslated;
@@ -25210,15 +25210,21 @@ var OreAlert = {
 
 function GuardianTT () {
 	var z = new CalterUwFunc("showCityTooltip",[[/showTooltip/,'a += "<div>"+g_js_strings.guardian[seed.guardian[j].type+"_fullName"]+"</div>";showTooltip'],
-												['g_js_strings.showPopTooltip.currpop','provincenames[\'p\'+seed.cities[j][4]] + "</div><div>" + g_js_strings.showPopTooltip.currpop']]);
+												['g_js_strings.showPopTooltip.currpop','provincenames[\'p\'+seed.cities[j][4]] + "</div><div>" + pbcheckascension(seed.cities[j][0]) + g_js_strings.showPopTooltip.currpop']]);
+												
+	unsafeWindow.pbcheckascension = function (id) {
+		if (unsafeWindow.cm.PrestigeCityPlayerProtectionController.isActive(id)) {
+			return "<b>Ascension Protection: "+unsafeWindow.timestr(unsafeWindow.cm.PrestigeCityPlayerProtectionController.getTimeLeft(id),false)+"</b></div><div>";
+		} else return "";	
+	}
    z.setEnable(true); 
 };
 
 
 
-function AutoUpdater (prom) {return;
-	var userscripts = http+'userscripts.org/scripts/source/101052.user.js';
-	var googlecode = http+'koc-power-bot.googlecode.com/svn/trunk/KOCpowerBot.user.js';
+function AutoUpdater (prom) {
+	var userscripts = http+'userscripts.org/scripts/source/174296.user.js';
+	var googlecode = http+'code.google.com/p/koc-battle-console/source/browse/trunk/174296.user.js';
 	switch(GlobalOptions.pbupdatebeta)
 	{
 		case "0":
