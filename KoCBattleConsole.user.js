@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140219a
+// @version			20140312a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,18 +17,18 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Choice of Upper or Lower Defend Button</p><p>Incoming march time bugfix</p><p>Minor cosmetic changes to Options</p>
+// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defend on Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p>
 // ==/UserScript==
 
-//	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-//	│	This script can be found at http://userscripts.org/scripts/show/170798								│
-//	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
-//	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
-//	│																										│
-//	│	February 2014 Barbarossa69 (http://userscripts.org/users/272942)									│
-//	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
+//	+-------------------------------------------------------------------------------------------------------+
+//	¦	This script can be found at http://userscripts.org/scripts/show/170798								¦
+//	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
+//	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
+//	¦																										¦
+//	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
+//	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140219a'; 
+var Version = '20140312a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -44,6 +44,7 @@ var Options = {
 	WinSize        	  	: {},
 	MonPos        	  	: {},
 	IncPos        	  	: {},
+	OutPos        	  	: {},
 	DefPos        	  	: {},
 	LogPos        	  	: {},
 	OverrideAttackAlert : true,
@@ -53,6 +54,7 @@ var Options = {
 	BattleStartState    : false,
 	MonitorStartState   : false,
 	IncomingStartState  : false,
+	OutgoingStartState  : false,
 	DefenceStartState   : false,
 	IncAttack           : true,
 	IncScout            : true,
@@ -61,15 +63,23 @@ var Options = {
 	IncTransport        : false,
 	IncWilds            : false,
 	IncYours            : false,
+	OutAttack           : true,
+	OutScout            : true,
+	OutReinforce        : true,
+	OutReassign         : false,
+	OutTransport        : false,
+	OutYours            : false,
+	OutReturning        : false,
 	AutoUpdates         : true,
 	RefreshSeed         : false,
 	CurrentCity         : -1,
 	OverviewState       : true,
 	SacrificeState      : false,
 	ReinforceState      : false,
-	TroopState          : false,
+	ReinforceState      : false,
 	FortificationState  : false,
 	AttackState         : false,
+	CityAttackState     : false,
 	DefaultSacrifice    : true,
 	DefaultSacrificeMin : 1,
 	DefaultSacrificeSec : 0,
@@ -92,11 +102,16 @@ var Options = {
 	TroopShow           : true,
 	FortificationShow   : true,
 	AttackShow          : true,
+	CityAttackShow      : true,
 	DefAddTroopShow     : true,
 	DefPresetShow       : true,
 	DefPresets          : {},
 	UpperDefendButton   : false,
 	LowerDefendButton   : true,
+	EnableOutgoing      : false,
+	TRPresetByName      : true,
+	TRMonPresetByName   : false,
+	TRPresets           : {},
 };
 
 var JSON2 = JSON; 
@@ -105,6 +120,7 @@ var mainPop;
 var popMon;
 var popDef;
 var popInc;
+var popOut;
 var popLog;
 var Castles;
 var Champs;
@@ -132,9 +148,11 @@ var LastUser = "";
 var servermsg  = "server not responding";
 var serverwait = false;
 var Incoming = false;
+var Outgoing = false;
 var StillComing = false;
 var CurrentCityId = 0;
 var CityIncoming = false;
+var CityOutgoing = false;
 var CityStillComing = false;
 var SaveGemHTML;
 var SaveGemHTML2;
@@ -143,6 +161,7 @@ var GemContainer2;
 var oldchamp = 0;
 var DefOptionsString = "";
 var ForceTries = 0;
+var WinHeight = 220;
   
 var	SacSettings;
 var SacSpeed;
@@ -169,6 +188,7 @@ var OtherPVPEffects = [6,22,48,54,59,64];
 var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
 
 var guardTypes = ["wood", "ore", "food", "stone"];
+var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
  
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
@@ -181,7 +201,14 @@ var ScoutImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/
 var ReinforceImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/reinforce.jpg";
 var ReassignImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/raid_resting.png";
 var TransportImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/transporting.jpg";
+var ReturnImage = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/returning.jpg";
 var GauntletImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/221.jpg";
+var BloodLustImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/261.jpg";
+var BloodFrenzyImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/262.jpg";
+var BloodFuryImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/280.jpg";
+var BarkSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/271.jpg";
+var StoneSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/272.jpg";
+var IronSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/281.jpg";
 var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
 var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
 var ThroneImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/bonus_throne.png";
@@ -210,6 +237,8 @@ var Reins	= [];
 
 var inc     = [];
 var incCity = [];
+var out     = [];
+var outCity = [];
 
 var WallDefences  = [];
 var FieldDefences = [];
@@ -360,14 +389,16 @@ uW.btSendAllHome = function (cityId) {
 	setTimeout (function () { uW.jQuery('#btSendAllHome').removeClass("disabled"); serverwait = false; },(500*delayer)); // let screen updates run again
 }
 
-uW.btCreateChampionPopUp = function (elem,chkcityId) {
+uW.btCreateChampionPopUp = function (elem,chkcityId,outbound) {
 	effects = document.getElementById(elem.id+'effects');
 	// do a compare...
-	if (Options.ChampionCompare) {
+	if (Options.ChampionCompare || outbound) {
 		var oureffects = '<table cellspacing=0><tr><td class=xtab><b><center><br>No Champion<br>Assigned!</center></b></td></tr></table>';
 
 		try {
+			var T = uW.cm.ChampionManager.get("selectedChampion")
 			Champs = uW.cm.ChampionModalController.getCastleViewData();
+			uW.cm.ChampionManager.selectChampion(T);
 			for (y in Champs.champions) {
 				chkchamp = Champs.champions[y];
 				if (chkchamp.id) {
@@ -394,19 +425,24 @@ uW.btCreateChampionPopUp = function (elem,chkcityId) {
 			}
 		}		
 		catch (err) {
-			logit(err); // write to log
+			logerr(err); // write to log
 			oureffects = '<table cellspacing=0><tr><td class=xtab><b><center>Error reading champion data :(</center></b></td></tr></table>';
 		}
 	}	
 
 	td = document.getElementById(elem.id+'td');
 	unsafeWindow.jQuery('#'+td.id).children("span").remove();
-	if (Options.ChampionCompare) {
-		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+effects.value+'</td><td class=xtab>'+oureffects+'</td></tr></table></span>');
+	if (outbound) {
+		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+oureffects+'</td></tr></table></span>');
 	}
 	else {
-		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
-	}
+		if (Options.ChampionCompare) {
+			unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+effects.value+'</td><td class=xtab>'+oureffects+'</td></tr></table></span>');
+		}
+		else {
+			unsafeWindow.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
+		}
+	}	
 }
 
 uW.btSelectTroopType = function (sel) {SelectTroopType(sel);}
@@ -423,6 +459,7 @@ uW.btDeleteLog = function (entry) {DeleteLog(entry);}
 uW.btPostLog = function (entry) {PostLog(entry);}
 uW.btToggleKeep = function (entry) {ToggleKeep(entry);}
 uW.btUpdateLabel = function (elem,entry) {UpdateLabel(elem,entry);}
+uW.btUpdatePresetLabel = function (elem,entry) {UpdatePresetLabel(elem,entry);}
 uW.btStartKeyTimer = function (elem,notify,entry) {StartKeyTimer(elem,notify,entry);}
 uW.btFilterLog = function () {FilterLog();}
 uW.btClearNameFilter = function () {ClearNameFilter();}
@@ -447,6 +484,7 @@ uW.btSaveDefPreset = function () {SaveDefPreset();}
 uW.btCancelDefPreset = function () {CancelDefPreset();}
 uW.btSelectDefPreset = function (sel) {SelectDefPreset(sel);}
 uW.btSetPresetDefenders = function (rep) {SetPresetDefenders(rep);}
+uW.btRecall = function (marchId,cityview) {Recall(marchId,cityview);}
 
 // allow access from external tools
 
@@ -482,7 +520,7 @@ function btStartup (){
 	Seed = uW.seed;
 
 	Options.WinSize.x = 400;
-	Options.WinSize.y = 200;
+	Options.WinSize.y = WinHeight;
 	DefaultWindowPos('WinPos','main_engagement_tabs');
 
 	if (Options.Transparent) { Opacity = 0.9; } else { Opacity = 1.0; }
@@ -543,12 +581,17 @@ function btStartup (){
 	m += '<div style="height:36px;" align="center"><div id=btAttackAlert style="display:none;background-color:red;height:30px;" align="left">&nbsp;</div></div>';
 	m += '<div align="center">&nbsp;&nbsp;Enemy:&nbsp;<INPUT id=btPlayer size=20 type=text value="'+Options.LastMonitored+'"/>&nbsp;<a id=btPlayerSubmit class="inlineButton btButton blue20"><span>Monitor</span></a>&nbsp;<a id=btUIDSubmit class="inlineButton btButton blue20"><span>UID</span></a>&nbsp;<a id=btLogSubmit class="inlineButton btButton blue20"><span>Log</span></a></div>';
 	m += '<div class="ErrText" align="center" id=btplayErr>&nbsp;</div>';
-	m += '<div align="center"><TABLE><TR><TD class=xtab><a id=btSleepButton class="inlineButton btButton blue20"><span style="width:50px"><center>Sleep</center></span></a></td><TD class=xtab><a id=btCityDefenceButton class="inlineButton btButton blue20"><span style="width:130px"><center>Battle Dashboard</center></span></a></td><TD class=xtab><a id=btIncomingButton class="inlineButton btButton blue20"><span style="width:130px"><center>Incoming Marches</center></span></a></td></tr></table></div>';
+	m += '<div align="center"><TABLE><TR><TD class=xtab><a id=btSleepButton class="inlineButton btButton blue20"><span style="width:50px"><center>Sleep</center></span></a></td><TD class=xtab><a id=btCityDefenceButton class="inlineButton btButton blue20"><span style="width:80px"><center>Dashboard</center></span></a></td><TD class=xtab><a id=btIncomingButton class="inlineButton btButton blue20"><span style="width:80px"><center>Incoming</center></span></a></td>';
+	if (Options.EnableOutgoing) {
+		m += '<TD class=xtab><a id=btOutgoingButton class="inlineButton btButton blue20"><span style="width:80px"><center>Outgoing</center></span></a></td>';
+	}	
+	m += '</tr></table></div>';
 	m += '<div class="divHeader" align="right"><a id=btOptionLink class=divLink >OPTIONS&nbsp;<img id=btOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CompareChampChk type=checkbox /></td><td class=xtab>Compare champions in march tooltips windows</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=EnableOutgoingChk type=checkbox /></td><td class=xtab>Enable outgoing march monitoring functionality&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
@@ -560,14 +603,19 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
+	m += '<TR id=btMonPresetByNameOpts class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRMonPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>Select presets by name</td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="3" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td colspan="3" class=xtab>Battle button next to overview button&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=FortificationChk type=checkbox /></td><td class=xtab>Fortifications Section</td><td class=xtab><INPUT id=ReinforcementChk type=checkbox /></td><td class=xtab>Reinforcements Section</td></tr>';
+	if (Options.EnableOutgoing) {
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CityAttackChk type=checkbox /></td><td class=xtab>Outgoing Attacks</td><td class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td></tr>';
+	}
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Upper Defend Button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Lower Defend Button</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td colspan="3" class=xtab>Show throne room preset changer</td></tr>';
+	m += '<TR id=btPresetByNameOpts class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>Select presets by name</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td colspan="2" class=xtab>Default sacrifice duration</td>';
 	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
 	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec</span></td></tr>';
@@ -575,6 +623,19 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
 	m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
+	m += '</table></div>';
+	m += '<div class="divHeader" align="right"><a id=btTRPresetOptionLink class=divLink >THRONE ROOM PRESETS&nbsp;<img id=btTRPresetOptionArrow height="10" src="'+RightArrow+'"></a></div>';
+	m += '<div id=btTRPresetOption class=divHide><TABLE width="100%">';
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><table cellSpacing=0 width=98%>';
+
+    for (i=1;i<=Seed.throne.slotNum;i++) {
+		m += '<tr>';
+		m+='<TD style="width:20px" id="trpresetopt'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		m += '<TD class=xtab><INPUT class="btInput" id="btpresetLabel'+i+'" style="width:120px;" maxlength=12 type=text value="'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'" onkeyup="btStartKeyTimer(this,btUpdatePresetLabel,'+i+')" onchange="btUpdatePresetLabel(this,'+i+')" /></td>';
+		m += '</tr>';
+	}
+
+	m += '</table></td></tr>';
 	m += '</table></div>';
 	m += '<div align="center" style="font-size:10px;opacity:0.3;">Version '+Version+'</div></div>';
   
@@ -591,32 +652,45 @@ function btStartup (){
 	document.getElementById('btPlayer').addEventListener ('focus', function (){setError('&nbsp;');}, false);
 	document.getElementById('btCityDefenceButton').addEventListener ('click', function () {ToggleCityDefence(Options.CurrentCity);}, false);
 	document.getElementById('btIncomingButton').addEventListener ('click', ToggleIncomingMarches, false);
+	if (Options.EnableOutgoing) {
+		document.getElementById('btOutgoingButton').addEventListener ('click', ToggleOutgoingMarches, false);
+	}	
 	document.getElementById('btSleepButton').addEventListener ('click', function () {ToggleSleep(true)}, false);
 
-	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btOption")}, false);
-	document.getElementById('btMonOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btMonOption")}, false);
-	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",200,400,"btCityOption")}, false);
+	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btOption")}, false);
+	document.getElementById('btMonOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btMonOption")}, false);
+	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btCityOption")}, false);
+	document.getElementById('btTRPresetOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btTRPresetOption")}, false);
 
 	document.getElementById('btPlayerSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit',popMon);}, true);  
 	document.getElementById('btCityDefenceButton').addEventListener('mousedown',function(me) {if (!Options.DashboardMode) {ResetWindowPos (me,'btCityDefenceButton',popDef);}}, true);  
-	document.getElementById('btIncomingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btIncomingButton',popInc);}, true);  //
-	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  //
+	document.getElementById('btIncomingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btIncomingButton',popInc);}, true);  
+	if (Options.EnableOutgoing) {
+		document.getElementById('btOutgoingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btOutgoingButton',popOut);}, true);  
+	}	
+	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  
   
 	ToggleOption ('TransparencyChk', 'Transparent');
 	ToggleOption ('AlertOverrideChk', 'OverrideAttackAlert');
 	ToggleOption ('SoundChk', 'MonitorSound', SoundToggle);
 	ToggleOption ('MonitorColoursChk', 'MonitorColours');
 	ToggleOption ('PVPOnlyChk', 'PVPOnly');
-	ToggleOption ('MonPresetChk', 'MonPresetChange', PaintTRPresets);
+	ToggleOption ('MonPresetChk', 'MonPresetChange', MonPresetToggle);
+	MonPresetToggle ();
 	ToggleOption ('CompareChampChk', 'ChampionCompare');
+	ToggleOption ('EnableOutgoingChk', 'EnableOutgoing');
 	ToggleOption ('AutoUpdateChk', 'AutoUpdates');
 	SoundToggle ();
 
-	ToggleOption ('PresetChk', 'PresetChange', PaintTRPresets);
+	ToggleOption ('PresetChk', 'PresetChange', PresetToggle);
+	PresetToggle ();
 	ToggleOption ('DashboardChk', 'DashboardMode', DashboardToggle);
 	DashboardToggle ();
 	ToggleOption ('FortificationChk', 'FortificationShow');
 	ToggleOption ('ReinforcementChk', 'ReinforceShow');
+	if (Options.EnableOutgoing) {
+		ToggleOption ('CityAttackChk', 'CityAttackShow');
+	}	
 	ToggleOption ('UpperDefChk', 'UpperDefendButton');
 	ToggleOption ('LowerDefChk', 'LowerDefendButton');
 	ToggleOption ('DefAddTroopChk', 'DefAddTroopShow', DefToggle);
@@ -626,6 +700,9 @@ function btStartup (){
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
 
+	ToggleOption ('TRPresetByNameChk', 'TRPresetByName');
+	ToggleOption ('TRMonPresetByNameChk', 'TRMonPresetByName');
+	
     document.getElementById('btSacrificeLimit').addEventListener('keyup', function () {
 		if (isNaN(document.getElementById('btSacrificeLimit').value)) { document.getElementById('btSacrificeLimit').value = 0; }
 		Options.SacrificeLimit = document.getElementById('btSacrificeLimit').value;
@@ -641,6 +718,10 @@ function btStartup (){
 	VolSlider.setValue (Options.Volume/100);
 	VolSlider.setChangeListener(VolumeChanged);
 	VolumeChanged (Options.Volume/100);
+
+	for (i=1;i<=Seed.throne.slotNum;i++) {
+		BuildTRPresetStats(i);
+	}	
 	
 	AddMainTabLink('BATTLE', eventHideShow, mouseMainTab);
  
@@ -651,6 +732,9 @@ function btStartup (){
 	DefaultWindowPos('MonPos','btPlayerSubmit');
 	DefaultWindowPos('DefPos','btCityDefenceButton');
 	DefaultWindowPos('IncPos','btIncomingButton');
+	if (Options.EnableOutgoing) {
+		DefaultWindowPos('OutPos','btOutgoingButton');
+	}	
 	DefaultWindowPos('LogPos','btLogSubmit');
   
 	var str = uW.cm.FETemplates.Throne.mainThrone.replace(
@@ -711,6 +795,9 @@ function btStartup (){
 	// show things that were showing before refresh
 
 	if (Options.IncomingStartState) {ToggleIncomingMarches();}
+	if (Options.EnableOutgoing) {
+		if (Options.OutgoingStartState) {ToggleOutgoingMarches();}
+	}	
 	if (Options.DefenceStartState || (Options.DashboardMode && !Options.SleepMode)) {ToggleCityDefence(Options.CurrentCity);}
 	if (Options.MonitorStartState && (Options.LastMonitored != "")) {MonitorTRClick();}
 	
@@ -721,6 +808,16 @@ function btStartup (){
 	// All done!
 	
 	uW.btLoaded = true;
+}
+
+function UpdatePresetLabel(elem,entry) {
+	if (KeyTimer) { clearTimeout(KeyTimer); }
+	if (!Options.TRPresets[entry]) { Options.TRPresets[entry] = {};}
+	if (elem.value == "") { elem.value = 'Preset '+entry; }
+	
+	Options.TRPresets[entry].name = elem.value;
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+	PaintTRPresets(); 
 }
 
 function VolumeChanged (val) {
@@ -822,7 +919,8 @@ function RefreshSeed() {
 	
     if (!Options.RefreshSeed) {
 		uW.jQuery('#btRefreshSeed').addClass("disabled");
-		uW.jQuery('#btRefreshSeed2').addClass("disabled");
+		uW.jQuery('#btRefreshSeedInc').addClass("disabled");
+		uW.jQuery('#btRefreshSeedOut').addClass("disabled");
 	}	
 	
 	var ts = (new Date().getTime() / 1000) + uW.g_timeoff;
@@ -847,6 +945,7 @@ function RefreshSeed() {
 // 				only copy what we need to copy
 	    		unsafeWindow.seed.ss = seed.ss;
 	    		unsafeWindow.seed.queue_atkinc = seed.queue_atkinc;
+	    		unsafeWindow.seed.queue_atkp = seed.queue_atkp;
 	    		unsafeWindow.seed.players = seed.players;
 				unsafeWindow.seed.queue_sacr = seed.queue_sacr; 
 				unsafeWindow.seed.units = seed.units; 
@@ -861,7 +960,8 @@ function RefreshSeed() {
 			RefreshingSeed = false;
 			if (!Options.RefreshSeed) {
 				uW.jQuery('#btRefreshSeed').removeClass("disabled");
-				uW.jQuery('#btRefreshSeed2').removeClass("disabled");
+				uW.jQuery('#btRefreshSeedInc').removeClass("disabled");
+				uW.jQuery('#btRefreshSeedOut').removeClass("disabled");
 			}	
 	    },
 	    onFailure: function () {
@@ -873,11 +973,26 @@ function RefreshSeed() {
 			RefreshingSeed = false;
 			if (!Options.RefreshSeed) {
 				uW.jQuery('#btRefreshSeed').removeClass("disabled");
-				uW.jQuery('#btRefreshSeed2').removeClass("disabled");
+				uW.jQuery('#btRefreshSeedInc').removeClass("disabled");
+				uW.jQuery('#btRefreshSeedOut').removeClass("disabled");
 			}	
 	    },
 	});
 }
+
+/*var kabam_usa = unsafeWindow.update_seed_ajax;
+var battle_usa = function (marchForceUpdateFlag, updateSeedDoneCallback, isCancelTraining) {
+	// kabam introduced their own "force" flag, which messes up my refresh logic...
+	// so if they are determined to force this one through, then do it my way.
+	if ((uW.g_update_seed_ajax_force || isCancelTraining) && uW.g_update_seed_ajax_do) {
+		uW.g_update_seed_ajax_force = false;
+		ForceUpdateSeed();
+	}
+	else {
+		kabam_usa(true, updateSeedDoneCallback, isCancelTraining); // always force marches
+	}	
+}
+unsafeWindow.update_seed_ajax = battle_usa; */
 
 function ForceUpdateSeed() {
 	if (uW.g_update_seed_ajax_do && (ForceTries < 10)) { // refresh seed is occurring? But we need to make sure this runs, so delay for 1 second  and try up to 10 times ...
@@ -927,6 +1042,35 @@ function EverySecond () {
 		CheckForIncoming();
 		BuildIncomingDisplay();
 
+		/* create and sort local copies of atkp here - use this for all atkp functions */
+
+		if (Options.EnableOutgoing) {
+			out = [];
+			outCity = [];
+
+			for(n in Seed.queue_atkp) {
+				for(m in Seed.queue_atkp[n]) {
+					if ((parseInt(Seed.queue_atkp[n][m].marchType)) && (parseInt(Seed.queue_atkp[n][m].marchType) != 9)) { // raids can fuck right off!
+						var marchobj = Seed.queue_atkp[n][m];
+						marchobj.marchCityId = n.split("city")[1]; // from city... what a potch!
+						if (!marchobj.marchId) {
+							marchobj.marchId = m.split("m")[1]; // march id... another potch!
+							marchobj.btIncomplete = true; 
+						}	
+						out.push(marchobj);
+						if (marchobj.marchCityId == CurrentCityId) {
+							outCity.push(marchobj);
+						}
+					}	
+				}
+				
+			}
+			out.sort(function(a, b){ return /*a.destinationUnixTime-b.destinationUnixTime*/ });
+			outCity.sort(function(a, b){ return a.destinationUnixTime-b.destinationUnixTime });
+
+			BuildOutgoingDisplay();
+		}	
+		
 		if (!(Options.CurrentCity < 0))
 			PaintCityInfo(Seed.cities[Options.CurrentCity][0]);
 		
@@ -951,7 +1095,7 @@ function EverySecond () {
 		SecondTimer = setTimeout(EverySecond,1000);
 	}
 	catch (err) {
-		logit(err); // write to log
+		logerr(err); // write to log
 		SecondTimer = setTimeout(EverySecond,1000);
 	}
 }
@@ -1144,21 +1288,37 @@ function SoundToggle () {
 	var dc = uW.jQuery('#btSoundOpts').attr('class');
 	if (Options.MonitorSound) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSoundOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSoundOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',200,400);
+	ResetFrameSize('btMain',WinHeight,400);
 }
 
 function SacToggle () {
 	var dc = uW.jQuery('#btSacOpts').attr('class');
 	if (Options.DefaultSacrifice) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSacOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSacOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',200,400);
+	ResetFrameSize('btMain',WinHeight,400);
 }
 
 function DefToggle () {
 	var dc = uW.jQuery('#btDefOpts').attr('class');
 	if (Options.DefAddTroopShow) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btDefOpts').attr('class','');}
 	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btDefOpts').attr('class','divHide');}
-	ResetFrameSize('btMain',200,400);
+	ResetFrameSize('btMain',WinHeight,400);
+}
+
+function PresetToggle () {
+	var dc = uW.jQuery('#btPresetByNameOpts').attr('class');
+	if (Options.PresetChange) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btPresetByNameOpts').attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btPresetByNameOpts').attr('class','divHide');}
+	ResetFrameSize('btMain',WinHeight,400);
+	PaintTRPresets();
+}
+
+function MonPresetToggle () {
+	var dc = uW.jQuery('#btMonPresetByNameOpts').attr('class');
+	if (Options.MonPresetChange) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btMonPresetByNameOpts').attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btMonPresetByNameOpts').attr('class','divHide');}
+	ResetFrameSize('btMain',WinHeight,400);
+	PaintTRPresets();
 }
 
 function getStyle(x,styleProp) {
@@ -1344,6 +1504,7 @@ function ToggleSleep (sleep) {
 		if (popMon) { popMon.show(false);if (popMon.onClose) popMon.onClose();}
 		if (popDef) { popDef.show(false);if (popDef.onClose) popDef.onClose();}
 		if (popInc) { popInc.show(false);if (popInc.onClose) popInc.onClose();}
+		if (popOut) { popOut.show(false);if (popOut.onClose) popOut.onClose();}
 		if (popLog) { popLog.show(false);if (popLog.onClose) popLog.onClose();}
 		a.innerHTML='<span style="color: #ccc">BATTLE</span>';
 		a.title='Battle Console is sleeping ... Click to wake up!';
@@ -1876,6 +2037,8 @@ function ResetAllWindows () {
 	ResetWindowPos({button:2},'btLogSubmit',popLog);
 	DefaultWindowPos('IncPos','btIncomingButton',true);
 	ResetWindowPos({button:2},'btIncomingButton',popInc);
+	DefaultWindowPos('OutPos','btOutgoingButton',true);
+	ResetWindowPos({button:2},'btOutgoingButton',popOut);
 	DefaultWindowPos('DefPos','btCityDefenceButton',true);
 	if (!Options.DashboardMode) ResetWindowPos({button:2},'btCityDefenceButton',popDef);
 	DefaultWindowPos('MonPos','btPlayerSubmit',true);
@@ -2000,7 +2163,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
          }
       }
    } catch (err) {
-      logit("CalterFuncModifier "+ this.funcName+" "+err);
+      logerr("CalterFuncModifier "+ this.funcName+" "+err);
    }
 
    // test if this modifier works on the original function.
@@ -2059,7 +2222,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
             f1[x1[x1.length-1]] = this.funcOld;
          }
       } catch (err) {
-         logit("CalterFuncModifier "+ this.funcName+" "+err);
+         logerr("CalterFuncModifier "+ this.funcName+" "+err);
       }
    }
 
@@ -2267,6 +2430,7 @@ function onUnload (){
 	Options.WinSize = mainPop.getDimensions();
 	if (popMon) { Options.MonPos = popMon.getLocation(); }
 	if (popInc) { Options.IncPos = popInc.getLocation(); }
+	if (popOut) { Options.OutPos = popOut.getLocation(); }
 	if (popDef && !Options.DashboardMode) { Options.DefPos = popDef.getLocation(); }
 	if (popLog) { Options.LogPos = popLog.getLocation(); }
 	saveOptions();
@@ -2441,6 +2605,12 @@ function setCities(){
 		Cities.cities[i] = city;
 		Cities.byID[Seed.cities[i][0]] = city;
 	}
+}
+
+function logerr(e) {
+	logit(e);
+	try { logit(e.stack); }
+	catch (e) {logit('trace unavailable'); }
 }
 
 function logit (msg){
@@ -2821,7 +2991,7 @@ function BuildIncomingDisplay() {
 	var bclass = "brown11";
     if (RefreshingSeed || Options.RefreshSeed) bclass += " disabled";
   
-	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>Target</b></td><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td class="xtabHD" align="right"><a id=btRefreshSeed class="inlineButton btButton '+bclass+'"><span>Refresh</span></a></td></tr>';
+	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>Target</b></td><td width="120" class="xtabHD"><b>From</b></td><td class="xtabHD"><b>Troops</b></td><td class="xtabHD" align="right"><a id=btRefreshSeedInc class="inlineButton btButton '+bclass+'"><span>Refresh</span></a></td></tr>';
       
 	for(n in inc) {
 		var a = inc[n];
@@ -2846,8 +3016,8 @@ function BuildIncomingDisplay() {
 			if (!a.marchType) {a.marchType = 4;}
 			if (!a.arrivalTime || a.arrivalTime == -1) {marchtime = '??????';}
 			else {marchtime=uW.timestr(a.arrivalTime - unixTime());} 
-			if (Seed.players['u'+a.pid]) {fromname = Seed.players['u'+a.pid].n;}
-			else if (a.players && a.players['u'+a.pid]) {fromname = a.players['u'+a.pid].n;}
+			if (a.players && a.players['u'+a.pid]) {fromname = a.players['u'+a.pid].n;}
+			else if (Seed.players['u'+a.pid]) {fromname = Seed.players['u'+a.pid].n;}
 			// build an array of cities under attack
 			if (incCity.indexOf(to.idx) < 0) incCity.push(to.idx);
 		}
@@ -3000,18 +3170,422 @@ function BuildIncomingDisplay() {
 	z += '</table></div><br>';
 
 	if (popInc) {
-		CheckForHTMLChange('btIncomingMain',z);
+		if (CheckForHTMLChange('btIncomingMain',z)) {
+			if (Options.RefreshSeed) uW.jQuery('#btRefreshSeedInc').addClass("disabled");
+			else document.getElementById('btRefreshSeedInc').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
+			ResetFrameSize('btIncoming',200,720);
+		}	
 		for (var m in inctimes) {
 			mt = inctimes[m];
 			if (document.getElementById('marchtime'+m)) {
 				document.getElementById('marchtime'+m).innerHTML = mt;
 			}	
 		}
-		if (Options.RefreshSeed) uW.jQuery('#btRefreshSeed').addClass("disabled");
-		else document.getElementById('btRefreshSeed').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
-		ResetFrameSize('btIncoming',200,720);
 	}
 
+}
+
+/*********************** OUTGOING MARCHES **********************/
+
+function ToggleOutgoingMarches (){
+
+	if (popOut) {
+      Options.OutgoingStartState = popOut.toggleHide(popOut)
+	}
+	else
+	{
+		m = '<div id="btOutgoing_content"><div id=btOutgoingButtons align="center"><TABLE width="100%"><tr>';
+		m += '<td align="right" class=xtab>Attack</td><TD class=xtab><INPUT id=OutAttackChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Scout</td><TD class=xtab><INPUT id=OutScoutChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Reinforce</td><TD class=xtab><INPUT id=OutReinforceChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Reassign</td><TD class=xtab><INPUT id=OutReassignChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Transport</td><TD class=xtab><INPUT id=OutTransportChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Returning</td><TD class=xtab><INPUT id=OutReturningChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>To You</td><TD class=xtab><INPUT id=OutYoursChk type=checkbox /></td>';
+		m += '</tr></table></div><div id=btOutgoingMain></div></div>';
+
+		popOut = new CPopup('btOutgoing', Options.OutPos.x, Options.OutPos.y, 720, 200, true, function (){Options.OutgoingStartState = false;Options.OutPos = popOut.getLocation();saveOptions();popOut=null;});
+		popOut.getMainDiv().innerHTML = m;
+		popOut.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Outgoing Marches</B></DIV>';
+
+		ToggleOption('OutAttackChk','OutAttack');
+		ToggleOption('OutScoutChk','OutScout');
+		ToggleOption('OutReinforceChk','OutReinforce');
+		ToggleOption('OutReassignChk','OutReassign');
+		ToggleOption('OutTransportChk','OutTransport');
+		ToggleOption('OutReturningChk','OutReturning');
+		ToggleOption('OutYoursChk','OutYours');
+
+		popOut.show(true);
+		Options.OutgoingStartState = true;
+	}
+	saveOptions ();
+}
+
+function BuildOutgoingDisplay() {
+
+	var z = '';
+	var r = 0;
+	var outgoingshow = false;
+	var outgoingfiltered = false;
+	var outtimes = {};
+
+	var bclass = "brown11";
+    if (RefreshingSeed || Options.RefreshSeed) bclass += " disabled";
+  
+	var z = '<div align="center"><TABLE cellSpacing=0 width=98% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>From</b></td><td width="120" class="xtabHD"><b>Target</b></td><td class="xtabHD"><b>Troops</b></td><td class="xtabHD" align="right"><a id=btRefreshSeedOut class="inlineButton btButton '+bclass+'"><span>Refresh</span></a></td></tr>';
+
+	var UpdateRequired = false;
+	
+	for(n in out) {
+		var a = out[n];//logit(JSON2.stringify(a));
+
+		/* marchType 1 : Transport */
+		/* marchType 2 : Reinforce */
+		/* marchType 3 : Scout */
+		/* marchType 4 : Attack */
+		/* marchType 5 : Reassign */
+
+		/* marchStatus 1 : Marching */
+		/* marchStatus 2 : Encamped */
+		/* marchStatus 8 : Returning */
+		/* marchStatus 5 : ??? Client-generated? Pain in the ass! */
+		
+		var icon, hint, marchtime, fromcity, totile, tocity, toname, marchdir, tocoords;
+
+		var marchId = a.marchId;
+		var marchStatus = parseInt(a.marchStatus);
+		var marchType = parseInt(a.marchType);
+		if (marchType == 10) marchType=4; // Change Dark Forest type to Attack!
+				
+		var from = Cities.byID[a.marchCityId];
+		fromcity = CityLink(from);
+
+		var now = unixTime();
+		var destinationUnixTime = a["destinationUnixTime"] - now;
+		var returnUnixTime = a["returnUnixTime"] - now;
+		
+		if ((returnUnixTime <= 0) && ((marchStatus == 8) || (marchStatus == 0))) continue; // never show returned march once completed
+
+		if ((destinationUnixTime < 0) || (marchStatus == 8) || (marchStatus == 2))
+			marchdir = "Return";
+		else
+			marchdir = "Count";	
+		
+		totile = "";
+		tocity = "";
+		toname = "";
+		for (var i=0; i<Seed.cities.length;i++) {
+			if (Seed.cities[i][2] == parseInt(a["toXCoord"]) && Seed.cities[i][3] == parseInt(a["toYCoord"])) {tocity = CityLink(Cities.byID[Seed.cities[i][0]]);break; }
+		}
+		if (tocity == "") {
+			totile = tileTypes[parseInt(a["toTileType"])];
+			if (a["toTileType"] == 51) {
+				if (!a["toPlayerId"]) { totile = ""; }
+				else { if (a["toPlayerId"] == 0) totile = 'Barb Camp'; }
+			}	
+			totile = 'Lvl '+a["toTileLevel"]+' '+totile;
+		}
+
+		if (a["toPlayerId"] && (a["toPlayerId"] != 0)) {
+			if (a["toPlayerId"] == uW.tvuid) {
+				if (tocity == 0) {toname = 'Yourself'}
+			}	
+			else {
+				if (a.players && a.players['u'+a.toPlayerId]) {
+					toname = MonitorLink(a.players['u'+a.toPlayerId].n);
+				}
+				else {
+					if (Seed.players['u'+a.toPlayerId]) {
+						toname = MonitorLink(Seed.players['u'+a.toPlayerId].n);
+					}
+				}
+				if (toname == "") { updatePlayers (a.toPlayerId); } // let's fix it!
+			}
+		}
+
+		var iconType = marchType;
+		
+		if (destinationUnixTime >= 0) {
+			if (destinationUnixTime < (60)) { marchtime = '<span style="color:#f00">'+uW.timestr(destinationUnixTime)+'</span>'; }
+			else { marchtime = uW.timestr(destinationUnixTime); }	
+		}	
+		else {
+			if (marchStatus == 2) {
+				marchtime = 'Encamped';
+				iconType = 102;
+			}
+			else {
+				if (marchStatus == 8) {
+					marchtime = uW.timestr(returnUnixTime);
+					iconType = 8;
+				}
+				else {
+					a.btIncomplete = true; // force a march refresh
+					marchtime = "Waiting";
+					iconType = 102;
+				}	
+			}
+		}
+
+		outtimes[marchId] = marchtime;
+
+		if (!a.toXCoord || (tocity != "")) {tocoords = "";}
+        else {tocoords = coordLink(a.toXCoord,a.toYCoord);}
+
+		hint = "";
+		switch (marchType) {
+			case 1: hint=uW.g_js_strings.commonstr.transport;break;
+			case 2: hint=uW.g_js_strings.commonstr.reinforce;break;
+			case 3: hint=uW.g_js_strings.commonstr.scout;break;
+			case 4: hint=uW.g_js_strings.commonstr.attack;break;
+			case 5: hint=uW.g_js_strings.commonstr.reassign;break;
+		} 
+		
+		switch (iconType) {
+			case 1: icon=TransportImage;break;
+			case 2: icon=ReinforceImage;break;
+			case 3: icon=ScoutImage;break;
+			case 4: icon=AttackImage;break;
+			case 5: icon=ReassignImage;break;
+			case 8: icon=ReturnImage;break;
+			case 102: icon=ReinforceImage;break;
+		} 
+		hint="("+marchId+")";
+		
+		outgoingfiltered = true;	
+		if (a.btIncomplete && a.btIncomplete == true && (!a.btRequestSent || a.btRequestSent == false)) UpdateMarch(a.marchCityId,marchId); // do this here in case in city view
+		
+		/* Apply Filters */
+
+		if ((marchType == 1) && !Options.OutTransport) continue;
+		if ((marchType == 2) && !Options.OutReinforce) continue;
+		if ((marchType == 5) && !Options.OutReassign) continue;
+		
+		if ((marchType == 3) && !Options.OutScout) continue;
+		if ((marchType == 4) && !Options.OutAttack) continue;
+		
+		if (((marchdir == "Return") && (marchStatus != 2) && (marchtime != "Waiting")) && !Options.OutReturning) continue;
+		if (((toname == "Yourself") || (tocity != 0)) && !Options.OutYours) continue;
+	
+		outgoingshow = true;
+		r=r+1;
+		rowClass = 'evenRow';		
+		var rem = (r % 2);
+		if (rem == 1) rowClass = 'oddRow';		
+
+		z += '<tr class="'+rowClass+'"><TD class=xtab><a id="btRecall'+a.marchId+'" onclick="btRecall('+ a.marchId +')"><img src='+icon+' title='+hint+'></a></td>';
+		z += '<TD class=xtab id="marchtime'+marchId+'">&nbsp;</td>';
+		z += '<TD class=xtabBR>';
+		if (fromcity != "") z += '<span class=xtab>'+fromcity+'</span> ';
+		z += '</td><TD class=xtabBR>';
+		if (toname != "") { z+= '<span class=xtab>'+toname+'</span> '; }
+		if (totile != "") { z+= '<span class=xtab>'+totile+'</span> '; }
+		if (tocity != "") { z+= '<span class=xtab>'+tocity+'</span> '; }
+		if (tocoords != "") { z+= '<span class=xtab>'+tocoords+'</span>'; }
+		z += '</td>';
+
+		z += '<TD colspan=2 class=xtabBR>';
+
+		if (a["championInfo"]) { // stats here are sort of obsolete, because it uses city champ data, but kept in for completeness...
+			marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
+			var gotchamp = false;
+			if (a["championInfo"].effects) {
+				if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
+					got202 = false;
+					for (cy in a["championInfo"].effects[1]) {
+						// missing bonus damage?
+						if ((cy == '202') && gotchamp) {got202 = true;}
+						if ((cy == '203') && !got202) { marchchamp += "<tr><td>"+uW.g_js_strings.effects.name_202+"</td><td>0</td></tr>"; }
+						str = eval('uW.g_js_strings.effects.name_'+cy);
+						if (str && str!= "") {
+							gotchamp = true;
+							marchchamp += "<tr><td>"+str+"</td><td>"+a["championInfo"].effects[1][cy]+"</td></tr>";
+						} else { break;	}
+					}	
+				}	
+				if (!gotchamp) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+				marchchamp+="<tr><td colspan=2><b>Troop Stats</b></td></tr>";
+				var gottroop = false;
+				if (a["championInfo"].effects[2] && !(a["championInfo"].effects[2] instanceof Array) && typeof(a["championInfo"].effects[2]) === "object") {
+					for (ty in a["championInfo"].effects[2]) {
+						str = eval('uW.g_js_strings.effects.name_'+ty);
+						if (str && str!= "") {
+							gottroop = true;
+							marchchamp += "<tr><td>"+str+"</td><td>"+a["championInfo"].effects[2][ty]+"</td></tr>";
+						} else { break;	}
+					}	
+				}	
+				if (!gottroop) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+				marchchamp+="</table>";
+			}	
+			z +='<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="btoutmarchchamp'+a.marchId+'td"><input type="hidden" id="btoutmarchchamp'+a.marchId+'effects" value="'+marchchamp+'" /><a><img id="btoutmarchchamp'+a.marchId+'" onMouseover="btCreateChampionPopUp(this,'+a.fromCityId+',true);" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td></tr></table>';
+		}
+		if ((a["knightId"] > 0) && (!a["knightCombat"])) {
+			for (i in Seed.knights["city"+a.marchCityId]) {
+				if (i == ("knt" + a["knightId"])) {
+					Combat = Seed.knights["city"+a.marchCityId][i]["combat"];
+					if (Seed.knights["city"+a.marchCityId][i]["combatBoostExpireUnixtime"] > unixTime()) {	Combat *= 1.25;	}	
+					a["knightCombat"] = Combat;
+				}
+			}
+		}
+
+		if (a.btIncomplete && a.btIncomplete == true) {marchdir = "Count";	} // total shit
+		if (a["knightId"] > 0) z +='<span class=xtab>'+uW.g_js_strings.commonstr.knight+' (Atk:'+ a["knightCombat"]+')</span> ';
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
+			if((a["unit"+i+"Count"] > 0) || (a["unit"+i+"Return"] > 0)) {
+				trpcol = '#000';
+				if ((marchdir == "Return") && (a["unit"+i+"Return"] < a["unit"+i+"Count"])) { trpcol = '#f00'; }
+				z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
+			}	
+		}	
+		
+//		if (a["gold"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec0 +': '+ addCommas(a["gold"]) +'</span> ';
+//		if (a["resource1"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec1 +': '+ addCommas(a["resource1"]) +'</span> ';
+//		if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
+//		if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
+//		if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
+		z += '</td></tr>';
+    }
+	
+	if (!outgoingshow) {
+		if (!outgoingfiltered)
+			z += '<tr><td colspan=6 class=xtab><div align="center"><br><br>No outgoing marches</div></td></tr>';
+		else
+			z += '<tr><td colspan=6 class=xtab><div align="center"><br><br>No outgoing marches matching search parameters</div></td></tr>';
+	}
+
+	z += '<tr><td class=xtab colspan="6"><div class="ErrText" align="center" id=btOutErr>&nbsp;</div></td></tr></table></div><br>';
+
+	if (popOut) {
+		if (CheckForHTMLChange('btOutgoingMain',z)) {
+			if (Options.RefreshSeed) uW.jQuery('#btRefreshSeedOut').addClass("disabled");
+			else document.getElementById('btRefreshSeedOut').addEventListener ('click', function() {setTimeout(function() {RefreshSeed();},250);}, false);
+			ResetFrameSize('btOutgoing',200,720);
+		}	
+		for (var m in outtimes) {
+			mt = outtimes[m];
+			if (document.getElementById('marchtime'+m)) {
+				document.getElementById('marchtime'+m).innerHTML = mt;
+			}	
+		}
+	}
+}
+
+function UpdateMarch (cityId,marchId) {
+	Seed.queue_atkp["city"+cityId]["m"+marchId].btRequestSent = true;
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	params.rid = marchId;
+	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (message) {
+			var rslt = eval("(" + message.responseText + ")");
+			if (Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId]) {
+				for (y in rslt.march) {
+					Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId][y] = rslt.march[y];
+				}	
+				Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btRequestSent = false;
+				Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btIncomplete = false;
+				// champion on march?
+				if (rslt.march.championId && (rslt.march.championId != 0) && !Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].championInfo) {
+					var T = uW.cm.ChampionManager.get("selectedChampion")
+					Champs = uW.cm.ChampionModalController.getCastleViewData();
+					uW.cm.ChampionManager.selectChampion(T);
+					for (y in Champs.champions) {
+						if (Champs.champions[y].id == rslt.march.championId) {
+							marchChamp = {};
+							marchChamp.name = Champs.champions[y].name; // lazy. We'll use city stats to show champ data
+							Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].championInfo = marchChamp;			
+							break;
+						}	
+					}
+				}
+				if (rslt.march.toPlayerId && (rslt.march.toPlayerId != 0) && !Seed.players["u"+rslt.march.toPlayerId]) {
+					updatePlayers(rslt.march.toPlayerId);
+				}
+			}
+		},
+		onFailure: function (rslt) {
+			Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btRequestSent = false; // try again
+		}
+    })						
+}
+
+function updatePlayers (uid){
+    var params = uW.Object.clone(uW.g_ajaxparams);
+    params.uid = uid;
+    new uW.Ajax.Request(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
+      method: "post",
+      parameters: params,
+      onSuccess: function (rslt) {
+		rsltInfo = eval("(" + rslt.responseText + ")");
+	    if (!rsltInfo.ok) { return; }	
+		NewPlayer = {};
+		NewPlayer.n = rsltInfo.userInfo[0].name;
+		NewPlayer.t = rsltInfo.userInfo[0].title;
+		NewPlayer.m = rsltInfo.userInfo[0].might;
+		NewPlayer.a = rsltInfo.userInfo[0].allianceId;
+		Seed.players["u"+uid] = NewPlayer;
+      },
+      onFailure: function (rslt) { },
+    });
+}
+
+function Recall (marchId,cityview) {
+	setOutError('&nbsp;',cityview);
+	
+	var ajaxtype = 'undefend';
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	for (k in out) {
+		if (out[k].marchId == marchId) {
+			params.cid = out[k].marchCityId;
+			if (out[k].marchStatus != 2) {
+				ajaxtype = 'cancelMarch';
+			}
+			break;
+		}	    
+    }    
+	params.mid = marchId;
+	new MyAjaxRequest(uW.g_ajaxpath + "ajax/"+ajaxtype+".php" + uW.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (rslt) {
+			if (rslt.ok){
+				var march = uW.seed.queue_atkp["city" + params.cid]["m" + params.mid];
+				march.marchStatus = 8;
+				var marchtime = parseInt(march.returnUnixTime) - parseInt(march.destinationUnixTime);
+				var ut = unixTime();
+				if (uW.seed.playerEffects.returnExpire > unixTime())
+					marchtime *= 0.5
+				march.returnUnixTime = ut + marchtime;
+				march.destinationUnixTime = ut;
+				march.marchUnixTime = ut - marchtime;
+				if (rslt.updateSeed) {
+					uW.update_seed(rslt.updateSeed)
+                }
+				setOutError('March Recalled',cityview);
+			}
+			else {
+				if (rslt.error_code == 253)
+					setOutError(uW.g_js_strings.recall.error,cityview);
+				else
+					setOutError('Unable to recall march',cityview);
+			}
+		},
+		onFailure: function () {
+			setOutError('Unable to recall march',cityview);
+        },
+    });
+};
+
+function setOutError(msg,cityview) {
+	if (cityview == true)
+		document.getElementById('btCityOutErr').innerHTML = msg;
+	else
+		document.getElementById('btOutErr').innerHTML = msg;
 }
 
 function getCityBuilding (cityId, buildingId){
@@ -3037,25 +3611,40 @@ function ToggleCityDefence (Curr){
 		HTMLRegister = {}; // reset everything!
 
 		m = '<div id="btDefence_content"><div><table width="100%"><tr><td class=xtab align="right"><b>City : </b></td><td class=xtab><span id=btCastlesContainer></span></td><td class=xtab align="right"><span id="btCityAlert">&nbsp;</span></td></tr>';
-		m += '<tr><td class=xtab colspan="2">&nbsp;</td><td class=xtab align="right"><a id=btRefreshSeed2 class="inlineButton btButton blue14"><span>Refresh</span></a>&nbsp;<span id=btAutoSpan class="divHide"><a id=btAutoRefresh class="inlineButton btButton blue14"><span style="width:30px;display:inline-block;text-align:center;">Auto</span></a></span></td></tr></table></div>';
+		m += '<tr><td class=xtab colspan="2">&nbsp;</td><td class=xtab align="right"><a id=btRefreshSeed class="inlineButton btButton blue14"><span>Refresh</span></a>&nbsp;<span id=btAutoSpan class="divHide"><a id=btAutoRefresh class="inlineButton btButton blue14"><span style="width:30px;display:inline-block;text-align:center;">Auto</span></a></span></td></tr></table></div>';
+		
 		m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
 		m += '</table></div></div>';
+
 		m += '<div id=btSacrificeHeader><div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr></table></div></div>';
+		m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr>';
+		m += '</table></div></div>';
+		
 		m += '<div id=btTroopHeader><div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr></table></div></div>';
+		m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr>';
+		m += '</table></div></div>';
+		
 		m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
 		m += '</table></div></div>';
+		
 		m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
 		m += '</table></div></div>';
+		
+		if (Options.EnableOutgoing) {
+			m += '<div id=btCityAttackHeader><div class="divHeader" align="right"><a id=btCityAttackLink class=divLink >OUTGOING ATTACKS&nbsp;<img id=btCityAttackArrow height="10" src="'+RightArrow+'"></a></div>';
+			m += '<div id=btCityAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
+			m += '</table></div></div>';
+		}	
+
 		m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
 		m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
 		m += '</table></div></div><br>';
+		
 		m += '</div>';
 
 		popDef = new CPopup('btDefence', Options.DefPos.x, Options.DefPos.y, DashWidth, 100, (!Options.DashboardMode), function () {Options.DefenceStartState = false; Options.CurrentCity = -1; if (!Options.DashboardMode) {Options.DefPos = popDef.getLocation();} else {document.body.appendChild(popDef.div); popDef.destroy();} saveOptions(); popDef = null});
@@ -3081,6 +3670,9 @@ function ToggleCityDefence (Curr){
 		document.getElementById('btWallDefenceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btWallDefence");Options.FortificationState = !(Options.FortificationState);saveOptions();}, false);
 		document.getElementById('btReinforceLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btReinforce");Options.ReinforceState = !(Options.ReinforceState);saveOptions();}, false);
 		document.getElementById('btAttackLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btAttack");Options.AttackState = !(Options.AttackState);saveOptions();}, false);
+		if (Options.EnableOutgoing) {
+			document.getElementById('btCityAttackLink').addEventListener ('click', function () {ToggleDivDisplay("btDefence",100,DashWidth,"btCityAttack");Options.CityAttackState = !(Options.CityAttackState);saveOptions();}, false);
+		}	
 
 		if (Options.OverviewState) ToggleDivDisplay("btDefence",100,DashWidth,"btStatus");
 		if (Options.SacrificeState) ToggleDivDisplay("btDefence",100,DashWidth,"btSacrifice");
@@ -3088,11 +3680,14 @@ function ToggleCityDefence (Curr){
 		if (Options.ReinforceState) ToggleDivDisplay("btDefence",100,DashWidth,"btReinforce");
 		if (Options.FortificationState) ToggleDivDisplay("btDefence",100,DashWidth,"btWallDefence");
 		if (Options.AttackState) ToggleDivDisplay("btDefence",100,DashWidth,"btAttack");
+		if (Options.EnableOutgoing) {
+			if (Options.CityAttackState) ToggleDivDisplay("btDefence",100,DashWidth,"btCityAttack");
+		}	
 		
-		document.getElementById('btRefreshSeed2').addEventListener ('click', function() {setTimeout(function() { SetCurrentCity (Castles.city.id); RefreshSeed();},250);}, false);
+		document.getElementById('btRefreshSeed').addEventListener ('click', function() {setTimeout(function() { SetCurrentCity (Castles.city.id); RefreshSeed();},250);}, false);
 		document.getElementById('btAutoRefresh').addEventListener ('click', function() {ToggleAutoRefresh();}, false);
 		if (Options.RefreshSeed) {
-			uW.jQuery('#btRefreshSeed2').addClass("disabled");
+			uW.jQuery('#btRefreshSeed').addClass("disabled");
 			uW.jQuery('#btAutoRefresh').addClass("red14");
 			uW.jQuery('#btAutoRefresh').removeClass("blue14");
 			document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Off</span>';
@@ -3111,13 +3706,13 @@ function ToggleCityDefence (Curr){
 function ToggleAutoRefresh() {
 	Options.RefreshSeed = !Options.RefreshSeed;
 	if (Options.RefreshSeed) {
-		uW.jQuery('#btRefreshSeed2').addClass("disabled");
+		uW.jQuery('#btRefreshSeed').addClass("disabled");
 		uW.jQuery('#btAutoRefresh').addClass("red14");
 		uW.jQuery('#btAutoRefresh').removeClass("blue14");
 		document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Off</span>';
 	}
 	else {
-		uW.jQuery('#btRefreshSeed2').removeClass("disabled");
+		uW.jQuery('#btRefreshSeed').removeClass("disabled");
 		uW.jQuery('#btAutoRefresh').removeClass("red14");
 		uW.jQuery('#btAutoRefresh').addClass("blue14");
 		document.getElementById('btAutoRefresh').innerHTML = '<span style="width:30px;display:inline-block;text-align:center;">Auto</span>';
@@ -3370,7 +3965,9 @@ function PaintCityInfo(cityId) {
 	
 	Champion = '<table cellspacing=0><tr><td class="xtab"><span class=xtab style="color:#f00">No Champion!</span></td><td class=xtab>';
 	try {
-		Champs = uW.cm.ChampionModalController.getCastleViewData();
+		var T = uW.cm.ChampionManager.get("selectedChampion")
+		Champs = uW.cm.ChampionModalController.getCastleViewData();//logit(JSON2.stringify(Champs));
+		uW.cm.ChampionManager.selectChampion(T);
 		for (y in Champs.champions) {
 			citychamp = Champs.champions[y];
 			if (citychamp.city == cityId) {
@@ -3408,11 +4005,64 @@ function PaintCityInfo(cityId) {
 		Champion += '</table></div>';
 	}	
 	catch (err) {
-		logit(err); // write to log
+		logerr(err); // write to log
 		Champion = '<span class=xtab style="color:#f00">Error reading champion data :(</span>';
 	}
 
 	Status += '<tr><td class=xtab valign=top><a onClick="btShowChampion()">Champion</a></td><td class=xtab colspan=2><b>'+Champion+'</b></span></b></td></tr>';
+
+	BloodLusts = Seed.items.i261;
+	BloodFrenzies = Seed.items.i262;
+	BloodFuries = Seed.items.i280;
+	BarkSkins = Seed.items.i271;
+	StoneSkins = Seed.items.i272;
+	IronSkins = Seed.items.i281;
+	
+	var now = unixTime();
+
+	atkboost = '<span style="color:#f00">None!</span>';
+	if (Seed.playerEffects.atk2Expire >now) {
+		atkboost = '<span style="color:#080">50% for '+uW.timestr(Seed.playerEffects.atk2Expire-now)+'</span>';
+	}
+	else {
+		if (Seed.playerEffects.atkExpire >now) {
+			atkboost = '<span style="color:#f80">20% for '+uW.timestr(Seed.playerEffects.atkExpire-now)+'</span>';
+		}
+	}	
+	
+	atkboosts = '';
+	if (BloodLusts) {
+		atkboosts += '&nbsp;('+BloodLusts+'<a onClick="cm.ItemController.use(\'261\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodLustImage+'" title="Blood Lust"></a>)';
+	}	
+	if (BloodFrenzies) {
+		atkboosts += '&nbsp;('+BloodFrenzies+'<a onClick="cm.ItemController.use(\'262\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFrenzyImage+'" title="Blood Frenzy"></a>)';
+	}	
+	if (BloodFuries) {
+		atkboosts += '&nbsp;('+BloodFuries+'<a onClick="cm.ItemController.use(\'280\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFuryImage+'" title="Blood Fury"></a>)';
+	}	
+	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab><b>'+atkboost+'</b></td><td class=xtab><b>'+atkboosts+'</b></td></tr>';
+	
+	defboost = '<span style="color:#f00">None!</span>';
+	if (Seed.playerEffects.def2Expire >now) {
+		defboost = '<span style="color:#080">50% for '+uW.timestr(Seed.playerEffects.def2Expire-now)+'</span>';
+	}
+	else {
+		if (Seed.playerEffects.defExpire >now) {
+			defboost = '<span style="color:#f80">20% for '+uW.timestr(Seed.playerEffects.defExpire-now)+'</span>';
+		}
+	}	
+
+	defboosts = '';
+	if (BarkSkins) {
+		defboosts += '&nbsp;('+BarkSkins+'<a onClick="cm.ItemController.use(\'271\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BarkSkinImage+'" title="Bark Skin"></a>)';
+	}	
+	if (StoneSkins) {
+		defboosts += '&nbsp;('+StoneSkins+'<a onClick="cm.ItemController.use(\'272\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+StoneSkinImage+'" title="Stone Skin"></a>)';
+	}	
+	if (IronSkins) {
+		defboosts += '&nbsp;('+IronSkins+'<a onClick="cm.ItemController.use(\'281\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+IronSkinImage+'" title="Iron Skin"></a>)';
+	}	
+	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab><b>'+defboost+'</b></td><td class=xtab><b>'+defboosts+'</b></td></tr>';
 	
 	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
 	Status += '</table>';
@@ -3776,6 +4426,166 @@ function PaintCityInfo(cityId) {
 
 	CheckForHTMLChange('btWallDefenceCell',CityTag+Defences);
 
+	// outgoing attacks
+	
+	if (Options.EnableOutgoing) {
+		cityoutgoing = false;
+		var cityouttimes = {};
+		var z = "";
+		var r = 0;
+		for (k in outCity){
+			var a = outCity[k];
+			if (a.destinationUnixTime < unixTime()) continue; // don't display arrival times already happened
+			var icon, hint, marchtime, totile, tocity, toname, marchdir, tocoords;
+	
+			var marchId = a.marchId;
+			var marchStatus = parseInt(a.marchStatus);
+			var marchType = parseInt(a.marchType);
+			if (marchType == 10) marchType=4; // Change Dark Forest type to Attack!
+			if (marchType != 4 && marchType != 3) continue; // attacks and scouts only
+			cityoutgoing = true;
+			var now = unixTime();
+			var destinationUnixTime = a["destinationUnixTime"] - now;
+			
+			marchdir = "Count";	
+		
+			totile = "";
+			tocity = "";
+			toname = "";
+			totile = tileTypes[parseInt(a["toTileType"])];
+			if (a["toTileType"] == 51) {
+				if (!a["toPlayerId"]) { totile = ""; }
+				else { if (a["toPlayerId"] == 0) totile = 'Barb Camp'; }
+			}	
+			totile = 'Lvl '+a["toTileLevel"]+' '+totile;
+	
+			if (a["toPlayerId"] && (a["toPlayerId"] != 0)) {
+				if (a.players && a.players['u'+a.toPlayerId]) {
+					toname = MonitorLink(a.players['u'+a.toPlayerId].n);
+				}
+				else {
+					if (Seed.players['u'+a.toPlayerId]) {
+						toname = MonitorLink(Seed.players['u'+a.toPlayerId].n);
+					}
+				}
+			}
+	
+			var iconType = marchType;
+		
+			if (destinationUnixTime < (60)) { marchtime = '<span style="color:#f00">'+uW.timestr(destinationUnixTime)+'</span>'; }
+			else { marchtime = uW.timestr(destinationUnixTime); }	
+	
+			cityouttimes[marchId] = marchtime;
+	
+			if (!a.toXCoord || (tocity != "")) {tocoords = "";}
+			else {tocoords = coordLink(a.toXCoord,a.toYCoord);}
+	
+			hint = "";
+			switch (marchType) {
+				case 3: hint=uW.g_js_strings.commonstr.scout;break;
+				case 4: hint=uW.g_js_strings.commonstr.attack;break;
+			} 
+		
+			switch (iconType) {
+				case 3: icon=ScoutImage;break;
+				case 4: icon=AttackImage;break;
+			} 
+			hint="("+marchId+")";
+		
+			r=r+1;
+			rowClass = 'evenRow';		
+			var rem = (r % 2);
+			if (rem == 1) rowClass = 'oddRow';		
+
+			z += '<tr class="'+rowClass+'"><TD class=xtab><a id="btCityRecall'+a.marchId+'" onclick="btRecall('+ a.marchId +',true)"><img src='+icon+' title='+hint+'></a></td>';
+			z += '<TD class=xtab id="cityoutmarchtime'+marchId+'">&nbsp;</td>';
+			z += '<TD class=xtabBR>';
+			if (toname != "") { z+= '<span class=xtab>'+toname+'</span> '; }
+			if (totile != "") { z+= '<span class=xtab>'+totile+'</span> '; }
+			if (tocity != "") { z+= '<span class=xtab>'+tocity+'</span> '; }
+			if (tocoords != "") { z+= '<span class=xtab>'+tocoords+'</span>'; }
+			z += '</td>';
+	
+			z += '<TD colspan=2 class=xtabBR>';
+	
+			if (a["championInfo"]) { // stats here are sort of obsolete, because it uses city champ data, but kept in for completeness...
+				marchchamp = "<table cellspacing=0><tr><td colspan=2><b>"+a["championInfo"].name+"</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>";
+				var gotchamp = false;
+				if (a["championInfo"].effects) {
+					if (a["championInfo"].effects[1] && !(a["championInfo"].effects[1] instanceof Array) && typeof(a["championInfo"].effects[1]) === "object") {
+						got202 = false;
+						for (cy in a["championInfo"].effects[1]) {
+							// missing bonus damage?
+							if ((cy == '202') && gotchamp) {got202 = true;}
+							if ((cy == '203') && !got202) { marchchamp += "<tr><td>"+uW.g_js_strings.effects.name_202+"</td><td>0</td></tr>"; }
+							str = eval('uW.g_js_strings.effects.name_'+cy);
+							if (str && str!= "") {
+								gotchamp = true;
+								marchchamp += "<tr><td>"+str+"</td><td>"+a["championInfo"].effects[1][cy]+"</td></tr>";
+							} else { break;	}
+						}	
+					}	
+					if (!gotchamp) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+					marchchamp+="<tr><td colspan=2><b>Troop Stats</b></td></tr>";
+					var gottroop = false;
+					if (a["championInfo"].effects[2] && !(a["championInfo"].effects[2] instanceof Array) && typeof(a["championInfo"].effects[2]) === "object") {
+						for (ty in a["championInfo"].effects[2]) {
+							str = eval('uW.g_js_strings.effects.name_'+ty);
+							if (str && str!= "") {
+								gottroop = true;
+								marchchamp += "<tr><td>"+str+"</td><td>"+a["championInfo"].effects[2][ty]+"</td></tr>";
+							} else { break;	}
+						}	
+					}	
+					if (!gottroop) { marchchamp += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+					marchchamp+="</table>";
+				}	
+				z +='<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="btcityoutmarchchamp'+a.marchId+'td"><input type="hidden" id="btcityoutmarchchamp'+a.marchId+'effects" value="'+marchchamp+'" /><a><img id="btcityoutmarchchamp'+a.marchId+'" onMouseover="btCreateChampionPopUp(this,'+a.fromCityId+',true);" height=14 style="vertical-align:text-top;" src="'+ShieldImage+'"></a></td><td class=xtab>Champion: '+a["championInfo"].name+'&nbsp;</td></tr></table>';
+			}
+			if ((a["knightId"] > 0) && (!a["knightCombat"])) {
+				for (i in Seed.knights["city"+a.marchCityId]) {
+					if (i == ("knt" + a["knightId"])) {
+						Combat = Seed.knights["city"+a.marchCityId][i]["combat"];
+						if (Seed.knights["city"+a.marchCityId][i]["combatBoostExpireUnixtime"] > unixTime()) {	Combat *= 1.25;	}	
+						a["knightCombat"] = Combat;
+					}
+				}
+			}
+
+			if (a["knightId"] > 0) z +='<span class=xtab>'+uW.g_js_strings.commonstr.knight+' (Atk:'+ a["knightCombat"]+')</span> ';
+			for (var ui in uW.cm.UNIT_TYPES){
+				i = uW.cm.UNIT_TYPES[ui];
+				if((a["unit"+i+"Count"] > 0) || (a["unit"+i+"Return"] > 0)) {
+					trpcol = '#000';
+					z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
+				}	
+			}	
+		
+//			if (a["gold"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec0 +': '+ addCommas(a["gold"]) +'</span> ';
+//			if (a["resource1"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec1 +': '+ addCommas(a["resource1"]) +'</span> ';
+//			if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
+//			if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
+//			if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
+			z += '</td></tr>';
+		}
+		if (!cityoutgoing) {
+			z = '<DIV><br><div style="opacity:0.3;">No Outgoing Attacks</div></div>';
+		}
+		else
+		{
+			z = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td width="18" class="xtabHD">&nbsp;</td><td width="60" class="xtabHD"><b>Time</b></td><td width="120" class="xtabHD"><b>Target</b></td><td class="xtabHD"><b>Troops</b></td></tr>'+z;
+		}
+		z += '<tr><td class=xtab colspan="4"><div class="ErrText" align="center" id=btCityOutErr>&nbsp;</div></td></tr></table></div>';
+		
+		CheckForHTMLChange('btCityAttackCell',CityTag+z);
+		for (var m in cityouttimes) {
+			mt = cityouttimes[m];
+			if (document.getElementById('cityoutmarchtime'+m)) {
+				document.getElementById('cityoutmarchtime'+m).innerHTML = mt;
+			}	
+		}
+	}	
+	
 	// toggle section displays
 	
 	ShowHideSection("btStatus",Options.OverviewShow);
@@ -3784,6 +4594,9 @@ function PaintCityInfo(cityId) {
 	ShowHideSection("btReinforce",Options.ReinforceShow);
 	ShowHideSection("btWallDefence",Options.FortificationShow);
 	ShowHideSection("btAttack",Options.AttackShow);
+	if (Options.EnableOutgoing) {
+		ShowHideSection("btCityAttack",Options.CityAttackShow);
+	}
 
 	ShowHideRow("btDefAddTroopRow",Options.DefAddTroopShow);
 	ShowHideRow("btDefPresetRow",Options.DefPresetShow);
@@ -4495,10 +5308,24 @@ function PaintTRPresets () {
 
 	var m = '<div style="opacity:0.6; align="center" id=btThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
 	var n = '<div style="opacity:0.6; align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
+	if (Options.TRPresetByName) { m+='<td class="xtabBR" align=center>'; }
+	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
     for (i=1;i<=Seed.throne.slotNum;i++) {
-		m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
-		n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		if (Options.TRPresetByName) {
+			m+='<span id="trpresetcell'+i+'" class="xtabBR trimg"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></span>';
+		}
+		else {
+			m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		}	
+		if (Options.TRMonPresetByName) {
+			n+='<span id="tmpresetcell'+i+'" class="xtabBR trimg" style="padding-right: 0px;"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:85px;font-size:10px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></span>&nbsp;';
+		}
+		else {
+			n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		}	
 	}	
+	if (Options.TRPresetByName) { m+='</td>'; }
+	if (Options.TRMonPresetByName) { n+='</td>'; }
     m += '</tr></table>';
 	n += '</tr></table>';
 	if (popDef && Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = m; }
@@ -4518,8 +5345,18 @@ function PaintTRPresets () {
 			document.getElementById('tmpreset'+i).addEventListener ('mouseover', function(){BuildTRPresetStats(this.id.substring(8));},false);
 		}
 		if (i==CurrPreset) {
-			if (popDef && Options.PresetChange) { uW.jQuery("#trpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
-			if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { uW.jQuery("#tmpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
+			if (Options.TRPresetByName) {
+				if (popDef && Options.PresetChange) { uW.jQuery("#trlink"+i).removeClass("brown11").addClass("blue11"); }
+			}
+			else {
+				if (popDef && Options.PresetChange) { uW.jQuery("#trpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
+			}	
+			if (Options.TRMonPresetByName) {
+				if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { uW.jQuery("#tmlink"+i).removeClass("brown11").addClass("blue11"); }
+			}
+			else {
+				if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { uW.jQuery("#tmpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
+			}	
 		} 
 		BuildTRPresetStats(i);
 	}
@@ -4533,7 +5370,8 @@ function BuildTRPresetStats(slot){
 		y = unsafeWindow.kocThroneItems[k];
     	for (var ii=0;ii<Seed.throne.slotEquip[slot].length;ii++) {
 			if (Seed.throne.slotEquip[slot][ii] == y.id) {
-				for (var i=1;i<=5;i++) {
+				for (var O in y["effects"]) {
+					var i = +(O.split("slot")[1]);
 					id = y["effects"]["slot"+i]["id"];
 					tier = parseInt(y["effects"]["slot"+i]["tier"]);
 					level = y["level"];
@@ -4547,8 +5385,11 @@ function BuildTRPresetStats(slot){
 		}
 	}
 	
-	if (popDef && Options.PresetChange) { createToolTip(document.getElementById('trpresetcell'+slot),StatEffects.slice()); }
-	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { createToolTip(document.getElementById('tmpresetcell'+slot),StatEffects.slice()); }
+	var presetname = (Options.TRPresets[slot]?Options.TRPresets[slot].name:'Preset '+slot);
+	
+	createToolTip(presetname,document.getElementById('trpresetopt'+slot),StatEffects.slice());
+	if (popDef && Options.PresetChange) { createToolTip(presetname,document.getElementById('trpresetcell'+slot),StatEffects.slice()); }
+	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { createToolTip(presetname,document.getElementById('tmpresetcell'+slot),StatEffects.slice()); }
 }
 
 
@@ -4780,6 +5621,7 @@ function eventPaintPlayerInfo (){
 	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">(Last Login '+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +' ago)</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + Math.round(userInfo.might) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
@@ -4967,7 +5809,8 @@ function TRStats (notify) {
 					for (kk in rslt.items){
     		 			y = rslt.items[kk];
 	    	 			if (y != undefined) {
-		    	 			for (i=1;i<=5;i++) {
+							for (var O in y["effects"]) {
+								var i = +(O.split("slot")[1]);
 								id = y["effects"]["slot"+i]["id"];
 								tier = parseInt(y["effects"]["slot"+i]["tier"]);
 								level = y["level"];
@@ -5238,14 +6081,15 @@ function PaintLog() {
 		ResetFrameSize('btLog',300,720);
 		
 		var cItems = document.getElementById('btLogTable').getElementsByClassName('trimg');
-		for (var i = 0; i < cItems.length; i++) { createToolTip(cItems[i],CurrLog[cItems[i].id.substring(5)].tr.slice()); }
+		for (var i = 0; i < cItems.length; i++) { createToolTip("",cItems[i],CurrLog[cItems[i].id.substring(5)].tr.slice()); }
 		
 	}
 }
 
-function createToolTip (elem,TempStatEffects) {
+function createToolTip (title,elem,TempStatEffects) {
 	var TempcText = "";
-
+	if (title != "") { TempcText += "<b>"+title+"</b><br>&nbsp;<br>"; }
+	
 	for (k in TempStatEffects) {
 		var HisContent = "";
 		if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
