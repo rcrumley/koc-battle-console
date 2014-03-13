@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defend on Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p>
+// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defence from Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -109,9 +109,10 @@ var Options = {
 	UpperDefendButton   : false,
 	LowerDefendButton   : true,
 	EnableOutgoing      : false,
-	TRPresetByName      : true,
+	TRPresetByName      : false,
 	TRMonPresetByName   : false,
 	TRPresets           : {},
+	OverrideDashboard   : {},
 };
 
 var JSON2 = JSON; 
@@ -229,6 +230,7 @@ var URL_CASTLE_BUT_SEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAX
 var HisStatEffects = [];
 var MyStatEffects  = [];
 
+var OpenDiv  = {};
 var Cities   = {};
 var userInfo = {};
 var rsltInfo = {};
@@ -247,6 +249,8 @@ var Infantry = [];
 var Ranged   = [];
 var Horsed   = [];
 var Siege    = [];
+
+DefaultDashboard = {"Overview":{Display:true, Sequence:0},"Sacrifices":{Display:true, Sequence:10},"Troops":{Display:true, Sequence:20},"Reinforcements":{Display:true, Sequence:30},"Fortifications":{Display:true, Sequence:40},"Outgoing Attacks":{Display:true, Sequence:50},"Incoming Attacks":{Display:true, Sequence:60}};
 
 for (var ui in uW.cm.UNIT_TYPES){
 	i = uW.cm.UNIT_TYPES[ui];
@@ -657,10 +661,10 @@ function btStartup (){
 	}	
 	document.getElementById('btSleepButton').addEventListener ('click', function () {ToggleSleep(true)}, false);
 
-	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btOption")}, false);
-	document.getElementById('btMonOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btMonOption")}, false);
-	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btCityOption")}, false);
-	document.getElementById('btTRPresetOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btTRPresetOption")}, false);
+	document.getElementById('btOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btOption",true)}, false);
+	document.getElementById('btMonOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btMonOption",true)}, false);
+	document.getElementById('btCityOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btCityOption",true)}, false);
+	document.getElementById('btTRPresetOptionLink').addEventListener ('click', function () {ToggleDivDisplay("btMain",WinHeight,400,"btTRPresetOption",true)}, false);
 
 	document.getElementById('btPlayerSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit',popMon);}, true);  
 	document.getElementById('btCityDefenceButton').addEventListener('mousedown',function(me) {if (!Options.DashboardMode) {ResetWindowPos (me,'btCityDefenceButton',popDef);}}, true);  
@@ -875,22 +879,34 @@ function ResetFrameSize(prefix,minheight,minwidth) {
 		uW.jQuery('#'+prefix+'_outer').css('width',w+10);
 }
 
-function ToggleDivDisplay(form,h,w,div) {
+function ToggleDivDisplay(form,h,w,div, autoclose) {
 	var dc = uW.jQuery('#'+div).attr('class');
 	if (dc) {
 		if (dc.indexOf('divHide') >= 0) {
 			uW.jQuery('#'+div).attr('class','');
 			uW.jQuery('#'+div+'Arrow').attr('src',DownArrow);
+			if (autoclose) {
+				lastdiv = "";
+				if (OpenDiv[form]) {
+					lastdiv = OpenDiv[form];
+				}
+				if (lastdiv != "") {
+					ToggleDivDisplay(form,h,w,lastdiv);
+				}
+				OpenDiv[form] = div;
+			}
 		}	
 		else {
 			uW.jQuery('#'+div).attr('class','divHide');
 			uW.jQuery('#'+div+'Arrow').attr('src',RightArrow);
+			if (autoclose) { OpenDiv[form] = '';}
 		}
 	}
 	else
 	{
 		uW.jQuery('#'+div).attr('class','divHide');
 		uW.jQuery('#'+div+'Arrow').attr('src',RightArrow);
+		if (autoclose) { OpenDiv[form] = '';}
 	}
 	ResetFrameSize(form,h,w);
 }
@@ -3610,40 +3626,73 @@ function ToggleCityDefence (Curr){
 	{
 		HTMLRegister = {}; // reset everything!
 
+		// build up from Default Dashboard
+		
+		var order = [];
+		
+		for (p in DefaultDashboard) {
+			var NewObj = {};
+			if (Options.OverrideDashboard[p]) {
+				NewObj = Options.OverrideDashboard[p];
+			}
+			else {
+				NewObj = DefaultDashboard[p];
+			}
+			NewObj["name"] = p;
+			order.push(NewObj);
+		}
+		order.sort(function(a, b){ return a.Sequence-b.Sequence });
+		
 		m = '<div id="btDefence_content"><div><table width="100%"><tr><td class=xtab align="right"><b>City : </b></td><td class=xtab><span id=btCastlesContainer></span></td><td class=xtab align="right"><span id="btCityAlert">&nbsp;</span></td></tr>';
 		m += '<tr><td class=xtab colspan="2">&nbsp;</td><td class=xtab align="right"><a id=btRefreshSeed class="inlineButton btButton blue14"><span>Refresh</span></a>&nbsp;<span id=btAutoSpan class="divHide"><a id=btAutoRefresh class="inlineButton btButton blue14"><span style="width:30px;display:inline-block;text-align:center;">Auto</span></a></span></td></tr></table></div>';
 		
-		m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
-		m += '</table></div></div>';
+		for (p in order) {
+			if (order[p].name == 'Overview') {
+				m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
+				m += '</table></div></div>';
+			}	
 
-		m += '<div id=btSacrificeHeader><div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr>';
-		m += '</table></div></div>';
+			if (order[p].name == 'Sacrifices') {
+				m += '<div id=btSacrificeHeader><div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
+				m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr>';
+				m += '</table></div></div>';
+			}
+			
+			if (order[p].name == 'Troops') {
+				m += '<div id=btTroopHeader><div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
+				m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr>';
+				m += '</table></div></div>';
+			}	
 		
-		m += '<div id=btTroopHeader><div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
-		m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr>';
-		m += '</table></div></div>';
+			if (order[p].name == 'Reinforcements') {
+				m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
+				m += '</table></div></div>';
+			}	
 		
-		m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
-		m += '</table></div></div>';
-		
-		m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
-		m += '</table></div></div>';
-		
-		if (Options.EnableOutgoing) {
-			m += '<div id=btCityAttackHeader><div class="divHeader" align="right"><a id=btCityAttackLink class=divLink >OUTGOING ATTACKS&nbsp;<img id=btCityAttackArrow height="10" src="'+RightArrow+'"></a></div>';
-			m += '<div id=btCityAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
-			m += '</table></div></div>';
-		}	
-
-		m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
-		m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
-		m += '</table></div></div><br>';
+			if (order[p].name == 'Fortifications') {
+				m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
+				m += '</table></div></div>';
+			}
+			
+			if (Options.EnableOutgoing) {
+				if (order[p].name == 'Outgoing Attacks') {
+					m += '<div id=btCityAttackHeader><div class="divHeader" align="right"><a id=btCityAttackLink class=divLink >OUTGOING ATTACKS&nbsp;<img id=btCityAttackArrow height="10" src="'+RightArrow+'"></a></div>';
+					m += '<div id=btCityAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
+					m += '</table></div></div>';
+				}	
+			}
+			
+			if (order[p].name == 'Incoming Attacks') {
+				m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
+				m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
+				m += '</table></div></div><br>';
+			}
+		}
 		
 		m += '</div>';
 
@@ -3870,10 +3919,10 @@ function PaintCityInfo(cityId) {
 	}
 	else {
 		if (cityExpTime < unixTime()) {
-			prestigeexp = '<span style="color:#f00">&nbsp;Expired!</span>';
+			prestigeexp = '<span style="color:#f00"><b>&nbsp;Expired!</b></span>';
 		}
 		else {
-			prestigeexp = '<span style="color:#080">&nbsp;'+uW.timestr(cityExpTime-unixTime())+' Remaining</span>';
+			prestigeexp = '<span style="color:#080"><b>&nbsp;'+uW.timestr(cityExpTime-unixTime())+' Remaining</b></span>';
 		}
 	}
 
@@ -3895,7 +3944,7 @@ function PaintCityInfo(cityId) {
 	Status += '<table cellSpacing=0 width="100%">';
 	Status += '<tr><td class=xtab width=70>Name</a></td><td class=xtab><b>'+Seed.cities[Curr][1]+'</b></td><td class=xtab rowspan=2 align=right><span class='+((Options.UpperDefendButton==false)?'divHide':'')+'>'+DefButton+'</span></td></tr>';
 	Status += '<tr><td class=xtab>Location</a></td><td class=xtab><b>'+uW.provincenames['p'+Seed.cities[Curr][4]]+'&nbsp;'+coordLink(Seed.cities[Curr][2],Seed.cities[Curr][3])+'</b></td></tr>';
-	Status += '<tr><td class=xtab>Faction</a></td><td class=xtab><b>'+CityFaction+'</b></td><td class=xtab><b>'+prestigeexp+'</b></td></tr>';
+	Status += '<tr><td class=xtab>Faction</a></td><td class=xtab><b>'+CityFaction+'</b></td><td class=xtab id=prestigeexpcell>&nbsp;</td></tr>';
 	
 	Embassy = '<span class=xtab style="color:#f00">No Embassy!</span>';
     var emb = getCityBuilding(cityId, 8);
@@ -3925,7 +3974,7 @@ function PaintCityInfo(cityId) {
 				Marshall += '&nbsp;&nbsp;<a id="btChangeMarshall" class="inlineButton btButton brown8" onclick="btChangeMarshall()"><span>Change</span></a>';
 				Gauntlets = Seed.items.i221;
 				if (!(s.combatBoostExpireUnixtime > unixTime()) && Gauntlets ) {
-					Marshall += '&nbsp;<a id="btBoostMarshall" class="inlineButton btButton brown8" onclick="btBoostMarshall()"><span>Boost</span></a>&nbsp;('+Seed.items.i221+'<img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+GauntletImage+'" title="Gauntlet of Courage">)';
+					Marshall += '&nbsp;<a id="btBoostMarshall" class="inlineButton btButton brown8" onclick="btBoostMarshall()" title="Gauntlet of Courage ('+Seed.items.i221+')"><span>Boost</span></a>';
 				}
 				else {
 					if (s.combatBoostExpireUnixtime > unixTime()) {
@@ -4020,49 +4069,47 @@ function PaintCityInfo(cityId) {
 	
 	var now = unixTime();
 
-	atkboost = '<span style="color:#f00">None!</span>';
+	atkboost = '<span style="color:#f00"><b>None!</b></span>';
 	if (Seed.playerEffects.atk2Expire >now) {
-		atkboost = '<span style="color:#080">50% for '+uW.timestr(Seed.playerEffects.atk2Expire-now)+'</span>';
+		atkboost = '<span style="color:#080"><b>50% for '+uW.timestr(Seed.playerEffects.atk2Expire-now)+'</b></span>';
 	}
 	else {
 		if (Seed.playerEffects.atkExpire >now) {
-			atkboost = '<span style="color:#f80">20% for '+uW.timestr(Seed.playerEffects.atkExpire-now)+'</span>';
+			atkboost = '<span style="color:#f80"><b>20% for '+uW.timestr(Seed.playerEffects.atkExpire-now)+'</b></span>';
 		}
 	}	
-	
-	atkboosts = '';
-	if (BloodLusts) {
-		atkboosts += '&nbsp;('+BloodLusts+'<a onClick="cm.ItemController.use(\'261\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodLustImage+'" title="Blood Lust"></a>)';
-	}	
-	if (BloodFrenzies) {
-		atkboosts += '&nbsp;('+BloodFrenzies+'<a onClick="cm.ItemController.use(\'262\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFrenzyImage+'" title="Blood Frenzy"></a>)';
-	}	
-	if (BloodFuries) {
-		atkboosts += '&nbsp;('+BloodFuries+'<a onClick="cm.ItemController.use(\'280\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFuryImage+'" title="Blood Fury"></a>)';
-	}	
-	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab><b>'+atkboost+'</b></td><td class=xtab><b>'+atkboosts+'</b></td></tr>';
-	
 	defboost = '<span style="color:#f00">None!</span>';
 	if (Seed.playerEffects.def2Expire >now) {
-		defboost = '<span style="color:#080">50% for '+uW.timestr(Seed.playerEffects.def2Expire-now)+'</span>';
+		defboost = '<span style="color:#080"><b>50% for '+uW.timestr(Seed.playerEffects.def2Expire-now)+'</b></span>';
 	}
 	else {
 		if (Seed.playerEffects.defExpire >now) {
-			defboost = '<span style="color:#f80">20% for '+uW.timestr(Seed.playerEffects.defExpire-now)+'</span>';
+			defboost = '<span style="color:#f80"><b>20% for '+uW.timestr(Seed.playerEffects.defExpire-now)+'</b></span>';
 		}
 	}	
-
-	defboosts = '';
+	
+	boosts = '<table cellspacing=0 cellpadding=0><tr>';
+	if (BloodLusts) {
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'261\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+BloodLustImage+'" title="Blood Lust ('+BloodLusts+')"></a></td>';
+	}	
+	if (BloodFrenzies) {
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'262\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFrenzyImage+'" title="Blood Frenzy ('+BloodFrenzies+')"></a></td>';
+	}	
+	if (BloodFuries) {
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'280\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+BloodFuryImage+'" title="Blood Fury ('+BloodFuries+')"></a></td>';
+	}	
 	if (BarkSkins) {
-		defboosts += '&nbsp;('+BarkSkins+'<a onClick="cm.ItemController.use(\'271\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+BarkSkinImage+'" title="Bark Skin"></a>)';
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'271\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+BarkSkinImage+'" title="Bark Skin ('+BarkSkins+')"></a></td>';
 	}	
 	if (StoneSkins) {
-		defboosts += '&nbsp;('+StoneSkins+'<a onClick="cm.ItemController.use(\'272\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+StoneSkinImage+'" title="Stone Skin"></a>)';
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'272\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+StoneSkinImage+'" title="Stone Skin ('+StoneSkins+')"></a></td>';
 	}	
 	if (IronSkins) {
-		defboosts += '&nbsp;('+IronSkins+'<a onClick="cm.ItemController.use(\'281\')"><img height=14 style="opacity:0.8;vertical-align:text-top;" src="'+IronSkinImage+'" title="Iron Skin"></a>)';
-	}	
-	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab><b>'+defboost+'</b></td><td class=xtab><b>'+defboosts+'</b></td></tr>';
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'281\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+IronSkinImage+'" title="Iron Skin ('+IronSkins+')"></a></td>';
+	}
+	boosts += '</tr></table>'
+	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab id=atkboostcell>&nbsp;</td><td class=xtab rowspan=2 align=right>'+boosts+'</td></tr>';
+	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab id=defboostcell>&nbsp;</b></td></tr>';
 	
 	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
 	Status += '</table>';
@@ -4092,6 +4139,9 @@ function PaintCityInfo(cityId) {
 			}	
 		}
 	}
+	document.getElementById('atkboostcell').innerHTML = atkboost;
+	document.getElementById('defboostcell').innerHTML = defboost;
+	document.getElementById('prestigeexpcell').innerHTML = prestigeexp;
 
 	// sacrifices
 
@@ -5312,13 +5362,13 @@ function PaintTRPresets () {
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		if (Options.TRPresetByName) {
-			m+='<span id="trpresetcell'+i+'" class="xtabBR trimg"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></span>';
+			m+='<div id="trpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>';
 		}
 		else {
 			m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		}	
 		if (Options.TRMonPresetByName) {
-			n+='<span id="tmpresetcell'+i+'" class="xtabBR trimg" style="padding-right: 0px;"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:85px;font-size:10px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></span>&nbsp;';
+			n+='<div id="tmpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:85px;font-size:10px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
 		}
 		else {
 			n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
