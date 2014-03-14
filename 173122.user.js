@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140310a
+// @version        20140314a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -18,7 +18,7 @@ if(window.self.location != window.top.location){
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
 
-var Version = '20140310a';
+var Version = '20140314a';
 
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
@@ -306,10 +306,11 @@ function ptStartup (){
     .ptcastleButSel {background-image:url("'+ URL_CASTLE_BUT_SEL +'")}\
   ';
 
-	var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:200px;}\
-					div#throneMainContainer div#trophyContainer{width:71px;height:86px;top:41px;left:381px;z-index:97;}\
-					div#throneMainContainer div#statueContainer{width:124px;height:296px;top:274px;left:300px;z-index:99;}\
-					div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:450px;z-index:99;}';
+  var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:450px;}\
+				div#throneMainContainer div#trophyContainer{width:71px;height:86px;top:41px;left:381px;}\
+				div#throneMainContainer div#statueContainer{width:124px;height:296px;top:274px;left:150px;z-index:97;}\
+				div#throneMainContainer div#advisorContainer{width:141px;height:240px;bottom:0pt;right:0pt;}\
+				div#throneMainContainer div#heroContainer{width:85px;height:136px;top:173px;left:450px;}';
   
   var styles = '\
     .ptdivHeader       {transparent;height: 16px;border-bottom:0px solid #000000;font-weight:bold;font-size:11px;opacity:0.75;margin-left:0px;margin-right:0px;margin-top:1px;margin-bottom:0px;padding-top:4px;padding-right:10px;vertical-align:text-top;align:left}\
@@ -10664,8 +10665,8 @@ Tabs.Attaque = {
 	var c = uW.cm.ChampionModalController.getCastleViewData();
 	var d = uW.cm.ChampionManager.getCityChampion(t.sourceCity.id);
 	if((c != null) && (d != null)) {
-	    champname = c.champions[d].name;
-	    champstatus = c.champions[d].status;
+	    var champname = c.champions[d].name;
+	    var champstatus = c.champions[d].status;
 	    if (champstatus=="Defending"){
 		var o = document.createElement("option");
 		o.text = champname;

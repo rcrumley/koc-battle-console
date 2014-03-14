@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140312a
+// @version			20140314a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defence from Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p>
+// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defence from Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p><p>Customise Dashboard Display Sequence</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140312a'; 
+var Version = '20140314a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -96,13 +96,6 @@ var Options = {
 	SacrificeLimit      : 1000000,
 	DefaultDefenceNum   : 200000,
 	MonitorChampions    : false,
-	OverviewShow        : true,
-	SacrificeShow       : true,
-	ReinforceShow       : true,
-	TroopShow           : true,
-	FortificationShow   : true,
-	AttackShow          : true,
-	CityAttackShow      : true,
 	DefAddTroopShow     : true,
 	DefPresetShow       : true,
 	DefPresets          : {},
@@ -251,6 +244,14 @@ var Horsed   = [];
 var Siege    = [];
 
 DefaultDashboard = {"Overview":{Display:true, Sequence:0},"Sacrifices":{Display:true, Sequence:10},"Troops":{Display:true, Sequence:20},"Reinforcements":{Display:true, Sequence:30},"Fortifications":{Display:true, Sequence:40},"Outgoing Attacks":{Display:true, Sequence:50},"Incoming Attacks":{Display:true, Sequence:60}};
+
+var OverviewShow = true;
+var SacrificeShow = true;
+var ReinforceShow = true;
+var TroopShow = true;
+var FortificationShow = true;
+var AttackShow = true;
+var CityAttackShow = true;
 
 for (var ui in uW.cm.UNIT_TYPES){
 	i = uW.cm.UNIT_TYPES[ui];
@@ -489,6 +490,8 @@ uW.btCancelDefPreset = function () {CancelDefPreset();}
 uW.btSelectDefPreset = function (sel) {SelectDefPreset(sel);}
 uW.btSetPresetDefenders = function (rep) {SetPresetDefenders(rep);}
 uW.btRecall = function (marchId,cityview) {Recall(marchId,cityview);}
+uW.btOverrideDash = function (sect) {OverrideDash(sect);}
+uW.btResetDash = function () {ResetDash();}
 
 // allow access from external tools
 
@@ -613,11 +616,7 @@ function btStartup (){
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="3" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td colspan="3" class=xtab>Battle button next to overview button&nbsp;*</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=FortificationChk type=checkbox /></td><td class=xtab>Fortifications Section</td><td class=xtab><INPUT id=ReinforcementChk type=checkbox /></td><td class=xtab>Reinforcements Section</td></tr>';
-	if (Options.EnableOutgoing) {
-		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CityAttackChk type=checkbox /></td><td class=xtab>Outgoing Attacks</td><td class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td></tr>';
-	}
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Upper Defend Button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Lower Defend Button</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Overview Defend Button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Troops Defend Button</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td colspan="3" class=xtab>Show throne room preset changer</td></tr>';
 	m += '<TR id=btPresetByNameOpts class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>Select presets by name</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td colspan="2" class=xtab>Default sacrifice duration</td>';
@@ -627,14 +626,41 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
 	m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
+
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=4><table cellSpacing=0 width=98%>';
+	m += '<TR><TD style="width:20px" class=xtabHD>Show</td><TD style="width:100px" class=xtabHD>Section</td><TD class=xtabHD>Sequence</td><TD class=xtabHD align=right><a id=btResetDash class="inlineButton btButton brown11"><span>Reset</span></a></td></tr>';
+
+    for (p in DefaultDashboard) {
+		var NewObj = {};
+		if (Options.OverrideDashboard[p]) {
+			NewObj.Display = Options.OverrideDashboard[p].Display;
+			NewObj.Sequence = Options.OverrideDashboard[p].Sequence;
+		}
+		else {
+			NewObj.Display = DefaultDashboard[p].Display;
+			NewObj.Sequence = DefaultDashboard[p].Sequence;
+		}
+		NewObj["name"] = p;
+
+		if (Options.EnableOutgoing || (NewObj["name"] != "Outgoing Attacks")) {
+			m += '<tr>';
+			m +='<TD style="width:20px" class="xtab"><INPUT id="dashDisp'+NewObj["name"]+'" type=checkbox '+(NewObj["Display"]?'CHECKED':'')+' onclick="btOverrideDash(\''+NewObj["name"]+'\')" /></td>';
+			m += '<TD class=xtab>'+NewObj["name"]+'</td>';
+			m += '<TD class=xtab><INPUT class="btInput" id="dashSeq'+NewObj["name"]+'" style="width:30px;" maxlength=3 type=text value="'+NewObj["Sequence"]+'" onkeyup="btOverrideDash(\''+NewObj["name"]+'\')" /></td>';
+			m += '<td class=xtab>&nbsp;</td></tr>';
+		}	
+	}
+	m += '</table></td></tr>';
+
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btTRPresetOptionLink class=divLink >THRONE ROOM PRESETS&nbsp;<img id=btTRPresetOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btTRPresetOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=2><table cellSpacing=0 width=98%>';
+	m += '<TR><TD style="width:20px" class=xtabHD>Num</td><TD class=xtabHD>Name</td></tr>';
 
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		m += '<tr>';
-		m+='<TD style="width:20px" id="trpresetopt'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		m +='<TD style="width:20px" id="trpresetopt'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		m += '<TD class=xtab><INPUT class="btInput" id="btpresetLabel'+i+'" style="width:120px;" maxlength=12 type=text value="'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'" onkeyup="btStartKeyTimer(this,btUpdatePresetLabel,'+i+')" onchange="btUpdatePresetLabel(this,'+i+')" /></td>';
 		m += '</tr>';
 	}
@@ -673,6 +699,7 @@ function btStartup (){
 		document.getElementById('btOutgoingButton').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btOutgoingButton',popOut);}, true);  
 	}	
 	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  
+	document.getElementById('btResetDash').addEventListener ('click', function() {ResetDash();}, false);
   
 	ToggleOption ('TransparencyChk', 'Transparent');
 	ToggleOption ('AlertOverrideChk', 'OverrideAttackAlert');
@@ -690,11 +717,6 @@ function btStartup (){
 	PresetToggle ();
 	ToggleOption ('DashboardChk', 'DashboardMode', DashboardToggle);
 	DashboardToggle ();
-	ToggleOption ('FortificationChk', 'FortificationShow');
-	ToggleOption ('ReinforcementChk', 'ReinforceShow');
-	if (Options.EnableOutgoing) {
-		ToggleOption ('CityAttackChk', 'CityAttackShow');
-	}	
 	ToggleOption ('UpperDefChk', 'UpperDefendButton');
 	ToggleOption ('LowerDefChk', 'LowerDefendButton');
 	ToggleOption ('DefAddTroopChk', 'DefAddTroopShow', DefToggle);
@@ -812,6 +834,34 @@ function btStartup (){
 	// All done!
 	
 	uW.btLoaded = true;
+}
+
+function ResetDash () {
+    for (p in DefaultDashboard) {
+		document.getElementById('dashSeq'+p).value = DefaultDashboard[p].Sequence;
+		document.getElementById('dashDisp'+p).checked = DefaultDashboard[p].Display;
+	}
+	Options.OverrideDashboard = {};
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+	if (popDef) { popDef.show(false); popDef = null; ToggleCityDefence(Options.CurrentCity); }
+}
+
+function OverrideDash (sect) {
+	var NewObj = {};
+	if (Options.OverrideDashboard[sect]) {
+		NewObj.Display = Options.OverrideDashboard[sect].Display;
+		NewObj.Sequence = Options.OverrideDashboard[sect].Sequence;
+	}
+	else {
+		NewObj.Display = DefaultDashboard[sect].Display;
+		NewObj.Sequence = DefaultDashboard[sect].Sequence;
+	}
+	if (isNaN(document.getElementById('dashSeq'+sect).value)) { document.getElementById('dashSeq'+sect).value = 0; }
+	NewObj.Sequence = document.getElementById('dashSeq'+sect).value;
+	NewObj.Display = document.getElementById('dashDisp'+sect).checked;
+	Options.OverrideDashboard[sect] = NewObj;
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+	if (popDef) { popDef.show(false); popDef = null; ToggleCityDefence(Options.CurrentCity); }
 }
 
 function UpdatePresetLabel(elem,entry) {
@@ -3633,10 +3683,12 @@ function ToggleCityDefence (Curr){
 		for (p in DefaultDashboard) {
 			var NewObj = {};
 			if (Options.OverrideDashboard[p]) {
-				NewObj = Options.OverrideDashboard[p];
+				NewObj.Display = Options.OverrideDashboard[p].Display;
+				NewObj.Sequence = Options.OverrideDashboard[p].Sequence;
 			}
 			else {
-				NewObj = DefaultDashboard[p];
+				NewObj.Display = DefaultDashboard[p].Display;
+				NewObj.Sequence = DefaultDashboard[p].Sequence;
 			}
 			NewObj["name"] = p;
 			order.push(NewObj);
@@ -3651,6 +3703,7 @@ function ToggleCityDefence (Curr){
 				m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
 				m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
 				m += '</table></div></div>';
+				OverviewShow = order[p].Display;
 			}	
 
 			if (order[p].name == 'Sacrifices') {
@@ -3658,6 +3711,7 @@ function ToggleCityDefence (Curr){
 				m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
 				m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr>';
 				m += '</table></div></div>';
+				SacrificeShow = order[p].Display;
 			}
 			
 			if (order[p].name == 'Troops') {
@@ -3665,18 +3719,21 @@ function ToggleCityDefence (Curr){
 				m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
 				m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr>';
 				m += '</table></div></div>';
+				TroopShow = order[p].Display;
 			}	
 		
 			if (order[p].name == 'Reinforcements') {
 				m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
 				m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
 				m += '</table></div></div>';
+				ReinforceShow = order[p].Display;
 			}	
 		
 			if (order[p].name == 'Fortifications') {
 				m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
 				m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
 				m += '</table></div></div>';
+				FortificationShow = order[p].Display;
 			}
 			
 			if (Options.EnableOutgoing) {
@@ -3684,6 +3741,7 @@ function ToggleCityDefence (Curr){
 					m += '<div id=btCityAttackHeader><div class="divHeader" align="right"><a id=btCityAttackLink class=divLink >OUTGOING ATTACKS&nbsp;<img id=btCityAttackArrow height="10" src="'+RightArrow+'"></a></div>';
 					m += '<div id=btCityAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
 					m += '</table></div></div>';
+					CityAttackShow = order[p].Display;
 				}	
 			}
 			
@@ -3691,6 +3749,7 @@ function ToggleCityDefence (Curr){
 				m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
 				m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
 				m += '</table></div></div><br>';
+				AttackShow = order[p].Display;
 			}
 		}
 		
@@ -4638,14 +4697,14 @@ function PaintCityInfo(cityId) {
 	
 	// toggle section displays
 	
-	ShowHideSection("btStatus",Options.OverviewShow);
-	ShowHideSection("btSacrifice",Options.SacrificeShow && (cityPrestigeType == "2"));
-	ShowHideSection("btTroop",Options.TroopShow);
-	ShowHideSection("btReinforce",Options.ReinforceShow);
-	ShowHideSection("btWallDefence",Options.FortificationShow);
-	ShowHideSection("btAttack",Options.AttackShow);
+	ShowHideSection("btStatus",OverviewShow);
+	ShowHideSection("btSacrifice",SacrificeShow && (cityPrestigeType == "2"));
+	ShowHideSection("btTroop",TroopShow);
+	ShowHideSection("btReinforce",ReinforceShow);
+	ShowHideSection("btWallDefence",FortificationShow);
+	ShowHideSection("btAttack",AttackShow);
 	if (Options.EnableOutgoing) {
-		ShowHideSection("btCityAttack",Options.CityAttackShow);
+		ShowHideSection("btCityAttack",CityAttackShow);
 	}
 
 	ShowHideRow("btDefAddTroopRow",Options.DefAddTroopShow);
