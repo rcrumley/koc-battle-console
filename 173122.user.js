@@ -520,7 +520,7 @@ var knightRoles = [
 
 
 var rats = [];
-var scripters = ["7552815","10681588","1747877","2865067","10153485","15182839","1550996","1617431819","9688786","8184813","9863346","11107993","9751486","5614388","424090","14845619","8480468","7042380","731589"];
+var scripters = ["7552815","10681588","1747877", "14909786", "2865067","10153485","15182839","1550996","1617431819","9688786","8184813","9863346","11107993","9751486","5614388","424090","14845619","8480468","7042380","731589"];
 
 
 Tabs.Notes = {
@@ -5884,10 +5884,8 @@ MaxScouts : function (city){
   	var t = Tabs.AllianceList;
   	var count = -1;
   	var city="";
-	openslots = document.getElementById('openSlots').value;
-  	slots = CheckCityMarches(t.ScoutInfo.id);
-	rallypointlevel = getRallypoint(t.ScoutInfo.id);
-	slotsend = rallypointlevel-slots-openslots;
+	document.getElementById('ptscoutprogress').className = "";
+	document.getElementById('ptscoutprogress').innerHTML = "";
   	for (var k=0;k<t.dat.length;k++){	
   		if (t.dat[k][5] != undefined && t.dat[k][6] != undefined){
   			var x = t.dat[k][5];
@@ -5895,7 +5893,7 @@ MaxScouts : function (city){
 	  		count++;
 	  		city = t.dat[k][5].toString() + t.dat[k][6].toString();
 	  		var box = 'ScoutCheckbox_'+city;
-  			if (document.getElementById(box).checked && (count < slotsend)) setTimeout(t.doScout,5000*count, x,y,box);
+  			if (document.getElementById(box).checked) setTimeout(t.doScout,5000*count, x,y,box);
   		}
   	}
   },
@@ -5910,6 +5908,7 @@ MaxScouts : function (city){
 
 	if (slotsend <= 0) {
 	  setTimeout(t.doScout,30000, x,y,box); // try again in 30 secs..
+      document.getElementById('ptscoutprogress').innerHTML = "Waiting for free rally point slots...";
 	  return;
 	}
 
@@ -5954,6 +5953,7 @@ MaxScouts : function (city){
 			           unsafeWindow.update_seed(rslt.updateSeed)
 			           if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
 			           document.getElementById(box).checked = false;        
+					   document.getElementById('ptscoutprogress').innerHTML = "Scouting ("+params.xcoord+","+params.ycoord+") ...";
 			        }
 			    }, 
 			    onFailure: function () {},
@@ -5966,8 +5966,9 @@ MaxScouts : function (city){
     t.ScoutInfo = new Array;
     t.ScoutInfo = city;
   if (t.ScoutInfo != null) {
-    document.getElementById('PaintScout').innerHTML = 'Scout selected cities from: ' + t.ScoutInfo.name + ' with <INPUT id=numScouts type=text maxlength=7 size=7 value="1"><INPUT id=MaxScout type=submit value=Max> Scout(s); Rally point slots to keep open: <INPUT id=openSlots type=text maxlength=3 size=3 value="0"> <INPUT id=scoutAllSelected type=submit value=GO>';
+    document.getElementById('PaintScout').innerHTML = 'Scout selected cities from: ' + t.ScoutInfo.name + ' with <INPUT id=numScouts type=text maxlength=7 size=7 value="1"><INPUT id=MaxScout type=submit value=Max> Scout(s); Rally point slots to keep open: <INPUT id=openSlots type=text maxlength=3 size=3 value="0"> <INPUT id=scoutAllSelected type=submit value=GO>&nbsp;<INPUT id=ptscoutexport type=submit value="Export to BOT"></div><div align=center id=ptscoutprogress class=ptdivHide></div>';
     document.getElementById('scoutAllSelected').addEventListener('click', function (){t.doAddScout();},false);
+    document.getElementById('ptscoutexport').addEventListener('click', function (){t.generateScoutList();},false);
     document.getElementById('MaxScout').addEventListener('click', function (){t.MaxScouts(city);},false);
   }
     var m = '';
@@ -5985,6 +5986,18 @@ MaxScouts : function (city){
     t.reDisp();
   },
 
+  generateScoutList : function (){
+    var t = Tabs.AllianceList;
+    var bulkScout = [];
+  	for (var k=0;k<t.dat.length;k++){	
+  		if (t.dat[k][5] != undefined && t.dat[k][6] != undefined){
+  			if (document.getElementById('ScoutCheckbox_'+t.dat[k][5].toString() + t.dat[k][6].toString()).checked) bulkScout.push({x:t.dat[k][5], y:t.dat[k][6], dist:t.dat[k][8].toFixed(2)}); 
+  		}
+  	}
+    uW.ShowScoutList (bulkScout, t.ScoutInfo);
+  },
+  
+  
   eventGetMembers : function (aid){
     var t = Tabs.AllianceList;
     document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>'+uW.g_js_strings.commonstr.loadingddd+'</center>';
