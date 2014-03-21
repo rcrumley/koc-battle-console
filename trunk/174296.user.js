@@ -6849,6 +6849,7 @@ Tabs.Search = {
     unsafeWindow.pbSearchLookup = t.clickedLookup;  
     unsafeWindow.pbSearchScout = t.clickedScout;
     unsafeWindow.pbExportToRaid = t.ExportToRaid;
+    unsafeWindow.ShowScoutList = t.ShowScoutList;
   },
 
   e_coordChange : function(){
@@ -26076,8 +26077,11 @@ function PlayerPopup (rslt,march) {
 		}, {
 			txt: "Post to Chat",
 			exe: function () {
-			    cText = n.replace(/\|\|\s*$/, "");
-				cText = ":::. |QuickScout Result|| "+ cText;
+			    cText = 'Name: ' + u.genderAndName + '||Might: ' + addCommas(parseInt(u.might)) +
+						'||' + uW.g_js_strings.commonstr.alliance+': '+ a +
+						'||City Co-ords: ('+ march.toXCoord + ',' + march.toYCoord + ')' +
+						'||City Level: '+ march.toTileLevel;
+				cText = ":::. |QuickScout Report|| "+ cText;
 				sendChat ("/a "+  cText);
 			}
 		}, {
