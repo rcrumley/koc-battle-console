@@ -7019,6 +7019,7 @@ Tabs.Search = {
         <TR><TD class=xtab align=right>'+translate("Max")+" "+translate("might")+':</td><TD class=xtab><INPUT type=text id=pamaxmight size=8 value='+ Options.maxmight +'>\
         <TR><TD class=xtab align=right>Ignore alliances ranked</td><TD class=xtab><INPUT type=text id=patopra size=4 value='+ Options.toprank +'> - <INPUT type=text id=pabotra size=4 value='+ Options.botrank +'></td>\
         <TR><TD class=xtab align=right>'+translate("Coordinates only")+':</td><TD class=xtab><INPUT type=checkbox id=pacoordsOnly \></td></tr>\
+        <TR><TD class=xtab align=right>'+translate("Auto-QuickScout mists")+':</td><TD class=xtab><INPUT type=checkbox id=paautoqs\></td></tr>\
         </table></div><BR><SPAN id=pasrchSizeWarn></span><DIV id=pbSrcExp></div>';
         FetchTopAlliances(Options.toprank,Options.botrank,function (e) {
          t.IgAlly = e;
@@ -7242,6 +7243,7 @@ Tabs.Search = {
         numRows = t.MAX_SHOW_WHILE_RUNNING;
         document.getElementById('pasrchSizeWarn').innerHTML = '<FONT COLOR=#600000>'+translate('NOTE: Table only shows ')+ t.MAX_SHOW_WHILE_RUNNING +' of '+ t.dat.length +translate(' results until search is complete')+'.</font>';
       }
+	  var qsdelay = 0;
       for (i=0; i<numRows; i++){
         m += '<TR><TD><DIV onclick="pbGotoMap('+ t.dat[i][0] +','+ t.dat[i][1] +')"><A>'+ t.dat[i][0] +','+ t.dat[i][1] +'</a></div></td>';
         if (coordsOnly) {
@@ -7249,15 +7251,27 @@ Tabs.Search = {
         } else {
           if (t.opt.searchType == 2) { // city search
             m += '<TD align="right" >'+ t.dat[i][2].toFixed(2) +'</td>';
-            if ( t.dat[i][5])
-              m += '<TD colspan=4>* '+translate("MISTED")+' * &nbsp; &nbsp; <SPAN onclick="pbSearchScout('+ t.dat[i][0] +','+ t.dat[i][1] +');return false;"><A>'+translate("Scout")+'</a></span></td></tr>';
+            if ( t.dat[i][5] && t.dat[i][7] == 0) {
+			  if (t.dat[i][9] == "") {
+				m += '<TD colspan=4 id=pbsrch'+t.dat[i][0]+t.dat[i][1]+'>* '+translate("MISTED")+' * &nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+ t.dat[i][0] +','+ t.dat[i][1] +','+t.selectedCity.id+');return false;"><A>'+translate("QuickScout")+'</a></span></td></tr>';
+				if (document.getElementById('paautoqs') && t.searchRunning) {
+					if (document.getElementById('paautoqs').checked) { setTimeout(unsafeWindow.quickscoutsearch,5000*qsdelay,t.dat[i][0],t.dat[i][1],t.selectedCity.id); }
+					qsdelay = qsdelay + 1;
+				}
+			  }	
+			  else
+				m += '<TD colspan=4 id=pbsrch'+t.dat[i][0]+t.dat[i][1]+'>'+t.dat[i][9]+'</td></tr>';
+			  
+			}  
             else{
+              var linestyle = '';
+			  if (t.dat[i][5]) linestyle = 'color:#888;';
               var allStyle = '';
               if ( t.dat[i][12]=='f')
                 allStyle = 'class=pbTextFriendly';
               else if ( t.dat[i][12]=='h')
                 allStyle = 'class=pbTextHostile';
-              m += '<TD>'+ t.dat[i][9]+'</td><TD align=right>'+ t.dat[i][10] +'</td><TD><SPAN '+ allStyle +'>'+ t.dat[i][11]+'</span></td><TD>'+( t.dat[i][13]?'<SPAN class=boldDarkRed>'+translate("ONLINE")+'</span>':'')+'</td><TD><A onclick="pbSearchLookup('+ t.dat[i][7] +')">'+translate("Lookup")+'</a></td></tr>';
+              m += '<TD style="'+linestyle+'">'+ t.dat[i][9]+'</td><TD align=right style="'+linestyle+'">'+ t.dat[i][10] +'</td><TD style="'+linestyle+'"><SPAN '+ allStyle +'>'+ t.dat[i][11]+'</span></td><TD>'+( t.dat[i][13]?'<SPAN class=boldDarkRed>'+translate("ONLINE")+'</span>':'')+'</td><TD><A onclick="pbSearchLookup('+ t.dat[i][7] +')">'+translate("Lookup")+'</a></td></tr>';
             }
             } else {
           m += '<TD align=right  valign="top">'+ t.dat[i][2].toFixed(2) +' &nbsp; </td><TD align=right>'+ t.dat[i][4] +'</td><TD> &nbsp; '+ tileNames[ t.dat[i][3]]
@@ -7353,7 +7367,8 @@ Tabs.Search = {
       }
         m += '</table></div>';
         m += '<BR><input type=checkbox id="pbskip">Skip targets when errors occur';
-        m += '<BR><input type=checkbox id="pbsallcities">Scout from all cities';
+        m += '<BR><input type=checkbox id="pbsallcities">Scout from all cities (NOT UNDER AP!)';
+        m += '<BR><input type=checkbox id="pbsquick" checked>Quickscout mists (update search & recall)';
         m += '<BR><CENTER>'+ strButton20(translate('Start Scout'), 'id=pbSrcStartScout') +'</center>';
         m += '<CENTER><DIV style="width:70%; max-height:75px; overflow-y:auto;" id=pbSrcScoutResult></DIV></center>';
     popScout.getMainDiv().innerHTML = m;
@@ -7406,9 +7421,13 @@ Tabs.Search = {
     logit('first '+Number(March.getTotalSlots(city.id))+' second: '+Number(March.getMarchSlots(city.id)));
      if (Number(Number(March.getTotalSlots(city.id))-Number(March.getMarchSlots(city.id))) <= 0){
      	if(document.getElementById('pbsallcities').checked) { 
-     		var newcity = Number(city.idx)+1;
-     		if(newcity > Number(Cities.numCities)-1) newcity = 0;
-     		city = Cities.cities[newcity];
+			var oldcityidx = Number(city.idx);
+			do {
+				var newcity = Number(city.idx)+1;
+				if(newcity > Number(Cities.numCities)-1) newcity = 0;
+				city = Cities.cities[newcity];
+			}	
+			while (!unsafeWindow.cm.PrestigeCityPlayerProtectionController.isActive(city.id) || (city.idx == oldcityidx))
      	};
         setTimeout(function(){t.doScoutCount(list, city, total, count)}, 5000);
         document.getElementById('pbSrcScoutResult').innerHTML += translate('Waiting for rally point to clear')+'...';
@@ -7455,18 +7474,70 @@ Tabs.Search = {
              unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
              if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
              document.getElementById('pbSrcScoutResult').innerHTML += translate('Sent!')+'<BR>';
+             if(document.getElementById('pbsquick').checked) {
+				var misted = false;
+				var t = Tabs.Search;
+				var numRows = t.mapDat.length;
+				for (i=0; i<numRows; i++){
+					if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
+						misted = t.mapDat[i][5];
+					}
+				}	
+				if (misted) {
+					fetchmarch(rslt.marchId,FillSearchDiv); // mist quick scout
+				}	
+             }
              if (notify)
               setTimeout(function(){ notify(count+1); }, 4000);
          } else {
-          if(document.getElementById('pbskip').checked) {
-             document.getElementById('pbSrcScoutResult').innerHTML += translate('Failed! Moving on')+'....<BR>';
-             if (notify)
-              setTimeout(function(){ notify(count+1); }, 4000);
-          } else {
-             document.getElementById('pbSrcScoutResult').innerHTML += translate('Failed! Retrying')+'....<BR>';
-             if (notify)
-              setTimeout(function(){ notify(count); }, 4000);
-        }
+             if(document.getElementById('pbsquick').checked) {
+				var misted = false;
+				var t = Tabs.Search;
+				var numRows = t.mapDat.length;
+				for (i=0; i<numRows; i++){
+					if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
+						misted = t.mapDat[i][5];
+					}
+				}	
+				if (misted) {
+					divid = 'pbsrch'+x+y;
+					if (!document.getElementById(divid)) return;
+					var msg = '<span style="color:#f00;">Error Code - '+rslt.error_code+'</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+city.id+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+					if(rslt.error_code == 208) {
+						msg = '<span style="color:#888;">Truced - Cannot Scout!</span>';
+						// update search results .. find correct row
+						var t = Tabs.Search;
+						var numRows = t.mapDat.length;
+						for (i=0; i<numRows; i++){
+							if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
+								t.mapDat[i][7] = 0;
+								t.mapDat[i][9] = msg;
+							}	
+						}
+					}
+					if(rslt.error_code == 210) {
+						msg = '<span style="color:#f00;">Rally Point Full!</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+city.id+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+					}
+					document.getElementById(divid).innerHTML = msg;
+				}
+			}	
+		 
+			if(document.getElementById('pbskip').checked) {
+				document.getElementById('pbSrcScoutResult').innerHTML += translate('Failed! Moving on')+'....<BR>';
+				if (notify)
+					setTimeout(function(){ notify(count+1); }, 4000);
+			} else {
+				if(rslt.error_code == 208) {
+					document.getElementById('pbSrcScoutResult').innerHTML += translate('Truced! Moving on')+'....<BR>';
+					if (notify)
+						setTimeout(function(){ notify(count+1); }, 4000);
+				}
+				else {
+					document.getElementById('pbSrcScoutResult').innerHTML += translate('Failed! Retrying')+'....<BR>';
+					if (notify)
+						setTimeout(function(){ notify(count); }, 4000);
+				}		
+			}
           }
         },
         onFailure: function () {}
@@ -25832,7 +25903,7 @@ function QuickScout() {
 						var resources = [0,0,0,0,0,0];
 						uW.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, uW.currentcityid, true, ut + rtimediff);
 						if (rslt.updateSeed) { uW.update_seed(rslt.updateSeed) }
-						if (e.tile.level == 0) fetchmarch(rslt.marchId); // mist scout
+						if (e.tile.level == 0) fetchmarch(rslt.marchId,PlayerPopup); // mist scout
 			        }
 					else {
 						uW.Modal.showAlert(uW.printLocalError(rslt.error_code, rslt.msg, rslt.feedback))
@@ -25841,9 +25912,71 @@ function QuickScout() {
 			    onFailure: function () {},
 		},true);
 	}
+
+	uW.quickscoutsearch = function(x,y,cid) {
+		// send 1 scout
+	  	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		if (cid==null) 
+			params.cid = uW.currentcityid; 
+		else
+			params.cid = cid; 
+	    params.type = 3
+	    params.kid = 0
+	    params.xcoord = x;
+	    params.ycoord = y;
+	  	params.u3 = 1;
+	  	params.gold = 0;
+	  	params.r1 = 0;
+	  	params.r2 = 0;
+	  	params.r3 = 0;
+	  	params.r4 = 0;
+	  	params.r5 = 0;
+
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
+			    method: "post",
+			    parameters: params,
+			    loading: true,
+			    onSuccess: function (rslt) {
+			        if (rslt.ok) {
+						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+						var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
+						var ut = uW.unixtime();
+						var unitsarr = {};
+						unitsarr[3] = 1;
+						var resources = [0,0,0,0,0,0];
+						uW.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, uW.currentcityid, true, ut + rtimediff);
+						if (rslt.updateSeed) { uW.update_seed(rslt.updateSeed) }
+						fetchmarch(rslt.marchId,FillSearchDiv); // mist scout
+					}
+					else {
+						divid = 'pbsrch'+x+y;
+						if (!document.getElementById(divid)) return;
+						var msg = '<span style="color:#f00;">Error Code - '+rslt.error_code+'</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+						if(rslt.error_code == 208) {
+							msg = '<span style="color:#888;">Truced - Cannot Scout!</span>';
+							// update search results .. find correct row
+							var t = Tabs.Search;
+							var numRows = t.mapDat.length;
+							for (i=0; i<numRows; i++){
+								if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
+									t.mapDat[i][7] = 0;
+									t.mapDat[i][9] = msg;
+								}	
+							}
+						}
+						if(rslt.error_code == 210) {
+							msg = '<span style="color:#f00;">Rally Point Full!</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+						}
+						document.getElementById(divid).innerHTML = msg;
+					}
+			    }, 
+			    onFailure: function () {},
+		},true);
+	}
+	
 };
 
-function fetchmarch(mid) {
+function fetchmarch(mid,notify) {
 	var uW = unsafeWindow;
 
 	var params = uW.Object.clone(uW.g_ajaxparams);
@@ -25858,43 +25991,76 @@ function fetchmarch(mid) {
 			}
 //			logit(JSON2.stringify(rslt));
 			if (rslt.march.toPlayerId != 0) {
-				fetchmarchPlayerInfo(rslt.march.toPlayerId, PlayerPopup, rslt.march)
+				fetchmarchPlayerInfo(rslt.march.toPlayerId, notify, rslt.march)
 			}
 			else {
-				unsafeWindow.Modal.multiButton({
-					buttons: [{
-						txt: "Recall Scout",
-						exe: function () {
-							uW.attack_recall(mid, 0, uW.currentcityid)
-							unsafeWindow.Modal.hideModal();
-						}
-					}, {
-						txt: unsafeWindow.g_js_strings.commonstr.cancel,
-						exe: function () {
-							unsafeWindow.Modal.hideModal()
-						}
-					}],
-					body: "<div>There is no longer a city at this location</div>",
-					title: "QuickScout Result"
-				});
+				notify({errorMsg:"<div>There is no longer a city at this location</div>"}, rslt.march);
 			}
 		},
-	    onFailure: function () {}
+	    onFailure: function () {notify ({errorMsg:'AJAX error'});}
 	});		
 };
+
+function cancelmarch (mid){
+	var uW = unsafeWindow;
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	params.mid = mid;
+	for (var c=0; c<Cities.numCities; c++){
+		var que = Seed.queue_atkp['city'+ Cities.cities[c].id];
+		if (matTypeof(que)=='array')
+			continue;
+		for (k in que){
+			if (k == 'm'+mid){
+				params.cid = Cities.cities[c].id;
+				break;
+			}
+		}    
+	}    
+	new MyAjaxRequest(uW.g_ajaxpath + "ajax/cancelMarch.php" + uW.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (rslt) {
+			if (rslt.ok) {
+				if (rslt.updateSeed) {
+					var marchtime = parseInt(Seed.queue_atkp["city" + params.cid]["m" + params.mid].returnUnixTime) - parseInt(Seed.queue_atkp["city" + params.cid]["m" + params.mid].destinationUnixTime);
+					var ut = uW.unixtime();
+					if (Seed.playerEffects.returnExpire > uW.unixtime()) {
+						marchtime *= 0.5
+					}
+					Seed.queue_atkp["city" + params.cid]["m" + params.mid].destinationUnixTime = rslt.destinationUnixTime || ut;
+					Seed.queue_atkp["city" + params.cid]["m" + params.mid].returnUnixTime = rslt.returnUnixTime || ut + marchtime * rslt.returnMultiplier;
+					Seed.queue_atkp["city" + params.cid]["m" + params.mid].marchStatus = 8;
+					uW.update_seed(rslt.updateSeed)
+				}
+				for (var j in uW.cm.UNIT_TYPES) {
+					j = uW.cm.UNIT_TYPES[j];
+					Seed.queue_atkp["city" + params.cid]["m" + params.mid]["unit" + j + "Return"] = parseInt(Seed.queue_atkp["city" + params.cid]["m" + params.mid]["unit" + j + "Count"])
+				}	
+			}
+		},
+		onFailure : function () {}
+	})
+}    
 
 function PlayerPopup (rslt,march) {
 //  logit(JSON2.stringify(rslt));
 //  logit(JSON2.stringify(march));
 
 	var uW = unsafeWindow;
+
+	if(rslt.errorMsg) {
+		cancelmarch(march.marchId);
+		uW.Modal.showAlert(rslt.errorMsg);
+		return;
+	}
+
 	var u = rslt.userInfo[0];
 
 	var a = 'None';
 	if (u.allianceName)
 		a = u.allianceName +' ('+ getDiplomacy(u.allianceId) + ')';
  	
-	var n = '<div> <b>Name:</b> ' + u.genderAndName + '<br/><b>Might:</b> ' + addCommas(u.might) +
+	var n = '<div> <b>Name:</b> ' + u.genderAndName + '<br/><b>Might:</b> ' + addCommas(parseInt(u.might)) +
 	'<br/><b>' + uW.g_js_strings.commonstr.alliance+':</b> '+ a +
 	'<br/><b>City Co-ords:</b> ('+ march.toXCoord + ',' + march.toYCoord + ')' +
 	'<br/><b>City Level:</b> '+ march.toTileLevel +
@@ -25904,18 +26070,93 @@ function PlayerPopup (rslt,march) {
 		buttons: [{
 			txt: "Recall Scout",
 			exe: function () {
-				uW.attack_recall(march.marchId, 0, uW.currentcityid)
+				uW.attack_recall(march.marchId, 2, uW.currentcityid);
 				unsafeWindow.Modal.hideModal();
+			}
+		}, {
+			txt: "Post to Chat",
+			exe: function () {
+			    cText = n.replace(/\|\|\s*$/, "");
+				cText = ":::. |QuickScout Result|| "+ cText;
+				sendChat ("/a "+  cText);
+			}
+		}, {
+			txt: "Monitor",
+			exe: function () {
+				uW.btMonitorExternalCallUID(u.userId);
 			}
 		}, {
 			txt: unsafeWindow.g_js_strings.commonstr.cancel,
 			exe: function () {
-				unsafeWindow.Modal.hideModal()
+				unsafeWindow.Modal.hideModal();
 			}
 		}],
 		body: n,
 		title: "QuickScout Result"
 	});
+};
+
+function FillSearchDiv (rslt,march) {
+//  logit(JSON2.stringify(rslt));
+//  logit(JSON2.stringify(march));
+
+	var uW = unsafeWindow;
+
+	cancelmarch(march.marchId);
+	divid = 'pbsrch'+march.toXCoord+march.toYCoord;
+	if (!document.getElementById(divid)) return;
+	
+	if(rslt.errorMsg) {
+		var n = '<span style="color:#888;">Misted Plain</span>';
+		document.getElementById(divid).innerHTML = n;
+		// update search results .. find correct row
+		var t = Tabs.Search;
+		var numRows = t.mapDat.length;
+		for (i=0; i<numRows; i++){
+			if (t.mapDat[i][0] == march.toXCoord && t.mapDat[i][1] == march.toYCoord) {
+				t.mapDat[i][7] = 0;
+				t.mapDat[i][9] = n;
+			}	
+		}
+		return;
+	}
+
+	var u = rslt.userInfo[0];
+
+	var a = 'None';
+	if (u.allianceName)
+		a = u.allianceName +' ('+ getDiplomacy(u.allianceId) + ')';
+ 	
+	var n = '<td><span style="color:#888;">' + u.name + '</span></td><td><span style="color:#888;">' + addCommas(parseInt(u.might)) +
+	'</span></td><td><span style="color:#888;">' + a + '</span></td><td>&nbsp;</td><TD><A onclick="pbSearchLookup('+ u.userId +')">'+translate("Lookup")+'</a></td>';
+	document.getElementById(divid).outerHTML = n;
+	
+	// update search results .. find correct row
+	
+	var t = Tabs.Search;
+
+	var numRows = t.mapDat.length;
+	for (i=0; i<numRows; i++){
+		if (t.mapDat[i][0] == march.toXCoord && t.mapDat[i][1] == march.toYCoord) {
+			t.mapDat[i][7] = u.userId;
+			t.mapDat[i][9] = u.name;
+			t.mapDat[i][10] = addCommas(parseInt(u.might));
+			t.mapDat[i][11] = a;
+			t.mapDat[i][14] = u.allianceId;
+			// fire off player online query
+			var uList = [];
+			uList.push(u.userId);
+			t.fetchPlayerStatus(uList,function(r) {	var t = Tabs.Search;
+													var numRows = t.mapDat.length;
+													for (u in r.data) {
+														for (i=0; i<numRows; i++) {
+															if (t.mapDat[i][7] == u) { t.mapDat[i][13] = r.data[u]?1:0;}
+														}
+													}
+													t.dispMapTable ();
+												  });
+		}
+	}
 };
 
 function fetchmarchPlayerInfo(uid, notify, march){
