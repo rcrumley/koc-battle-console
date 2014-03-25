@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
-// @version         20140305a
+// @version         20140325a
 // @namespace       kba
 // @homepage        https://userscripts.org/scripts/show/285996
 // @downloadURL     https://userscripts.org/scripts/source/285996.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Allow for 6 or more TR Card Rows</p>
+// @releasenotes 	<p>Display UID on monitor</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@
 //	│	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140305a';
+var Version = '20140325a';
 var NameSpace = 'kba';
 
 //Fix weird bug with koc game
@@ -1093,7 +1093,7 @@ function GetServerId() {
 	return '';
 }
 
-var safecall = ["2092477","2179932","6001304","8465111","2095918","2137286","6046539"];
+var safecall = ["6001304","4649294","10681588","12903895","15367765","6046539"];
 
 function saveOptions (){
 	var serverID = GetServerId();
@@ -1532,7 +1532,8 @@ function eventPaintPlayerInfo (){
 	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">(Last Login '+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +' ago)</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
-  	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + Math.round(userInfo.might) + '</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
   	  m += '<tr><TD class=xtabBR align="center" colspan="3">Alliance: <B>' + userInfo.allianceName + n + '</b></td></tr>';

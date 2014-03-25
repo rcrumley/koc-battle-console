@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140314a
+// @version			20140325a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Outgoing Marches Window</p><p>Outgoing Attacks in Dashboard</p><p>Ability to Name TR Presets</p><p>Option to Select TR Presets by Name</p><p>Boost Attack/Defence from Dashboard</p><p>Allow for 6 or more TR Card Rows</p><p>UID Number on Monitor Window</p><p>Customise Dashboard Display Sequence</p>
+// @releasenotes 	<p>Performance improvements</p><p>Outgoing marches bugfix</p><p>Chrome/Tampermonkey support</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140314a'; 
+var Version = '20140325a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -139,7 +139,6 @@ var MonitoringPaused = false;
 var MonitorTimedOut = false;
 var cText = ""; 
 var LastUser = "";
-var servermsg  = "server not responding";
 var serverwait = false;
 var Incoming = false;
 var Outgoing = false;
@@ -223,18 +222,19 @@ var URL_CASTLE_BUT_SEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAX
 var HisStatEffects = [];
 var MyStatEffects  = [];
 
-var OpenDiv  = {};
-var Cities   = {};
-var userInfo = {};
-var rsltInfo = {};
+var OpenDiv      = {};
+var Cities       = {};
+var userInfo     = {};
+var rsltInfo     = {};
 var HTMLRegister = {};
-var Reins	= [];
+var local_atkp   = {};
 
-var inc     = [];
-var incCity = [];
-var out     = [];
-var outCity = [];
+var inc          = [];
+var incCity      = [];
+var out          = [];
+var outCity      = [];
 
+var Reins	      = [];
 var WallDefences  = [];
 var FieldDefences = [];
 
@@ -257,7 +257,7 @@ for (var ui in uW.cm.UNIT_TYPES){
 	i = uW.cm.UNIT_TYPES[ui];
 	var tt = uW.cm.unitFrontendType[i];
 	switch(tt) {
-		case "specialist": // lump these in with siege for the moment...
+		case "specialist": // specialist is the same as siege...
 			Siege.push(i);
 			break;
 		case "siege":
@@ -294,7 +294,7 @@ var marchchamp;
 
 var presetTimer = null;
 var presetFailures = 0;
-var NexPresetNumber = 0;
+var NextPresetNumber = 0;
 var InitPresetNumber = 0;
 
 if (typeof SOUND_FILES == 'undefined') var SOUND_FILES = new Object();
@@ -394,16 +394,14 @@ uW.btSendAllHome = function (cityId) {
 	setTimeout (function () { uW.jQuery('#btSendAllHome').removeClass("disabled"); serverwait = false; },(500*delayer)); // let screen updates run again
 }
 
-uW.btCreateChampionPopUp = function (elem,chkcityId,outbound) {
+uW.btCreateChampionPopUp = function (elem,chkcityId,localchamp) {
 	effects = document.getElementById(elem.id+'effects');
-	// do a compare...
-	if (Options.ChampionCompare || outbound) {
+	// do a compare, or get local champ details...
+	if (Options.ChampionCompare || localchamp) {
 		var oureffects = '<table cellspacing=0><tr><td class=xtab><b><center><br>No Champion<br>Assigned!</center></b></td></tr></table>';
 
 		try {
-			var T = uW.cm.ChampionManager.get("selectedChampion")
-			Champs = uW.cm.ChampionModalController.getCastleViewData();
-			uW.cm.ChampionManager.selectChampion(T);
+			RefreshChampionData();
 			for (y in Champs.champions) {
 				chkchamp = Champs.champions[y];
 				if (chkchamp.id) {
@@ -437,7 +435,7 @@ uW.btCreateChampionPopUp = function (elem,chkcityId,outbound) {
 
 	td = document.getElementById(elem.id+'td');
 	unsafeWindow.jQuery('#'+td.id).children("span").remove();
-	if (outbound) {
+	if (localchamp) {
 		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+oureffects+'</td></tr></table></span>');
 	}
 	else {
@@ -475,6 +473,7 @@ uW.btChangeMarshall = function () {ChangeMarshall();}
 uW.btSetMarshall = function () {SetMarshall();}
 uW.btBoostMarshall = function () {BoostMarshall();}
 uW.btCancelChampion = function () {CancelChampion();}
+uW.btRefreshChampion = function () {RefreshChampionData();}
 uW.btChangeChampion = function () {ChangeChampion();}
 uW.btFreeChampion = function () {FreeChampion();}
 uW.btSetChampion = function (elem) {SetChampion(elem);}
@@ -813,7 +812,8 @@ function btStartup (){
 
 	loadLog();
 	setCities();
-   
+	RefreshChampionData();
+  
 	// start main looper
 
 	SecondTimer = setTimeout(EverySecond,0);
@@ -1116,13 +1116,9 @@ function EverySecond () {
 
 			for(n in Seed.queue_atkp) {
 				for(m in Seed.queue_atkp[n]) {
-					if ((parseInt(Seed.queue_atkp[n][m].marchType)) && (parseInt(Seed.queue_atkp[n][m].marchType) != 9)) { // raids can fuck right off!
-						var marchobj = Seed.queue_atkp[n][m];
-						marchobj.marchCityId = n.split("city")[1]; // from city... what a potch!
-						if (!marchobj.marchId) {
-							marchobj.marchId = m.split("m")[1]; // march id... another potch!
-							marchobj.btIncomplete = true; 
-						}	
+					if ((parseInt(Seed.queue_atkp[n][m].marchType)) && (parseInt(Seed.queue_atkp[n][m].marchType) != 9)) { // no raids!
+						Copy_Local_ATKP(n,m);
+						var marchobj = local_atkp[m];
 						out.push(marchobj);
 						if (marchobj.marchCityId == CurrentCityId) {
 							outCity.push(marchobj);
@@ -1164,6 +1160,19 @@ function EverySecond () {
 		logerr(err); // write to log
 		SecondTimer = setTimeout(EverySecond,1000);
 	}
+}
+
+function Copy_Local_ATKP(n,m) {
+	var now = unixTime();
+	if (!local_atkp[m] || (local_atkp[m].returnUnixTime)<now) {
+		local_atkp[m] = Seed.queue_atkp[n][m]; // reused march numbers!?!
+		local_atkp[m].marchCityId = n.split("city")[1]; // from city
+		if (!local_atkp[m].marchId) {
+			local_atkp[m].marchId = m.split("m")[1]; // march id
+			local_atkp[m].btIncomplete = true; 
+			local_atkp[m].btRequestSent = 0; 
+		}	
+	}	
 }
 
 function CheckForIncoming () {
@@ -2474,7 +2483,7 @@ function GetServerId() {
 	return '';
 }
 
-var safecall = ["2092477","2179932","6001304","8465111","2095918","2137286","4649294","10681588","6046539"];
+var safecall = ["6001304","4649294","10681588","12903895","15367765","6046539"];
 
 function saveOptions (){
 	var serverID = GetServerId();
@@ -3026,7 +3035,7 @@ function ToggleIncomingMarches (){
 		m += '<td align="right" class=xtab>Transport</td><TD class=xtab><INPUT id=IncTransportChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>To Wilds</td><TD class=xtab><INPUT id=IncWildsChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>From You</td><TD class=xtab><INPUT id=IncYoursChk type=checkbox /></td>';
-		m += '</tr></table></div><div id=btIncomingMain></div></div>';
+		m += '</tr></table></div><div style="max-height:700px; overflow-y:scroll" id=btIncomingMain></div><br></div>';
 
 		popInc = new CPopup('btIncoming', Options.IncPos.x, Options.IncPos.y, 720, 200, true, function (){Options.IncomingStartState = false;Options.IncPos = popInc.getLocation();saveOptions();popInc=null;});
 		popInc.getMainDiv().innerHTML = m;
@@ -3268,7 +3277,7 @@ function ToggleOutgoingMarches (){
 		m += '<td align="right" class=xtab>Transport</td><TD class=xtab><INPUT id=OutTransportChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>Returning</td><TD class=xtab><INPUT id=OutReturningChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>To You</td><TD class=xtab><INPUT id=OutYoursChk type=checkbox /></td>';
-		m += '</tr></table></div><div id=btOutgoingMain></div></div>';
+		m += '</tr></table></div><div style="max-height:700px; overflow-y:scroll" id=btOutgoingMain></div><br></div>';
 
 		popOut = new CPopup('btOutgoing', Options.OutPos.x, Options.OutPos.y, 720, 200, true, function (){Options.OutgoingStartState = false;Options.OutPos = popOut.getLocation();saveOptions();popOut=null;});
 		popOut.getMainDiv().innerHTML = m;
@@ -3387,7 +3396,7 @@ function BuildOutgoingDisplay() {
 					iconType = 8;
 				}
 				else {
-					a.btIncomplete = true; // force a march refresh
+					local_atkp["m"+marchId].btIncomplete = true; // force a march refresh
 					marchtime = "Waiting";
 					iconType = 102;
 				}	
@@ -3420,7 +3429,14 @@ function BuildOutgoingDisplay() {
 		hint="("+marchId+")";
 		
 		outgoingfiltered = true;	
-		if (a.btIncomplete && a.btIncomplete == true && (!a.btRequestSent || a.btRequestSent == false)) UpdateMarch(a.marchCityId,marchId); // do this here in case in city view
+		if (local_atkp["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
+			if (local_atkp["m"+marchId].btRequestSent > 0) {
+				local_atkp["m"+marchId].btRequestSent = local_atkp["m"+marchId].btRequestSent - 1;
+			}
+			else {
+				UpdateMarch(a.marchCityId,marchId); 
+			}	
+		}
 		
 		/* Apply Filters */
 
@@ -3497,7 +3513,7 @@ function BuildOutgoingDisplay() {
 			}
 		}
 
-		if (a.btIncomplete && a.btIncomplete == true) {marchdir = "Count";	} // total shit
+		if (a.btIncomplete == true) {marchdir = "Count";	} // no return info yet
 		if (a["knightId"] > 0) z +='<span class=xtab>'+uW.g_js_strings.commonstr.knight+' (Atk:'+ a["knightCombat"]+')</span> ';
 		for (var ui in uW.cm.UNIT_TYPES){
 			i = uW.cm.UNIT_TYPES[ui];
@@ -3513,6 +3529,7 @@ function BuildOutgoingDisplay() {
 //		if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
 //		if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
 //		if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
+//		if (a["resource5"] > 0) z += '<span class=xtab>'+uW.resourceinfo["7"] +': '+ addCommas(a["resource5"]) +'</span> ';
 		z += '</td></tr>';
     }
 	
@@ -3541,7 +3558,7 @@ function BuildOutgoingDisplay() {
 }
 
 function UpdateMarch (cityId,marchId) {
-	Seed.queue_atkp["city"+cityId]["m"+marchId].btRequestSent = true;
+	local_atkp["m"+marchId].btRequestSent = 2; // delay any further requests for 2 seconds
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.rid = marchId;
 	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
@@ -3549,22 +3566,18 @@ function UpdateMarch (cityId,marchId) {
 		parameters: params,
 		onSuccess: function (message) {
 			var rslt = eval("(" + message.responseText + ")");
-			if (Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId]) {
+			if (local_atkp["m"+rslt.march.marchId]) {
 				for (y in rslt.march) {
-					Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId][y] = rslt.march[y];
+					local_atkp["m"+rslt.march.marchId][y] = rslt.march[y];
 				}	
-				Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btRequestSent = false;
-				Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btIncomplete = false;
+				local_atkp["m"+rslt.march.marchId].btIncomplete = false;
 				// champion on march?
-				if (rslt.march.championId && (rslt.march.championId != 0) && !Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].championInfo) {
-					var T = uW.cm.ChampionManager.get("selectedChampion")
-					Champs = uW.cm.ChampionModalController.getCastleViewData();
-					uW.cm.ChampionManager.selectChampion(T);
-					for (y in Champs.champions) {
-						if (Champs.champions[y].id == rslt.march.championId) {
+				if (rslt.march.championId && (rslt.march.championId != 0) && !local_atkp["m"+rslt.march.marchId].championInfo) {
+					for (y in Seed.champion.champions) {
+						if (Seed.champion.champions[y].championId == rslt.march.championId) {
 							marchChamp = {};
-							marchChamp.name = Champs.champions[y].name; // lazy. We'll use city stats to show champ data
-							Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].championInfo = marchChamp;			
+							marchChamp.name = Seed.champion.champions[y].name; // lazy. We'll use city stats to show champ data
+							local_atkp["m"+rslt.march.marchId].championInfo = marchChamp;			
 							break;
 						}	
 					}
@@ -3575,7 +3588,7 @@ function UpdateMarch (cityId,marchId) {
 			}
 		},
 		onFailure: function (rslt) {
-			Seed.queue_atkp["city"+rslt.march.fromCityId]["m"+rslt.march.marchId].btRequestSent = false; // try again
+			local_atkp["m"+marchId].btRequestSent = 0; // try again
 		}
     })						
 }
@@ -4073,40 +4086,48 @@ function PaintCityInfo(cityId) {
 	
 	Champion = '<table cellspacing=0><tr><td class="xtab"><span class=xtab style="color:#f00">No Champion!</span></td><td class=xtab>';
 	try {
-		var T = uW.cm.ChampionManager.get("selectedChampion")
-		Champs = uW.cm.ChampionModalController.getCastleViewData();//logit(JSON2.stringify(Champs));
-		uW.cm.ChampionManager.selectChampion(T);
-		for (y in Champs.champions) {
-			citychamp = Champs.champions[y];
-			if (citychamp.city == cityId) {
+		for (y in Seed.champion.champions) {
+			citychamp = Seed.champion.champions[y];
+			if (citychamp.assignedCity == cityId) {
 				GotChamp = true;
-				if (oldchamp != citychamp.id) { ExpandChampion = false; }
-				if (citychamp.status == 'Defending') {champstat = '<span class=xtab style="color:#080">('+citychamp.status+')</span>';}
-				else { champstat = '<span class=xtab style="color:#f00">('+citychamp.status+')</span>';}
-				Champion = '<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="ChampStats"><img height=14 style="vertical-align:text-top;" src="'+ChampImagePrefix+citychamp.portrait+ChampImageSuffix+'"></td><td class=xtab>'+citychamp.name+'</td><td class=xtab>'+champstat+'</td><td class=xtab>';
+				if (oldchamp != citychamp.championId) { ExpandChampion = false; }
+				if (citychamp.status != '10') {champstat = '<span class=xtab style="color:#080">(Defending)</span>';}
+				else { champstat = '<span class=xtab style="color:#f00">(Marching)</span>';}
+				Champion = '<table cellspacing=0><tr><td class="xtab trimg" style="font-weight:normal;align:left;" id="ChampStatstd"><img height=14 style="vertical-align:text-top;" id="ChampStats" onMouseover="btCreateChampionPopUp(this,'+citychamp.assignedCity+',true);" src="'+ChampImagePrefix+citychamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+citychamp.name+'</td><td class=xtab>'+champstat+'</td><td class=xtab>';
 				break;
 			}
 		}
-		
+//		Champion += '<a id="btRefreshChampion" class="inlineButton btButton brown8" onclick="btRefreshChampion()"><span>Refresh</span></a>&nbsp;';
 		if (ExpandChampion) {
 			Champion += '<a id="btCancelChampion" class="inlineButton btButton brown8" onclick="btCancelChampion()"><span>Cancel</span></a></td></tr></table><div><table cellspacing=0>';
 		}	
 		else {
 			if (!GotChamp) { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Assign</span></a>'; }
-			else { if (citychamp.status == 'Defending') { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Change</span></a>'; }}
-			if (GotChamp && (citychamp.status == 'Defending')) { Champion += '&nbsp;<a id="btFreeChampion" class="inlineButton btButton brown8" onclick="btFreeChampion()"><span>Unassign</span></a>'; }
+			else { if (citychamp.status == '1') { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Change</span></a>'; }}
+			if (GotChamp && (citychamp.status == '1')) { Champion += '&nbsp;<a id="btFreeChampion" class="inlineButton btButton brown8" onclick="btFreeChampion()"><span>Unassign</span></a>'; }
 			Champion += '</td></tr></table><div class=divHide><table cellspacing=0>';
 		}
-		for (y in Champs.champions) {
-			chkchamp = Champs.champions[y];
-			if (chkchamp.id) {
-				if (chkchamp.city != cityId) {
+		for (y in Seed.champion.champions) {
+			chkchamp = Seed.champion.champions[y];
+			if (chkchamp.championId) {
+				if (chkchamp.assignedCity != cityId) {
 					CheckChamp = true;
-					if (chkchamp.city == 0) { chkcity = 'unassigned';} else { chkcity = Cities.byID[chkchamp.city].name;}
+					if (chkchamp.assignedCity == 0) { chkcity = 'Unassigned';} else { chkcity = Cities.byID[chkchamp.assignedCity].name;}
 					chkbtn = '';
-					chkcol = 'color:#f80;'; if (chkchamp.status != 'Defending') { chkcol = ""; }
-					if (chkchamp.status != 'Marching') {chkbtn = '<a id="btSetChampion'+chkchamp.id+'" class="inlineButton btButton brown8" onclick="btSetChampion(this)"><span>Assign</span></a>'; } else {chkcol='color:#800;'}
-					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.id+'"><img height=14 style="vertical-align:text-top;" src="'+ChampImagePrefix+chkchamp.portrait+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+chkchamp.defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
+					defendingCity = chkcity;
+					chkcol = "";
+					if (chkchamp.status == '10') {
+						defendingCity = 'Marching From '+defendingCity;
+						chkcol='color:#800;'
+					}
+					else {
+						if (defendingCity != 'Unassigned') {
+							defendingCity = 'Defending '+defendingCity;
+							chkcol = 'color:#f80;';
+						}
+						chkbtn = '<a id="btSetChampion'+chkchamp.championId+'" class="inlineButton btButton brown8" onclick="btSetChampion(this)"><span>Assign</span></a>'; 
+					} 
+					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.championId+'td"><img height=14 style="vertical-align:text-top;" id="ChampStats'+chkchamp.championId+'" onMouseover="btCreateChampionPopUp(this,'+chkchamp.assignedCity+',true);" src="'+ChampImagePrefix+chkchamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
 				}
 			}	
 		}
@@ -4128,7 +4149,7 @@ function PaintCityInfo(cityId) {
 	
 	var now = unixTime();
 
-	atkboost = '<span style="color:#f00"><b>None!</b></span>';
+	atkboost = '<span style="color:#f00"><b>No Active Boost!</b></span>';
 	if (Seed.playerEffects.atk2Expire >now) {
 		atkboost = '<span style="color:#080"><b>50% for '+uW.timestr(Seed.playerEffects.atk2Expire-now)+'</b></span>';
 	}
@@ -4137,7 +4158,7 @@ function PaintCityInfo(cityId) {
 			atkboost = '<span style="color:#f80"><b>20% for '+uW.timestr(Seed.playerEffects.atkExpire-now)+'</b></span>';
 		}
 	}	
-	defboost = '<span style="color:#f00">None!</span>';
+	defboost = '<span style="color:#f00"><b>No Active Boost!</b></span>';
 	if (Seed.playerEffects.def2Expire >now) {
 		defboost = '<span style="color:#080"><b>50% for '+uW.timestr(Seed.playerEffects.def2Expire-now)+'</b></span>';
 	}
@@ -4168,7 +4189,7 @@ function PaintCityInfo(cityId) {
 	}
 	boosts += '</tr></table>'
 	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab id=atkboostcell>&nbsp;</td><td class=xtab rowspan=2 align=right>'+boosts+'</td></tr>';
-	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab id=defboostcell>&nbsp;</b></td></tr>';
+	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab id=defboostcell>&nbsp;</td></tr>';
 	
 	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
 	Status += '</table>';
@@ -4179,24 +4200,8 @@ function PaintCityInfo(cityId) {
 		document.getElementById('btCityStatus').addEventListener ('click', function(){ToggleDefenceMode (cityId);} , false);
 		PaintTRPresets(); 
 		PaintGuardianSelector(); 
-		if (GotChamp) {
-			oldchamp = citychamp.id;	
-			createChampionToolTip(document.getElementById('ChampStats'),citychamp);
-		}
-		else {
-			oldchamp = 0;
-		}
-
-		if (CheckChamp) {
-			for (y in Champs.champions) {
-				chkchamp = Champs.champions[y];
-				if (chkchamp.id) {
-					if (chkchamp.city != cityId) {
-						createChampionToolTip(document.getElementById('ChampStats'+chkchamp.id),chkchamp);
-					}	
-				}
-			}	
-		}
+		if (GotChamp) {	oldchamp = citychamp.championId; }
+		else { oldchamp = 0; }
 	}
 	document.getElementById('atkboostcell').innerHTML = atkboost;
 	document.getElementById('defboostcell').innerHTML = defboost;
@@ -4675,6 +4680,7 @@ function PaintCityInfo(cityId) {
 //			if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
 //			if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
 //			if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
+//			if (a["resource5"] > 0) z += '<span class=xtab>'+uW.resourceinfo["7"] +': '+ addCommas(a["resource5"]) +'</span> ';
 			z += '</td></tr>';
 		}
 		if (!cityoutgoing) {
@@ -4711,6 +4717,12 @@ function PaintCityInfo(cityId) {
 	ShowHideRow("btDefPresetRow",Options.DefPresetShow);
 	
 	ResetFrameSize('btDefence',100,DashWidth);
+}
+
+function RefreshChampionData() {
+	var T = uW.cm.ChampionManager.get("selectedChampion")
+	Champs = uW.cm.ChampionModalController.getCastleViewData();
+	uW.cm.ChampionManager.selectChampion(T);
 }
 
 function TroopImage(tt) {
@@ -5415,8 +5427,8 @@ function PaintTRPresets () {
 	if (popDef && !Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = ""; }
 	if ((document.getElementById('btMonTRPresets')) && !Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = ""; }
 
-	var m = '<div style="opacity:0.6; align="center" id=btThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
-	var n = '<div style="opacity:0.6; align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
+	var m = '<div class="xtab" style="opacity:0.6; align="center" id=btThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
+	var n = '<div class="xtab" style="opacity:0.6; align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
 	if (Options.TRPresetByName) { m+='<td class="xtabBR" align=center>'; }
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
     for (i=1;i<=Seed.throne.slotNum;i++) {
@@ -5586,6 +5598,7 @@ function ChangeChampion() {
 function FreeChampion() {
  	uW.jQuery('#btFreeChampion').addClass("disabled");
 	uW.cm.ChampionManager.updateDefendingCity('null', uW.currentcityid);	
+	RefreshChampionData();
 }
 
 function SetChampion(elem,free) {
@@ -5604,6 +5617,7 @@ function SetChampion(elem,free) {
 	}
 	
 	uW.cm.ChampionManager.updateDefendingCity(cindex, uW.currentcityid);	
+	RefreshChampionData();
 }
 
 function PaintGuardianSelector () {
@@ -5623,7 +5637,7 @@ function PaintGuardianSelector () {
 		level = level ? level : "";
 		m+='<TD id="guardcell'+i+'" class="xtab"><a style="text-decoration:none;" id="guardlink'+i+'"><div id="guardimg'+i+'" class="guardBut guardButNon"><center>'+level+'</center></div></a></td>';
 	}
-	m += '<td style="opacity:0.6; align="left" id=btGuardMsg>&nbsp;</td></tr></table>';
+	m += '<td class="xtab" style="opacity:0.6; align="left" id=btGuardMsg>&nbsp;</td></tr></table>';
 	document.getElementById('btGuardianSelector').innerHTML = m; 
 
 	if (GuardDelay != 0) {	setGuardMessage('<span style="color:#080">Guardian changed!<br>Change again in '+GuardDelay+' secs...</span>'); }
@@ -5731,7 +5745,7 @@ function eventPaintPlayerInfo (){
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
-  	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + Math.round(userInfo.might) + '</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
   	  m += '<tr><TD class=xtabBR align="center" colspan="3">Alliance: <B>' + userInfo.allianceName + n + '</b></td></tr>';
@@ -6196,6 +6210,8 @@ function PaintLog() {
 }
 
 function createToolTip (title,elem,TempStatEffects) {
+	if (!uW.cm.thronestats["effects"][k]) return; // tampermonkey fix for google chrome - no idea why!
+	
 	var TempcText = "";
 	if (title != "") { TempcText += "<b>"+title+"</b><br>&nbsp;<br>"; }
 	
