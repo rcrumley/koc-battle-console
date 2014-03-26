@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140325a
+// @version			20140326a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Performance improvements</p><p>Outgoing marches bugfix</p><p>Chrome/Tampermonkey support</p>
+// @releasenotes 	<p>TR log tooltips bugfix</p><p>Last Login bugfix</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140325a'; 
+var Version = '20140326a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -2528,8 +2528,8 @@ function convertTime (datestr,AddMins){
 function getLastLogDuration (datestr,AddMins){
 	if (!datestr) return;
 	var Interval = convertTime(new Date(datestr.replace(" ","T")),AddMins) - uW.g_timeoff - unixTime();
-	if (Interval < 0) return uW.timestr(Interval*(-1));
-	else return "";  
+	if (Interval < 0) return '(Last Login '+ uW.timestr(Interval*(-1)) +' ago';
+	else return '(Logged in a few minutes ago)';  
 }
 
 function getDuration (datestr,AddMins){
@@ -5741,7 +5741,7 @@ function eventPaintPlayerInfo (){
   	m += '<TABLE width="100%"><tr><td class=xtabBR align="center" colspan="3"><B>' + userInfo.name + o +'</b></td></tr>';
 
 	if (!userInfo.online)
-	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">(Last Login '+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +' ago)</td></tr>';
+	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +'</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
@@ -6210,8 +6210,6 @@ function PaintLog() {
 }
 
 function createToolTip (title,elem,TempStatEffects) {
-	if (!uW.cm.thronestats["effects"][k]) return; // tampermonkey fix for google chrome - no idea why!
-	
 	var TempcText = "";
 	if (title != "") { TempcText += "<b>"+title+"</b><br>&nbsp;<br>"; }
 	
