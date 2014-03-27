@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140319a
+// @version        20140327a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140319a';
+var Version = '20140327a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -5385,6 +5385,22 @@ getpinauth : function () {
              + ', MM Lv'+ parseInt(Seed.tech.tch11)
              + ', AH Lv'+ parseInt(Seed.tech.tch12);
         }
+		var baseProtection =0;
+		var totalSthPrt = 0;
+		var SthPrtResearch = parseInt(Seed.tech.tch14);
+		var TRStHsBoost = equippedthronestats(89);	
+		if (TRStHsBoost == 0) TRStHsBoost = 1				
+		var researchToApply = ((SthPrtResearch / 10) + 1);
+		var TRBoostToApply = ((TRStHsBoost / 100) + 1);
+		var baseValsByLevel = {1:100000,2:200000,3:300000,4:400000,5:500000,6:600000,7:700000,8:800000,9:900000,10:1000000,11:5000000,12:50000000}
+		for (k in Seed.buildings['city' +city.id]) {
+			if (Seed.buildings['city' +city.id][k][0] == 9) {
+				baseProtection = baseValsByLevel[Seed.buildings['city' +city.id][k][1]];
+			}
+		}
+		totalSthPrt = addCommas(parseInt((baseProtection * researchToApply) * TRBoostToApply))
+		//alert(totalSthPrt);
+ 		msg += '|| StoreHouse Protected Res = ' + totalSthPrt + ' with ' + TRStHsBoost + '% TR Boost';
       }
     new t.sendalert(m); 
     }
@@ -7364,7 +7380,7 @@ Tabs.Search = {
         m += '<DIV class=pbStat>'+translate("Scout from")+' <span id=pbsrcScoutcity>'+city.name+'</span> <BR> '+translate("Total targets ")+coordlist.length+'</div>';
         m += '<DIV style="max-height:220px; overflow-y:auto;"><TABLE align=center cellpadding=0 cellspacing=0 class=pbTabPadNW><TR style="font-weight:bold; background-color:white"><TD width=15><input type=checkbox id=pbsrcScout_All /></td><TD>'+translate("Target Coords")+'</td></tr>';
       for(i=0; i<coordlist.length; i++){
-            m += '<TR style="background-color:white"><TD><input type=checkbox name=pbsrcScoutCheck id="pbsrcScoutCheck_'+coordlist[i].x+'_'+coordlist[i].y+'" value="'+coordlist[i].x+'_'+coordlist[i].y+'" /></td><TD>'+coordLink(coordlist[i].x,coordlist[i].y)+'</td></tr>';
+            m += '<TR style="background-color:white"><TD><input type=checkbox name=pbsrcScoutCheck id="pbsrcScoutCheck_'+coordlist[i].x+'_'+coordlist[i].y+'" value="'+coordlist[i].x+'_'+coordlist[i].y+'" '+(coordlist[i].chk?'CHECKED':'')+'/></td><TD>'+coordLink(coordlist[i].x,coordlist[i].y)+'</td></tr>';
       }
         m += '</table></div>';
         m += '<BR><input type=checkbox id="pbskip">Skip targets when errors occur';
@@ -22750,11 +22766,11 @@ Tabs.ascension = {
                     document.getElementById('pbAscCurMight_' + i).innerHTML = 'N/A';
                 }
 	      } else {
-                if (cityPrestigeLevel < 3) {
+                if (cityPrestigeLevel < 6) {
                     //logit(cityPrestigeLevel + ' ' + isPrestigeCity)
                     document.getElementById('pbGreenBar_' + i).innerHTML = '<img src="'+http+'koc-power-bot.googlecode.com/svn/trunk/progress_green_bar.png" width=' + progressWidth + '% height=25>'
                     document.getElementById('pbProgPerc_' + i).innerHTML = progressWidth + '%';
-                    document.getElementById('pbCityPrestigeLevel_' + i).innerHTML = cityPrestigeLevel + '/3';
+                    document.getElementById('pbCityPrestigeLevel_' + i).innerHTML = cityPrestigeLevel + '/6';
                     document.getElementById('pbAscCurMight_'+i).innerHTML = cityPrestige + '/' +fullPrestige[cityPrestigeLevel-1];
                 } else {
                     document.getElementById('pbGreenBar_' + i).innerHTML = '<CENTER><B>C O M P L E T E &nbsp;&nbsp;&nbsp; (for now)</center>'
@@ -22767,7 +22783,7 @@ Tabs.ascension = {
             } else {
                 document.getElementById('pbGreenBar_' + i).innerHTML = '<CENTER><B>C I T Y &nbsp;&nbsp;&nbsp; N O T  &nbsp;&nbsp;&nbsp; A S C E N D E D &nbsp;&nbsp;&nbsp; Y E T</center>'
                 document.getElementById('pbProgPerc_' + i).innerHTML = '<CENTER>N/A</center>';
-                document.getElementById('pbCityPrestigeLevel_' + i).innerHTML = '<CENTER>0/3</center>';
+                document.getElementById('pbCityPrestigeLevel_' + i).innerHTML = '<CENTER>0/6</center>';
                 document.getElementById('pbAscCurMight_' + i).innerHTML = 'N/A';
             }
         }
@@ -22815,7 +22831,7 @@ Tabs.ascension = {
 //        }
 
         if (isPrestigeCity) {
-          if (cityPrestigeType == 3 && cityPrestigeLevel < 3) {
+          if (cityPrestigeType == 3 && cityPrestigeLevel < 6) {
             var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
             params.cid = cityId;
             params.prestigeType = 3;
