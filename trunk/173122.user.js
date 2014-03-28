@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140327a
+// @version        20140328a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140327a';
+var Version = '20140328a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -5822,17 +5822,9 @@ ajax/viewCourt.php:
 					var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
-					var unitsarr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-					for (i = 0; i <= unitsarr.length; i++) {
-						if (params["u" + i]) {
-							unitsarr[i] = params["u" + i];
-						}
-					}
-					var resources = new Array();
-					resources[0] = params.gold;
-					for (i = 1; i <= 4; i++) {
-						resources[i] = params["r" + i];
-					}
+					var unitsarr = {};
+					unitsarr[3] = 1;
+					var resources = [0,0,0,0,0,0];
 					var currentcityid = params.cid;
 					unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
 					unsafeWindow.update_seed(rslt.updateSeed)
@@ -10280,12 +10272,12 @@ Tabs.Attaque = {
 					var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
-					var unitsarr = [];
-					for (j in unsafeWindow.unitcost)
-						unitsarr.push(0);
-					for (i = 0; i <= unitsarr.length; i++)
+					var unitsarr = {};
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
 						if (params["u" + i])
 							unitsarr[i] = params["u" + i];
+					}		
 					var resources = new Array();
 					resources[0] = params.gold;
 					for (i = 1; i <= 5; i++) {
@@ -14251,19 +14243,20 @@ function CdialogCancelContinue(msg, canNotify, contNotify, centerElement) {
 	pop.show(true);
 }
 // TODO: make class (multiple instances needed)
-function dialogRetry(errMsg, errCode, seconds, onRetry, onCancel) {
+function dialogRetry(errMsg, errCode, url, retry, seconds, onRetry, onCancel) {
 	seconds = parseInt(seconds);
-	var pop = new CPopup('ptretry', 0, 0, 400, 200, true);
+	var pop = new CPopup('ptretry', 0, 0, 400, 225, true);
 	pop.centerMe(mainPop.getMainDiv());
 	pop.getTopDiv().innerHTML = '<CENTER>KOC Power Tools</center>';
-	pop.getMainDiv().innerHTML = '<CENTER><BR><FONT COLOR=#550000><B>An error has ocurred:</b></font><BR><BR><DIV id=paretryErrMsg></div>\
-      <BR><BR><B>Automatically retrying in <SPAN id=paretrySeconds></b></span> seconds ...<BR><BR><INPUT id=paretryCancel type=submit value="CANCEL Retry" \>';
+	pop.getMainDiv().innerHTML = '<CENTER><BR><FONT COLOR=#550000><B>An error has occurred:</b></font><BR><BR><DIV id=paretryErrMsg></div>\
+      <BR><BR><B>Automatically retrying in <SPAN id=paretrySeconds></b></span> seconds ...<BR><BR><DIV id=paretryCmd></div><BR><INPUT id=paretryCancel type=submit value="CANCEL Retry" \>';
 	document.getElementById('paretryCancel').addEventListener('click', doCancel, false);
 	pop.show(true);
 	if (errCode && unsafeWindow.g_js_strings.errorcode['err_' + errCode])
 		document.getElementById('paretryErrMsg').innerHTML = unsafeWindow.g_js_strings.errorcode['err_' + errCode];
 	else
 		document.getElementById('paretryErrMsg').innerHTML = errMsg;
+	document.getElementById('paretryCmd').innerHTML = url + ' (Retry '+(retry+1)+' of 5)';
 	document.getElementById('paretrySeconds').innerHTML = seconds;
 	var rTimer = setTimeout(doRetry, seconds * 1000);
 	countdown();
@@ -14373,7 +14366,7 @@ function MyAjaxRequest(url, o, noRetry) {
 	function myRetry() {
 		++retry;
 		new AjaxRequest(url, opts);
-		delay = delay * 1.25;
+		//delay = delay * 1.25;
 	}
 
 	function myFailure() {
@@ -14385,22 +14378,33 @@ function MyAjaxRequest(url, o, noRetry) {
 	}
 
 	function mySuccess(msg) {
-		var rslt = eval("(" + msg.responseText + ")");
-		var x;
-		if (rslt.ok) {
-			if (DEBUG_TRACE) logit(" 1b myAjaxRequest.mySuccess(): " + inspect(rslt, 1, 1));
-			rslt.errorMsg = null; ///// !!!!!!!!!!!!!  ************
-			if (rslt.updateSeed)
-				uW.update_seed(rslt.updateSeed);
-			wasSuccess(rslt);
-			return;
+		var rslt;
+		try {
+			rslt = JSON2.parse(msg.responseText);
+		} catch(e) {
+			//alert(unescape(msg.responseText));
+			if (retry<5) {
+				rslt = {"ok":false,"error_code":9,"errorMsg":"Failed due to invalid json"}
+			} else {
+				rslt = {"ok":true,"error_code":9,"data":[]};
+			}
 		}
-		if (DEBUG_TRACE) logit(" 1b myAjaxRequest.mySuccess() !ok : " + inspect(rslt, 3, 1));
+		var x;
+		if (window.EmulateAjaxError){
+		rslt.ok = false;  
+		rslt.error_code=8;
+		}
+		if (rslt.ok){
+		if (rslt.updateSeed)
+			unsafeWindow.update_seed(rslt.updateSeed);
+		wasSuccess (rslt);
+		return;
+		}
 		rslt.errorMsg = uW.printLocalError((rslt.error_code || null), (rslt.msg || null), (rslt.feedback || null));
 		/*if ( (x = rslt.errorMsg.indexOf ('<br><br>')) > 0)
-      rslt.errorMsg = rslt.errorMsg.substr (0, x-1);*/
+		rslt.errorMsg = rslt.errorMsg.substr (0, x-1);*/
 		if (!noRetry && (rslt.error_code == 0 || rslt.error_code == 8 || rslt.error_code == 1 || rslt.error_code == 3)) {
-			dialogRetry(rslt.errorMsg, rslt.error_code, delay, function () {
+			dialogRetry(rslt.errorMsg, rslt.error_code, url, retry, delay, function () {
 				myRetry()
 			}, function () {
 				wasSuccess(rslt)
