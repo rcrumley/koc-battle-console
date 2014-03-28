@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140327a
+// @version        20140328a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140327a';
+var Version = '20140328a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -7470,6 +7470,12 @@ Tabs.Search = {
     params.xcoord = x;
     params.ycoord = y;
     params.u3 = Options.srcScoutAmt;
+  	params.gold = 0;
+  	params.r1 = 0;
+  	params.r2 = 0;
+  	params.r3 = 0;
+  	params.r4 = 0;
+  	params.r5 = 0;
     new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
          method: "post",
          parameters: params,
@@ -7477,17 +7483,13 @@ Tabs.Search = {
          onSuccess: function (rslt) {
          rslt = eval("(" + rslt.responseText + ")");
          if (rslt.ok) {
-             var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-             var ut = unixTime();
-            var unitsarr = [];
-            for (j in unsafeWindow.unitcost)
-               unitsarr.push(0);
-            for(i = 0; i <= unitsarr.length; i++)
-               if(params["u"+i])
-                unitsarr[i] = params["u"+i];
-             var resources=[0,0,0,0,0,0,0,0,0,0,0,0,0];
-             var currentcityid = params.cid;
- 							var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
+            var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+            var ut = unixTime();
+			var unitsarr = {};
+			unitsarr[3] = 1;
+			var resources = [0,0,0,0,0,0];
+            var currentcityid = params.cid;
+			var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
              unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
              if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
              document.getElementById('pbSrcScoutResult').innerHTML += translate('Sent!')+'<BR>';
@@ -9686,16 +9688,16 @@ Tabs.transport = {
 							var t = Tabs.transport;
 							t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
 						}
-						var unitsarr = [];
-						for (j in unsafeWindow.unitcost)
-							unitsarr.push(0);
-						for(i = 0; i <= unitsarr.length; i++)
-							if(params["u"+i])
-								unitsarr[i] = params["u"+i];
-						var resources=new Array();
+						var unitsarr = {};
+						for (var ui in unsafeWindow.cm.UNIT_TYPES){
+							i = unsafeWindow.cm.UNIT_TYPES[ui];
+							if (params["u" + i])
+								unitsarr[i] = params["u" + i];
+						}		
+						var resources = new Array();
 						resources[0] = params.gold;
-						for(i=1; i<=5; i++){
-							resources[i] = params["r"+i];
+						for (i = 1; i <= 5; i++) {
+							resources[i] = params["r" + i];
 						}
 						var currentcityid = city;
 						var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
@@ -9760,57 +9762,57 @@ Tabs.transport = {
                  
         var profiler = new unsafeWindow.cm.Profiler("ResponseTime", "march.php");
          new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-                  method: "post",
-                  parameters: params,
-                  loading: true,
-                  onSuccess: function (transport) {
-                 profiler.stop();
-                  var rslt = eval("(" + transport.responseText + ")");
-                  if (rslt.ok) {                  
-                          var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-                          var ut = unixTime();
-            var unitsarr = [];
-            for (j in unsafeWindow.unitcost)
-               unitsarr.push(0);
-            for(i = 0; i <= unitsarr.length; i++)
-               if(params["u"+i])
-                              unitsarr[i] = params["u"+i];
-                          var resources=new Array();
-                          resources[0] = params.gold;
-                          for(i=1; i<=5; i++){
-                              resources[i] = params["r"+i];
-                          }
-                          var currentcityid = t.tcp.city.id;
- 							var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-                          unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
-                          if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-                          document.getElementById ('errorSpace').innerHTML = 'Send: ' + addCommas(params.r1+params.r2+params.r3+params.r4+params.r5+params.gold) + ' Resources with ' + addCommas(parseInt(document.getElementById ('TroopsToSend').value)) + ' ' + unsafeWindow.unitcost[unitType][0];
-                          document.getElementById ('pbtradeamountFood').value = 0;
-                          document.getElementById ('pbtradeamountWood').value = 0;
-                          document.getElementById ('pbtradeamountStone').value = 0;
-                          document.getElementById ('pbtradeamountOre').value = 0;
-                          document.getElementById ('pbtradeamountAstone').value = 0;
-                          document.getElementById ('pbtradeamountGold').value = 0;
-                          document.getElementById ('TroopsToSend').value = 0;
-                  } else {
-                   if (rslt.user_action == "backOffWaitTime") {
-                  logit('backoffwaittime '+rslt.wait_time);
-                        if(rslt.tt)
-                        var tt = rslt.tt;
-                        var wait = 1;
-                        if(rslt.wait_time)
-                        wait = rslt.wait_time;
-                        setTimeout (function(){t.ManualTransport(tt);}, wait*1000);
-                        document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + 'kabam making us wait for '+wait+' seconds then retry march' +'</font>';
-                        return;
-                 };
-                          var errorcode =  'err_' + rslt.error_code;
-                          if (rslt.msg == undefined)document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + unsafeWindow.g_js_strings.errorcode[errorcode] +'</font>';
-                          else document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + rslt.msg +'</font>';
-                  }
-                  },
-                  onFailure: function () {profiler.stop();}
-          });
+				method: "post",
+				parameters: params,
+				loading: true,
+				onSuccess: function (transport) {
+					profiler.stop();
+					var rslt = eval("(" + transport.responseText + ")");
+					if (rslt.ok) {                  
+						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+						var ut = unixTime();
+						var unitsarr = {};
+						for (var ui in unsafeWindow.cm.UNIT_TYPES){
+							i = unsafeWindow.cm.UNIT_TYPES[ui];
+							if (params["u" + i])
+								unitsarr[i] = params["u" + i];
+						}		
+						var resources = new Array();
+						resources[0] = params.gold;
+						for (i = 1; i <= 5; i++) {
+							resources[i] = params["r" + i];
+						}
+                        var currentcityid = t.tcp.city.id;
+						var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
+                        unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
+                        if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
+                        document.getElementById ('errorSpace').innerHTML = 'Send: ' + addCommas(params.r1+params.r2+params.r3+params.r4+params.r5+params.gold) + ' Resources with ' + addCommas(parseInt(document.getElementById ('TroopsToSend').value)) + ' ' + unsafeWindow.unitcost[unitType][0];
+                        document.getElementById ('pbtradeamountFood').value = 0;
+                        document.getElementById ('pbtradeamountWood').value = 0;
+                        document.getElementById ('pbtradeamountStone').value = 0;
+                        document.getElementById ('pbtradeamountOre').value = 0;
+                        document.getElementById ('pbtradeamountAstone').value = 0;
+                        document.getElementById ('pbtradeamountGold').value = 0;
+                        document.getElementById ('TroopsToSend').value = 0;
+					} else {
+						if (rslt.user_action == "backOffWaitTime") {
+							logit('backoffwaittime '+rslt.wait_time);
+							if(rslt.tt)
+								var tt = rslt.tt;
+							var wait = 1;
+							if(rslt.wait_time)
+								wait = rslt.wait_time;
+							setTimeout (function(){t.ManualTransport(tt);}, wait*1000);
+							document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + 'kabam making us wait for '+wait+' seconds then retry march' +'</font>';
+							return;
+						};
+						var errorcode =  'err_' + rslt.error_code;
+						if (rslt.msg == undefined)document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + unsafeWindow.g_js_strings.errorcode[errorcode] +'</font>';
+						else document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + rslt.msg +'</font>';
+					}
+                },
+                onFailure: function () {profiler.stop();}
+			});
         }
     },
     show: function (x) {
@@ -15923,13 +15925,13 @@ function getTroopDefTrainEstimates (cityID, city){
 }
 
 
-function dialogRetry (errMsg, seconds, onRetry, onCancel, errCode){
+function dialogRetry (errMsg, seconds, onRetry, onCancel, errCode, url, retry){
   seconds = parseInt(seconds);
   var pop = new pbPopup ('pbretry', 0, 0, 400,225, true);
   pop.centerMe(mainPop.getMainDiv());
   pop.getTopDiv().innerHTML = '<CENTER>KOC Power Bot</center>';
-  pop.getMainDiv().innerHTML = '<CENTER><BR><FONT COLOR=#550000><B>An error has ocurred:</b></font><BR><BR><DIV id=paretryErrMsg></div>\
-      <BR><BR><B>Automatically retrying in <SPAN id=paretrySeconds></b></span> seconds ...<BR><BR><INPUT id=paretryCancel type=submit value="CANCEL Retry" \>';
+  pop.getMainDiv().innerHTML = '<CENTER><BR><FONT COLOR=#550000><B>An error has occurred:</b></font><BR><BR><DIV id=paretryErrMsg></div>\
+      <BR><B>Automatically retrying in <SPAN id=paretrySeconds></b></span> seconds ...<BR><BR><DIV id=paretryCmd></div><BR><INPUT id=paretryCancel type=submit value="CANCEL Retry" \>';
   document.getElementById('paretryCancel').addEventListener ('click', doCancel, false);
   pop.show(true);
   
@@ -15937,6 +15939,7 @@ function dialogRetry (errMsg, seconds, onRetry, onCancel, errCode){
     document.getElementById('paretryErrMsg').innerHTML = unsafeWindow.g_js_strings.errorcode['err_'+errCode];
   else
     document.getElementById('paretryErrMsg').innerHTML = errMsg;
+  document.getElementById('paretryCmd').innerHTML = url + ' (Retry '+(retry+1)+' of 5)';
   document.getElementById('paretrySeconds').innerHTML = seconds;
   var rTimer = setTimeout (doRetry, seconds*1000);
   countdown ();
@@ -16067,7 +16070,7 @@ if (DEBUG_TRACE) logit (" 0 myAjaxRequest: "+ url +"\n" + inspect (o, 2, 1));
   var wasSuccess = o.onSuccess;
   var wasFailure = o.onFailure;
   var retry = 0;
-  var delay = 20;
+  var delay = 5;
   var show = true;
   var noRetry = noRetry===true?true:false;
   var silentTimer;
@@ -16080,7 +16083,7 @@ if (DEBUG_TRACE) logit (" 0 myAjaxRequest: "+ url +"\n" + inspect (o, 2, 1));
   function myRetry(){
     ++retry;
     new AjaxRequest(url, opts);
-    delay = delay * 1.25;
+    //delay = delay * 1.25;
   }
   function myFailure(){
     var o = {};
@@ -16116,9 +16119,9 @@ if (DEBUG_TRACE) logit (" 0 myAjaxRequest: "+ url +"\n" + inspect (o, 2, 1));
      // rslt.errorMsg = rslt.errorMsg.substr (0, x-1);
     if (!noRetry && (rslt.error_code==0 || rslt.error_code==8 || rslt.error_code==1 || rslt.error_code==3)){
     	if (matTypeof(rslt.errorMsg) == 'object') {
-      dialogRetry (inspect(rslt.errorMsg), delay, function(){myRetry()}, function(){wasSuccess (rslt)}, rslt.error_code);
+      dialogRetry (inspect(rslt.errorMsg), delay, function(){myRetry()}, function(){wasSuccess (rslt)}, rslt.error_code,url,retry);
 		} else {
-			dialogRetry (rslt.errorMsg, delay, function(){myRetry()}, function(){wasSuccess (rslt)}, rslt.error_code);
+			dialogRetry (rslt.errorMsg, delay, function(){myRetry()}, function(){wasSuccess (rslt)}, rslt.error_code,url,retry);
 		};
     } else if (!noRetry && rslt.error_code==9) {
         silentTimer = setTimeout(silentRetry, delay*1000);
@@ -21536,31 +21539,33 @@ var March = {
         t.currentrequests++;
         //alert(inspect(params));
         new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {   
-            method: "post",
-            parameters: params,
-            loading: true,
-            onSuccess: function (transport) {
-                t.profiler.stop();
-                --t.currentrequests;
-                var rslt = eval("(" + transport.responseText + ")");
-                 if (rslt.updateSeed) {
-                        unsafeWindow.update_seed(rslt.updateSeed)
-                    }
-                if (rslt.ok) {
-                    var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-                    var ut = unsafeWindow.unixtime();
-            var unitsarr = [];
-            for (j in unsafeWindow.unitcost)
-               unitsarr.push(0);
-            unitsarr.push(0);
-            unitsarr.push(0);
-            for(i = 0; i <= unitsarr.length; i++)
-               if(params["u"+i])
-                            unitsarr[i] = params["u"+i];
-                    var resources=[0,0,0,0,0,0,0,0,0,0,0,0,0];
-                    var currentcityid = params.cid;
- 							var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-                    unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
+			method: "post",
+			parameters: params,
+			loading: true,
+			onSuccess: function (transport) {
+				t.profiler.stop();
+				--t.currentrequests;
+				var rslt = eval("(" + transport.responseText + ")");
+				if (rslt.updateSeed) {
+					unsafeWindow.update_seed(rslt.updateSeed)
+				}
+				if (rslt.ok) {
+					var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+					var ut = unsafeWindow.unixtime();
+					var unitsarr = {};
+					for (var ui in unsafeWindow.cm.UNIT_TYPES){
+						i = unsafeWindow.cm.UNIT_TYPES[ui];
+						if (params["u" + i])
+							unitsarr[i] = params["u" + i];
+					}		
+					var resources = new Array();
+					resources[0] = params.gold;
+					for (i = 1; i <= 5; i++) {
+						resources[i] = params["r" + i];
+					}
+					var currentcityid = params.cid;
+ 					var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
+					unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
                   
                     if (rslt.updateSeed) {
                         unsafeWindow.update_seed(rslt.updateSeed);
@@ -21621,43 +21626,43 @@ var March = {
                     
                     //lets start telling kabam their server sucks! 
                     
-						var a = null;
-						var g = Number(rslt.error_code);
-						var g_server = unsafeWindow.g_server;
-						switch (g) {
-							case 0:
-								a = "Unexpected Error.";
-								break;
-							case 8:
-								a = "Excess traffic.";
-								unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server);
-								break;
-							case 3:
-								//game out of sync
-								break;
-							case 4:
-								//not enough units
-								break;
-							case 104:
-								//unable to attack target
-								break;
-							case 208:
-								// beginner protection
-								break;
-							case 210:
-								// Max marches
-							case 213:
-								//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
-								  Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
-								//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
-								break;
-							default:
-								a = "Something has gone wrong.";
-								unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server); 
-         	           rslt.max = cids;
-								//scripterdebuglog(rslt,'march');//For those getting unknown errors, uncomment this line and Baos will also receive your errors live.
-								break;
-							};
+					var a = null;
+					var g = Number(rslt.error_code);
+					var g_server = unsafeWindow.g_server;
+					switch (g) {
+						case 0:
+							a = "Unexpected Error.";
+							break;
+						case 8:
+							a = "Excess traffic.";
+							unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server);
+							break;
+						case 3:
+							//game out of sync
+							break;
+						case 4:
+							//not enough units
+							break;
+						case 104:
+							//unable to attack target
+							break;
+						case 208:
+							// beginner protection
+							break;
+						case 210:
+							// Max marches
+						case 213:
+							//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
+							  Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
+							//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
+							break;
+						default:
+							a = "Something has gone wrong.";
+							unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server); 
+							rslt.max = cids;
+							//scripterdebuglog(rslt,'march');//For those getting unknown errors, uncomment this line and Baos will also receive your errors live.
+							break;
+					};
                     setTimeout (function(){callback(rslt)}, 5*1000); //return all sever excess traffic error to original function to handle
                     return;
                 }
@@ -21670,7 +21675,7 @@ var March = {
                     callback({ok:false}); //return all onFailure as {ok:false} so as to trigger remarch
                 t.loop(); //Always check for the next queued march after a request
             }
-          });
+        });
     }
 };
 
