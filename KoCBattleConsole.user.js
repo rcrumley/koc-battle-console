@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140326a
+// @version			20140331a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>TR log tooltips bugfix</p><p>Last Login bugfix</p>
+// @releasenotes 	<p>Daylight Savings Time Fix</p><p>Chrome/Tampermonkey Support</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140326a'; 
+var Version = '20140331a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -165,7 +165,6 @@ var TotalTroops;
 var TotalSanctuaryTroops;
 
 var FFVersion = getFirefoxVersion();
-var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+480-getDST(); // difference between local time and PST/PDT in mins. All KoC TimeStamps appear to be in PST or PDT...
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
@@ -659,7 +658,7 @@ function btStartup (){
 
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		m += '<tr>';
-		m +='<TD style="width:20px" id="trpresetopt'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
+		m +='<TD style="width:20px" id="trpresetopt'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div id="trpresetoptdiv'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		m += '<TD class=xtab><INPUT class="btInput" id="btpresetLabel'+i+'" style="width:120px;" maxlength=12 type=text value="'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'" onkeyup="btStartKeyTimer(this,btUpdatePresetLabel,'+i+')" onchange="btUpdatePresetLabel(this,'+i+')" /></td>';
 		m += '</tr>';
 	}
@@ -1101,7 +1100,9 @@ function EverySecond () {
 		incCity = [];
 
 		for(n in Seed.queue_atkinc) {
-			inc.push(Seed.queue_atkinc[n]);
+			if (Seed.queue_atkinc[n].marchType) {
+				inc.push(Seed.queue_atkinc[n]);
+			}	
 		}
 		inc.sort(function(a, b){ if(!a.arrivalTime) a.arrivalTime = -1; if(!b.arrivalTime) b.arrivalTime = -1;return a.arrivalTime-b.arrivalTime });
      
@@ -1116,13 +1117,13 @@ function EverySecond () {
 
 			for(n in Seed.queue_atkp) {
 				for(m in Seed.queue_atkp[n]) {
-					if ((parseInt(Seed.queue_atkp[n][m].marchType)) && (parseInt(Seed.queue_atkp[n][m].marchType) != 9)) { // no raids!
+					if (Seed.queue_atkp[n][m].marchType && (parseInt(Seed.queue_atkp[n][m].marchType) != 9)) { // no raids!
 						Copy_Local_ATKP(n,m);
 						var marchobj = local_atkp[m];
 						out.push(marchobj);
 						if (marchobj.marchCityId == CurrentCityId) {
 							outCity.push(marchobj);
-						}
+						}	
 					}	
 				}
 				
@@ -1506,7 +1507,7 @@ function getMisted (uid,divid){
 		parameters: params,
 		onSuccess: function (rslt) {
 			u = unixTime();
-			f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")),TimeOffset);
+			f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
 			if (f >= u) {
 				var el =  document.getElementById(divid);
 				if (typeof(el) != 'undefined' && el != null) {
@@ -2512,46 +2513,40 @@ function onUnload (){
 }
 
 function unixTime (){
-	return parseInt (new Date().getTime() / 1000) + uW.g_timeoff;
+	return parseInt (new Date().getTime() / 1000) + unsafeWindow.g_timeoff;
 }
 
 function formatDateTime(a) {
 	return uW.formatDate(new Date(a * 1000), "NNN dd, HH:mm")
 }
 
-function convertTime (datestr,AddMins){
+function convertTime (datestr){
 	if (!datestr) return;
-	// KoC timestamps are PST, which is 420 minutes (7 hours) behind UTC...?
-	return parseInt (datestr.getTime() / 1000) + (AddMins*60) + uW.g_timeoff;
+	// KOC Timestamps are in Local Pacific Time, so need to convert to datestr which is UTC, into unixtime and add 8 hours for PST
+	// Then adjust for Pacific Daylight Savings Time...
+	return parseInt(datestr.getTime()/1000)+(480*60)-getDST(datestr);
 }
 
-function getLastLogDuration (datestr,AddMins){
+function getLastLogDuration (datestr){
 	if (!datestr) return;
-	var Interval = convertTime(new Date(datestr.replace(" ","T")),AddMins) - uW.g_timeoff - unixTime();
-	if (Interval < 0) return '(Last Login '+ uW.timestr(Interval*(-1)) +' ago';
+	var Interval = convertTime(new Date(datestr.replace(" ","T")+"Z")) - unixTime();
+	if (Interval < 0) return '(Last Login '+ uW.timestr(Interval*(-1)) +' ago)';
 	else return '(Logged in a few minutes ago)';  
 }
 
-function getDuration (datestr,AddMins){
+function getDuration (datestr){
 	if (!datestr) return;
-	var Interval = convertTime(new Date(datestr.replace(" ","T")),AddMins) - uW.g_timeoff - unixTime();
+	var Interval = convertTime(new Date(datestr.replace(" ","T")+"Z")) - unixTime();
 	if (Interval >= 0) {
 		return uW.timestr(Interval);
 	}
 	else {
-		if (Interval > -43200) {
-			return "Can't Truce for "+uW.timestr(43200 - (Interval*-1));
-		}
-		else {
-			return "";  
-		}	
+		if (Interval > -43200) { return "Can't Truce for "+uW.timestr(43200 - (Interval*-1)); }
+		else { return ""; }	
 	}	
 }
 
-function getDST() {
-	var local = new Date;
-	var utc = local.getTime() + (local.getTimezoneOffset() * 60000);
-	var today = new Date(utc + (3600000*(-8))); // pacific time
+function getDST(today) {
 	var yr = today.getFullYear();
 	var dst_start = new Date("March 14, "+yr+" 02:00:00"); // 2nd Sunday in March can't occur after the 14th 
 	var dst_end = new Date("November 07, "+yr+" 02:00:00"); // 1st Sunday in November can't occur after the 7th
@@ -2561,7 +2556,7 @@ function getDST() {
 	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
 	var dstadj = 0;
 	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
-		dstadj = (-60); 
+		dstadj = (3600); // 60 mins!
 	}
 	return dstadj;
 }
@@ -2633,7 +2628,7 @@ function isMyself (userID){
 
 function GetStatusText(warStatus,truceExpireTimestamp) {
 	// weird bug?!!!?
-    var dur = getDuration(truceExpireTimestamp,TimeOffset);
+    var dur = getDuration(truceExpireTimestamp);
 	var d = '';
 	if (dur != "") {d = ' ('+dur+')';}
 	else {warStatus = 1;} // I think this just means the status hasn't been updated...?
@@ -3120,6 +3115,7 @@ function BuildIncomingDisplay() {
 			else {fromname = MonitorLink(fromname);}
 		}
 		
+		icon = "";
 		switch (marchType) {
 			case 1: icon=TransportImage;hint="Transport";break;
 			case 2: icon=ReinforceImage;hint="Reinforce";break;
@@ -3127,7 +3123,8 @@ function BuildIncomingDisplay() {
 			case 4: icon=AttackImage;hint="Attack";break;
 			case 5: icon=ReassignImage;hint="Reassign";break;
 		} 
-
+		if(icon=="")continue; // tampermonkey fix
+		
 		incomingfiltered = true;	
 		
 		/* Apply Filters */
@@ -3333,7 +3330,7 @@ function BuildOutgoingDisplay() {
 		var marchType = parseInt(a.marchType);
 		if (marchType == 10) marchType=4; // Change Dark Forest type to Attack!
 				
-		var from = Cities.byID[a.marchCityId];
+		var from = Cities.byID[a.marchCityId];if(!from)continue; // tampermonkey fix
 		fromcity = CityLink(from);
 
 		var now = unixTime();
@@ -5422,9 +5419,9 @@ function SwitchThroneRoom (elem) {
 }
 
 function PaintTRPresets () {
-	if (!popDef && !(document.getElementById('btMonTRPresets'))) { return; }
+	if (!(document.getElementById('btTRPresets')) && !(document.getElementById('btMonTRPresets'))) { return; }
 	if (ThroneDelay > 10) { return; }
-	if (popDef && !Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = ""; }
+	if ((document.getElementById('btTRPresets')) && !Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = ""; }
 	if ((document.getElementById('btMonTRPresets')) && !Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = ""; }
 
 	var m = '<div class="xtab" style="opacity:0.6; align="center" id=btThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
@@ -5433,7 +5430,7 @@ function PaintTRPresets () {
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		if (Options.TRPresetByName) {
-			m+='<div id="trpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>';
+			m+='<div id="trpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
 		}
 		else {
 			m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
@@ -5449,7 +5446,7 @@ function PaintTRPresets () {
 	if (Options.TRMonPresetByName) { n+='</td>'; }
     m += '</tr></table>';
 	n += '</tr></table>';
-	if (popDef && Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = m; }
+	if ((document.getElementById('btTRPresets')) && Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = m; }
 	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = n; }
 
 	if (ThroneDelay != 0) {	setThroneMessage('<span style="color:#080">Throne Room changed! Change again in '+ThroneDelay+' secs...</span>'); }
@@ -5457,7 +5454,7 @@ function PaintTRPresets () {
 
 	CurrPreset = Seed.throne.activeSlot;
 	for (i=1;i<=Seed.throne.slotNum;i++) {
-		if (popDef && Options.PresetChange) {
+		if ((document.getElementById('btTRPresets')) && Options.PresetChange) {
 			document.getElementById('trlink'+i).addEventListener ('click', function(){SwitchThroneRoom(this);},false);
 			document.getElementById('trpreset'+i).addEventListener ('mouseover', function(){BuildTRPresetStats(this.id.substring(8));},false);
 		}
@@ -5466,17 +5463,13 @@ function PaintTRPresets () {
 			document.getElementById('tmpreset'+i).addEventListener ('mouseover', function(){BuildTRPresetStats(this.id.substring(8));},false);
 		}
 		if (i==CurrPreset) {
-			if (Options.TRPresetByName) {
-				if (popDef && Options.PresetChange) { uW.jQuery("#trlink"+i).removeClass("brown11").addClass("blue11"); }
-			}
-			else {
-				if (popDef && Options.PresetChange) { uW.jQuery("#trpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
+			if ((document.getElementById('btTRPresets')) && Options.PresetChange) {
+				if (Options.TRPresetByName) { uW.jQuery("#trlink"+i).removeClass("brown11").addClass("blue11"); }
+				else { uW.jQuery("#trpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
 			}	
-			if (Options.TRMonPresetByName) {
-				if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { uW.jQuery("#tmlink"+i).removeClass("brown11").addClass("blue11"); }
-			}
-			else {
-				if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { uW.jQuery("#tmpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
+			if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) {
+				if (Options.TRMonPresetByName) { uW.jQuery("#tmlink"+i).removeClass("brown11").addClass("blue11"); }
+				else { uW.jQuery("#tmpreset"+i).removeClass("presetButNon").addClass("presetButSel"); }
 			}	
 		} 
 		BuildTRPresetStats(i);
@@ -5509,7 +5502,7 @@ function BuildTRPresetStats(slot){
 	var presetname = (Options.TRPresets[slot]?Options.TRPresets[slot].name:'Preset '+slot);
 	
 	createToolTip(presetname,document.getElementById('trpresetopt'+slot),StatEffects.slice());
-	if (popDef && Options.PresetChange) { createToolTip(presetname,document.getElementById('trpresetcell'+slot),StatEffects.slice()); }
+	if ((document.getElementById('btTRPresets')) && Options.PresetChange) { createToolTip(presetname,document.getElementById('trpresetcell'+slot),StatEffects.slice()); }
 	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { createToolTip(presetname,document.getElementById('tmpresetcell'+slot),StatEffects.slice()); }
 }
 
@@ -5741,9 +5734,9 @@ function eventPaintPlayerInfo (){
   	m += '<TABLE width="100%"><tr><td class=xtabBR align="center" colspan="3"><B>' + userInfo.name + o +'</b></td></tr>';
 
 	if (!userInfo.online)
-	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +'</td></tr>';
+	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin) +'</td></tr>';
 	if (userInfo.misted) 
-  	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
+  	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
@@ -5826,7 +5819,7 @@ function eventPaintTRStats () {
 			}
 		}	
 		if (!Options.PVPOnly || PVP) {
-			if (HisStatEffects[k] && (HisStatEffects[k] != 0)) HisContent = (Math.round(HisStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
+			if (HisStatEffects[k] && (HisStatEffects[k] != 0) && uW.cm.thronestats["effects"][k]) HisContent = (Math.round(HisStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
 			if (HisContent != "") { m +='<TR><TD  width="25px" class=xtab></td><TD class=xtab>' + LineStyle + HisContent + EndStyle +'</span></td><TD  width="50px" class=xtab></td></tr>'; cText += HisContent + "||"; }
 		}	
 	}
@@ -5898,7 +5891,7 @@ function fetchCourtInfo (notify) {
       parameters: params,
       onSuccess: function (rslt) {
 	    u = unixTime();
-		f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")),TimeOffset);
+		f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
 	    userInfo.misted = (f >= u);
 	    userInfo.fogExpireTimestamp = rslt.playerInfo.fogExpireTimestamp;
 	    userInfo.warStatus = rslt.playerInfo.warStatus;
@@ -6215,7 +6208,7 @@ function createToolTip (title,elem,TempStatEffects) {
 	
 	for (k in TempStatEffects) {
 		var HisContent = "";
-		if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
+		if (TempStatEffects[k] && (TempStatEffects[k] != 0) && uW.cm.thronestats["effects"][k]) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
 		if (HisContent != "") { TempcText += HisContent + "<br>"; }
 	}
 	
@@ -6253,7 +6246,7 @@ function PostLog(entry) {
 		var HisContent = "";
 		var PVP = ((AttackEffects.indexOf(parseInt(k)) > -1) || (DefenceEffects.indexOf(parseInt(k)) > -1) || (LifeEffects.indexOf(parseInt(k)) > -1) || (RangeEffects.indexOf(parseInt(k)) > -1) || (SpeedEffects.indexOf(parseInt(k)) > -1) || (AccuracyEffects.indexOf(parseInt(k)) > -1) || (OtherCombatEffects.indexOf(parseInt(k)) > -1) || (OtherPVPEffects.indexOf(parseInt(k)) > -1));
 		if (!Options.PVPOnly || PVP) {
-			if (TempStatEffects[k] && (TempStatEffects[k] != 0)) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
+			if (TempStatEffects[k] && (TempStatEffects[k] != 0) && uW.cm.thronestats["effects"][k]) HisContent = (Math.round(TempStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
 			if (HisContent != "") { TempcText += HisContent + "||"; }
 		}	
 	}
