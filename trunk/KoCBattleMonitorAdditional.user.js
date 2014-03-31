@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
-// @version         20140325a
+// @version         20140331a
 // @namespace       kba
 // @homepage        https://userscripts.org/scripts/show/285996
 // @downloadURL     https://userscripts.org/scripts/source/285996.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Display UID on monitor</p>
+// @releasenotes 	<p>Daylight Savings Time Fix</p><p>Chrome/Tampermonkey Support</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@
 //	│	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140325a';
+var Version = '20140331a';
 var NameSpace = 'kba';
 
 //Fix weird bug with koc game
@@ -75,8 +75,6 @@ var LastUser = "";
 var servermsg  = "server not responding";
 
 var FFVersion = getFirefoxVersion();
-
-var TimeOffset = parseInt(new Date().getTimezoneOffset()*(-1))+480-getDST(); // difference between local time and PST/PDT in mins. All KoC TimeStamps appear to be in PST or PDT...
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
@@ -1121,39 +1119,33 @@ function unixTime (){
 	return parseInt (new Date().getTime() / 1000) + uW.g_timeoff;
 }
 
-function convertTime (datestr,AddMins){
+function convertTime (datestr){
 	if (!datestr) return;
-	// KoC timestamps are PST, which is 420 minutes (7 hours) behind UTC...?
-	return parseInt (datestr.getTime() / 1000) + (AddMins*60) + uW.g_timeoff;
+	// KOC Timestamps are in Local Pacific Time, so need to convert to datestr which is UTC, into unixtime and add 8 hours for PST
+	// Then adjust for Pacific Daylight Savings Time...
+	return parseInt(datestr.getTime()/1000)+(480*60)-getDST(datestr);
 }
 
-function getLastLogDuration (datestr,AddMins){
+function getLastLogDuration (datestr){
 	if (!datestr) return;
-	var Interval = convertTime(new Date(datestr.replace(" ","T")),AddMins) - uW.g_timeoff - unixTime();
-	if (Interval < 0) return uW.timestr(Interval*(-1));
-	else return "";  
+	var Interval = convertTime(new Date(datestr.replace(" ","T")+"Z")) - unixTime();
+	if (Interval < 0) return '(Last Login '+ uW.timestr(Interval*(-1)) +' ago)';
+	else return '(Logged in a few minutes ago)';  
 }
 
-function getDuration (datestr,AddMins){
+function getDuration (datestr){
 	if (!datestr) return;
-	var Interval = convertTime(new Date(datestr.replace(" ","T")),AddMins) - uW.g_timeoff - unixTime();
+	var Interval = convertTime(new Date(datestr.replace(" ","T")+"Z")) - unixTime();
 	if (Interval >= 0) {
 		return uW.timestr(Interval);
 	}
 	else {
-		if (Interval > -43200) {
-			return "Can't Truce for "+uW.timestr(43200 - (Interval*-1));
-		}
-		else {
-			return "";  
-		}	
+		if (Interval > -43200) { return "Can't Truce for "+uW.timestr(43200 - (Interval*-1)); }
+		else { return ""; }	
 	}	
 }
 
-function getDST() {
-	var local = new Date;
-	var utc = local.getTime() + (local.getTimezoneOffset() * 60000);
-	var today = new Date(utc + (3600000*(-8))); // pacific time
+function getDST(today) {
 	var yr = today.getFullYear();
 	var dst_start = new Date("March 14, "+yr+" 02:00:00"); // 2nd Sunday in March can't occur after the 14th 
 	var dst_end = new Date("November 07, "+yr+" 02:00:00"); // 1st Sunday in November can't occur after the 7th
@@ -1163,7 +1155,7 @@ function getDST() {
 	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
 	var dstadj = 0;
 	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
-		dstadj = (-60); 
+		dstadj = (3600); // 60 mins!
 	}
 	return dstadj;
 }
@@ -1235,7 +1227,7 @@ function isMyself (userID){
 
 function GetStatusText(warStatus,truceExpireTimestamp) {
 	// weird bug?!!!?
-    var dur = getDuration(truceExpireTimestamp,TimeOffset);
+    var dur = getDuration(truceExpireTimestamp);
 	var d = '';
 	if (dur != "") {d = ' ('+dur+')';}
 	else {warStatus = 1;} // I think this just means the status hasn't been updated...?
@@ -1529,9 +1521,9 @@ function eventPaintPlayerInfo (){
   	m = '<TABLE width="100%"><tr><td class=xtabBR align="center" colspan="3"><B>' + userInfo.name + o +'</b></td></tr>';
 
 	if (!userInfo.online)
-	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">(Last Login '+ getLastLogDuration(userInfo.lastLogin,TimeOffset) +' ago)</td></tr>';
+	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">(Last Login '+ getLastLogDuration(userInfo.lastLogin) +' ago)</td></tr>';
 	if (userInfo.misted) 
-  	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp,TimeOffset) + ') ***</b></td></tr>';
+  	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
@@ -1613,7 +1605,7 @@ function eventPaintTRStats () {
 			}
 		}	
 		if (!Options.PVPOnly || PVP) {
-			if (HisStatEffects[k] && (HisStatEffects[k] != 0)) HisContent = (Math.round(HisStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
+			if (HisStatEffects[k] && (HisStatEffects[k] != 0) && uW.cm.thronestats["effects"][k]) HisContent = (Math.round(HisStatEffects[k]*100)/100) + '% ' + uW.cm.thronestats["effects"][k]["1"];
 			if (HisContent != "") { m +='<TR><TD width="25px" class=xtab></td><TD class=xtab>' + LineStyle + HisContent + EndStyle +'</span></td><TD width="50px" class=xtab></td></tr>'; cText += HisContent + "||"; }
 		}	
 	}
@@ -1667,7 +1659,7 @@ function fetchCourtInfo (notify) {
       parameters: params,
       onSuccess: function (rslt) {
 	    u = unixTime();
-		f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")),TimeOffset);
+		f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
 	    userInfo.misted = (f >= u);
 	    userInfo.fogExpireTimestamp = rslt.playerInfo.fogExpireTimestamp;
 	    userInfo.warStatus = rslt.playerInfo.warStatus;
