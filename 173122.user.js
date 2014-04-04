@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140404a
+// @version        20140404b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140404a';
+var Version = '20140404b';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -5824,7 +5824,13 @@ ajax/viewCourt.php:
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
 					var unitsarr = {};
-					unitsarr[3] = 1;
+					for (var ui in uW.cm.UNIT_TYPES){
+						i = uW.cm.UNIT_TYPES[ui];
+						if (params["u" + i])
+							unitsarr[i] = params["u" + i];
+						else
+							unitsarr[i] = 0;
+					}		
 					var resources = [0,0,0,0,0,0];
 					var currentcityid = params.cid;
 					unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
@@ -10272,6 +10278,8 @@ Tabs.Attaque = {
 						i = uW.cm.UNIT_TYPES[ui];
 						if (params["u" + i])
 							unitsarr[i] = params["u" + i];
+						else
+							unitsarr[i] = 0;
 					}		
 					var resources = new Array();
 					resources[0] = params.gold;
