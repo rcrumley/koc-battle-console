@@ -769,7 +769,7 @@ Tabs.Notes = {
 	// add the notes to the map tooltip
 	updateTooltip: function (ttHtml) {
 		var newTT = null;
-		var result = Tabs.Notes.re.exec(ttHtml);logit(ttHtml);logit(result);
+		var result = Tabs.Notes.re.exec(ttHtml);
 		if (result && result[1]) {
 			var note;
 			if (note = Tabs.Notes.noteValues[result[1]]) {
