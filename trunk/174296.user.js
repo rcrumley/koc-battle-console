@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140328a
+// @version        20140404a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140328a';
+var Version = '20140404a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -81,7 +81,6 @@ unsafeWindow.arthurCheck = function (a) {
 	return;
 };
 
-unsafeWindow.actionLog = function(msg) { sendChat ("/a "+  msg); actionLog(msg); logit(msg);};
 
 
 var isAFK = false;
@@ -171,7 +170,7 @@ var Options = {
   LastCrestReport   : 0,
   MsgInterval  : 1,
   CrestMsgInterval  : 1,
-  CrestYeddaTarget  : 999,
+  CrestMercTarget  : 999,
 
   foodreport   : false,
   crestreport  : true,
@@ -195,7 +194,7 @@ var Options = {
   mklag  :  false,
   amain  :  false,
   smain  :  0,
-  MAP_DELAY :  20000,
+  MAP_DELAY :  4000,
   fchar: "Null",
   toprank:  0,
   botrank:  0,
@@ -2442,6 +2441,7 @@ Tabs.Throne = {
                 "Dagonet The Court Jester"  : "http://i.imgur.com/29bAH99.png",
                 "Minstrel"              : "http://i.imgur.com/hUIXhca.png",
 		"Percival"		: "http://i.imgur.com/ei2YRFF.png",
+		"Tristan"		: "http://i.imgur.com/4TeU5Zv.png",
             },
             Thrones : {
                 "Valor"             : "http://i.imgur.com/fIeZMXM.png",
@@ -2450,6 +2450,7 @@ Tabs.Throne = {
                 "Harmony"           : "http://i.imgur.com/XdpulbB.png",
                 "Stalwart Throne"   : "http://i.imgur.com/3pI3OZj.jpg",
                 "Throne of Fortune" : "http://i.imgur.com/ykrqzP9.jpg",
+                "Rugged Throne"     : "http://i.imgur.com/IrI7vMJ.jpg",
             },
             Banners : {
                 "Pendragons Banner"     : "http://i.imgur.com/lQ1iSSD.png",
@@ -7476,24 +7477,11 @@ Tabs.Search = {
   	params.r3 = 0;
   	params.r4 = 0;
   	params.r5 = 0;
-    new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-         method: "post",
-         parameters: params,
-         loading: true,
-         onSuccess: function (rslt) {
-         rslt = eval("(" + rslt.responseText + ")");
-         if (rslt.ok) {
-            var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-            var ut = unixTime();
-			var unitsarr = {};
-			unitsarr[3] = 1;
-			var resources = [0,0,0,0,0,0];
-            var currentcityid = params.cid;
-			var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-             unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
-             if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-             document.getElementById('pbSrcScoutResult').innerHTML += translate('Sent!')+'<BR>';
-             if(document.getElementById('pbsquick').checked) {
+	
+	March.addMarch(params, function(rslt){
+		if (rslt.ok) {
+			document.getElementById('pbSrcScoutResult').innerHTML += translate('Sent!')+'<BR>';
+			if(document.getElementById('pbsquick').checked) {
 				var misted = false;
 				var t = Tabs.Search;
 				var numRows = t.mapDat.length;
@@ -7505,11 +7493,12 @@ Tabs.Search = {
 				if (misted) {
 					fetchmarch(rslt.marchId,FillSearchDiv); // mist quick scout
 				}	
-             }
-             if (notify)
-              setTimeout(function(){ notify(count+1); }, 4000);
-         } else {
-             if(document.getElementById('pbsquick').checked) {
+			}
+			if (notify)
+				setTimeout(function(){ notify(count+1); }, 4000);
+		}
+		else {
+			if(document.getElementById('pbsquick').checked) {
 				var misted = false;
 				var t = Tabs.Search;
 				var numRows = t.mapDat.length;
@@ -7557,10 +7546,8 @@ Tabs.Search = {
 						setTimeout(function(){ notify(count); }, 4000);
 				}		
 			}
-          }
-        },
-        onFailure: function () {}
-          });
+		}
+	});
   },
   getRallypoint: function(cityId){
       var t = Tabs.Search;
@@ -9665,155 +9652,83 @@ Tabs.transport = {
 
 		params["u"+unit.slice(3)] = wagons_needed;
         
-           if ((carry_Food + carry_Wood + carry_Stone + carry_Ore + carry_Astone + carry_Gold) > 0) {
-        if(tt)
-        params.tt = tt;    
-        var profiler = new unsafeWindow.cm.Profiler("ResponseTime", "march.php");     
-         new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-                  method: "post",
-                  parameters: params,
-                  loading: true,
-                  onSuccess: function (transport) {
-					profiler.stop();
-					var rslt = eval("(" + transport.responseText + ")");
-					if (rslt.ok) {
-						if (!rev)
-							actionLog('Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
-						else	
-							actionLog('Reverse Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
-						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-						var ut = unsafeWindow.unixtime();
-				 
-						if (rev) {
-							var t = Tabs.transport;
-							t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
-						}
-						var unitsarr = {};
-						for (var ui in unsafeWindow.cm.UNIT_TYPES){
-							i = unsafeWindow.cm.UNIT_TYPES[ui];
-							if (params["u" + i])
-								unitsarr[i] = params["u" + i];
-						}		
-						var resources = new Array();
-						resources[0] = params.gold;
-						for (i = 1; i <= 5; i++) {
-							resources[i] = params["r" + i];
-						}
-						var currentcityid = city;
-						var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-						unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
-						if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-					} else {
+		if ((carry_Food + carry_Wood + carry_Stone + carry_Ore + carry_Astone + carry_Gold) > 0) {
+			if(tt) params.tt = tt;    
+		
+			March.addMarch(params, function(rslt){
+				if (rslt.ok) {
+					if (!rev) {
+						actionLog('Trade From: ' + cityname + " To: " + xcoord + ',' + ycoord + " -> "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
+					}	
+					else {
+						actionLog('Reverse Trade From: ' + cityname + " To: " + xcoord + ',' + ycoord + " -> "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
 						var t = Tabs.transport;
-						if (rslt.user_action == "backOffWaitTime") {
-							logit('backoffwaittime '+rslt.wait_time);
-							var wait = 1;
-							if(rslt.wait_time)
-								wait = rslt.wait_time;
-							setTimeout (function(){t.doTrades(count,rev,rslt.tt);}, wait*1000);
-							return;
-						};
-						if (!rslt.msg) {rslt.msg = 'Error Code ('+rslt.error_code+')';}
-						if (!rev)
-							actionLog(''+translate("TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
-						else	
-							actionLog(''+translate("REVERSE TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
-					}
-                  },
-                  onFailure: function () {profiler.stop();
-				  }
-          });
-        }
+						t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
+					}		
+				}
+				else {
+					if (!rslt.msg) {rslt.msg = 'Error Code ('+rslt.error_code+')';}
+					if (!rev)
+						actionLog(''+translate("TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
+					else	
+						actionLog(''+translate("REVERSE TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
+				}
+			});
+		}	
     },
     
     ManualTransport: function(tt){
-    var t = Tabs.transport;
-       if (document.getElementById ('ptcityX').value == "" || document.getElementById ('ptcityY').value == "") return;
-    if ( t.TroopsNeeded > t.Troops) return;
+		var t = Tabs.transport;
+		if (document.getElementById ('ptcityX').value == "" || document.getElementById ('ptcityY').value == "") return;
+		if ( t.TroopsNeeded > t.Troops) return;
     
-       var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-    var unitType = document.getElementById('TransportTroop').value;
-    var LoadUnit = (parseInt(Seed.tech.tch10) * ((parseInt(unsafeWindow.unitstats[unitType]['5'])/100)*10)) + parseInt(unsafeWindow.unitstats[unitType]['5']);
-    var Load =  parseInt(Seed.units['city' + t.tcp.city.id][unitType]);
-	if (unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id]) {
-		for(var sacIndex = 0; sacIndex < unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id].length; sacIndex ++ ) if(unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id][sacIndex]["unitType"] == unitType.slice(3)) Load *= unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id][sacIndex]["multiplier"][0];
-	}	
-    var MaxLoad = Load * LoadUnit;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		var unitType = document.getElementById('TransportTroop').value;
+		var LoadUnit = (parseInt(Seed.tech.tch10) * ((parseInt(unsafeWindow.unitstats[unitType]['5'])/100)*10)) + parseInt(unsafeWindow.unitstats[unitType]['5']);
+		var Load =  parseInt(Seed.units['city' + t.tcp.city.id][unitType]);
+		if (unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id]) {
+			for(var sacIndex = 0; sacIndex < unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id].length; sacIndex ++ ) if(unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id][sacIndex]["unitType"] == unitType.slice(3)) Load *= unsafeWindow.seed.queue_sacr["city"+t.tcp.city.id][sacIndex]["multiplier"][0];
+		}	
+		var MaxLoad = Load * LoadUnit;
 
-    document.getElementById ('errorSpace').innerHTML = '';
+		document.getElementById ('errorSpace').innerHTML = '';
           
-    params.kid = 0;
-    params.cid=  t.tcp.city.id;
-    params.type = "1";
-    params.xcoord = parseInt(document.getElementById ('ptcityX').value);
-    params.ycoord = parseInt(document.getElementById ('ptcityY').value);
-    params.r1 = parseInt(document.getElementById ('pbtradeamountFood').value);
-    params.r2 = parseInt(document.getElementById ('pbtradeamountWood').value);
-    params.r3 = parseInt(document.getElementById ('pbtradeamountStone').value);
-    params.r4 = parseInt(document.getElementById ('pbtradeamountOre').value);
-    params.r5 = parseInt(document.getElementById ('pbtradeamountAstone').value);
-    params.gold = parseInt(document.getElementById ('pbtradeamountGold').value);
+		params.kid = 0;
+		params.cid=  t.tcp.city.id;
+		params.type = "1";
+		params.xcoord = parseInt(document.getElementById ('ptcityX').value);
+		params.ycoord = parseInt(document.getElementById ('ptcityY').value);
+		params.r1 = parseInt(document.getElementById ('pbtradeamountFood').value);
+		params.r2 = parseInt(document.getElementById ('pbtradeamountWood').value);
+		params.r3 = parseInt(document.getElementById ('pbtradeamountStone').value);
+		params.r4 = parseInt(document.getElementById ('pbtradeamountOre').value);
+		params.r5 = parseInt(document.getElementById ('pbtradeamountAstone').value);
+		params.gold = parseInt(document.getElementById ('pbtradeamountGold').value);
 
-	params["u"+unitType.slice(3)] = parseInt(document.getElementById ('TroopsToSend').value);
+		params["u"+unitType.slice(3)] = parseInt(document.getElementById ('TroopsToSend').value);
 	
-   if (tt)
-   params.tt = tt;
-    if ((params.r1 + params.r2 + params.r3 + params.r4 + params.r5 + params.gold) > 0) {
-                 
-        var profiler = new unsafeWindow.cm.Profiler("ResponseTime", "march.php");
-         new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-				method: "post",
-				parameters: params,
-				loading: true,
-				onSuccess: function (transport) {
-					profiler.stop();
-					var rslt = eval("(" + transport.responseText + ")");
-					if (rslt.ok) {                  
-						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-						var ut = unixTime();
-						var unitsarr = {};
-						for (var ui in unsafeWindow.cm.UNIT_TYPES){
-							i = unsafeWindow.cm.UNIT_TYPES[ui];
-							if (params["u" + i])
-								unitsarr[i] = params["u" + i];
-						}		
-						var resources = new Array();
-						resources[0] = params.gold;
-						for (i = 1; i <= 5; i++) {
-							resources[i] = params["r" + i];
-						}
-                        var currentcityid = t.tcp.city.id;
-						var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-                        unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
-                        if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
-                        document.getElementById ('errorSpace').innerHTML = 'Send: ' + addCommas(params.r1+params.r2+params.r3+params.r4+params.r5+params.gold) + ' Resources with ' + addCommas(parseInt(document.getElementById ('TroopsToSend').value)) + ' ' + unsafeWindow.unitcost[unitType][0];
-                        document.getElementById ('pbtradeamountFood').value = 0;
-                        document.getElementById ('pbtradeamountWood').value = 0;
-                        document.getElementById ('pbtradeamountStone').value = 0;
-                        document.getElementById ('pbtradeamountOre').value = 0;
-                        document.getElementById ('pbtradeamountAstone').value = 0;
-                        document.getElementById ('pbtradeamountGold').value = 0;
-                        document.getElementById ('TroopsToSend').value = 0;
-					} else {
-						if (rslt.user_action == "backOffWaitTime") {
-							logit('backoffwaittime '+rslt.wait_time);
-							if(rslt.tt)
-								var tt = rslt.tt;
-							var wait = 1;
-							if(rslt.wait_time)
-								wait = rslt.wait_time;
-							setTimeout (function(){t.ManualTransport(tt);}, wait*1000);
-							document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + 'kabam making us wait for '+wait+' seconds then retry march' +'</font>';
-							return;
-						};
-						var errorcode =  'err_' + rslt.error_code;
-						if (rslt.msg == undefined)document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + unsafeWindow.g_js_strings.errorcode[errorcode] +'</font>';
-						else document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + rslt.msg +'</font>';
-					}
-                },
-                onFailure: function () {profiler.stop();}
-			});
-        }
+		if (tt) params.tt = tt;
+	
+		if ((params.r1 + params.r2 + params.r3 + params.r4 + params.r5 + params.gold) > 0) {
+    
+			March.addMarch(params, function(rslt){
+				if (rslt.ok) {
+					document.getElementById ('errorSpace').innerHTML = 'Send: ' + addCommas(params.r1+params.r2+params.r3+params.r4+params.r5+params.gold) + ' Resources with ' + addCommas(parseInt(document.getElementById ('TroopsToSend').value)) + ' ' + unsafeWindow.unitcost[unitType][0];
+					document.getElementById ('pbtradeamountFood').value = 0;
+					document.getElementById ('pbtradeamountWood').value = 0;
+					document.getElementById ('pbtradeamountStone').value = 0;
+					document.getElementById ('pbtradeamountOre').value = 0;
+					document.getElementById ('pbtradeamountAstone').value = 0;
+					document.getElementById ('pbtradeamountGold').value = 0;
+					document.getElementById ('TroopsToSend').value = 0;
+				}
+				else {
+					var errorcode =  'err_' + rslt.error_code;
+					if (rslt.msg == undefined)document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + unsafeWindow.g_js_strings.errorcode[errorcode] +'</font>';
+					else document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + rslt.msg +'</font>';
+				}
+			});	
+		}
     },
     show: function (x) {
         var t = Tabs.transport;
@@ -12311,7 +12226,7 @@ Tabs.Options = {
 		m+= '<TR><TD><INPUT id=pbexpinc type=checkbox '+ (Options.expinc?'CHECKED ':'')+ '/></td><TD> Post missed and expired incoming marches</td></tr>';
         
         m+='<TR><TD colspan=2><BR><B>'+translate("KofC Features:")+'</b></td></tr>\
-        <TR><TD><INPUT id=pbFairie type=checkbox /></td><TD>'+translate("Disable annoying Faire and Court popups (but automatically post treasure chests)")+'</td></tr>\
+        <TR><TD><INPUT id=pbFairie type=checkbox /></td><TD>'+translate("Disable annoying Faire and Court popups")+'</td></tr>\
         <TR><TD><INPUT id=pbWatchEnable type=checkbox '+ (GlobalOptions.pbWatchdog?'CHECKED ':'') +'/></td><TD>'+translate("Refresh if KOC not loaded within 1 minute (all domains)")+'</td></tr>\
         <TR><TD><INPUT id=pbEveryEnable type=checkbox /></td><TD>'+translate("Refresh KOC every")+' <INPUT id=pbeverymins type=text size=2 maxlength=3 \> '+translate("minutes")+'</td></tr>\
         <TR><TD><INPUT id=pbChatREnable type=checkbox /></td><TD>'+translate("Put chat on right (requires wide screen)")+'</td></tr>\
@@ -14438,13 +14353,7 @@ var RefreshEvery  = {
 var FairieKiller  = {
   saveFunc : null,
   init : function (tf){
-	var mod = new CalterUwFunc('pop_treasure_chest_modal',
-         [['popTreasureChestModal(a)', 'popTreasureChest(a);actionLog("Treasure chest posted")']]);
-	mod.setEnable(tf);
 
-	var mod2 = new CalterUwFunc('pop_action_feed_modal',
-         [['popActionFeedModal()', 'popActionFeed();actionLog("Faire posted")']]);
-	mod2.setEnable(false);
    
 
 
@@ -20586,7 +20495,7 @@ Tabs.Attack = {
 		m += '<TABLE class=ptTab><TR><TD>Target Co-ords:&nbsp;&nbsp;X:&nbsp;<INPUT id=pbcrestx type=text size=3 maxlength=3 value=""></td>';
 		m += '<TD>Y:&nbsp;<INPUT id=pbcresty type=text size=3 maxlength=3 value=""></td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will reduce wave 1 MM for subsequent attacks)</td></tr>';
-		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when target amount reached)</td><td align=right>Thane Target&nbsp;<INPUT id=pbyeddatarget value='+ Options.CrestYeddaTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=curryedda></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, attacks will stop when target amount reached)</td><td align=right>Thane Target&nbsp;<INPUT id=pbmerctarget value='+ Options.CrestMercTarget +' type=text size=3 \>&nbsp;&nbsp;Current Amount:&nbsp;<span id=currmerc></span>&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>';
    
 
 		var dude = unsafeWindow.unitnamedesctranslated;
@@ -20647,14 +20556,14 @@ Tabs.Attack = {
 			saveOptions();
 		},false);
     
-		document.getElementById("pbyeddatarget").addEventListener('change', function(e){
-			Options.CrestYeddaTarget = parseIntNan(e.target.value);
+		document.getElementById("pbmerctarget").addEventListener('change', function(e){
+			Options.CrestMercTarget = parseIntNan(e.target.value);
 			saveOptions();
-			document.getElementById("curryedda").innerHTML = parseIntNan(Seed.items[t.MercItem]);
-			if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestYeddaTarget))
-				unsafeWindow.jQuery('#curryedda').css('color', 'green');
+			document.getElementById("currmerc").innerHTML = parseIntNan(Seed.items[t.MercItem]);
+			if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestMercTarget))
+				unsafeWindow.jQuery('#currmerc').css('color', 'green');
 			else	
-				unsafeWindow.jQuery('#curryedda').css('color', 'black');
+				unsafeWindow.jQuery('#currmerc').css('color', 'black');
 		},false);
 
 
@@ -20678,11 +20587,11 @@ Tabs.Attack = {
 			}
 		}
         
-		document.getElementById("curryedda").innerHTML = parseIntNan(Seed.items[t.MercItem]);
-		if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestYeddaTarget))
-			unsafeWindow.jQuery('#curryedda').css('color', 'green');
+		document.getElementById("currmerc").innerHTML = parseIntNan(Seed.items[t.MercItem]);
+		if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestMercTarget))
+			unsafeWindow.jQuery('#currmerc').css('color', 'green');
 		else	
-			unsafeWindow.jQuery('#curryedda').css('color', 'black');
+			unsafeWindow.jQuery('#currmerc').css('color', 'black');
         
 
 
@@ -21088,13 +20997,13 @@ Tabs.Attack = {
 			return;
 		};
 		
-		document.getElementById("curryedda").innerHTML = parseIntNan(Seed.items[t.MercItem]);
-		if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestYeddaTarget))
-			unsafeWindow.jQuery('#curryedda').css('color', 'green');
+		document.getElementById("currmerc").innerHTML = parseIntNan(Seed.items[t.MercItem]);
+		if (parseIntNan(Seed.items[t.MercItem]) >= parseIntNan(Options.CrestMercTarget))
+			unsafeWindow.jQuery('#currmerc').css('color', 'green');
 		else	
-			unsafeWindow.jQuery('#curryedda').css('color', 'black');
+			unsafeWindow.jQuery('#currmerc').css('color', 'black');
 		
-		if (CrestData[CrestDataNum].isMerc && (parseIntNan(Seed.items[t.MercItem]) >= Options.CrestYeddaTarget)) {
+		if (CrestData[CrestDataNum].isMerc && (parseIntNan(Seed.items[t.MercItem]) >= Options.CrestMercTarget)) {
 			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
 			return;
 		}
@@ -21361,17 +21270,31 @@ var March = {
             t.sendMarch(opts.params, opts.callback);
         } else {
             t.queue.push(opts);
+			actionLog(t.getMarchType(opts.params.type)+' added to march queue. Queue now contains '+ t.getQueueLength +' marches.');
+
             //setTimeout(t.loop, 2000);
         }
     },
     loop : function (){
-        var t = this;
-        if(t.currentrequests < 5){
+		var t = this;
+		if (t.currentrequests < 5){
             var opts = t.queue.shift();
-         if(opts)
-            t.sendMarch(opts.params, opts.callback);
-        }
+			if(opts) {
+				t.sendMarch(opts.params, opts.callback);
+				actionLog(t.getMarchType(opts.params.type)+' triggered from march queue. Queue now contains '+ t.getQueueLength +' marches.');
+			}	
+		}
     },
+    getMarchType : function (mt){
+		switch (parseIntNan(mt)) {
+			case 1: return 'Transport';
+			case 2: return 'Reinforcement';
+			case 3: return 'Scout';
+			case 4: return 'Attack';
+			case 5: return 'Reassign';
+			default: return 'March';
+        }
+	},
     getQueueLength : function (){
         var t = this;
         return t.queue.length;
@@ -21653,7 +21576,8 @@ var March = {
 							// Max marches
 						case 213:
 							//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
-							  Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
+							  if (Seed.knights['city'+params.cid]['knt'+params.kid])
+								Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
 							//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
 							break;
 						default:
@@ -25911,28 +25835,15 @@ function QuickScout() {
 	  	params.r4 = 0;
 	  	params.r5 = 0;
 
-		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-			    method: "post",
-			    parameters: params,
-			    loading: true,
-			    onSuccess: function (rslt) {
-			        if (rslt.ok) {
-						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-						var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
-						var ut = uW.unixtime();
-						var unitsarr = {};
-						unitsarr[3] = 1;
-						var resources = [0,0,0,0,0,0];
-						uW.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, uW.currentcityid, true, ut + rtimediff);
-						if (rslt.updateSeed) { uW.update_seed(rslt.updateSeed) }
-						if (e.tile.level == 0) fetchmarch(rslt.marchId,PlayerPopup); // mist scout
-			        }
-					else {
-						uW.Modal.showAlert(uW.printLocalError(rslt.error_code, rslt.msg, rslt.feedback))
-					}
-			    }, 
-			    onFailure: function () {},
-		},true);
+		March.addMarch(params, function(rslt){
+			if (rslt.ok) {
+				if (e.tile.level == 0) fetchmarch(rslt.marchId,PlayerPopup); // mist scout
+			}
+			else {
+				uW.Modal.showAlert(uW.printLocalError(rslt.error_code, rslt.msg, rslt.feedback));
+			}
+		});
+		
 	}
 
 	uW.quickscoutsearch = function(x,y,cid) {
@@ -25954,48 +25865,33 @@ function QuickScout() {
 	  	params.r4 = 0;
 	  	params.r5 = 0;
 
-		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
-			    method: "post",
-			    parameters: params,
-			    loading: true,
-			    onSuccess: function (rslt) {
-			        if (rslt.ok) {
-						var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-						var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
-						var ut = uW.unixtime();
-						var unitsarr = {};
-						unitsarr[3] = 1;
-						var resources = [0,0,0,0,0,0];
-						uW.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, uW.currentcityid, true, ut + rtimediff);
-						if (rslt.updateSeed) { uW.update_seed(rslt.updateSeed) }
-						fetchmarch(rslt.marchId,FillSearchDiv); // mist scout
+		March.addMarch(params, function(rslt){
+			if (rslt.ok) {
+				fetchmarch(rslt.marchId,FillSearchDiv); // mist scout
+			}
+			else {
+				divid = 'pbsrch'+x+y;
+				if (!document.getElementById(divid)) return;
+				var msg = '<span style="color:#f00;">Error Code - '+rslt.error_code+'</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+				if(rslt.error_code == 208) {
+					msg = '<span style="color:#888;">Truced - Cannot Scout!</span>';
+					// update search results .. find correct row
+					var t = Tabs.Search;
+					var numRows = t.mapDat.length;
+					for (i=0; i<numRows; i++){
+						if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
+							t.mapDat[i][7] = 0;
+							t.mapDat[i][9] = msg;
+						}	
 					}
-					else {
-						divid = 'pbsrch'+x+y;
-						if (!document.getElementById(divid)) return;
-						var msg = '<span style="color:#f00;">Error Code - '+rslt.error_code+'</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
-						if(rslt.error_code == 208) {
-							msg = '<span style="color:#888;">Truced - Cannot Scout!</span>';
-							// update search results .. find correct row
-							var t = Tabs.Search;
-							var numRows = t.mapDat.length;
-							for (i=0; i<numRows; i++){
-								if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
-									t.mapDat[i][7] = 0;
-									t.mapDat[i][9] = msg;
-								}	
-							}
-						}
-						if(rslt.error_code == 210) {
-							msg = '<span style="color:#f00;">Rally Point Full!</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
-						}
-						document.getElementById(divid).innerHTML = msg;
-					}
-			    }, 
-			    onFailure: function () {},
-		},true);
+				}
+				if(rslt.error_code == 210) {
+					msg = '<span style="color:#f00;">Rally Point Full!</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
+				}
+				document.getElementById(divid).innerHTML = msg;
+			}
+		});
 	}
-	
 };
 
 function fetchmarch(mid,notify) {

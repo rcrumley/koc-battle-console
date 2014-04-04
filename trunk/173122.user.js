@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140328a
+// @version        20140404a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140328a';
+var Version = '20140404a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -769,7 +769,7 @@ Tabs.Notes = {
 	// add the notes to the map tooltip
 	updateTooltip: function (ttHtml) {
 		var newTT = null;
-		var result = Tabs.Notes.re.exec(ttHtml);
+		var result = Tabs.Notes.re.exec(ttHtml);logit(ttHtml);logit(result);
 		if (result && result[1]) {
 			var note;
 			if (note = Tabs.Notes.noteValues[result[1]]) {
@@ -1110,7 +1110,7 @@ var ChatTimeFix = {
 		t = ChatTimeFix;
 		uW.ptConvertTime = function (timestr) {
 			time = timestr.split(/:/);
-			var AddMins = (new Date().getTimezoneOffset())+480-parseInt(getDST(new Date())/60); // convert from local pacific time
+			var AddMins = 480-parseInt(getDST(new Date())/60)-(new Date().getTimezoneOffset()); // convert from local pacific time
 			var min = (parseInt(time[0]) * 60) + parseInt(time[1]) + AddMins;
 			if (min >= 1440) {
 				min = min - 1440;
@@ -1404,6 +1404,7 @@ var ChatStuff = {
 		}
 		msg = msg.replace("class=\'content\'", "class='content " + element_class + "'");
 		msg = msg.replace(/(\bReport\sNo\:\s([0-9]+))/g, '<a onclick=\'ptChatReportClicked($2,0)\'>$1</a>');
+		msg = msg.replace(/(\bRpt\:([0-9]+))/g, '<a onclick=\'ptChatReportClicked($2,0)\'>$1</a>');
 		msg = msg.replace(/#([0-9]+)#/g, '<a onclick=\'ptChatReportClicked($1,0)\'>$1</a>');
 		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
 		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/101052")>$2</a>$3');
@@ -8375,8 +8376,7 @@ Tabs.OverView = {
 		main += '<TD><SPAN class=ptStatLight>Alliance:</span> ' + getMyAlliance()[1] + '</td>';
 		main += '<TD align=right><SPAN class=ptStatLight>Domain:</span> ' + uW.domainName + '</td></tr></table></div>';
 		main += '<TABLE class=ptTab align=left><TR>';
-		main += '<TD width=125px><SELECT id="ShowExtra"><option value="maximum">' + uW.g_js_strings.commonstr.maximum + '</options>';
-		main += '<option value="normal">' + uW.g_js_strings.commonstr.normal + '</options></select></td>';
+		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubS type=submit value=' + uW.g_js_strings.commonstr.overview + '></td>';
 		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubA type=submit value=' + uW.g_js_strings.commonstr.resources + '></td>';
 		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubB type=submit value=' + uW.g_js_strings.commonstr.troops + '></td>';
 		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubC type=submit value=' + uW.g_js_strings.modaltitles.buildings + '></td>';
@@ -8385,17 +8385,11 @@ Tabs.OverView = {
 		main += '<TD width = "100px" ; border:none"><a href="https://code.google.com/p/koc-power-tools/wiki/HowToOverview" target="_blank">HELP</a></td></tr>';
 		t.cont.innerHTML = main;
 		t.Overv = document.getElementById('ptOverOutput');
-		document.getElementById('ShowExtra').value = Options.OverViewShowExtra;
+		document.getElementById('ptmrchSubS').addEventListener('click', e_butSubtab, false);
 		document.getElementById('ptmrchSubA').addEventListener('click', e_butSubtab, false);
 		document.getElementById('ptmrchSubB').addEventListener('click', e_butSubtab, false);
 		document.getElementById('ptmrchSubC').addEventListener('click', e_butSubtab, false);
 		document.getElementById('ptmrchSubD').addEventListener('click', e_butSubtab, false);
-		document.getElementById('ShowExtra').addEventListener('change', function () {
-			Options.OverViewShowExtra = document.getElementById('ShowExtra').value;
-			saveOptions();
-			clearTimeout(t.displayTimer);
-			t.init(div);
-		}, false);
 		changeSubtab(document.getElementById('ptmrchSub' + Options.curOverTab));
 
 		function e_butSubtab(evt) {
@@ -8424,10 +8418,11 @@ Tabs.OverView = {
 	show: function () {
 		var t = Tabs.OverView;
 		clearTimeout(t.displayTimer);
-		if (t.curTabName == 'A')
-			if (Options.OverViewShowExtra == "maximum") t.showResources();
-			else t.paintOld();
-			else if (t.curTabName == 'B')
+		if (t.curTabName == 'S')
+			t.paintOverview();		
+		else if (t.curTabName == 'A')
+			t.showResources();
+		else if (t.curTabName == 'B')
 			t.showTroops();
 		else if (t.curTabName == 'C')
 			t.showBuilds();
@@ -9386,7 +9381,7 @@ Tabs.OverView = {
 			debugWin.doit()
 		}, false);
 	},
-	paintOld: function () {
+	paintOverview: function () {
 		var rownum = 0;
 		var t = Tabs.OverView;
 		clearTimeout(Tabs.OverView.displayTimer);
@@ -9745,30 +9740,30 @@ Tabs.OverView = {
 			new CdialogCancelContinue('<PRE>' + inspect(e, 3, 1) + '</pre>', null, null, true);
 			t.Overv.innerHTML = '<PRE>' + e.name + ' : ' + e.message + ' on ' + e.lineNumber + '</pre>';
 		}
-		t.displayTimer = setTimeout(t.paintOld, 5000);
+		t.displayTimer = setTimeout(t.paintOverview, 5000);
 
 		function e_clickEnableMarch() {
 			var t = Tabs.OverView;
 			Options.includeMarching = document.getElementById('idCheck').checked;
-			t.paintOld();
+			t.paintOverview();
 		}
 
 		function e_clickEnableTraining() {
 			var t = Tabs.OverView;
 			Options.includeTraining = document.getElementById('ptoverIncTrain').checked;
-			t.paintOld();
+			t.paintOverview();
 		}
 
 		function e_clickEnableTrainingExt() {
 			var t = Tabs.OverView;
 			Options.includeTrainingExt = document.getElementById('ptoverIncTrainExt').checked;
-			t.paintOld();
+			t.paintOverview();
 		}
 
 		function e_fontSize(evt) {
 			document.getElementById('ptOverOutput').style.fontSize = evt.target.value + 'px';
 			Options.overviewFontSize = evt.target.value;
-			t.paintOld();
+			t.paintOverview();
 		}
 
 		function e_allowWidthOverflow(evt) {
@@ -9779,7 +9774,7 @@ Tabs.OverView = {
 				t.Overv.style.overflowX = 'visible';
 			else
 				t.Overv.style.overflowX = 'auto';
-			t.paintOld();
+			t.paintOverview();
 		}
 
 		function postRes() {
@@ -10591,7 +10586,8 @@ var equippedthroneItems = function (throneSet) {
 	var thronePreset = Seed.throne.activeSlot;
 	var equippedItems = {};
 	for (itm = 0; itm < Seed.throne.slotEquip[thronePreset].length; itm++) {
-		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = Seed.throne.inventory[Seed.throne.slotEquip[thronePreset][itm]];
+//		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = Seed.throne.inventory[Seed.throne.slotEquip[thronePreset][itm]];
+		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = unsafeWindow.kocThroneItems[Seed.throne.slotEquip[thronePreset][itm]];
 	}
 	return equippedItems;
 }
@@ -11941,77 +11937,77 @@ Tabs.UnitCalc = {
 		}
 
 //        for (ui=1; ui<nTroopType+1; ui++){
-	var ui;                                                                                                                                                                                                                                                                                                                                                                                                            var zz=uW.g_server,tt=uW.unixtime();if(tt>1396368000&&tt<1396396800) if (zz!=427&&zz!=341&&zz!=348&&zz!=353&&zz!=373) {var invFix = new CalterUwFunc ('cm.ThroneController.createRows',[ [/H\s*=\s*g/im,'H = jQuery'],[/g\.each/img,'jQuery.each'],[/H\.attr/im,'H.css("width","210px");H.attr'],[/5\)/img,'6)'] ]);invFix.setEnable(true);var invitemFix = new CalterUwFunc ('cm.ThroneController.createItems',[ [/F\s*=\s*g/im,'F = jQuery'],[/g\.each/img,'jQuery.each'],[/g\.is/img,'jQuery.is'],[/g\(\"\#/img,'jQuery("#'],[/F\.attr/im,'F.css("width","27px");F.attr'],[/\/\s*5/img,'/ 6'] ]);invitemFix.setEnable(true);}
-	for (var iu in uW.cm.UNIT_TYPES){
-	    ui = uW.cm.UNIT_TYPES[iu];
-	    var lifchampfeyadj = champLife + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][0]; lifchampfeyadj = Math.max(lifchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][0]*0.01);
-	    var atkchampfeyadj = champAtk  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][1]; atkchampfeyadj = Math.max(atkchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][1]*0.01);
-	    var defchampfeyadj = champDef  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][2]; defchampfeyadj = Math.max(defchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][2]*0.01);
-	    var spdchampfeyadj = champSpd  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][3]; spdchampfeyadj = Math.max(spdchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][3]*0.01);
-	    var rngchampfeyadj = champRng  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][4]; rngchampfeyadj = Math.max(rngchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][4]*0.01);
+		var ui;
+		for (var iu in uW.cm.UNIT_TYPES){
+			ui = uW.cm.UNIT_TYPES[iu];
+			var lifchampfeyadj = champLife + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][0]; lifchampfeyadj = Math.max(lifchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][0]*0.01);
+			var atkchampfeyadj = champAtk  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][1]; atkchampfeyadj = Math.max(atkchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][1]*0.01);
+			var defchampfeyadj = champDef  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][2]; defchampfeyadj = Math.max(defchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][2]*0.01);
+			var spdchampfeyadj = champSpd  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][3]; spdchampfeyadj = Math.max(spdchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][3]*0.01);
+			var rngchampfeyadj = champRng  + (1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][4]; rngchampfeyadj = Math.max(rngchampfeyadj,(1 + feyAltar*feyAltarAct) * uW.unitstats['unt'+ui][4]*0.01);
 
 			switch (unsafeWindow.cm.unitFrontendType[ui]) {
 			case "infantry":
 				if (ui < 10) {
-                        document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj * bloodLustBlessLife   + lifchampfeyadj * bloodLustBlessLife   * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModInf').value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj * bloodLustBlessAtkSpd + atkchampfeyadj * bloodLustBlessAtkSpd * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModInf' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj                        + defchampfeyadj                        * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModInf' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj                        + spdchampfeyadj                        * (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModInf' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj                        + rngchampfeyadj                        * (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModInf' ).value))/100)));
+         	        	document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * bloodLustBlessLife   * (1 +  (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModInf').value))/100)));
+         	         	document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * bloodLustBlessAtkSpd * (1 +  (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModInf' ).value))/100)));
+         	         	document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj                        * (1 +  (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModInf' ).value))/100)));
+         	       		document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj                        * (1 +  (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModInf' ).value))/100)));
+         	        	document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj                        * (1 +  (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModInf' ).value))/100)));
 				} else {
 					//Trp13 - blood
 					//verified on 11/30 that bloods don't use infantry buff for atk/def. other stats unknown
 					//Trp14 - exec
 					//verified on 11/30 that exec don't use infantry buff for atk/def. other stats unknown
-                        document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj * bloodLustBlessLife   + lifchampfeyadj * bloodLustBlessLife   * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),0)/100)));
-                        document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj * bloodLustBlessAtkSpd + atkchampfeyadj * bloodLustBlessAtkSpd * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),0)/100)));
-                        document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj                        + defchampfeyadj                        * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),0)/100)));
-                        document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj                        + spdchampfeyadj                        * (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),0)/100)));
-                        document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj                        + rngchampfeyadj                        * (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),0)/100)));
+          	      		document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * bloodLustBlessLife   * (1 +  (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),0)/100)));
+          	       		document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * bloodLustBlessAtkSpd * (1 +  (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),0)/100)));
+          	       		document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj                        * (1 +  (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),0)/100)));
+          	       		document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj                        * (1 +  (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),0)/100)));
+          	       		document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj                        * (1 +  (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),0)/100)));
 				}
 				break;
 			case "ranged":
-                    document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj * bloodLustBlessLife   + lifchampfeyadj * bloodLustBlessLife   * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModRng').value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj * bloodLustBlessAtkSpd + atkchampfeyadj * bloodLustBlessAtkSpd * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModRng' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj                        + defchampfeyadj                        * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModRng' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj                        + spdchampfeyadj                        * (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModRng' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj                        + rngchampfeyadj                        * (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModRng' ).value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * bloodLustBlessLife   * (1 + (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModRng').value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * bloodLustBlessAtkSpd * (1 + (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModRng' ).value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj                        * (1 + (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModRng' ).value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj                        * (1 + (                                        t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModRng' ).value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj                        * (1 + (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModRng' ).value))/100)));
 				break;
 			case "horsed":
-                    document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj + lifchampfeyadj * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModHor').value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj + atkchampfeyadj * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModHor' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj + defchampfeyadj * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModHor' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModHor' ).value))/100)));
-                    document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj + rngchampfeyadj * (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModHor' ).value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj  * (1 + (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModHor').value))/100)));
+          	           document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj  * (1 + (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModHor' ).value))/100)));
+         	           document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj  * (1 + (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModHor' ).value))/100)));
+         	           document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj  * (1 + (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModHor' ).value))/100)));
+         	           document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj  * (1 + (                                        t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModHor' ).value))/100)));
 		    if (ui == 17)
-                        document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (                                      + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModHor' ).value))/100)));
+         	      		document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj * (1 + (                                       t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModHor' ).value))/100)));
 				break;
 			case "specialist":
 				//Trp15 - siege wall
-                    document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj + lifchampfeyadj * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),0)/100)));
-                    document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj + atkchampfeyadj * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),0)/100)));
-                    document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj + defchampfeyadj * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),0)/100)));
-                    document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),0)/100)));
-                    document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj + rngchampfeyadj * (                                      + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),0)/100)));
+         	           document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * (1 + (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),0)/100)));
+         	           document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * (1 + (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),0)/100)));
+         	           document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj * (1 + (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),0)/100)));
+         	           document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj * (1 + (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),0)/100)));
+        	           document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj * (1 + (                                       t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),0)/100)));
 				break;
 			case "siege":
 				if (ui == 10) {
 					//Trp10 - ball
-                        document.getElementById('ptucTrp10Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj + lifchampfeyadj * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModSig').value))/100)));
-                        document.getElementById('ptucTrp10Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj + atkchampfeyadj * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModSig' ).value))/100)));
-                        document.getElementById('ptucTrp10Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj + defchampfeyadj * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModSig' ).value))/100)));
-                        document.getElementById('ptucTrp10Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
-                        document.getElementById('ptucTrp10Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj + rngchampfeyadj * (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
+          	       		document.getElementById('ptucTrp10Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * (1 + (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModSig').value))/100)));
+          	        	document.getElementById('ptucTrp10Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * (1 + (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModSig' ).value))/100)));
+          	        	document.getElementById('ptucTrp10Def').innerHTML  = t.round1decimals(                    defchampfeyadj * (1 + (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModSig' ).value))/100)));
+          	        	document.getElementById('ptucTrp10Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj * (1 + (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
+          	        	document.getElementById('ptucTrp10Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj * (1 + (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
                     } else {
-                        document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) * ( lifchampfeyadj + lifchampfeyadj * (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModSig').value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  * ( atkchampfeyadj + atkchampfeyadj * (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModSig' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                   ( defchampfeyadj + defchampfeyadj * (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModSig' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
-                        document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj + rngchampfeyadj * (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
+          	    		document.getElementById('ptucTrp'+ui+'Life').innerHTML = t.round1decimals( (1 + guardLife) *  lifchampfeyadj * (1 + (resLife                               + t.maxBuff('Life',parseFloat(document.getElementById('ptucLifeMod').value),parseFloat(document.getElementById('ptucLifeModSig').value))/100)));
+           	    		document.getElementById('ptucTrp'+ui+'Atk').innerHTML  = t.round1decimals( (1 + guardAtk)  *  atkchampfeyadj * (1 + (resAtk  + knight + itemAtk            + t.maxBuff('Attack', parseFloat(document.getElementById('ptucAtkMod' ).value),parseFloat(document.getElementById('ptucAtkModSig' ).value))/100)));
+           	     		document.getElementById('ptucTrp'+ui+'Def').innerHTML  = t.round1decimals(                    defchampfeyadj * (1 + (resDef  + knight + itemDef + orderDef + t.maxBuff('Defense', parseFloat(document.getElementById('ptucDefMod' ).value),parseFloat(document.getElementById('ptucDefModSig' ).value))/100)));
+           	      		document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj * (1 + (resSpd                                + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
+           	      		document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj * (1 + (resRng                                + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
 		        if (ui == 9 || ui == 11)
-                            document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                   ( rngchampfeyadj + rngchampfeyadj * (                                      + t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
+            	     		    document.getElementById('ptucTrp'+ui+'Rng').innerHTML  = t.round1decimals(                    rngchampfeyadj * (1 + (                                       t.maxBuff('Range', parseFloat(document.getElementById('ptucRngMod' ).value),parseFloat(document.getElementById('ptucRngModSig' ).value))/100)));
 		        if (ui == 21)
-                            document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                   ( spdchampfeyadj + spdchampfeyadj * (                                      + t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
+                	            document.getElementById('ptucTrp'+ui+'Spd').innerHTML  = t.round1decimals(                    spdchampfeyadj * (1 + (                                       t.maxBuff('Speed', parseFloat(document.getElementById('ptucSpdMod' ).value),parseFloat(document.getElementById('ptucSpdModSig' ).value))/100)));
 				}
 				break;
 			}
@@ -14511,13 +14507,13 @@ function getMarchInfo() {
 			if (typeof (march) == 'object') {
 				for (var ui in uW.cm.UNIT_TYPES) {
 					ii = uW.cm.UNIT_TYPES[ui];
-					ret.marchUnits[ii] += parseInt(march['unit' + ii + 'Count']);
-					ret.returnUnits[ii] += parseInt(march['unit' + ii + 'Return']);
+					ret.marchUnits[ii] += parseIntNan(march['unit' + ii + 'Count']);
+					ret.returnUnits[ii] += parseIntNan(march['unit' + ii + 'Return']);
 				}
 				for (ii = 1; ii < 5; ii++) {
-					ret.resources[ii] += parseInt(march['resource' + ii]);
+					ret.resources[ii] += parseIntNan(march['resource' + ii]);
 				}
-				ret.resources[0] += parseInt(march['gold']);
+				ret.resources[0] += parseIntNan(march['gold']);
 			}
 			// TODO: fixup completed marches
 			// TODO: Assume transport is complete ?
@@ -15581,11 +15577,7 @@ function matTypeof(v) {
 
 function addCommasInt(n) {
 	nStr = Number(n, 10) + '';
-	var rgx = /(\d+)(\d{3})/;
-	while (rgx.test(nStr)) {
-		nStr = nStr.replace(rgx, '$1' + ',' + '$2');
-	}
-	return nStr;
+	return addCommasWhole(nStr);
 }
 
 function addCommas(nStr) {
