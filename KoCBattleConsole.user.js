@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140331a
+// @version			20140404a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Daylight Savings Time Fix</p><p>Chrome/Tampermonkey Support</p>
+// @releasenotes 	<p>Support for pridwen415 (pvp domain)</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140331a'; 
+var Version = '20140404a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -251,6 +251,7 @@ var TroopShow = true;
 var FortificationShow = true;
 var AttackShow = true;
 var CityAttackShow = true;
+var SelectiveDefending = true;
 
 for (var ui in uW.cm.UNIT_TYPES){
 	i = uW.cm.UNIT_TYPES[ui];
@@ -523,7 +524,8 @@ function btStartup (){
 	if (!trusted) {Options.RefreshSeed = false; saveOptions ();}
 
 	Seed = uW.seed;
-
+	SelectiveDefending = uW.g_serverType != uW.cm.SERVER_TYPES.PVP;
+	
 	Options.WinSize.x = 400;
 	Options.WinSize.y = WinHeight;
 	DefaultWindowPos('WinPos','main_engagement_tabs');
@@ -621,10 +623,13 @@ function btStartup (){
 	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
 	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Maximum troops to sacrifice</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;troops</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
-	m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
 
+	if (SelectiveDefending) {
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
+		m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
+	}
+		
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=4><table cellSpacing=0 width=98%>';
 	m += '<TR><TD style="width:20px" class=xtabHD>Show</td><TD style="width:100px" class=xtabHD>Section</td><TD class=xtabHD>Sequence</td><TD class=xtabHD align=right><a id=btResetDash class="inlineButton btButton brown11"><span>Reset</span></a></td></tr>';
 
@@ -717,9 +722,13 @@ function btStartup (){
 	DashboardToggle ();
 	ToggleOption ('UpperDefChk', 'UpperDefendButton');
 	ToggleOption ('LowerDefChk', 'LowerDefendButton');
-	ToggleOption ('DefAddTroopChk', 'DefAddTroopShow', DefToggle);
-	DefToggle ();
-	ToggleOption ('DefPresetChk', 'DefPresetShow');
+
+	if (SelectiveDefending) {
+		ToggleOption ('DefAddTroopChk', 'DefAddTroopShow', DefToggle);
+		DefToggle ();
+		ToggleOption ('DefPresetChk', 'DefPresetShow');
+	}
+	
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
@@ -732,11 +741,13 @@ function btStartup (){
 		Options.SacrificeLimit = document.getElementById('btSacrificeLimit').value;
 		saveOptions();
 	}, false);
-    document.getElementById('btDefaultDefenceNum').addEventListener('keyup', function () {
-		if (isNaN(document.getElementById('btDefaultDefenceNum').value)) { document.getElementById('btDefaultDefenceNum').value = 0; }
-		Options.DefaultDefenceNum = document.getElementById('btDefaultDefenceNum').value;
-		saveOptions();
-	}, false);
+	if (SelectiveDefending) {
+		document.getElementById('btDefaultDefenceNum').addEventListener('keyup', function () {
+			if (isNaN(document.getElementById('btDefaultDefenceNum').value)) { document.getElementById('btDefaultDefenceNum').value = 0; }
+			Options.DefaultDefenceNum = document.getElementById('btDefaultDefenceNum').value;
+			saveOptions();
+		}, false);
+	}	
 	
 	VolSlider = new SliderBar (document.getElementById('btVolSlider'), 200, 21, 0);
 	VolSlider.setValue (Options.Volume/100);
@@ -1515,7 +1526,7 @@ function getMisted (uid,divid){
 				}	
 			}  
 		},
-    },true);
+    },true); // no retry
 }
 
 function AddMainTabLink(text, eventListener, mouseListener) {
@@ -2989,7 +3000,7 @@ function fetchPlayerList (name, notify){  // at least 3 chars!!
 		onFailure: function (rslt) {
 			setError ('AJAX error (server not responding)');
 		}	
-	},true);
+	},true); // no retry
 }
 
 function eventMatchNameMonitor (rslt){
@@ -3558,11 +3569,10 @@ function UpdateMarch (cityId,marchId) {
 	local_atkp["m"+marchId].btRequestSent = 2; // delay any further requests for 2 seconds
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.rid = marchId;
-	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
+	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
 		method: "post",
 		parameters: params,
-		onSuccess: function (message) {
-			var rslt = eval("(" + message.responseText + ")");
+		onSuccess: function (rslt) {
 			if (local_atkp["m"+rslt.march.marchId]) {
 				for (y in rslt.march) {
 					local_atkp["m"+rslt.march.marchId][y] = rslt.march[y];
@@ -3587,7 +3597,7 @@ function UpdateMarch (cityId,marchId) {
 		onFailure: function (rslt) {
 			local_atkp["m"+marchId].btRequestSent = 0; // try again
 		}
-    })						
+    },true); // no retry			
 }
 
 function updatePlayers (uid){
@@ -3899,7 +3909,8 @@ function SetCurrentCity(cityId) {
 		m +='<SELECT class="btSelector" id="btRitualTroops" onchange="btSelectTroopType(this);"><option value="0">--Troop Type--</option>';
 		for (y in uW.unitcost) {
 			var TroopAllowed = (o.indexOf(y.substr(3)) >= 0);
-			var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)])+parseIntNan(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
+			if (SelectiveDefending) { var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)])+parseIntNan(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]); }
+			else { var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);	}
 			if ((tot > 0) && TroopAllowed) {
 				m +='<option value="'+y.substr(3)+'">'+uW.unitcost[y][0]+'</option>';
 			}	
@@ -3916,53 +3927,58 @@ function SetCurrentCity(cityId) {
 
 // refresh troop add defenders cell
 
-	DefOptionsString = "";
-	m = '<TABLE cellSpacing=0 width=100% height=0%><tr><TD colspan=3 class=xtabHD>Assign Defenders</td><TD width="100" align=right class=xtabHD><a id="btSelectDefendButton" class="inlineButton btButton blue14" onclick="cm.CastleController.openSelectDefendingTroops();"><span style="width:85px;display:inline-block;text-align:center;" align="center">Select Troops</span></a></td></tr>';
-	m +='<tr id=btDefAddTroopRow><TD width="120" class=xtabBR><span class=xtab>';
-	m +='<SELECT class="btSelector" id="btDefendTroops" onchange="btSelectDefTroopType(this);"><option value="0">--Troop Type--</option>';
-	for (y in uW.unitcost) {
-		var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
-		if ((tot > 0)) {
-			m +='<option value="'+y.substr(3)+'">'+uW.unitcost[y][0]+'</option>';
-			DefOptionsString = DefOptionsString + y.substr(3);
-		}	
+	if (SelectiveDefending) {
+		DefOptionsString = "";
+		m = '<TABLE cellSpacing=0 width=100% height=0%><tr><TD colspan=3 class=xtabHD>Assign Defenders</td><TD width="100" align=right class=xtabHD><a id="btSelectDefendButton" class="inlineButton btButton blue14" onclick="cm.CastleController.openSelectDefendingTroops();"><span style="width:85px;display:inline-block;text-align:center;" align="center">Select Troops</span></a></td></tr>';
+		m +='<tr id=btDefAddTroopRow><TD width="120" class=xtabBR><span class=xtab>';
+		m +='<SELECT class="btSelector" id="btDefendTroops" onchange="btSelectDefTroopType(this);"><option value="0">--Troop Type--</option>';
+		for (y in uW.unitcost) {
+			var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
+			if ((tot > 0)) {
+				m +='<option value="'+y.substr(3)+'">'+uW.unitcost[y][0]+'</option>';
+				DefOptionsString = DefOptionsString + y.substr(3);
+			}	
+		}
+		m +='</select></span></td>';
+		m +='<td width="200" class=xtab><INPUT class="btInput" id="btDefendAmount" type=text size=11 maxlength=10 value=""><span id="btTotalDefTroops"></span></td>';
+		m +='<td align=right class=xtab><span id="btMaxDefTroops"></span></td>';
+		m +='<td width="100" align=right class=xtab><a id="btAddDefendButton" class="inlineButton btButton blue14" onclick="btAddDefenders()"><span style="width:85px;display:inline-block;text-align:center;" align="center">Add</span></a></td></tr>';
+		m +='<tr id=btDefPresetRow><TD colspan=4 class=xtab><TABLE cellSpacing=0 width=100% height=0%><tr><td class=xtab>';
+		m +='<SELECT class="btSelector" style="width:190px;" id="btDefendPreset" onchange="btSelectDefPreset(this);"><option value="0">--Select Preset--</option>';
+		for (y in Options.DefPresets) {
+			m +='<option value="'+y+'">'+Options.DefPresets[y][0]+'</option>';
+		}  
+		NextPresetNumber = parseIntNan(y) + 1;
+	
+		for (z in uW.ptDefendFav) { // add in powertools presets
+			m +='<option style="color:#888;" value="T'+z+'">(PowerTools) '+uW.ptDefendFav[z][0]+'</option>';
+		}  
+		m +='</select></td>';
+		m +='<td align=left class=xtab width=200><a id="btNewDefPreset" class="inlineButton btButton brown8" onclick="btNewDefPreset()"><span>New</span></a>&nbsp;<a id="btChgDefPreset" class="inlineButton btButton brown8 disabled" onclick="btChgDefPreset()"><span>Chg</span></a></td>';
+		m +='<td align=right class=xtab style="padding-right:0px;"><a id="btAddPresetButton" class="inlineButton btButton blue14" onclick="btSetPresetDefenders(false)"><span style="width:15px;display:inline-block;text-align:center;" align="center">+</span></a>&nbsp;<a id="btReplacePresetButton" class="inlineButton btButton blue14" onclick="btSetPresetDefenders(true)"><span style="width:85px;display:inline-block;text-align:center;" align="center">Replace</span></a></td></tr></table>';
+		if (ExpandDefPreset) m += '<div id=DefEditPresetRow >';
+		else m += '<div id=DefEditPresetRow class=divHide >';
+		m +='<TABLE cellSpacing=0 width=100% height=0%><tr><TD colspan=2 class=xtabHD style="font-size:2px;">&nbsp;</td></tr><tr><td class=xtab style="padding-top:5px;">Preset Name:&nbsp;<INPUT class="btInput" id="btDefPresetName" size=20 style="width: 185px" type=text value=""/></td>';
+		m +='<td align=right class=xtab style="padding-right:0px;"><a id="btSaveDefPreset" class="inlineButton btButton brown8" onclick="btSaveDefPreset()"><span>Save</span></a></td></tr>';
+		m +='<tr><td colspan=2 class=xtabBR style="padding-right:0px;">';
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
+			m += '<span class=xtab>'+TroopImage(i)+'<INPUT class="btInput" id="btPresetTroop'+i+'" type=text style="width:53px;" size=10 maxlength=9 value=""></span> ';
+		}
+		m +='</td></tr><tr><TD colspan=2 class=xtabHD align=right style="padding-right:0px;"><a id="btDelDefPreset" class="inlineButton btButton brown8 disabled" onclick="btDelDefPreset()"><span>Delete</span></a>&nbsp;<a id="btCancelDefPreset" class="inlineButton btButton brown8" onclick="btCancelDefPreset()"><span>Cancel</span></a></td></tr></table>';	
+		m +='</div></td></tr>';
+		m += '<tr><td class=xtab colspan="4"><div style="opacity:0.6;" align="center" id=btTroopMsg>&nbsp;</div></td></tr></table>';
+
+		document.getElementById('btTroopAddCell').innerHTML = m;
+	
+		if (InitPresetNumber != 0) {
+			document.getElementById('btDefendPreset').value = InitPresetNumber;
+			SelectDefPreset(document.getElementById('btDefendPreset'));
+			InitPresetnumber = 0;
+		}
 	}
-	m +='</select></span></td>';
-	m +='<td width="200" class=xtab><INPUT class="btInput" id="btDefendAmount" type=text size=11 maxlength=10 value=""><span id="btTotalDefTroops"></span></td>';
-	m +='<td align=right class=xtab><span id="btMaxDefTroops"></span></td>';
-	m +='<td width="100" align=right class=xtab><a id="btAddDefendButton" class="inlineButton btButton blue14" onclick="btAddDefenders()"><span style="width:85px;display:inline-block;text-align:center;" align="center">Add</span></a></td></tr>';
-	m +='<tr id=btDefPresetRow><TD colspan=4 class=xtab><TABLE cellSpacing=0 width=100% height=0%><tr><td class=xtab>';
-	m +='<SELECT class="btSelector" style="width:190px;" id="btDefendPreset" onchange="btSelectDefPreset(this);"><option value="0">--Select Preset--</option>';
-	for (y in Options.DefPresets) {
-		m +='<option value="'+y+'">'+Options.DefPresets[y][0]+'</option>';
-	}  
-	NextPresetNumber = parseIntNan(y) + 1;
-
-	for (z in uW.ptDefendFav) { // add in powertools presets
-		m +='<option style="color:#888;" value="T'+z+'">(PowerTools) '+uW.ptDefendFav[z][0]+'</option>';
-	}  
-	m +='</select></td>';
-	m +='<td align=left class=xtab width=200><a id="btNewDefPreset" class="inlineButton btButton brown8" onclick="btNewDefPreset()"><span>New</span></a>&nbsp;<a id="btChgDefPreset" class="inlineButton btButton brown8 disabled" onclick="btChgDefPreset()"><span>Chg</span></a></td>';
-	m +='<td align=right class=xtab style="padding-right:0px;"><a id="btAddPresetButton" class="inlineButton btButton blue14" onclick="btSetPresetDefenders(false)"><span style="width:15px;display:inline-block;text-align:center;" align="center">+</span></a>&nbsp;<a id="btReplacePresetButton" class="inlineButton btButton blue14" onclick="btSetPresetDefenders(true)"><span style="width:85px;display:inline-block;text-align:center;" align="center">Replace</span></a></td></tr></table>';
-	if (ExpandDefPreset) m += '<div id=DefEditPresetRow >';
-	else m += '<div id=DefEditPresetRow class=divHide >';
-	m +='<TABLE cellSpacing=0 width=100% height=0%><tr><TD colspan=2 class=xtabHD style="font-size:2px;">&nbsp;</td></tr><tr><td class=xtab style="padding-top:5px;">Preset Name:&nbsp;<INPUT class="btInput" id="btDefPresetName" size=20 style="width: 185px" type=text value=""/></td>';
-	m +='<td align=right class=xtab style="padding-right:0px;"><a id="btSaveDefPreset" class="inlineButton btButton brown8" onclick="btSaveDefPreset()"><span>Save</span></a></td></tr>';
-	m +='<tr><td colspan=2 class=xtabBR style="padding-right:0px;">';
-	for (var ui in uW.cm.UNIT_TYPES){
-		i = uW.cm.UNIT_TYPES[ui];
-		m += '<span class=xtab>'+TroopImage(i)+'<INPUT class="btInput" id="btPresetTroop'+i+'" type=text style="width:53px;" size=10 maxlength=9 value=""></span> ';
-	}
-	m +='</td></tr><tr><TD colspan=2 class=xtabHD align=right style="padding-right:0px;"><a id="btDelDefPreset" class="inlineButton btButton brown8 disabled" onclick="btDelDefPreset()"><span>Delete</span></a>&nbsp;<a id="btCancelDefPreset" class="inlineButton btButton brown8" onclick="btCancelDefPreset()"><span>Cancel</span></a></td></tr></table>';	
-	m +='</div></td></tr>';
-	m += '<tr><td class=xtab colspan="4"><div style="opacity:0.6;" align="center" id=btTroopMsg>&nbsp;</div></td></tr></table>';
-
-	document.getElementById('btTroopAddCell').innerHTML = m;
-
-	if (InitPresetNumber != 0) {
-		document.getElementById('btDefendPreset').value = InitPresetNumber;
-		SelectDefPreset(document.getElementById('btDefendPreset'));
-		InitPresetnumber = 0;
+	else {
+		uW.jQuery('#btTroopAddCell').addClass("divHide");
 	}
 	
 	PaintCityInfo(cityId);
@@ -4272,38 +4288,42 @@ function PaintCityInfo(cityId) {
 	else DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton green20"><span style="width:75px"><center>Hiding!</center></span></a>';	
 	
 	TroopCell = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=2 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
-	Troops = '<tr><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td></tr>';
-	Troops += '<tr><td class="xtabBRTop">';
-	for(c=0; c<Infantry.length; c++){
-		var i = parseInt(Infantry[c]);
-       	if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
-	}	
-	Troops += '</td><td class="xtabBRTop">';
-	for(c=0; c<Ranged.length; c++){
-		var i = parseInt(Ranged[c]);
-       	if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
-	}	
-	Troops += '</td><td class="xtabBRTop">';
-	for(c=0; c<Horsed.length; c++){
-		var i = parseInt(Horsed[c]);
-       	if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
-	}	
-	Troops += '</td><td class="xtabBRTop">';
-	for(c=0; c<Siege.length; c++){
-		var i = parseInt(Siege[c]);
-       	if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
-	}	
-	Troops += '</td></tr>';
-	if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><br><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
 
-	TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr>';
+	if (SelectiveDefending) {
+		Troops = '<tr><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td></tr>';
+		Troops += '<tr><td class="xtabBRTop">';
+		for(c=0; c<Infantry.length; c++){
+			var i = parseInt(Infantry[c]);
+			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+		}	
+		Troops += '</td><td class="xtabBRTop">';
+		for(c=0; c<Ranged.length; c++){
+			var i = parseInt(Ranged[c]);
+			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+		}	
+		Troops += '</td><td class="xtabBRTop">';
+		for(c=0; c<Horsed.length; c++){
+			var i = parseInt(Horsed[c]);
+			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+		}	
+		Troops += '</td><td class="xtabBRTop">';
+		for(c=0; c<Siege.length; c++){
+			var i = parseInt(Siege[c]);
+			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+		}	
+		Troops += '</td></tr>';
+		if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><br><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
+
+		TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr>';
 	
-	GotTroops = false;
-	TroopColour = '#000';
-	TitleColour = '#888888';
-	TitleStyle = 'xtabHD';
+		GotTroops = false;
+		TroopColour = '#000';
+		TitleColour = '#888888';
+		TitleStyle = 'xtabHD';
 
-	TroopCell += '<tr><td colspan=4 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Defend" style="color:#888888;font-size:14px;" onclick="btSelectDefenders(\'A\',true);">Sanctuary</a></b><br></td></tr>';
+		TroopCell += '<tr><td colspan=4 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Defend" style="color:#888888;font-size:14px;" onclick="btSelectDefenders(\'A\',true);">Sanctuary</a></b><br></td></tr>';
+	}
+	
 	Troops = '<tr><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',true);">Infantry</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',true);">Ranged</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',true);">Horsed</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',true);">Siege</a></b></td></tr>';
 	Troops += '<tr><td class="xtabBRTop">';
 	for(c=0; c<Infantry.length; c++){
@@ -4332,20 +4352,22 @@ function PaintCityInfo(cityId) {
 	if (CheckForHTMLChange('btTroopCell',CityTag+TroopCell)) {
 		document.getElementById('btCityStatus2').addEventListener ('click', function(){ToggleDefenceMode (cityId);} , false);
 		// check if troop types dropdown needs refreshing
-		CheckOptionsString = "";
-		for (y in uW.unitcost) {
-			var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
-			if ((tot > 0)) {
-				CheckOptionsString = CheckOptionsString + y.substr(3);
+		if (SelectiveDefending) {
+			CheckOptionsString = "";
+			for (y in uW.unitcost) {
+				var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
+				if ((tot > 0)) {
+					CheckOptionsString = CheckOptionsString + y.substr(3);
+				}	
+			}
+			if (DefOptionsString != CheckOptionsString) {
+				InitPresetNumber = document.getElementById('btDefendPreset').value;
+				SetCurrentCity(Seed.cities[Curr][0]);
 			}	
-		}
-		if (DefOptionsString != CheckOptionsString) {
-			InitPresetNumber = document.getElementById('btDefendPreset').value;
-			SetCurrentCity(Seed.cities[Curr][0]);
+			else {
+				SelectDefTroopType (document.getElementById("btDefendTroops"));
+			}
 		}	
-		else {
-			SelectDefTroopType (document.getElementById("btDefendTroops"));
-		}
 	}
 	
 	// reinforcements
@@ -4754,7 +4776,8 @@ function SelectTroopType (sel) {
 		TotalTroops = 0;
 		return false
 	} else {
-		TotalTroops = parseIntNan(Seed.units['city' + Seed.cities[Options.CurrentCity][0]]['unt'+sel.value])+parseIntNan(Seed.defunits['city' + Seed.cities[Options.CurrentCity][0]]['unt'+sel.value]);
+		if (SelectiveDefending) { TotalTroops = parseIntNan(Seed.units['city' + Seed.cities[Options.CurrentCity][0]]['unt'+sel.value])+parseIntNan(Seed.defunits['city' + Seed.cities[Options.CurrentCity][0]]['unt'+sel.value]); }
+		else { TotalTroops = parseIntNan(Seed.units['city' + Seed.cities[Options.CurrentCity][0]]['unt'+sel.value]); }
 		document.getElementById('btTotalTroops').innerHTML = '&nbsp;/&nbsp;'+addCommas(TotalTroops);
 		document.getElementById('btMaxTroops').innerHTML = '<a id="btMaxButton" onclick="btSetMaxTroops()"><span style="font-size:9px;" align="center">max</span></a>';
 		// set default sac length if blank
@@ -4859,12 +4882,14 @@ function ToggleDefenceMode (cityId) {
             }
 			uW.jQuery('#btCityStatus').removeClass("disabled");
 			uW.jQuery('#btCityStatus2').removeClass("disabled");
+			if (rslt.updateSeed) { uW.update_seed(rslt.updateSeed); }
         },
-        onFailure: function () { serverwait = false; uW.jQuery('#btCityStatus').removeClass("disabled");uW.jQuery('#btCityStatus2').removeClass("disabled"); }
-    },false);
+        onFailure: function () { serverwait = false; uW.jQuery('#btCityStatus').removeClass("disabled"); uW.jQuery('#btCityStatus2').removeClass("disabled"); }
+    });
 }
 
 function SelectDefenders (sel,def) {
+	if (!SelectiveDefending) return;
 	var MoveArray = [];
 	if (!def) { // switch to sanctuary
 		if (sel == "A") { // All
@@ -5253,7 +5278,7 @@ function StartRitual () {
 			setSacError(rslt.errorMsg);
 			uW.jQuery('#btStartRitualButton').removeClass("disabled");
 		}	
-	},false);
+	});
 }
 
 function setSacError(msg) {
@@ -5286,7 +5311,7 @@ function StopRitual (sacNo, notify){
 				notify(rslt.errorMsg);
 			uW.jQuery('#btStopRitual'+sacNo).removeClass("disabled");
         },
-    },false);
+    });
 }
 
 function SwitchGuardian (elem) {
@@ -5353,7 +5378,7 @@ function SwitchGuardian (elem) {
 			logit("Guardian change server error");
 			setGuardMessage('<span style="color:#f00">Server connection failed.</span>');
 		}
-    }, true)
+    },true) // noretry
 }
 
 function SwitchThroneRoom (elem) {
@@ -5369,12 +5394,11 @@ function SwitchThroneRoom (elem) {
     params.ctrl = 'throneRoom\\ThroneRoomServiceAjax';
     params.action = 'setPreset';
     params.presetId = NewPreset;
-    new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
+    new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
         method: "post",
         parameters: params,
         loading: true,
-        onSuccess: function (transport) {
-            var rslt = eval("(" + transport.responseText + ")");
+        onSuccess: function (rslt) {
             if(rslt.ok){
 				var H = Seed.throne.slotEquip[NewPreset];
 				Seed.throne.activeSlot = NewPreset;
@@ -5415,7 +5439,7 @@ function SwitchThroneRoom (elem) {
 			setThroneMessage('<span style="color:#f00">Server connection failed.</span>');
 			presetFailures = 0;
 		}, 
-    });
+    },true); // noretry
 }
 
 function PaintTRPresets () {
@@ -5526,12 +5550,11 @@ function SetMarshall() {
 	params.pos = pos;
 	params.kid = kid;
 	params.cid = uW.currentcityid;
-	new AjaxRequest(uW.g_ajaxpath + "ajax/assignknight.php" + uW.g_ajaxsuffix, {
+	new MyAjaxRequest(uW.g_ajaxpath + "ajax/assignknight.php" + uW.g_ajaxsuffix, {
 		method : "post",
 		parameters : params,
-		onSuccess : function (transport) {
-		uW.jQuery('#btSetMarshall').removeClass("disabled");
-			var rslt = eval("(" + transport.responseText + ")");
+		onSuccess : function (rslt) {
+			uW.jQuery('#btSetMarshall').removeClass("disabled");
 			if (rslt.ok) {
 				if (kid == 0) {
 					uW.seed.leaders["city" + uW.currentcityid].combatKnightId = "0";
@@ -5543,7 +5566,7 @@ function SetMarshall() {
 			}
 		},
 		onFailure : function () { uW.jQuery('#btSetMarshall').removeClass("disabled"); }
-	})
+	},true); // noretry
 }
 
 function BoostMarshall() {
@@ -5554,12 +5577,11 @@ function BoostMarshall() {
 	params.iid = item.substring(1);
 	params.cid = uW.currentcityid;
 	params.kid = kid;
-	new AjaxRequest(uW.g_ajaxpath + "ajax/boostKnight.php" + uW.g_ajaxsuffix, {
+	new MyAjaxRequest(uW.g_ajaxpath + "ajax/boostKnight.php" + uW.g_ajaxsuffix, {
 		method : "post",
 		parameters : params,
-		onSuccess : function (transport) {
+		onSuccess : function (rslt) {
 			uW.jQuery('#btBoostMarshall').removeClass("disabled");
-			var rslt = eval("(" + transport.responseText + ")");
 			if (rslt.ok) {
 				uW.seed.knights["city" + uW.currentcityid]["knt" + kid].combatBoostExpireUnixtime = rslt.expiration.toString();
 				uW.seed.items[item] = parseInt(uW.seed.items[item]) - 1;
@@ -5575,7 +5597,7 @@ function BoostMarshall() {
 			}
 		},
 		onFailure : function () { uW.jQuery('#btBoostMarshall').removeClass("disabled"); }
-	})
+	},true); // noretry
 }
 
 function CancelChampion() {
@@ -5879,7 +5901,7 @@ function fetchPlayerStatus (notify){
         setError ('AJAX error (server not responding)');
 		notify ();
       },
-    },true);
+    },true); // no retry
 }
 
 function fetchCourtInfo (notify) {
@@ -5905,7 +5927,7 @@ function fetchCourtInfo (notify) {
         setError ('AJAX error (server not responding)');
 		notify ();
       },
-    },true);
+    },true); // no retry
 }
 
 function TRStats (notify) {
@@ -5914,43 +5936,42 @@ function TRStats (notify) {
 	params.action = 'getEquipped';
 	params.playerId = userInfo.userId;
 
-  	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
+  	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
 		method: "post",
 		parameters: params,
 		loading: true,
-		onSuccess: function (transport) {
-			var rslt = eval("(" + transport.responseText + ")");
-				if(rslt.ok){
-					for (k in uW.cm.thronestats.effects) HisStatEffects[k] = 0;
-					for (kk in rslt.items){
-    		 			y = rslt.items[kk];
-	    	 			if (y != undefined) {
-							for (var O in y["effects"]) {
-								var i = +(O.split("slot")[1]);
-								id = y["effects"]["slot"+i]["id"];
-								tier = parseInt(y["effects"]["slot"+i]["tier"]);
-								level = y["level"];
+		onSuccess: function (rslt) {
+			if(rslt.ok){
+				for (k in uW.cm.thronestats.effects) HisStatEffects[k] = 0;
+				for (kk in rslt.items){
+   		 			y = rslt.items[kk];
+    	 			if (y != undefined) {
+						for (var O in y["effects"]) {
+							var i = +(O.split("slot")[1]);
+							id = y["effects"]["slot"+i]["id"];
+							tier = parseInt(y["effects"]["slot"+i]["tier"]);
+							level = y["level"];
+							p = uW.cm.thronestats.tiers[id][tier];
+							while (!p && (tier > 0)) {
+								tier--;
 								p = uW.cm.thronestats.tiers[id][tier];
-								while (!p && (tier > 0)) {
-									tier--;
-									p = uW.cm.thronestats.tiers[id][tier];
-								}
-								if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
-   				           	    var base = p.base || 0;
-								var growth = p.growth ||0;
-								Current = base + ((level * level + level) * growth * 0.5);
-								if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 							}
+							if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
+  				           	    var base = p.base || 0;
+							var growth = p.growth ||0;
+							Current = base + ((level * level + level) * growth * 0.5);
+							if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 						}
 					}
-			   } else setMonitorError('Error Reading Throne Room');
+				}
+			} else setMonitorError('Error Reading Throne Room');
 			if (params.playerId == userInfo.userId) {notify();}
 		},
 		onFailure: function () {
 			setMonitorError('Server Not Responding');
 			if (params.playerId == userInfo.userId) {notify();}
 		},
-	}); 	  	  	
+	},true); // no retry
 }  
 
 function StopMonitoring () {
