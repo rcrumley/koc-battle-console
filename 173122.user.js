@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140404b
+// @version        20140408a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140404b';
+var Version = '20140408a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -5824,8 +5824,8 @@ ajax/viewCourt.php:
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
 					var unitsarr = {};
-					for (var ui in uW.cm.UNIT_TYPES){
-						i = uW.cm.UNIT_TYPES[ui];
+					for (var ui in unsafeWindow.cm.UNIT_TYPES){
+						i = unsafeWindow.cm.UNIT_TYPES[ui];
 						if (params["u" + i])
 							unitsarr[i] = params["u" + i];
 						else
@@ -10274,8 +10274,8 @@ Tabs.Attaque = {
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
 					var unitsarr = {};
-					for (var ui in uW.cm.UNIT_TYPES){
-						i = uW.cm.UNIT_TYPES[ui];
+					for (var ui in unsafeWindow.cm.UNIT_TYPES){
+						i = unsafeWindow.cm.UNIT_TYPES[ui];
 						if (params["u" + i])
 							unitsarr[i] = params["u" + i];
 						else
