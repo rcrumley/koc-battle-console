@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
-// @version         20140331a
+// @version         20140410a
 // @namespace       kba
 // @homepage        https://userscripts.org/scripts/show/285996
 // @downloadURL     https://userscripts.org/scripts/source/285996.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Daylight Savings Time Fix</p><p>Chrome/Tampermonkey Support</p>
+// @releasenotes 	<p>Option to Reduce Size of Monitor Window</p><p>Volume Control</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -24,10 +24,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	March 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
+//	│	April 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140331a';
+var Version = '20140410a';
 var NameSpace = 'kba';
 
 //Fix weird bug with koc game
@@ -49,6 +49,8 @@ var Options = {
 	MonitorStartState   : false,
 	AutoUpdates         : true,
 	PVPOnly             : false,
+	Volume              : 100,
+	MonitorFontSize		: 11,
 };
 
 var JSON2 = JSON; 
@@ -73,6 +75,9 @@ var MonitorTimedOut = false;
 var cText = ""; 
 var LastUser = "";
 var servermsg  = "server not responding";
+var MonWidth=300;
+var MonHeight=500;
+var fontratio=1;
 
 var FFVersion = getFirefoxVersion();
 
@@ -144,6 +149,7 @@ function btStartup (){
 				.xtabBRTop {padding-right: 5px; border:none; background:none;vertical-align:top;}\
 				tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
 				.btPopMain       {background: url("' + PanelBG + '") no-repeat scroll -10px -50px transparent; border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size:11px;}\
+				.btMonitor_btPopMain { font-size:'+Options.MonitorFontSize+'px;}\
 				.btPopup         {border:5px ridge #666; opacity:0.9; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
 				.btSelector		 {font-size:11px; }\
 				.btInput		 {font-size:10px; }\
@@ -171,6 +177,8 @@ function btStartup (){
 	m += '<div class="divHeader" align="right"><a id=btOptionLink_'+NameSpace+' class=divLink >OPTIONS&nbsp;<img id=btOptionArrow_'+NameSpace+' height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btOption_'+NameSpace+' class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
+    m += '<TR id=btSoundOpts_'+NameSpace+' class="divHide"><TD colspan=2 class=xtab>&nbsp;</td><TD align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider_'+NameSpace+'></span></td><TD align=right id=btVolOut_'+NameSpace+' style="width:30px;">0</td></tr></table></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont_'+NameSpace+' class=btInput') + '</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;<a id=btUpdateCheck_'+NameSpace+' class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
@@ -190,11 +198,19 @@ function btStartup (){
 
 	document.getElementById('btPlayerSubmit_'+NameSpace).addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit_'+NameSpace,popMon);}, true);  
   
-	ToggleOption ('SoundChk_'+NameSpace, 'MonitorSound');
+	ToggleOption ('SoundChk_'+NameSpace, 'MonitorSound', SoundToggle);
+	SoundToggle ();
+	
+	document.getElementById('btMonitorFont_'+NameSpace).addEventListener('change', ChangeFontSize, false);
+
 	ToggleOption ('MonitorColoursChk_'+NameSpace, 'MonitorColours');
 	ToggleOption ('PVPOnlyChk_'+NameSpace, 'PVPOnly');
 	ToggleOption ('AutoUpdateChk_'+NameSpace, 'AutoUpdates');
-	ResetFrameSize('btMain_'+NameSpace,110,400);
+  
+	VolSlider = new SliderBar (document.getElementById('btVolSlider_'+NameSpace), 200, 21, 0);
+	VolSlider.setValue (Options.Volume/100);
+	VolSlider.setChangeListener(VolumeChanged);
+	VolumeChanged (Options.Volume/100);
   
 	AddMainTabLink('BATTLE(2)', eventHideShow, mouseMainTab);
  
@@ -217,6 +233,26 @@ function btStartup (){
 	// Set to check for updates in 15 seconds
 	
 	if (Options.AutoUpdates && !trusted) setTimeout(function(){AutoUpdater.check();},15000); 
+}
+
+function ChangeFontSize(evt) {
+	Options.MonitorFontSize = evt.target.value;
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+	if (MonitoringActive && popMon) { popMon.show(false); popMon.destroy(); popMon = null; initMonitor(userInfo.userId,MonitoringPaused); }
+}
+
+function SoundToggle () {
+	var dc = uW.jQuery('#btSoundOpts_'+NameSpace).attr('class');
+	if (Options.MonitorSound) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btSoundOpts_'+NameSpace).attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btSoundOpts_'+NameSpace).attr('class','divHide');}
+	ResetFrameSize('btMain_'+NameSpace,110,400);
+}
+
+function VolumeChanged (val) {
+	document.getElementById('btVolOut_'+NameSpace).innerHTML = parseInt(val*100);
+    Options.Volume = parseInt(val*100);
+	saveOptions();
+	if (AudioManager.player) {AudioManager.setVolume(1, Options.Volume);}
 }
 
 function DefaultWindowPos(OptPos,elem) {
@@ -457,6 +493,116 @@ function isNaNCommas (n){
 	n = n.split(',');
 	n = n.join('');
 	return isNaN(n);
+}
+
+// value is 0 to 1.0
+function SliderBar (container, width, height, value, classPrefix, margin){
+  var self = this;
+  this.listener = null;
+  if (value==null)
+    value = 0;
+  if (!margin)
+    margin = parseInt(width*.05);
+  this.value = value;
+  if (width<20) width=20;
+  if (height<5) height=5;
+  if (classPrefix == null){
+    classPrefix = 'slider';
+    var noClass = true;
+  }    
+  var sliderHeight = parseInt(height/2);
+  var sliderTop = parseInt(height/4);
+  this.sliderWidth = width - (margin*2);
+    
+  this.div = document.createElement ('div');
+  this.div.style.height = height +'px';
+  this.div.style.width = width +'px';
+  this.div.className = classPrefix +'Cont';
+  if (noClass)
+    this.div.style.backgroundColor='#ddd';
+  
+  this.slider = document.createElement ('div');
+  this.slider.setAttribute ('style', 'position:relative;');
+  this.slider.style.height = sliderHeight + 'px'
+  this.slider.style.top = sliderTop + 'px';
+  this.slider.style.width = this.sliderWidth +'px';
+  this.slider.style.left = margin +'px';   /////
+  this.slider.className = classPrefix +'Bar';
+  this.slider.draggable = true;
+  if (noClass)
+    this.slider.style.backgroundColor='#fff';
+  
+  this.sliderL = document.createElement ('div');
+  this.sliderL.setAttribute ('style', 'width:100px; height:100%; position:relative;');
+  this.sliderL.className = classPrefix +'Part';
+  this.sliderL.draggable = true;
+  if (noClass)
+    this.sliderL.style.backgroundColor='#0c0';
+  
+  this.knob = document.createElement ('div');
+  this.knob.setAttribute ('style', 'width:3px; position:relative; left:0px; background-color:#222;');
+  this.knob.style.height = height +'px';
+  this.knob.style.top = (0-sliderTop) +'px';
+  this.knob.className = classPrefix +'Knob';
+  this.knob.draggable = true;
+  this.slider.appendChild(this.sliderL);
+  this.sliderL.appendChild (this.knob);
+  this.div.appendChild (this.slider);
+  container.appendChild (this.div);
+  this.div.addEventListener('mousedown',  mouseDown, false);
+
+  this.getValue = function (){
+    return self.value;
+  }
+
+  this.setValue = function (val){   // todo: range check
+    var relX = (val * self.sliderWidth);
+    self.sliderL.style.width = relX + 'px';
+    self.knob.style.left =  relX + 'px';
+    self.value = val;
+    if (self.listener)
+      self.listener(self.value);
+  }
+  
+  this.setChangeListener = function (listener){
+    self.listener = listener;
+  }
+
+  function moveKnob (me){
+    var relX = me.clientX - self.divLeft;
+    if (relX < 0)
+      relX = 0;
+    if (relX > self.sliderWidth)
+      relX = self.sliderWidth;
+    self.knob.style.left = (relX - (self.knob.clientWidth/2) ) +'px';   // - half knob width !?!?
+    self.sliderL.style.width = relX + 'px';
+    self.value =  relX / self.sliderWidth; 
+    if (self.listener)
+      self.listener(self.value);
+  }
+  function doneMoving (){
+    self.div.removeEventListener('mousemove', mouseMove, true);
+    document.removeEventListener('mouseup', mouseUp, true);
+  }
+  function mouseUp (me){
+    moveKnob (me);
+    doneMoving();
+  }
+  
+  function mouseDown(me){
+    var e = self.slider;
+    self.divLeft = 0;
+    while (e.offsetParent){   // determine actual clientX
+      self.divLeft += e.offsetLeft;
+      e = e.offsetParent;
+    }
+    moveKnob (me);
+    document.addEventListener('mouseup',  mouseUp, true);
+    self.div.addEventListener('mousemove',  mouseMove, true);
+  }
+  function mouseMove(me){
+    moveKnob (me);
+  }
 }
 
 // creates a 'popup' div
@@ -1195,6 +1341,27 @@ function addCommasWhole(nStr){
 	return x1;
 }
 
+function htmlSelector(valNameObj, curVal, tags) {
+	m = [];
+	m.push('<SELECT');
+	if (tags) {
+		m.push(' ');
+		m.push(tags);
+	}
+	for (k in valNameObj) {
+		m.push('><OPTION ');
+		if (k == curVal)
+			m.push('SELECTED ');
+		m.push('value="');
+		m.push(k);
+		m.push('">');
+		m.push(valNameObj[k]);
+		m.push('</option>');
+	}
+	m.push('</select>');
+	return m.join('');
+}
+
 function getFirefoxVersion (){
 	var ver='', i;
 	var ua = navigator.userAgent;  
@@ -1461,8 +1628,8 @@ function initMonitor(uid,Paused) {
 	// set booleans and show loading window if not already active..
 
 	userInfo.userLoaded = false;
-	ResetHTMLRegister('btUserDiv');
-	ResetHTMLRegister('btMonitorDiv');
+	ResetHTMLRegister('btUserDiv_'+NameSpace);
+	ResetHTMLRegister('btMonitorDiv_'+NameSpace);
 	MonitoringActive = false;
 	MonitoringPaused = Paused;
 	if (popMon) {popMon = null;}
@@ -1489,9 +1656,18 @@ function CreateMonitorWindow () {
 	LastUser = "";
 	LastTR = [];
     
-	m = '<div id="btMonitor_'+NameSpace+'_content"><div id=btCountdownDiv_'+NameSpace+'><TABLE width="100%"><tr><td class=xtab align="center">&nbsp;</span></td></tr></table></div><div id=btUserDiv_'+NameSpace+'><TABLE><TD class=xtab><br><B>&nbsp;&nbsp;&nbsp;Loading...</b></td></tr></table></div><div id=btMonitorDiv_'+NameSpace+'></div><div id=btButtonDiv_'+NameSpace+'></div></div>';
+	m = '<div style="font-size:'+Options.MonitorFontSize+'px;" id="btMonitor_'+NameSpace+'_content"><div id=btCountdownDiv_'+NameSpace+'><TABLE width="100%"><tr><td class=xtab align="center">&nbsp;</span></td></tr></table></div><div id=btUserDiv_'+NameSpace+'><TABLE><TD class=xtab><br><B>&nbsp;&nbsp;&nbsp;Loading...</b></td></tr></table></div><div id=btMonitorDiv_'+NameSpace+'></div><div id=btButtonDiv_'+NameSpace+'></div></div>';
 
-	popMon = new CPopup('btMonitor_'+NameSpace, Options.MonPos.x, Options.MonPos.y, 300, 550, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
+	MonWidth=300;
+	MonHeight=500;
+	
+	// adjust width and height based on monitor font size
+
+	fontratio = Options.MonitorFontSize / 11;
+	MonWidth = Math.floor(MonWidth * fontratio);
+	MonHeight = Math.floor(MonHeight * fontratio);
+	
+	popMon = new CPopup('btMonitor_'+NameSpace, Options.MonPos.x, Options.MonPos.y, MonWidth, MonHeight, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
 	popMon.getMainDiv().innerHTML = m;
 	popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor</B></DIV>';
 	popMon.show(true);
@@ -1534,7 +1710,7 @@ function eventPaintPlayerInfo (){
   	m += '<tr><TD class=xtab align="center" colspan="3">&nbsp;</td></tr></table>';
 
 	if (CheckForHTMLChange('btUserDiv_'+NameSpace,m)) {
-		ResetFrameSize('btMonitor_'+NameSpace,550,300);
+		ResetFrameSize('btMonitor_'+NameSpace,MonHeight,MonWidth);
 	}	
 }
 
@@ -1614,7 +1790,7 @@ function eventPaintTRStats () {
 	m +='</table>';
 
 	if (CheckForHTMLChange('btMonitorDiv_'+NameSpace,m)) {
-		ResetFrameSize('btMonitor_'+NameSpace,550,300);
+		ResetFrameSize('btMonitor_'+NameSpace,MonHeight,MonWidth);
 	}	
 	   
 // if changed while monitoring play a sound...
@@ -1622,6 +1798,7 @@ function eventPaintTRStats () {
     if ((LastUser == userInfo.name) && (JSON2.stringify(LastTR) != JSON2.stringify(HisStatEffects)) && !MonitoringPaused) {
 		if (Options.MonitorSound) {
 			AudioManager.setSource(SOUND_FILES.monitor);
+			AudioManager.setVolume(Options.Volume);
 			AudioManager.play();
 			setTimeout(function(){AudioManager.stop();}, 2500);
 		}	
@@ -1736,9 +1913,10 @@ function StartMonitorLoop () {
 	// show buttons ...
 
 	m = '<TABLE width="100%">';
-	m +='<TR><TD class=xtab colspan="3"><div align="center"><br><a id=btPostToChat_'+NameSpace+' class="inlineButton btButton blue20"><span>Post to Chat</span></a>&nbsp;<a id=btOpenTR_'+NameSpace+' class="inlineButton btButton blue20"><span>Throne Room</span></a>&nbsp;<a id=btPause_'+NameSpace+' class="inlineButton btButton blue20"><span>Pause</span></a></div></td></tr>';
+	m +='<TR><TD class=xtab colspan="3"><div align="center"><br><a id=btPostToChat_'+NameSpace+' class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Post to Chat</span></a>&nbsp;<a id=btOpenTR_'+NameSpace+' class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Throne Room</span></a>&nbsp;<a id=btPause_'+NameSpace+' class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span></a></div></td></tr>';
 	m +='</table>';
 	document.getElementById('btButtonDiv_'+NameSpace).innerHTML = m;
+	ResetFrameSize('btMonitor_'+NameSpace,MonHeight,MonWidth);
 	document.getElementById('btPostToChat_'+NameSpace).addEventListener ('click', function(){sendChat()}, false);
 	document.getElementById('btPause_'+NameSpace).addEventListener ('click', function(){TogglePause()}, false);
 	document.getElementById('btOpenTR_'+NameSpace).addEventListener ('click', function(){showTR()}, false);
@@ -1775,6 +1953,7 @@ function MonitorTRLoop () {
 			Options.MonitorStartState = false;
 			saveOptions ();
 			AudioManager.setSource(SOUND_FILES.timeout);
+			AudioManager.setVolume(Options.Volume);
 			AudioManager.play();
 			setTimeout(function(){AudioManager.stop();}, 2500);
 		}
@@ -1793,7 +1972,7 @@ function MonitorTRLoop () {
 			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Timed Out</B></DIV>'; }
 		else
 			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Paused</B></DIV>'; }
-		document.getElementById('btPause_'+NameSpace).innerHTML = "<span>Resume</span>"; 
+		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Resume</span>'; 
 	}	
 	else {	
 		var dots = "";
@@ -1803,7 +1982,7 @@ function MonitorTRLoop () {
 		}
 	
 		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring&nbsp;'+dots+'</B></DIV>'; 
-		document.getElementById('btPause_'+NameSpace).innerHTML = "<span>Pause</span>"; 
+		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span>'; 
 		
 		if (((MonitorLooper % MonitorInterval) == 1) || trusted) { 
 			TRStats(eventPaintTRStats);
