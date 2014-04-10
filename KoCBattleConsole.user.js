@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140409a
+// @version			20140410a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Buttons for Mist and Dove on Dashboard</p><p>Broken Dove Detection</p><p>Support for pridwen415 (pvp domain)</p><p>Make defending troops bold in sacrifice dropdown</p>
+// @releasenotes 	<p>Quick-Sacrifice Troop Buttons</p><p>Option to Reduce Size of Monitor Window</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	April 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140409a'; 
+var Version = '20140410a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -83,6 +83,7 @@ var Options = {
 	DefaultSacrifice    : true,
 	DefaultSacrificeMin : 1,
 	DefaultSacrificeSec : 0,
+	QuickSacrifice      : true,
 	OverviewBattleBtn   : true,
 	SleepMode           : false,
 	PVPOnly             : false,
@@ -106,6 +107,7 @@ var Options = {
 	TRMonPresetByName   : false,
 	TRPresets           : {},
 	OverrideDashboard   : {},
+	MonitorFontSize		: 11,
 };
 
 var JSON2 = JSON; 
@@ -153,8 +155,13 @@ var GemContainer;
 var GemContainer2;
 var oldchamp = 0;
 var DefOptionsString = "";
+var QuickSacString = "";
+var allownewsacs = false;
 var ForceTries = 0;
 var WinHeight = 220;
+var MonWidth=300;
+var MonHeight=500;
+var fontratio=1;
   
 var	SacSettings;
 var SacSpeed;
@@ -464,6 +471,7 @@ uW.btSetRitualLength = function (sel) {SetRitualLength(sel);}
 uW.btCheckDefaultRitual = function (sel) {CheckDefaultRitual(sel);}
 uW.btStartRitual = function () {StartRitual();}
 uW.btStopRitual = function (sacNo) {StopRitual(sacNo);}
+uW.btQuickSacrifice = function (tt) {QuickSacrifice(tt);}
 uW.btSetMaxTroops = function () {SetMaxTroops();}
 uW.btSendHome = function (marchId) {SendHome(marchId);}
 uW.btShowDefenceWindow = function () {ShowWatchTower (Cities.byID[uW.currentcityid]);}
@@ -550,6 +558,7 @@ function btStartup (){
 				.xtabBRTop {padding-right: 5px; border:none; background:none; white-space:normal; vertical-align:top;}\
 				tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
 				.btPopMain       {background: url("' + PanelBG + '") no-repeat scroll -10px -50px transparent; border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size:11px;}\
+				.btMonitor_btPopMain { font-size:'+Options.MonitorFontSize+'px;}\
 				.btPopup         {border:5px ridge #666; opacity:'+Opacity+'; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
 				.btSelector		 {font-size:11px; }\
 				.btInput		 {font-size:10px; }\
@@ -612,12 +621,13 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=EnableOutgoingChk type=checkbox /></td><td class=xtab>Enable outgoing march monitoring functionality&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL Window Positions!</span></a></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL window positions!</span></a></td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btMonOptionLink class=divLink >MONITOR OPTIONS&nbsp;<img id=btMonOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btMonOption class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
     m += '<TR id=btSoundOpts class="divHide"><TD colspan=2 class=xtab>&nbsp;</td><TD align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider></span></td><TD align=right id=btVolOut style="width:30px;">0</td></tr></table></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont class=btInput') + '</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
@@ -625,20 +635,21 @@ function btStartup (){
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btCityOptionLink class=divLink >DASHBOARD OPTIONS&nbsp;<img id=btCityOptionArrow height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btCityOption class=divHide><TABLE width="100%">';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="3" class=xtab>Always On (Requires Widescreen in PowerBot or AIO)</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DashboardChk type=checkbox /></td><td colspan="3" class=xtab>Always on (Requires widescreen in PowerBot or AIO)</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=OverviewChk type=checkbox /></td><td colspan="3" class=xtab>Battle button next to overview button&nbsp;*</td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Overview Defend Button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Troops Defend Button</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=UpperDefChk type=checkbox /></td><td class=xtab>Overview defend button</td><td class=xtab><INPUT id=LowerDefChk type=checkbox /></td><td class=xtab>Troops defend button</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PresetChk type=checkbox /></td><td colspan="3" class=xtab>Show throne room preset changer</td></tr>';
 	m += '<TR id=btPresetByNameOpts class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>Select presets by name</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=QuickSacChk type=checkbox /></td><td colspan="2" class=xtab>Show quick sacrifice icons</td>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefaultSacChk type=checkbox /></td><td colspan="2" class=xtab>Default sacrifice duration</td>';
 	m += '<TD width=80 class=xtab><span id=btSacOpts class="divHide"><INPUT class="btInput" style="width: 30px;text-align:right;" id="btDefaultRitualMinutes" type=text maxlength=4 value="'+Options.DefaultSacrificeMin+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;min&nbsp;';
 	m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btDefaultRitualSeconds" type=text maxlength=2 value="'+Options.DefaultSacrificeSec+'" onkeyup="btCheckDefaultRitual(this)">&nbsp;sec</span></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Maximum troops to sacrifice</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btSacrificeLimit" type=text maxlength=10 value="'+Options.SacrificeLimit+'">&nbsp;troops</td></tr>';
 
 	if (SelectiveDefending) {
-		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show Defence Add Troops</td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefAddTroopChk type=checkbox /></td><td colspan="3" class=xtab>Show defence add troops</td></tr>';
 		m += '<TR id=btDefOpts class="divHide"><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><TD colspan="2" class=xtab>Default add defence amount</td><TD width=80 class=xtab><INPUT class="btInput" style="width:50px;text-align:right;" id="btDefaultDefenceNum" type=text maxlength=10 value="'+Options.DefaultDefenceNum+'">&nbsp;troops</td></tr>';
-		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show Defensive Presets</td></tr>';
+		m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=DefPresetChk type=checkbox /></td><td colspan="3" class=xtab>Show defensive presets</td></tr>';
 	}
 		
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab colspan=4><table cellSpacing=0 width=98%>';
@@ -714,7 +725,9 @@ function btStartup (){
 	}	
 	document.getElementById('btLogSubmit').addEventListener('mousedown',function(me) {ResetWindowPos (me,'btLogSubmit',popLog);}, true);  
 	document.getElementById('btResetDash').addEventListener ('click', function() {ResetDash();}, false);
-  
+
+	document.getElementById('btMonitorFont').addEventListener('change', ChangeFontSize, false);
+	
 	ToggleOption ('TransparencyChk', 'Transparent');
 	ToggleOption ('AlertOverrideChk', 'OverrideAttackAlert');
 	ToggleOption ('SoundChk', 'MonitorSound', SoundToggle);
@@ -741,11 +754,12 @@ function btStartup (){
 	}
 	
 	ToggleOption ('OverviewChk', 'OverviewBattleBtn');
+	ToggleOption ('QuickSacChk', 'QuickSacrifice',PaintQuickSac);
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
 
 	ToggleOption ('TRPresetByNameChk', 'TRPresetByName');
-	ToggleOption ('TRMonPresetByNameChk', 'TRMonPresetByName');
+	ToggleOption ('TRMonPresetByNameChk', 'TRMonPresetByName', PaintTRPresets);
 	
     document.getElementById('btSacrificeLimit').addEventListener('keyup', function () {
 		if (isNaN(document.getElementById('btSacrificeLimit').value)) { document.getElementById('btSacrificeLimit').value = 0; }
@@ -855,6 +869,12 @@ function btStartup (){
 	// All done!
 	
 	uW.btLoaded = true;
+}
+
+function ChangeFontSize(evt) {
+	Options.MonitorFontSize = evt.target.value;
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
+	if (MonitoringActive && popMon) { popMon.show(false); popMon.destroy(); popMon = null; initMonitor(userInfo.userId,MonitoringPaused); }
 }
 
 function ResetDash () {
@@ -2620,6 +2640,27 @@ function addCommasWhole(nStr){
 	return x1;
 }
 
+function htmlSelector(valNameObj, curVal, tags) {
+	m = [];
+	m.push('<SELECT');
+	if (tags) {
+		m.push(' ');
+		m.push(tags);
+	}
+	for (k in valNameObj) {
+		m.push('><OPTION ');
+		if (k == curVal)
+			m.push('SELECTED ');
+		m.push('value="');
+		m.push(k);
+		m.push('">');
+		m.push(valNameObj[k]);
+		m.push('</option>');
+	}
+	m.push('</select>');
+	return m.join('');
+}
+
 function getFirefoxVersion (){
 	var ver='', i;
 	var ua = navigator.userAgent;  
@@ -3918,8 +3959,10 @@ function SetCurrentCity(cityId) {
 			}	
 		}
 
-		m = '<TABLE cellSpacing=0 width=100% height=0%><tr><TD width="120" class=xtabBR><span class=xtab>';
-		m +='<SELECT class="btSelector" id="btRitualTroops" onchange="btSelectTroopType(this);"><option value="0">--Troop Type--</option>';
+		m = '<TABLE cellSpacing=0 width=100% height=0%>';
+		m += '<tr><TD width="120" class=xtabBR><span class=xtab>';
+		m += '<SELECT class="btSelector" id="btRitualTroops" onchange="btSelectTroopType(this);"><option value="0">--Troop Type--</option>';
+		QuickSacString = "";
 		for (y in uW.unitcost) {
 			var TroopAllowed = (o.indexOf(y.substr(3)) >= 0);
 			var DefendingTroops = 0;
@@ -3928,6 +3971,7 @@ function SetCurrentCity(cityId) {
 			if ((tot > 0) && TroopAllowed) {
 				if (DefendingTroops != 0) { m +='<option style="font-weight:bold;" value="'+y.substr(3)+'">'+uW.unitcost[y][0]+'</option>'; }
 				else { m +='<option value="'+y.substr(3)+'">'+uW.unitcost[y][0]+'</option>'; }
+				QuickSacString = QuickSacString + '<a class="TextLink" onclick="btQuickSacrifice('+y.substr(3)+');">'+TroopImage(y.substr(3))+'</a>';
 			}	
 		}
 		m +='</select></span></td>';
@@ -3935,7 +3979,7 @@ function SetCurrentCity(cityId) {
 		m +='<td width="80" class=xtab><INPUT class="btInput" style="width: 30px;text-align:right;" id="btRitualMinutes" type=text maxlength=4 value="" onkeyup="btSetRitualLength(this)">&nbsp;m&nbsp;';
 		m +='<INPUT class="btInput" style="width: 15px;text-align:right;" id="btRitualSeconds" type=text maxlength=2 value="" onkeyup="btSetRitualLength(this)">&nbsp;s&nbsp;</td>';
 		m +='<td width="90" align=right class=xtab><a id="btStartRitualButton" class="inlineButton btButton blue14" onclick="btStartRitual()"><span style="width:65px;display:inline-block;text-align:center;" align="center">Sacrifice</span></a></td></tr>';
-		m += '<tr><td class=xtab colspan="4"><div class="ErrText" align="center" id=btSacErr>&nbsp;</div></td></tr>';
+		m += '<tr><td class=xtab colspan="5"><div class="ErrText" align="center" id=btSacErr>&nbsp;</div></td></tr>';
 		m += '</table>';
 		document.getElementById('btNewSacrificeCell').innerHTML = m;
 	}	
@@ -4287,7 +4331,9 @@ function PaintCityInfo(cityId) {
 		s += '<tr><td class=xtab>Increase</td><td class=xtab><b>'+SacSettings.stat_inc+'%</b></td>';
 		s += '<td class=xtab>Channelled Suffering?</td><td class=xtab><b>'+(ChannelledSuffering?'Yes':'No')+'</b></td></tr>';
 		s += '<tr><td class=xtab>Max. Troops</td><td class=xtab><b>'+addCommas(SacSettings.max_amount)+'</b></td>';
-		s += '<td class=xtab>Troops per Second</td><td class=xtab><b>'+(Math.round(SacSpeed * 100 / SacSpeedBuff)/100)+'</b></td></tr></table>';
+		s += '<td class=xtab>Troops per Second</td><td class=xtab><b>'+(Math.round(SacSpeed * 100 / SacSpeedBuff)/100)+'</b></td></tr>';
+		s += '<tr id=btQuickSac class=divHide><td class=xtab colspan="4">'+QuickSacString+'</td></tr>';
+		s += '</table>';
 	
 		sac = Seed.queue_sacr["city" + cityId],
 		sacrifices = false;
@@ -4312,9 +4358,11 @@ function PaintCityInfo(cityId) {
 
 		if (r < SacAllowed) {
 			ShowNewSacrifice(true);
+			allownewsacs = true;
 		}
 		else {	
 			ShowNewSacrifice(false);
+			allownewsacs = false;
 			z += '<tr><td class=xtab colspan="4"><div class="ErrText" align="center">&nbsp;</div></td></tr>';
 		}
 		z += '</table></div>';
@@ -4323,9 +4371,12 @@ function PaintCityInfo(cityId) {
 	{
 		z = '<div><br><div style="opacity:0.3;">No fey altars!</div><br></div>';
 		ShowNewSacrifice(false);
+		allownewsacs = false;
 	}
 	
-	CheckForHTMLChange('btSacrificeCell',CityTag+s+z);
+	if (CheckForHTMLChange('btSacrificeCell',CityTag+s+z)) {
+		PaintQuickSac();
+	}
 	
 	// troops
 
@@ -4367,7 +4418,7 @@ function PaintCityInfo(cityId) {
 			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 		}	
 		Troops += '</td></tr>';
-		if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><br><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
+		if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
 
 		TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr>';
 	
@@ -4401,28 +4452,26 @@ function PaintCityInfo(cityId) {
        	if (Seed.units['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',true);">'+TroopImage(i)+ addCommas(Seed.units['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 	}	
 	Troops += '</td></tr>';
-	if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><br><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
+	if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
 	TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr></table></div>';
 	
 	if (CheckForHTMLChange('btTroopCell',CityTag+TroopCell)) {
 		document.getElementById('btCityStatus2').addEventListener ('click', function(){ToggleDefenceMode (cityId);} , false);
-		// check if troop types dropdown needs refreshing
-		if (SelectiveDefending) {
-			CheckOptionsString = "";
-			for (y in uW.unitcost) {
-				var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
-				if ((tot > 0)) {
-					CheckOptionsString = CheckOptionsString + y.substr(3);
-				}	
-			}
-			if (DefOptionsString != CheckOptionsString) {
-				InitPresetNumber = document.getElementById('btDefendPreset').value;
-				SetCurrentCity(Seed.cities[Curr][0]);
+		// check if troop types dropdowns need refreshing - Defence AND Sacrifice!
+		CheckOptionsString = "";
+		for (y in uW.unitcost) {
+			var tot = parseIntNan(Seed.units['city' + Seed.cities[Curr][0]]['unt'+y.substr(3)]);
+			if ((tot > 0)) {
+				CheckOptionsString = CheckOptionsString + y.substr(3);
 			}	
-			else {
-				SelectDefTroopType (document.getElementById("btDefendTroops"));
-			}
+		}
+		if (DefOptionsString != CheckOptionsString) {
+			if (SelectiveDefending) { InitPresetNumber = document.getElementById('btDefendPreset').value; }
+			SetCurrentCity(Seed.cities[Curr][0]);
 		}	
+		else {
+			if (SelectiveDefending) { SelectDefTroopType (document.getElementById("btDefendTroops")); }
+		}
 	}
 	
 	// reinforcements
@@ -4793,6 +4842,20 @@ function PaintCityInfo(cityId) {
 	ResetFrameSize('btDefence',100,DashWidth);
 }
 
+function PaintQuickSac () {
+	if (!document.getElementById('btQuickSac')) { return; }
+	if ((Options.QuickSacrifice == true) && (allownewsacs == true))
+		ShowQuickSac(true);
+	else
+		ShowQuickSac(false);
+}
+
+function ShowQuickSac (tf) {
+	var dc = uW.jQuery('#btQuickSac').attr('class');
+	if (tf) {if (dc.indexOf('divHide') >= 0) uW.jQuery('#btQuickSac').attr('class','');}
+	else {if (dc.indexOf('divHide') < 0) uW.jQuery('#btQuickSac').attr('class','divHide');}
+}
+
 function RefreshChampionData() {
 	var T = uW.cm.ChampionManager.get("selectedChampion")
 	Champs = uW.cm.ChampionModalController.getCastleViewData();
@@ -4802,7 +4865,7 @@ function RefreshChampionData() {
 function TroopImage(tt) {
 	if (tt < 50) { var TroopText = uW.unitcost['unt'+tt][0];}
 	else { var TroopText = uW.fortcost['frt'+tt][0];}
-	var img = '<img style="margin:1px;width:20px;height:20px;vertical-align:middle" src="'+TroopImagePrefix+tt+TroopImageSuffix+'" title="'+TroopText+'">&nbsp;';
+	var img = '<img style="width:20px;height:20px;vertical-align:middle" src="'+TroopImagePrefix+tt+TroopImageSuffix+'" title="'+TroopText+'">&nbsp;';
 	return img;
 }
 
@@ -5283,7 +5346,15 @@ function setReinError(msg) {
 	document.getElementById('btReinErr').innerHTML = msg;
 }
 
-function StartRitual () {
+function QuickSacrifice (tt) {
+	var sel = document.getElementById('btRitualTroops');
+	if (!sel) return;
+	sel.value = tt;
+	SelectTroopType(sel);
+	StartRitual(true);
+}
+
+function StartRitual (QS) {
 	setSacError('&nbsp;');
 	var unitid = parseInt(document.getElementById('btRitualTroops').value);
 	var numUnits = parseInt(document.getElementById('btRitualAmount').value);
@@ -5300,7 +5371,7 @@ function StartRitual () {
 	if (clawback < 0) {
 		var MoveArray = [];
 		MoveArray[unitid] = clawback;
-		ChangeDefendingTroops (CurrentCityId, MoveArray, false, StartRitual);return;
+		ChangeDefendingTroops (CurrentCityId, MoveArray, false, StartRitual(QS));return;
 	}
 	
 	var params = uW.Object.clone(uW.g_ajaxparams);
@@ -5319,11 +5390,13 @@ function StartRitual () {
 				
 				setSacError('&nbsp;');
 				document.getElementById('btRitualTroops').value = 0;
-				document.getElementById('btRitualAmount').value = "";
-				document.getElementById('btRitualMinutes').value = "";
-				document.getElementById('btRitualSeconds').value = "";
 				document.getElementById('btTotalTroops').innerHTML = "";
 				document.getElementById('btMaxTroops').innerHTML = "";
+				if (!QS) {
+					document.getElementById('btRitualAmount').value = "";
+					document.getElementById('btRitualMinutes').value = "";
+					document.getElementById('btRitualSeconds').value = "";
+				}	
 			} else {
 				setSacError(rslt.feedback);
 			}
@@ -5504,7 +5577,7 @@ function PaintTRPresets () {
 	if ((document.getElementById('btMonTRPresets')) && !Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = ""; }
 
 	var m = '<div class="xtab" style="opacity:0.6; align="center" id=btThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
-	var n = '<div class="xtab" style="opacity:0.6; align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
+	var n = '<div class="xtab" style="opacity:0.6;font-size:'+Options.MonitorFontSize+'px;" align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
 	if (Options.TRPresetByName) { m+='<td class="xtabBR" align=center>'; }
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
     for (i=1;i<=Seed.throne.slotNum;i++) {
@@ -5515,9 +5588,12 @@ function PaintTRPresets () {
 			m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		}	
 		if (Options.TRMonPresetByName) {
-			n+='<div id="tmpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:85px;font-size:10px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
+			n+='<div id="tmpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:'+Math.floor(85*fontratio)+'px;font-size:'+(Options.MonitorFontSize<10?Options.MonitorFontSize:10)+'px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
 		}
 		else {
+			if ((Seed.throne.slotNum > 8) && ((i-1) == Math.floor(Seed.throne.slotNum/2))) {
+				n+='</tr><TR>';
+			}
 			n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		}	
 	}	
@@ -5526,7 +5602,7 @@ function PaintTRPresets () {
     m += '</tr></table>';
 	n += '</tr></table>';
 	if ((document.getElementById('btTRPresets')) && Options.PresetChange) { document.getElementById('btTRPresets').innerHTML = m; }
-	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = n; }
+	if ((document.getElementById('btMonTRPresets')) && Options.MonPresetChange) { document.getElementById('btMonTRPresets').innerHTML = n; ResetFrameSize('btMonitor',MonHeight,MonWidth); }
 
 	if (ThroneDelay != 0) {	setThroneMessage('<span style="color:#080">Throne Room changed! Change again in '+ThroneDelay+' secs...</span>'); }
 	else { setThroneMessage('&nbsp;'); }
@@ -5792,9 +5868,18 @@ function CreateMonitorWindow () {
 	LastUser = "";
 	LastTR = [];
     
-	m = '<div id="btMonitor_content"><div id=btCountdownDiv><TABLE width="100%"><tr><td class=xtab align="center">&nbsp;</span></td></tr></table></div><div id=btUserDiv><TABLE><TD class=xtab><br><B>&nbsp;&nbsp;&nbsp;Loading...</b></td></tr></table></div><div id=btMonitorDiv></div><div id=btButtonDiv></div></div>';
+	m = '<div style="font-size:'+Options.MonitorFontSize+'px;" id="btMonitor_content"><div id=btCountdownDiv><TABLE width="100%"><tr><td class=xtab align="center">&nbsp;</span></td></tr></table></div><div id=btUserDiv><TABLE><TD class=xtab><br><B>&nbsp;&nbsp;&nbsp;Loading...</b></td></tr></table></div><div id=btMonitorDiv></div><div id=btButtonDiv></div></div>';
 
-	popMon = new CPopup('btMonitor', Options.MonPos.x, Options.MonPos.y, 300, 550, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
+	MonWidth=300;
+	MonHeight=500;
+	
+	// adjust width and height based on monitor font size
+
+	fontratio = Options.MonitorFontSize / 11;
+	MonWidth = Math.floor(MonWidth * fontratio);
+	MonHeight = Math.floor(MonHeight * fontratio);
+	
+	popMon = new CPopup('btMonitor', Options.MonPos.x, Options.MonPos.y, MonWidth, MonHeight, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
 	popMon.getMainDiv().innerHTML = m;
 	popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor</B></DIV>';
 	popMon.show(true);
@@ -5825,7 +5910,7 @@ function eventPaintPlayerInfo (){
 
 	if (CheckForHTMLChange('btUserDiv',m)) {
 		PaintTRPresets(); 
-		ResetFrameSize('btMonitor',550,300);
+		ResetFrameSize('btMonitor',MonHeight,MonWidth);
 	}	
 }
 
@@ -5900,12 +5985,12 @@ function eventPaintTRStats () {
 			if (HisContent != "") { m +='<TR><TD  width="25px" class=xtab></td><TD class=xtab>' + LineStyle + HisContent + EndStyle +'</span></td><TD  width="50px" class=xtab></td></tr>'; cText += HisContent + "||"; }
 		}	
 	}
+	m +='</table>';
     cText = cText.replace(/\|\|\s*$/, "");
     cText = ":::. |" +title + "|| "+ cText;
-	m +='</table>';
 
 	if (CheckForHTMLChange('btMonitorDiv',m)) {
-		ResetFrameSize('btMonitor',550,300);
+		ResetFrameSize('btMonitor',MonHeight,MonWidth);
 	}	
 	   
 // if first TR monitored for this user then add log entry...
@@ -6044,9 +6129,10 @@ function StartMonitorLoop () {
 	// show buttons ...
 
 	m = '<TABLE width="100%">';
-	m +='<TR><TD class=xtab colspan="3"><div align="center"><br><a id=btPostToChat class="inlineButton btButton blue20"><span>Post to Chat</span></a>&nbsp;<a id=btOpenTR class="inlineButton btButton blue20"><span>Throne Room</span></a>&nbsp;<a id=btPause class="inlineButton btButton blue20"><span>Pause</span></a></div></td></tr>';
+	m +='<TR><TD class=xtabBR colspan="3"><div align="center"><br><a id=btPostToChat class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Post to Chat</span></a>&nbsp;<a id=btOpenTR class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Throne Room</span></a>&nbsp;<a id=btPause class="inlineButton btButton blue20"><span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span></a></div></td></tr>';
 	m +='</table>';
 	document.getElementById('btButtonDiv').innerHTML = m;
+	ResetFrameSize('btMonitor',MonHeight,MonWidth);
 	document.getElementById('btPostToChat').addEventListener ('click', function(){sendChat()}, false);
 	document.getElementById('btPause').addEventListener ('click', function(){TogglePause()}, false);
 	document.getElementById('btOpenTR').addEventListener ('click', function(){showTR()}, false);
@@ -6102,7 +6188,7 @@ function MonitorTRLoop () {
 			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Timed Out</B></DIV>'; }
 		else
 			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Paused</B></DIV>'; }
-		document.getElementById('btPause').innerHTML = "<span>Resume</span>"; 
+		document.getElementById('btPause').innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Resume</span>'; 
 	}	
 	else {	
 		var dots = "";
@@ -6112,7 +6198,7 @@ function MonitorTRLoop () {
 		}
 	
 		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring&nbsp;'+dots+'</B></DIV>'; 
-		document.getElementById('btPause').innerHTML = "<span>Pause</span>"; 
+		document.getElementById('btPause').innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span>'; 
 		
 		if (((MonitorLooper % MonitorInterval) == 1) || trusted) { 
 			TRStats(eventPaintTRStats);
