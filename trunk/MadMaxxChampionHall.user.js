@@ -1,19 +1,19 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20131123a
+// @version        20140415b
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
-// @homepage       http://userscripts.org/scripts/show/183854
+// @homepage       http://userscripts.org/scripts/show/464044
 // @delay 2000
 // @priority -11
 // @run-at         document-end
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
-// @updateURL      https://userscripts.org/scripts/source/183854.meta.js
-// @downloadURL    https://userscripts.org/scripts/source/183854.user.js
+// @updateURL      https://userscripts.org/scripts/source/464044.meta.js
+// @downloadURL    https://userscripts.org/scripts/source/464044.user.js
 // @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/uncommon_chestArmor_briton_70x70.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
@@ -28,12 +28,13 @@
 // @grant       GM_getResourceURL
 // @contributionURL https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=FDW4NZ6PRMDMJ&lc=US&item_name=TR%20Organizer%20Donations&item_number=1001&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 // @contributionAmount $3.00
+// @screenshot http://s3.amazonaws.com/uso_ss/24187/large.png?1385254902
 // ==/UserScript==
 
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20131123a_mm';
+var Version = '20140415b_mm';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
@@ -1481,14 +1482,6 @@ Tabs.champSalvage = {
                var effectName = CM.thronestats.effects[i][1];
                if (effects.indexOf(effectName) < 0) effects.push(effectName);
             }
-            
-            /*
-            for (i = 17; i <= 23; i ++)
-            {
-                var effectName = CM.thronestats.effects[i][1];
-               if (effects.indexOf(effectName) < 0) effects.push(effectName);
-            }
-            */
 
             var select = document.getElementById(rowId + "chsel3");
             for (index in effects) {
@@ -1904,16 +1897,6 @@ Tabs.champSalvage = {
                         {
                             //logit("rslt: " + inspect(rslt,3,1));
                             if (champ_item) Tabs.champSalvage.setStatus('Unable to salvage item ' + champ_item.name);
-
-                            // store off the object id and record the number of failures.  If it fails too many times, skip it next time.
-                            //if ( !t.salvageFailList[id] ) 
-                            //   t.salvageFailList[id] = 1;
-                            //else
-                            //   t.salvageFailList[id]++;
-
-                            //logit("Salvage failed.  Current number of failures of item " + id +" is " + t.salvageFailList[id]);
-
-                            //unsafeWindow.cm.ThroneView.renderInventory(unsafeWindow.kocChampionItems);
                         }
 
                         var idx = t.delItems.indexOf(id);
@@ -1942,7 +1925,6 @@ Tabs.champSalvage = {
                     t.deleting = false;
                     if (unsafeWindow.kocChampionItems[id] )
                         logit("salvage failed for item " + unsafeWindow.kocChampionItems[id].name );
-                    //unsafeWindow.cm.ThroneView.renderInventory(unsafeWindow.kocChampionItems);
                     return;
                 }
             });
@@ -2002,7 +1984,7 @@ function addCondition(c)
     this.conditions.push(c);
 }
 
-var itemTypes = {"weapon": 1, "chest": 2, "shield": 5};
+var itemTypes = {"weapon": 1, "chest": 2, "helm":3, "shield": 5};
 
 function applyRule(id)
 {
@@ -2546,7 +2528,7 @@ Tabs.organizer = {
             var P = t.panelType;
 
             var level = X.level || 0;
-            var quality =  X.quality || 0;
+            var quality =  X.rarity || 0;
 
             var bump = t.panelNextLevel;
 
@@ -3504,15 +3486,32 @@ Tabs.upgrader = {
 
 
                var d = 2 + Math.random() * 8;
+               logit("checking repair time")
+               
+               if (Seed.queue_champion == null) {
+                   for (kk in unsafeWindow.kocChampionItems) {
+                       var K = unsafeWindow.kocChampionItems[kk];
+                       if ((K.status == 2) ||  (K.status == 3)) {
+                           logit("Object is being repaired, but there's no queue");
+                           Seed.queue_champion = {};
+                           Seed.queue_champion.start = parseInt(K.start);
+                           Seed.queue_champion.end = parseInt(K.eta);
+                           Seed.queue_champion.itemId = K.equipmentId;
+                           break;
+                       }
+                   }
+               }
+               
                if (Seed.queue_champion != null && Seed.queue_champion.end != null)
                {
                    var repairTimeLeft = Seed.queue_champion.end- unixTime();
+                   logit ("time left: " + repairTimeLeft);
                    t.repairEnd = Seed.queue_champion.end;
                    t.repairId = Seed.queue_champion.itemId;
                    var n = new Date(t.repairEnd *1000);
 
                    t.setStatus("Waiting until " + n.toLocaleTimeString() + " for repair to complete.  Item: " + unsafeWindow.kocChampionItems[t.repairId].name);
-                   setTimeout(t.clearRepair, (repairTimeLeft+1)*1000);
+                   setTimeout(t.clearRepair, (repairTimeLeft+1)*5000);
                    if (repairTimeLeft >0) d += repairTimeLeft;
                }
 
@@ -3809,10 +3808,10 @@ Tabs.upgrader = {
                        loading: true,
                        onSuccess: function (transport) {
                            try {
-                               logit("enhance request sucess");
+                               //logit("enhance request sucess");
                                //logit("transport: " + inspect(transport,3,1));
                                var rslt = eval("(" + transport.responseText + ")");
-                               logit("rslt: " + inspect(rslt,3,1));
+                               //logit("rslt: " + inspect(rslt,3,1));
                                if(rslt.ok){
                                    Seed.resources["city" + Seed.cities[num_city][0]]["rec5"][0] = Seed.resources["city" + Seed.cities[num_city][0]]["rec5"][0] - rslt.aetherstones;
                                    if (rslt.gems > 0)
@@ -4002,7 +4001,7 @@ Tabs.upgrader = {
                    onSuccess: function (transport) {
                        try {
 
-                           logit("transport: " + inspect(transport,3,1));
+                           //logit("transport: " + inspect(transport,3,1));
                            var rslt = eval("(" + transport.responseText + ")");
                            if(rslt.ok){
                                Seed.resources["city" + Seed.cities[num_city][0]]["rec5"][0] = Seed.resources["city" + Seed.cities[num_city][0]]["rec5"][0] - parseInt(rslt.aetherstones);
@@ -4444,11 +4443,11 @@ Tabs.upgrader = {
                    parameters: params,
                    loading: true,
                    onSuccess: function (transport) {
-                       logit("repair success");
+                       //logit("repair success");
                        //logit("tport: " + inspect(transport,3,1));
                        var rslt = eval("(" + transport.responseText + ")");
 
-                       logit("rslt: " + inspect(rslt,3,1));
+                       //logit("rslt: " + inspect(rslt,3,1));
                        if(rslt.ok){
                            //logit("ok");
                            var item = unsafeWindow.kocChampionItems[rslt.equipmentId];
@@ -4474,20 +4473,32 @@ Tabs.upgrader = {
                        else
                        {
                            logit ("Repair failed");
-                           if (rslt.feedback)
-                           {
-                               t.setStatus(rslt.feedback);
-                               unsafeWindow.kocChampionItems[rItem].status = CM.CHAMPION.STATUS_INACTIVE;
-                               t.clearRepair();
-                           }
-
+                           logit("result:" + inspect(rslt,3,1));
+                           
                            // regrab the end times in case this is caused by a manual repair
                            if (Seed.queue_champion && Seed.queue_champion.end && Seed.queue_champion.itemId)
                            {
                                t.repairEnd = Seed.queue_champion.end;
                                t.repairId = Seed.queue_champion.itemId;
                            }
-                           logit("result:" + inspect(rslt,3,1));
+                           
+                           if (feedback.index("There is one equipment in repairing queue") > 0)
+                           {
+                              // item is still be repaired.    
+                              return;
+                           }
+                               
+                           
+                           if (rslt.feedback)
+                           {
+                               t.setStatus(rslt.feedback);
+                               
+                               unsafeWindow.kocChampionItems[rItem].status = CM.CHAMPION.STATUS_INACTIVE;
+                               t.clearRepair();
+                           }
+
+
+                           
                        }
                        return;
                    },
@@ -4893,7 +4904,7 @@ function display_confirm(confirm_msg,ok_function,cancel_function){
 //The following code is released under public domain.
 
 var AutoUpdater_183854 = {
-        id: 183854,
+        id: 464044,
         days: 1,   // check every 1 day
         name: "KOC Champion Organizer",
         version: Version,
