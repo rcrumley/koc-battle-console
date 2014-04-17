@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140408a
+// @version        20140417a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140408a';
+var Version = '20140417a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1006,7 +1006,7 @@ var ApothTimeFix = {
 		t = ApothTimeFix;
 		t.apothFix = new CalterUwFunc('cm.RevivalModel.getRevivalStats', [
 			[/&&\s*h\.isDruid/im, '|| h.id === 23'],
-			[/try/im, 'var insert=getRevivalStats_hook(insert); var ff = insert.f; var equippedItems = insert.equippedItems; var dd = insert.d; g = dd[k]["Cost"] * j; try'],
+			[/try/im, 'var insert=getRevivalStats_hook(insert); var ff = insert.f; var equippedItems = insert.equippedItems; var dd = insert.d; g = (dd[k]?+(dd[k]["Cost"])||2000:2000) * j; try'],
 			[/g\s*=\s*e\(k\)\s*\*\s*j,/im, ' '],
 			[/hasFactionBonus\(\)/im, 'hasFactionBonus(equippedItems)'],
 			[/\[7]\s*\*\s*j/im, '[7] * parseInt(j)'],
@@ -5461,7 +5461,7 @@ ajax/viewCourt.php:
             .clickableSel{background-color:#ffffcc;}\
             .xxtab{background-color:none; padding-left:5px; padding-right:5px;} </style>\
       <DIV class=ptstat ><TABLE id=tabAllMembers cellpadding=0  width=100%><TR font-weight:bold"><TD class=xtab> &nbsp; ' + allName + '</td>\
-        <TD class=xtab width=80% align=center>' + uW.g_js_strings.commonstr.distance + uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>' + numPlayers + uW.g_js_strings.commonstr.members + '&nbsp; </td></tr></table></div>\
+        <TD class=xtab width=80% align=center>' + uW.g_js_strings.commonstr.distance + uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>' + numPlayers + uW.g_js_strings.commonstr.members + '&nbsp;</td></tr></table></div>\
        <div style="max-height:500px; height:500px; overflow-y:auto;"><TABLE id=tabAllMembers align=center cellpadding=0 cellspacing=0><THEAD style="overflow-y:auto;">\
       <TR style="font-weight:bold"><TD id=clickCol0 onclick="PTalClickSort(this)" class=clickable><A><DIV>' + uW.g_js_strings.commonstr.player + '</div></a></td>\
          <TD id=clickCol1 onclick="PTalClickSort(this)" class=clickable align=center><A><DIV>Might</a></div></td>\
@@ -14404,7 +14404,7 @@ function MyAjaxRequest(url, o, noRetry) {
 		wasSuccess (rslt);
 		return;
 		}
-		rslt.errorMsg = uW.printLocalError((rslt.error_code || null), (rslt.msg || null), (rslt.feedback || null));
+		rslt.errorMsg = unsafeWindow.printLocalError((rslt.error_code || null), (rslt.msg || null), (rslt.feedback || null));
 		/*if ( (x = rslt.errorMsg.indexOf ('<br><br>')) > 0)
 		rslt.errorMsg = rslt.errorMsg.substr (0, x-1);*/
 		if (!noRetry && (rslt.error_code == 0 || rslt.error_code == 8 || rslt.error_code == 1 || rslt.error_code == 3)) {

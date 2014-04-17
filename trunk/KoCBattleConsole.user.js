@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140410a
+// @version			20140417a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Quick-Sacrifice Troop Buttons</p><p>Option to Reduce Size of Monitor Window</p>
+// @releasenotes 	<p>Show Battle Spells on incoming marches</p><p>Options to show resources in march windows</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -28,7 +28,7 @@
 //	¦	April 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140410a'; 
+var Version = '20140417a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -63,6 +63,7 @@ var Options = {
 	IncTransport        : false,
 	IncWilds            : false,
 	IncYours            : false,
+	IncResources        : true,
 	OutAttack           : true,
 	OutScout            : true,
 	OutReinforce        : true,
@@ -70,6 +71,7 @@ var Options = {
 	OutTransport        : false,
 	OutYours            : false,
 	OutReturning        : false,
+	OutResources        : false,
 	AutoUpdates         : true,
 	RefreshSeed         : false,
 	CurrentCity         : -1,
@@ -216,6 +218,13 @@ var PresetImage_SEL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src
 var MistImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/10021.jpg";
 var DoveImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/901.jpg";
 
+var	GoldImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/gold_30.png';
+var FoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/food_30.png';
+var WoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/wood_30.png';
+var StoneImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/stone_30.png';
+var OreImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/iron_30.png';
+var AetherImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/aetherstone_30.png';
+
 var TroopImagePrefix = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_";
 var TroopImageSuffix = "_30.jpg";
 
@@ -236,6 +245,7 @@ var userInfo     = {};
 var rsltInfo     = {};
 var HTMLRegister = {};
 var local_atkp   = {};
+var local_atkinc = {};
 
 var inc          = [];
 var incCity      = [];
@@ -1143,9 +1153,17 @@ function EverySecond () {
 		inc = [];
 		incCity = [];
 
+		/* check local marches still exist */
+		
+		for(n in local_atkinc) {
+			if (!Seed.queue_atkinc[n]) { delete local_atkinc[n]; }
+		}	
+		
 		for(n in Seed.queue_atkinc) {
 			if (Seed.queue_atkinc[n].marchType) {
 				inc.push(Seed.queue_atkinc[n]);
+				/* check and copy to local */
+				if (!local_atkinc[n]) { Copy_Local_ATKINC(n); }
 			}	
 		}
 		inc.sort(function(a, b){ if(!a.arrivalTime) a.arrivalTime = -1; if(!b.arrivalTime) b.arrivalTime = -1;return a.arrivalTime-b.arrivalTime });
@@ -1209,14 +1227,24 @@ function EverySecond () {
 
 function Copy_Local_ATKP(n,m) {
 	var now = unixTime();
-	if (!local_atkp[m] || (local_atkp[m].returnUnixTime)<now) {
+	if (!local_atkp[m] || ((local_atkp[m].returnUnixTime<now) && (local_atkp[m].marchStatus!=2))) {
 		local_atkp[m] = Seed.queue_atkp[n][m]; // reused march numbers!?!
 		local_atkp[m].marchCityId = n.split("city")[1]; // from city
 		if (!local_atkp[m].marchId) {
 			local_atkp[m].marchId = m.split("m")[1]; // march id
-			local_atkp[m].btIncomplete = true; 
-			local_atkp[m].btRequestSent = 0; 
+//			local_atkp[m].btIncomplete = true; // code moved because of showing march aetherstone resource, always need to fetch the march to do this. If overhead is a problem, move it back..
+//			local_atkp[m].btRequestSent = 0; 
 		}	
+		local_atkp[m].btIncomplete = true; 
+		local_atkp[m].btRequestSent = 0; 
+	}	
+}
+
+function Copy_Local_ATKINC(m) {
+	if (!local_atkinc[m]) {
+		local_atkinc[m] = Seed.queue_atkinc[m];
+		local_atkinc[m].btIncomplete = true; 
+		local_atkinc[m].btRequestSent = 0; 
 	}	
 }
 
@@ -3095,6 +3123,7 @@ function ToggleIncomingMarches (){
 		m += '<td align="right" class=xtab>Transport</td><TD class=xtab><INPUT id=IncTransportChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>To Wilds</td><TD class=xtab><INPUT id=IncWildsChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>From You</td><TD class=xtab><INPUT id=IncYoursChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Resources</td><TD class=xtab><INPUT id=IncResChk type=checkbox /></td>';
 		m += '</tr></table></div><div style="max-height:700px; overflow-y:scroll" id=btIncomingMain></div><br></div>';
 
 		popInc = new CPopup('btIncoming', Options.IncPos.x, Options.IncPos.y, 720, 200, true, function (){Options.IncomingStartState = false;Options.IncPos = popInc.getLocation();saveOptions();popInc=null;});
@@ -3108,6 +3137,7 @@ function ToggleIncomingMarches (){
 		ToggleOption('IncTransportChk','IncTransport');
 		ToggleOption('IncWildsChk','IncWilds');
 		ToggleOption('IncYoursChk','IncYours');
+		ToggleOption('IncResChk','IncResources');
 
 		popInc.show(true);
 		Options.IncomingStartState = true;
@@ -3191,6 +3221,14 @@ function BuildIncomingDisplay() {
 		if(icon=="")continue; // tampermonkey fix
 		
 		incomingfiltered = true;	
+		if (local_atkinc["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
+			if (local_atkinc["m"+marchId].btRequestSent > 0) {
+				local_atkinc["m"+marchId].btRequestSent = local_atkinc["m"+marchId].btRequestSent - 1;
+			}
+			else {
+				UpdateIncomingMarch(marchId); 
+			}	
+		}
 		
 		/* Apply Filters */
 
@@ -3289,11 +3327,28 @@ function BuildIncomingDisplay() {
 				if(a["unit"+i+marchdir] > 0) z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': '+ addCommas(a["unit"+i+marchdir])+'</span> ';
 			}	
 		}
-//		if (a["gold"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec0 +': '+ addCommas(a["gold"]) +'</span> ';
-//		if (a["resource1"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec1 +': '+ addCommas(a["resource1"]) +'</span> ';
-//		if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
-//		if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
-//		if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
+
+		if (local_atkinc["m"+marchId]["fromSpellType"]) {
+			var spell = eval('uW.g_js_strings.spells.name_'+local_atkinc["m"+marchId]["fromSpellType"]);
+			if (spell) {
+				var spellstyle = 'color:#808;';
+				z +='<br><span class=xtab style="'+spellstyle+'"><b>*&nbsp;'+spell+'&nbsp;*</b></span>'
+			}
+		}
+
+		if (Options.IncResources) {
+			if ((a["gold"] > 0) || (a["resource1"] > 0) || (a["resource2"] > 0) || (a["resource3"] > 0) || (a["resource4"] > 0) || (local_atkinc["m"+marchId]["resource5"] > 0)) {
+				z+="<br>";
+			}
+		
+			if (a["gold"] > 0) z += '<span class=xtab>'+ResourceImage(GoldImage,"Gold") + addCommas(a["gold"]) +'</span> ';
+			if (a["resource1"] > 0) z += '<span class=xtab>'+ResourceImage(FoodImage,"Food") + addCommas(a["resource1"]) +'</span> ';
+			if (a["resource2"] > 0) z += '<span class=xtab>'+ResourceImage(WoodImage,"Wood") + addCommas(a["resource2"]) +'</span> ';
+			if (a["resource3"] > 0) z += '<span class=xtab>'+ResourceImage(StoneImage,"Stone") + addCommas(a["resource3"]) +'</span> ';
+			if (a["resource4"] > 0) z += '<span class=xtab>'+ResourceImage(OreImage,"Ore") + addCommas(a["resource4"]) +'</span> ';
+			if (local_atkinc["m"+marchId]["resource5"] > 0) z += '<span class=xtab>'+ResourceImage(AetherImage,"Aether") + addCommas(local_atkinc["m"+marchId]["resource5"]) +'</span> ';
+		}
+		
 		z += '</td></tr>';
     }
   
@@ -3319,6 +3374,9 @@ function BuildIncomingDisplay() {
 			}	
 		}
 	}
+	else {
+		ResetHTMLRegister('btIncomingMain');
+	}
 
 }
 
@@ -3339,6 +3397,7 @@ function ToggleOutgoingMarches (){
 		m += '<td align="right" class=xtab>Transport</td><TD class=xtab><INPUT id=OutTransportChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>Returning</td><TD class=xtab><INPUT id=OutReturningChk type=checkbox /></td>';
 		m += '<td align="right" class=xtab>To You</td><TD class=xtab><INPUT id=OutYoursChk type=checkbox /></td>';
+		m += '<td align="right" class=xtab>Resources</td><TD class=xtab><INPUT id=OutResChk type=checkbox /></td>';
 		m += '</tr></table></div><div style="max-height:700px; overflow-y:scroll" id=btOutgoingMain></div><br></div>';
 
 		popOut = new CPopup('btOutgoing', Options.OutPos.x, Options.OutPos.y, 720, 200, true, function (){Options.OutgoingStartState = false;Options.OutPos = popOut.getLocation();saveOptions();popOut=null;});
@@ -3352,6 +3411,7 @@ function ToggleOutgoingMarches (){
 		ToggleOption('OutTransportChk','OutTransport');
 		ToggleOption('OutReturningChk','OutReturning');
 		ToggleOption('OutYoursChk','OutYours');
+		ToggleOption('OutResChk','OutResources');
 
 		popOut.show(true);
 		Options.OutgoingStartState = true;
@@ -3585,13 +3645,28 @@ function BuildOutgoingDisplay() {
 				z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
 			}	
 		}	
+
+		if (a["fromSpellType"]) {
+			var spell = eval('uW.g_js_strings.spells.name_'+a["fromSpellType"]);
+			if (spell) {
+				var spellstyle = 'color:#808;';
+				z +='<br><span class=xtab style="'+spellstyle+'"><b>*&nbsp;'+spell+'&nbsp;*</b></span>'
+			}
+		}
 		
-//		if (a["gold"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec0 +': '+ addCommas(a["gold"]) +'</span> ';
-//		if (a["resource1"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec1 +': '+ addCommas(a["resource1"]) +'</span> ';
-//		if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
-//		if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
-//		if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
-//		if (a["resource5"] > 0) z += '<span class=xtab>'+uW.resourceinfo["7"] +': '+ addCommas(a["resource5"]) +'</span> ';
+		if (Options.OutResources) {
+			if ((a["gold"] > 0) || (a["resource1"] > 0) || (a["resource2"] > 0) || (a["resource3"] > 0) || (a["resource4"] > 0) || (a["resource5"] > 0)) {
+				z+="<br>";
+			}
+
+			if (a["gold"] > 0) z += '<span class=xtab>'+ResourceImage(GoldImage,"Gold") + addCommas(a["gold"]) +'</span> ';
+			if (a["resource1"] > 0) z += '<span class=xtab>'+ResourceImage(FoodImage,"Food") + addCommas(a["resource1"]) +'</span> ';
+			if (a["resource2"] > 0) z += '<span class=xtab>'+ResourceImage(WoodImage,"Wood") + addCommas(a["resource2"]) +'</span> ';
+			if (a["resource3"] > 0) z += '<span class=xtab>'+ResourceImage(StoneImage,"Stone") + addCommas(a["resource3"]) +'</span> ';
+			if (a["resource4"] > 0) z += '<span class=xtab>'+ResourceImage(OreImage,"Ore") + addCommas(a["resource4"]) +'</span> ';
+			if (a["resource5"] > 0) z += '<span class=xtab>'+ResourceImage(AetherImage,"Aether") + addCommas(a["resource5"]) +'</span> ';
+		}
+		
 		z += '</td></tr>';
     }
 	
@@ -3616,6 +3691,9 @@ function BuildOutgoingDisplay() {
 				document.getElementById('marchtime'+m).innerHTML = mt;
 			}	
 		}
+	}
+	else {
+		ResetHTMLRegister('btOutgoingMain');
 	}
 }
 
@@ -3650,6 +3728,27 @@ function UpdateMarch (cityId,marchId) {
 		},
 		onFailure: function (rslt) {
 			local_atkp["m"+marchId].btRequestSent = 0; // try again
+		}
+    },true); // no retry			
+}
+
+function UpdateIncomingMarch (marchId) {
+	local_atkinc["m"+marchId].btRequestSent = 2; // delay any further requests for 2 seconds
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	params.rid = marchId;
+	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (rslt) {
+			if (local_atkinc["m"+rslt.march.marchId]) {
+				for (y in rslt.march) {
+					local_atkinc["m"+rslt.march.marchId][y] = rslt.march[y];
+				}	
+				local_atkinc["m"+rslt.march.marchId].btIncomplete = false;
+			}
+		},
+		onFailure: function (rslt) {
+			local_atkinc["m"+marchId].btRequestSent = 0; // try again
 		}
     },true); // no retry			
 }
@@ -4614,6 +4713,15 @@ function PaintCityInfo(cityId) {
 				if (a["cnt"]) { z += '<span class=xtab>'+a["cnt"]+'</span> ';}
 				else { z += '<span class=xtab>(Upgrade WatchTower)</span> '; }
 			}
+
+			if (local_atkinc["m"+marchId]["fromSpellType"]) {
+				var spell = eval('uW.g_js_strings.spells.name_'+local_atkinc["m"+marchId]["fromSpellType"]);
+				if (spell) {
+					var spellstyle = 'color:#808;';
+					z +='<br><span class=xtab style="'+spellstyle+'"><b>*&nbsp;'+spell+'&nbsp;*</b></span>'
+				}
+			}
+
 			z += '</td></tr>';
         }
     }
@@ -4797,14 +4905,17 @@ function PaintCityInfo(cityId) {
 					z += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
 				}	
 			}	
-		
-//			if (a["gold"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec0 +': '+ addCommas(a["gold"]) +'</span> ';
-//			if (a["resource1"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec1 +': '+ addCommas(a["resource1"]) +'</span> ';
-//			if (a["resource2"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec2 +': '+ addCommas(a["resource2"]) +'</span> ';
-//			if (a["resource3"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec3 +': '+ addCommas(a["resource3"]) +'</span> ';
-//			if (a["resource4"] > 0) z += '<span class=xtab>'+uW.resourceinfo.rec4 +': '+ addCommas(a["resource4"]) +'</span> ';
-//			if (a["resource5"] > 0) z += '<span class=xtab>'+uW.resourceinfo["7"] +': '+ addCommas(a["resource5"]) +'</span> ';
+
+			if (a["fromSpellType"]) {
+				var spell = eval('uW.g_js_strings.spells.name_'+a["fromSpellType"]);
+				if (spell) {
+					var spellstyle = 'color:#808;';
+					z +='<br><span class=xtab style="'+spellstyle+'"><b>*&nbsp;'+spell+'&nbsp;*</b></span>'
+				}
+			}
+			
 			z += '</td></tr>';
+			
 		}
 		if (!cityoutgoing) {
 			z = '<DIV><br><div style="opacity:0.3;">No Outgoing Attacks</div></div>';
@@ -4866,6 +4977,11 @@ function TroopImage(tt) {
 	if (tt < 50) { var TroopText = uW.unitcost['unt'+tt][0];}
 	else { var TroopText = uW.fortcost['frt'+tt][0];}
 	var img = '<img style="width:20px;height:20px;vertical-align:middle" src="'+TroopImagePrefix+tt+TroopImageSuffix+'" title="'+TroopText+'">&nbsp;';
+	return img;
+}
+
+function ResourceImage(path,title) {
+	var img = '<img style="width:20px;height:20px;vertical-align:middle" src="'+path+'" title="'+title+'">&nbsp;';
 	return img;
 }
 
@@ -6092,13 +6208,10 @@ function TRStats (notify) {
 							tier = parseInt(y["effects"]["slot"+i]["tier"]);
 							level = y["level"];
 							p = uW.cm.thronestats.tiers[id][tier];
-							while (!p && (tier > 0)) {
-								tier--;
-								p = uW.cm.thronestats.tiers[id][tier];
-							}
+							while (!p && (tier > 0)) { tier--; p = uW.cm.thronestats.tiers[id][tier]; }
 							if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
-  				           	    var base = p.base || 0;
-							var growth = p.growth ||0;
+							var base = p.base || 0;
+							var growth = p.growth || 0;
 							Current = base + ((level * level + level) * growth * 0.5);
 							if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 						}
