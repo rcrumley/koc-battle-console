@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
-// @version         20140410a
+// @version         20140502a
 // @namespace       kba
 // @homepage        https://userscripts.org/scripts/show/285996
 // @downloadURL     https://userscripts.org/scripts/source/285996.user.js
@@ -16,7 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Option to Reduce Size of Monitor Window</p><p>Volume Control</p>
+// @releasenotes 	<p>IMPORTANT! Fix for Jewel Stats!</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -24,10 +24,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	April 2014 Barbarossa69 (http://userscripts.org/users/272942)										│
+//	│	May 2014 Barbarossa69 (http://userscripts.org/users/272942)											│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140410a';
+var Version = '20140502a';
 var NameSpace = 'kba';
 
 //Fix weird bug with koc game
@@ -45,6 +45,7 @@ var Options = {
 	MonPos        	    : {},
 	MonitorColours      : true,
 	LastMonitored       : "",
+	LastMonitoredUID    : 0,
 	MonitorSound        : false,
 	MonitorStartState   : false,
 	AutoUpdates         : true,
@@ -228,7 +229,7 @@ function btStartup (){
 
 	// show things that were showing before refresh
 
-	if (Options.MonitorStartState && (Options.LastMonitored != "")) {MonitorTRClick();}
+	if (Options.MonitorStartState && (Options.LastMonitoredUID != 0)) {initMonitor(Options.LastMonitoredUID);}
 	
 	// Set to check for updates in 15 seconds
 	
@@ -1556,7 +1557,7 @@ function UIDClick() {
 function MonitorTRClick() {
 	setError('&nbsp;');
 	var name = document.getElementById('btPlayer_'+NameSpace).value;
-	name = name.replace(/\'/g,"_");
+    name = name.replace(/\'/g,"_").replace(/\,/g,"_").replace(/\-/g,"_");
 
 	if (name.toUpperCase() == Seed.player.name.toUpperCase()) {
 		initMonitor (uW.tvuid, false)
@@ -1865,31 +1866,38 @@ function TRStats (notify) {
 		loading: true,
 		onSuccess: function (transport) {
 			var rslt = eval("(" + transport.responseText + ")");
-				if(rslt.ok){
-					for (k in uW.cm.thronestats.effects) HisStatEffects[k] = 0;
-					for (kk in rslt.items){
-    		 			y = rslt.items[kk];
-	    	 			if (y != undefined) {
-							for (var O in y["effects"]) {
-								var i = +(O.split("slot")[1]);
-								id = y["effects"]["slot"+i]["id"];
-								tier = parseInt(y["effects"]["slot"+i]["tier"]);
-								level = y["level"];
+			if(rslt.ok){
+				for (k in uW.cm.thronestats.effects) HisStatEffects[k] = 0;
+				for (kk in rslt.items){
+   		 			y = rslt.items[kk];
+    	 			if (y != undefined) {
+						if (y["jewel"] && y["jewel"]["valid"] == true){
+							y["effects"]["slot6"].fromJewel = true;
+							y["effects"]["slot6"].quality = y["jewel"].quality;
+						}
+						for (var O in y["effects"]) {
+							var i = +(O.split("slot")[1]);
+							id = y["effects"]["slot"+i]["id"];
+							tier = parseInt(y["effects"]["slot"+i]["tier"]);
+							level = y["level"];
+							p = uW.cm.thronestats.tiers[id][tier];
+							while (!p && (tier > 0)) {
+								tier--;
 								p = uW.cm.thronestats.tiers[id][tier];
-								while (!p && (tier > 0)) {
-									tier--;
-									p = uW.cm.thronestats.tiers[id][tier];
-								}
-								if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
-   				           	    var base = p.base || 0;
-								var growth = p.growth ||0;
-								Current = base + ((level * level + level) * growth * 0.5);
-								if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 							}
+							if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
+  				           	    var base = p.base || 0;
+							var growth = p.growth ||0;
+							if (y["effects"]["slot"+i].fromJewel && (level > uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
+								level = uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
+							}
+							Current = base + ((level * level + level) * growth * 0.5);
+							if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 						}
 					}
-			   } else setMonitorError('Error Reading Throne Room');
-			if (params.playerId == userInfo.userId) {notify();}
+				}
+		   } else setMonitorError('Error Reading Throne Room');
+		if (params.playerId == userInfo.userId) {notify();}
 		},
 		onFailure: function () {
 			setMonitorError('Server Not Responding');
@@ -1923,6 +1931,7 @@ function StartMonitorLoop () {
 
 	MonitorID = userInfo.userId;
 	Options.LastMonitored = userInfo.name;
+	Options.LastMonitoredUID = userInfo.userId;
 	Options.MonitorStartState = true;
 	saveOptions();
 

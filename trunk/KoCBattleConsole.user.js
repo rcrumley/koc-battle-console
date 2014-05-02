@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140417a
+// @version			20140502a
 // @namespace		kbc
 // @homepage		https://userscripts.org/scripts/show/170798
 // @updateURL		https://userscripts.org/scripts/source/170798.meta.js
@@ -17,7 +17,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>Show Battle Spells on incoming marches</p><p>Options to show resources in march windows</p>
+// @releasenotes 	<p>IMPORTANT! Fix for Jewel Stats!</p><p>Performance improvements</p><p>All monitor links now use UID internally (not user name)</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -25,10 +25,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	April 2014 Barbarossa69 (http://userscripts.org/users/272942)										¦
+//	¦	May 2014 Barbarossa69 (http://userscripts.org/users/272942)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140417a'; 
+var Version = '20140502a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -50,6 +50,7 @@ var Options = {
 	OverrideAttackAlert : true,
 	MonitorColours      : true,
 	LastMonitored       : "",
+	LastMonitoredUID    : 0,
 	MonitorSound        : false,
 	BattleStartState    : false,
 	MonitorStartState   : false,
@@ -164,6 +165,7 @@ var WinHeight = 220;
 var MonWidth=300;
 var MonHeight=500;
 var fontratio=1;
+var ThroneUID;
   
 var	SacSettings;
 var SacSpeed;
@@ -522,6 +524,7 @@ uW.btOverrideDash = function (sect) {OverrideDash(sect);}
 uW.btResetDash = function () {ResetDash();}
 
 // allow access from external tools
+// NAME CALL LINK PROVIDED FOR LEGACY ONLY - ALL FUTURE LINKS SHOULD USE UID CALL!
 
 uW.btMonitorExternalCall = function(name) {
 	if (name !="") {
@@ -532,8 +535,7 @@ uW.btMonitorExternalCall = function(name) {
 
 uW.btMonitorExternalCallUID = function(UID) {
 	if (UID !="") {
-		document.getElementById('btPlayer').value = UID;	 
-		UIDClick();
+		initMonitor (UID, false)
 	}	
 }	
 
@@ -806,29 +808,26 @@ function btStartup (){
 		DefaultWindowPos('OutPos','btOutgoingButton');
 	}	
 	DefaultWindowPos('LogPos','btLogSubmit');
-  
+
+	// throne room alteration
+	
 	var str = uW.cm.FETemplates.Throne.mainThrone.replace(
 		'<li id="throneStatTab" class="inactive"> Stats </li>',
 		'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> Stats </li>');
 	uW.cm.FETemplates.Throne.mainThrone = str;
    
 	uW.btThroneMonitorTR = function() {
-		var name = uW.jQuery("div.primarytitlebar span.title").text();
-		name = name.substring(0,name.indexOf(uW.g_js_strings.throneRoom.title_part));
-		if (name !="") {
-			document.getElementById('btPlayer').value = name;	 
-			MonitorTRClick();
-		}  
+		if (ThroneUID != 0) { initMonitor (ThroneUID, false); }	
 	}
    
 	// intercept throne room view function to grey out monitor option for your own room...
 
 	var oldTRViewFunc = uW.cm.ThroneView.openThrone;
 	var newTRViewFunc = function(c) {
+		ThroneUID = 0;
+		if (c) {ThroneUID = c.id;}
 		oldTRViewFunc(c);
-		var name = uW.jQuery("div.primarytitlebar span.title").text();
-		name = name.substring(0,name.indexOf(uW.g_js_strings.throneRoom.title_part));
-		if (name =="") {uW.jQuery("#throneMonitor").attr("class","deactive"); }		
+		if (ThroneUID == 0) {uW.jQuery("#throneMonitor").attr("class","deactive"); }		
 	};
 	uW.cm.ThroneView.openThrone = newTRViewFunc;
 
@@ -870,7 +869,7 @@ function btStartup (){
 		if (Options.OutgoingStartState) {ToggleOutgoingMarches();}
 	}	
 	if (Options.DefenceStartState || (Options.DashboardMode && !Options.SleepMode)) {ToggleCityDefence(Options.CurrentCity);}
-	if (Options.MonitorStartState && (Options.LastMonitored != "")) {MonitorTRClick();}
+	if (Options.MonitorStartState && (Options.LastMonitoredUID != 0)) {initMonitor(Options.LastMonitoredUID);}
 	
 	// Set to check for updates in 15 seconds
 	
@@ -1324,7 +1323,7 @@ function CheckForIncoming () {
 
 		if (soonest.arrivalTime != -1) atime = uW.cm.TimeFormatter.format(parseInt(soonest.arrivalTime-unixTime()));	
 		else atime = '??????';
-		if (Seed.players['u'+soonest.pid]) {who = Seed.players['u'+soonest.pid].n; bywho = ' by '+MonitorLink(who,"AlertLink");}
+		if (Seed.players['u'+soonest.pid]) {who = Seed.players['u'+soonest.pid].n; bywho = ' by '+MonitorLink(soonest.pid,who,"AlertLink");}
 		else { bywho = '&nbsp;&nbsp;(Upgrade WatchTower)' ;}
 
 		msgcontainer = '<div class="textContainer" style="margin-left:-10px;padding-top:0px;">';
@@ -1484,14 +1483,14 @@ function CheckDashPosition () {
 	if (Chat && (Chat.className == 'mod_comm') && (parseIntNan(getStyle(Chat,'top')) < 0)) {
 		ChatWidth = parseIntNan(getStyle(Chat,'width'));
 	}
-	var AIO = document.getElementById('Dash_div');
+	var AIO = document.getElementById('Dash_div'); // AIO and BAO
 	if (!AIO) AIO = document.getElementById('Dash_div_box'); // multilang
 	var AIOWidth = 0;
 	if (AIO) {
 		AIOWidth = parseIntNan(getStyle(AIO,'width'));
 	}
 	var Dash = document.getElementById('btDashboard');
-	if (Dash) {Dash.style.left = 760+ChatWidth+AIOWidth+"px"; }
+	if (Dash) {Dash.style.left = 760+ChatWidth+AIOWidth+"px";}
 }
 
 function DashboardToggle () {
@@ -2890,13 +2889,13 @@ function coordLink (x, y){
 	return m.join('');
 }
 
-function MonitorLink (n,cl){
+function MonitorLink (id,n,cl){
 	var m = [];
 	if (cl)
-		m.push ('<a class="'+cl+'" onclick="btMonitorExternalCall (\'');
+		m.push ('<a class="'+cl+'" onclick="btMonitorExternalCallUID (\'');
 	else	
-		m.push ('<a onclick="btMonitorExternalCall (\'');
-	m.push (n);
+		m.push ('<a onclick="btMonitorExternalCallUID (\'');
+	m.push (id);
 	m.push ('\'); return false">');
 	m.push (n);
 	m.push ('</a>');  
@@ -3207,7 +3206,7 @@ function BuildIncomingDisplay() {
 		else
 		{
 			if (fromname == "") { if (a.score) {fromname = '(Upgrade WatchTower)';} else {fromname = '(Unknown)';}}
-			else {fromname = MonitorLink(fromname);}
+			else {fromname = MonitorLink(a.fromPlayerId,fromname);}
 		}
 		
 		icon = "";
@@ -3221,14 +3220,17 @@ function BuildIncomingDisplay() {
 		if(icon=="")continue; // tampermonkey fix
 		
 		incomingfiltered = true;	
-		if (local_atkinc["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
-			if (local_atkinc["m"+marchId].btRequestSent > 0) {
-				local_atkinc["m"+marchId].btRequestSent = local_atkinc["m"+marchId].btRequestSent - 1;
+
+		if (popInc || (popDef && Options.AttackState && AttackShow )) {
+			if (local_atkinc["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
+				if (local_atkinc["m"+marchId].btRequestSent > 0) {
+					local_atkinc["m"+marchId].btRequestSent = local_atkinc["m"+marchId].btRequestSent - 1;
+				}
+				else {
+					UpdateIncomingMarch(marchId); 
+				}	
 			}
-			else {
-				UpdateIncomingMarch(marchId); 
-			}	
-		}
+		}	
 		
 		/* Apply Filters */
 
@@ -3490,11 +3492,11 @@ function BuildOutgoingDisplay() {
 			}	
 			else {
 				if (a.players && a.players['u'+a.toPlayerId]) {
-					toname = MonitorLink(a.players['u'+a.toPlayerId].n);
+					toname = MonitorLink(a.toPlayerId,a.players['u'+a.toPlayerId].n);
 				}
 				else {
 					if (Seed.players['u'+a.toPlayerId]) {
-						toname = MonitorLink(Seed.players['u'+a.toPlayerId].n);
+						toname = MonitorLink(a.toPlayerId,Seed.players['u'+a.toPlayerId].n);
 					}
 				}
 				if (toname == "") { updatePlayers (a.toPlayerId); } // let's fix it!
@@ -3551,14 +3553,17 @@ function BuildOutgoingDisplay() {
 		hint="("+marchId+")";
 		
 		outgoingfiltered = true;	
-		if (local_atkp["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
-			if (local_atkp["m"+marchId].btRequestSent > 0) {
-				local_atkp["m"+marchId].btRequestSent = local_atkp["m"+marchId].btRequestSent - 1;
+
+		if (popOut || (popDef && Options.CityAttackState && CityAttackShow)) {
+			if (local_atkp["m"+marchId].btIncomplete == true) { // do this here in case march used in city view
+				if (local_atkp["m"+marchId].btRequestSent > 0) {
+					local_atkp["m"+marchId].btRequestSent = local_atkp["m"+marchId].btRequestSent - 1;
+				}
+				else {
+					UpdateMarch(a.marchCityId,marchId); 
+				}	
 			}
-			else {
-				UpdateMarch(a.marchCityId,marchId); 
-			}	
-		}
+		}	
 		
 		/* Apply Filters */
 
@@ -4648,7 +4653,7 @@ function PaintCityInfo(cityId) {
 			if (!a.fromXCoord) {fromcoords = "";}
 			else {fromcoords = coordLink(a.fromXCoord,a.fromYCoord);}
 			if (fromname == "") {fromname = '(Upgrade WatchTower)';}
-			else {fromname = MonitorLink(fromname);}
+			else {fromname = MonitorLink(a.pid,fromname);}
 			
 			switch (marchType) {
 				case 3: icon=ScoutImage;hint="Scout";break;
@@ -4806,11 +4811,11 @@ function PaintCityInfo(cityId) {
 	
 			if (a["toPlayerId"] && (a["toPlayerId"] != 0)) {
 				if (a.players && a.players['u'+a.toPlayerId]) {
-					toname = MonitorLink(a.players['u'+a.toPlayerId].n);
+					toname = MonitorLink(a.toPlayerId,a.players['u'+a.toPlayerId].n);
 				}
 				else {
 					if (Seed.players['u'+a.toPlayerId]) {
-						toname = MonitorLink(Seed.players['u'+a.toPlayerId].n);
+						toname = MonitorLink(a.toPlayerId,Seed.players['u'+a.toPlayerId].n);
 					}
 				}
 			}
@@ -5763,6 +5768,9 @@ function BuildTRPresetStats(slot){
 					p = unsafeWindow.cm.thronestats.tiers[id][tier];
 					while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
 					if (!p) continue; // can't find stats for tier
+					if (y["effects"]["slot"+i].fromJewel && (level > uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
+						level = uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
+					}
 					Current = p.base + ((level * level + level) * p.growth * 0.5);
 					if (i<=parseInt(y.quality)) StatEffects[id] += Current;
 				}
@@ -5965,7 +5973,7 @@ function initMonitor(uid,Paused) {
 
 	// get user info first..
 	
-	fetchPlayerInfo(uid,eventLoadMonitor);
+	fetchPlayerInfo(uid,true,eventLoadMonitor);
 }  
 
 function eventLoadMonitor (){
@@ -6030,7 +6038,7 @@ function eventPaintPlayerInfo (){
 	}	
 }
 
-function fetchPlayerInfo (uid, notify){
+function fetchPlayerInfo (uid, init, notify){
 
     var params = uW.Object.clone(uW.g_ajaxparams);
     params.uid = uid;
@@ -6040,10 +6048,15 @@ function fetchPlayerInfo (uid, notify){
       onSuccess: function (rslt) {
 		rsltInfo = eval("(" + rslt.responseText + ")");
 	    if (!rsltInfo.ok) { 
+			if (init) {
+				if (document.getElementById('btUserDiv')) {
+					document.getElementById('btUserDiv').innerHTML = '<TABLE width=100%><TD align=center class=xtab style="color:#f00;"><br><B>Unknown UID</b></td></tr></table>'; 
+				}
+			}	
 			setError('Unknown UID');
 			return;
 		}	
-
+		
 		userInfo = rsltInfo.userInfo[0];
 		fetchPlayerStatus (notify);
       },
@@ -6202,6 +6215,10 @@ function TRStats (notify) {
 				for (kk in rslt.items){
    		 			y = rslt.items[kk];
     	 			if (y != undefined) {
+						if (y["jewel"] && y["jewel"]["valid"] == true){
+							y["effects"]["slot6"].fromJewel = true;
+							y["effects"]["slot6"].quality = y["jewel"].quality;
+						}
 						for (var O in y["effects"]) {
 							var i = +(O.split("slot")[1]);
 							id = y["effects"]["slot"+i]["id"];
@@ -6212,6 +6229,9 @@ function TRStats (notify) {
 							if (!p) { logit('No stats for effect '+id+' in tier '+tier+' or below');continue; } // can't find stats for tier
 							var base = p.base || 0;
 							var growth = p.growth || 0;
+							if (y["effects"]["slot"+i].fromJewel && (level > uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
+								level = uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
+							}
 							Current = base + ((level * level + level) * growth * 0.5);
 							if (i<=parseInt(y["quality"])) HisStatEffects[id] += Current;
 						}
@@ -6252,6 +6272,7 @@ function StartMonitorLoop () {
 
 	MonitorID = userInfo.userId;
 	Options.LastMonitored = userInfo.name;
+	Options.LastMonitoredUID = userInfo.userId;
 	Options.MonitorStartState = true;
 	saveOptions();
 
@@ -6269,7 +6290,7 @@ function MonitorTRLoop () {
     MonitorLooper = MonitorLooper+1;
 	if (MonitorLooper > 30) {
 		MonitorLooper = 0;
-		fetchPlayerInfo (userInfo.userId, eventPaintPlayerInfo);
+		fetchPlayerInfo (userInfo.userId,false,eventPaintPlayerInfo);
 	}  
 
 // check for 15 minute monitor timeout
@@ -6449,7 +6470,7 @@ function PaintLog() {
 		z += '<tr class="'+rowClass+'">';
 		z += '<TD style="width:20px" class="xtab trimg" id="trimg'+n+'" align=left><img src="'+ThroneImage+'"</img></td>';
 		z += '<TD style="width:80px" class=xtab>'+formatDateTime(a.ts)+'</td>';
-		z += '<TD style="width:115px" class=xtab>'+MonitorLink(a.name)+'</td>';
+		z += '<TD style="width:115px" class=xtab>'+MonitorLink(a.id,a.name)+'</td>';
 		z += '<TD style="width:115px" class=xtab>'+a.alliance+'</td>';
 		z += '<TD style="width:145px" class=xtab><INPUT class="btInput" id="btLabel'+n+'" size=20 style="width: 140px" type=text value="'+a.label+'" onkeyup="btStartKeyTimer(this,btUpdateLabel,'+n+')" onchange="btUpdateLabel(this,'+n+')" /></td>';
 		z += '<TD style="width:30px" class=xtab align=center><INPUT id="btKeep'+n+'" type=checkbox '+(a.keep?'CHECKED':'')+' onclick="btToggleKeep('+n+')" /></td>';
