@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20140410a
+// @version        20140501a
 // @namespace      mmm
 // @homepage       http://userscripts.org/scripts/show/411452
 // @delay 2000
@@ -8,8 +8,8 @@
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
-// @updateURL      https://userscripts.org/scripts/source/132329.meta.js
-// @downloadURL    https://userscripts.org/scripts/source/132329.user.js
+// @updateURL      https://userscripts.org/scripts/source/411452.meta.js
+// @downloadURL    https://userscripts.org/scripts/source/411452.user.js
 // @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
@@ -32,7 +32,7 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140410a_Goat';
+var Version = '20140501a_Goat';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
@@ -184,7 +184,7 @@ var upgradeData = {
         retryInterval : 30,
         enhanceAction : false,
         enhanceItem : 0,
-        enhanceMax  : 5,
+        enhanceMax  : 6,
         minStones : 100000,
         switchToUpgrade : true,
         salvageActive : false,
@@ -1340,19 +1340,17 @@ function installHandlerFunctions() {
 			
 			// create a button to "tag" an item in preset
             			
-			var tagLevel = 0;
+			var ptagLevel = 0;
 			
 			for (var i=0; i < tagData.itemColorList.length; i++) {
 				if ( j.id == tagData.itemColorList[i].itemId) {
-					if (tagData.itemColorList[i].preset>0) {
-						tagLevel += 2;
-					} else {
-						tagLevel += 1;
+					if (tagData.itemColorList[i].preset == Seed.throne.activeSlot) {
+						ptagLevel += 1;
 					}
 				}
 			}
 							
-			if (tagLevel < 2) {
+			if (ptagLevel == 0) {
 				var btn4 = document.createElement('a');
 				$(btn4).addClass("buttonv2 h20 brown")
 				.html("Add Preset Tag")
@@ -1372,9 +1370,19 @@ function installHandlerFunctions() {
 					$("#contextMenu div.title").after(btn4);
 			}
 						
-            // create a button to "tag" an item
+            // create a button to "tag" an 
 			
-			if (tagLevel == 0 || tagLevel == 2) {
+			var utagLevel = 0;
+			
+			for (var i=0; i < tagData.itemColorList.length; i++) {
+				if ( j.id == tagData.itemColorList[i].itemId) {
+					if (tagData.itemColorList[i].preset == 0) {
+						utagLevel += 1;
+					}
+				}
+			}
+			
+			if (utagLevel == 0) {
 				var btn3 = document.createElement('a');
 				$(btn3).addClass("buttonv2 h20 brown")
 				.html("Tag Item")
@@ -1396,7 +1404,7 @@ function installHandlerFunctions() {
 			}
 
             // create a button to set the item to auto-enhance
-            if (j.quality < 5) {
+            if (j.quality < 6) {
                 var btn2 = document.createElement('a');
                 $(btn2).addClass("buttonv2 h20 green")
                 .html("Auto Enhance")
@@ -1455,13 +1463,20 @@ function installHandlerFunctions() {
             .css('color', 'white')
             .bind("click", function () {
                 var cText = $("div#trCardItem" + j.id).find("div.trCard").text();
+                cText = cText.replace("[" + j.id + "]","");
                 if (cText) {
-                    cText = cText.replace("Type", "||Type").replace("Quality","||Quality").replace("Level","||Level")
-                    cText = cText.replace("Might","||Might").replace(/    /g, "||").replace(/\|\|\|\|/g, "||").replace(/\|\|\s*$/, "");
+                    cText = cText.replace("Type", "||Type").replace("Quality", "||Quality").replace("Level", "||Level")
+                    cText = cText.replace("Might", "||Might").replace(/    /g, "||").replace(/\|\|\|\|/g, "||").replace(/\|\|\s*$/, "");
                     cText = ":::. |" + cText;
                     var table = cText.split("||");
-                    for (row=1; row<=5; row++) {
-                        table[table.length-6+row] = "Row " + row + ": " + table[table.length-6+row];
+                    if (table.length <= 11) {
+                        for (row = 1; row <= 5; row++) {
+                            table[table.length - 6 + row] = "Row " + row + ": " + table[table.length - 6 + row];
+                        }
+                    } else {
+                        for (row = 1; row <= 6; row++) {
+                            table[table.length - 7 + row] = "Row " + row + ": " + table[table.length - 7 + row];
+                        }
                     }
                     cText = table.join("||");
 
@@ -2301,6 +2316,7 @@ Tabs.throneSalvage = {
             m += '<option value="3">Rare</option>';
             m += '<option value="4">Epic</option>';
             m += '<option value="5">Wondrous</option>';
+			m += '<option value="6">Miraculous</option>';
             m += '</select> and higher</div></td>';
 
             m += '<td colspan=2 width=24%>Keep the first <INPUT id=trSaveNum type=text size=3 maxlength=3 value="' + salvageData.throneSaveNum+ '"/> items</td>';
@@ -4156,6 +4172,7 @@ Tabs.options = {
             m += '<option value="3">'+ uW.g_js_strings.throneRoom.rare +'</option>';
             m += '<option value="4">'+ uW.g_js_strings.throneRoom.epic +'</option>';
             m += '<option value="5">'+ uW.g_js_strings.throneRoom.wondrous +'</option>';
+			m += '<option value="6">'+ uW.g_js_strings.throneRoom.miraculous +'</option>';
             m += '</select> </div></td></tr>';
 
             m += '<TR><TD><div style="white-space: pre;" ><INPUT id=trSalUpgradeManual type=checkbox '+ (salvageData.upgradeManual?' CHECKED':'') +'/> Upgrade items to +1 on manual delete.</td></tr>';
@@ -4654,7 +4671,8 @@ Tabs.upgrader = {
                         uW.g_js_strings ? uW.g_js_strings.throneRoom.uncommon : "Uncommon",
                                 uW.g_js_strings ? uW.g_js_strings.throneRoom.rare : "Rare", 
                                         uW.g_js_strings ?uW.g_js_strings.throneRoom.epic : "Epic",
-                                                uW.g_js_strings ?uW.g_js_strings.throneRoom.wondrous : "Wondrous"],
+                                                uW.g_js_strings ?uW.g_js_strings.throneRoom.wondrous : "Wondrous",
+													uW.g_js_strings ?uW.g_js_strings.throneRoom.miraculous : "Miraculous"],
                                                 upgradePath : {
                                                     0: {maxLev: 2, nextQual: 2 },
                                                     1: {maxLev: 2, nextQual: 2 },
@@ -4679,7 +4697,8 @@ Tabs.upgrader = {
                                                                         unsafeWindow.g_js_strings.throneRoom.uncommon,
                                                                         unsafeWindow.g_js_strings.throneRoom.rare, 
                                                                         unsafeWindow.g_js_strings.throneRoom.epic,
-                                                                        unsafeWindow.g_js_strings.throneRoom.wondrous];
+                                                                        unsafeWindow.g_js_strings.throneRoom.wondrous,
+																		unsafeWindow.g_js_strings.throneRoom.miraculous];
                                                     }
 
                                                     // header stuff
@@ -4837,7 +4856,7 @@ Tabs.upgrader = {
                                                     var qItem = new QueueItem();
                                                     qItem.item   = id;
                                                     qItem.action = "enhance";
-                                                    qItem.level  = 5;
+                                                    qItem.level  = 6;
                                                     queueData.list.push(qItem);
                                                     saveQueueData();
                                                     $("div#throneInventoryItem" + id).addClass('yellowBorder');
@@ -4858,8 +4877,8 @@ Tabs.upgrader = {
                                                     var qual = +throne_item.quality;
                                                     var lev  = +throne_item.level;
 
-                                                    if (qual >= 5) {
-                                                        logit("Item already at wondrous");
+                                                    if (qual >= 6) {
+                                                        logit("Item already at Miraculous");
                                                         return;
                                                     }
 
@@ -4867,7 +4886,7 @@ Tabs.upgrader = {
                                                     var nextQual = null;
                                                     var qItem = null;
 
-                                                    while (qual < 5) {
+                                                    while (qual < 6) {
                                                         maxLev = t.upgradePath[qual].maxLev;
                                                         nextQual = t.upgradePath[qual].nextQual;
 
@@ -5449,7 +5468,7 @@ Tabs.upgrader = {
                                                     var m;
                                                     if ($("#trAction").val() == "enhance") {
                                                         m = '<div id=trMaxDiv> Max: <select id="trMaxLevel">';
-                                                        for (i =1; i <=5; i++) {
+                                                        for (i =1; i <=6; i++) {
                                                             m  += '<option value="' + i + '">' + t.qualities[i] + '</option>';
                                                         }
                                                         m += '</select></div>';
@@ -5466,7 +5485,7 @@ Tabs.upgrader = {
 
                                                     $("#trMaxDiv").html(m);
                                                     if ($("#trAction").val() == "enhance") {
-                                                        $("#trMaxLevel").val(5);
+                                                        $("#trMaxLevel").val(6);
                                                     } else if ($("#trAction").val() == "upgrade") {
                                                         $("#trMaxLevel").val(maxTrLevel);
                                                     }
@@ -5498,7 +5517,7 @@ Tabs.upgrader = {
 
                                                         if (q.action =="enhance") {
                                                             m += '<div style="text-align: center;"><select id="trChangeLevel' + ii +'" style="width:90px; text-align: center;">';
-                                                            for (i =1; i <=5; i++) {
+                                                            for (i =1; i <=6; i++) {
                                                                 m  += '<option value="' + i + '" '+ (q.level==i ? 'selected' : '' ) +'>' + t.qualities[i] + '</option>';
                                                             }
                                                             m += '</select></div>';
@@ -5850,11 +5869,11 @@ Tabs.estats = {
             m += '<TR valign=top align=center><TH colspan=6>Enhancing Numbers  (successes/failures)</TH></TR>';
 
             var qstrings = new Array(uW.g_js_strings.throneRoom.simple,  uW.g_js_strings.throneRoom.common, uW.g_js_strings.throneRoom.uncommon,
-                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous);
+                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous,   uW.g_js_strings.throneRoom.miraculous);
 
 
             m += '<TR valign=top align=center><th></th>';
-            for( q =1; q <=5; q++)
+            for( q =1; q <=6; q++)
             {
                 m += "<td style='font-weight: bold;' class='td" + (q%2+1) +"'  >";
                 m += qstrings[q];
@@ -5888,7 +5907,7 @@ Tabs.estats = {
             }
 
             m += '<TR valign=top align=center><th> Totals: </th>';
-            for( q =0; q <5; q++)
+            for( q =0; q <6; q++)
             {
                 m += "<td style='font-weight: bold;' class='td" + (q%2) +"'  >";
                 m += st[q] + " / " + ft[q];
@@ -5897,7 +5916,7 @@ Tabs.estats = {
             m += '</TR>';
 
             m += '<TR valign=top align=center><th> Percents: </th>';
-            for( q =0; q <5; q++)
+            for( q =0; q <6; q++)
             {
                 m += "<td style='font-weight: bold;' class='td" + (q%2) +"'  >";
                 if ( (st[q] + ft[q]) == 0 )
@@ -5953,7 +5972,7 @@ Tabs.ustats = {
             m += '<TR valign=top align=center><TH colspan=14>Upgrading Numbers  (successes/failures)</TH></TR>';
 
             var qstrings = new Array(uW.g_js_strings.throneRoom.simple,  uW.g_js_strings.throneRoom.common, uW.g_js_strings.throneRoom.uncommon,
-                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous);
+                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous,   uW.g_js_strings.throneRoom.miraculous);
 
 
             m += '<TR valign=top align=center><th></th>';
