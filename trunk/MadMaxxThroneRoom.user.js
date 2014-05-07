@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20140501a
+// @version        20140503b
 // @namespace      mmm
 // @homepage       http://userscripts.org/scripts/show/411452
 // @delay 2000
@@ -32,7 +32,7 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140501a_Goat';
+var Version = '20140503b_Goat';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
@@ -1462,26 +1462,23 @@ function installHandlerFunctions() {
             .html("Post Stats to Chat")
             .css('color', 'white')
             .bind("click", function () {
-                var cText = $("div#trCardItem" + j.id).find("div.trCard").text();
-                cText = cText.replace("[" + j.id + "]","");
-                if (cText) {
-                    cText = cText.replace("Type", "||Type").replace("Quality", "||Quality").replace("Level", "||Level")
-                    cText = cText.replace("Might", "||Might").replace(/    /g, "||").replace(/\|\|\|\|/g, "||").replace(/\|\|\s*$/, "");
-                    cText = ":::. |" + cText;
-                    var table = cText.split("||");
-                    if (table.length <= 11) {
-                        for (row = 1; row <= 5; row++) {
-                            table[table.length - 6 + row] = "Row " + row + ": " + table[table.length - 6 + row];
-                        }
-                    } else {
-                        for (row = 1; row <= 6; row++) {
-                            table[table.length - 7 + row] = "Row " + row + ": " + table[table.length - 7 + row];
-                        }
-                    }
-                    cText = table.join("||");
-
-                    sendChat(cText);
-                }
+                var y = unsafeWindow.kocThroneItems[j.id];
+				var m = ':::.|' + y.name;
+				for (var O in y["effects"]) {
+					var i = +(O.split("slot")[1]);
+					id = y["effects"]["slot" + i]["id"];
+					tier = parseInt(y["effects"]["slot" + i]["tier"]);
+					level = y["level"];
+					p = unsafeWindow.cm.thronestats.tiers[id][tier];
+					while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
+					if (!p) continue; // can't find stats for tier
+					if (y["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
+						level = unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
+					}
+					Current = p.base + ((level * level + level) * p.growth * 0.5);
+					m += '||' + Current + "% " + unsafeWindow.cm.thronestats["effects"][id]["1"];
+				};
+				sendChat("/a " + m);
                 $("#contextMenu").remove();
             });
 
@@ -4176,7 +4173,9 @@ Tabs.options = {
             m += '</select> </div></td></tr>';
 
             m += '<TR><TD><div style="white-space: pre;" ><INPUT id=trSalUpgradeManual type=checkbox '+ (salvageData.upgradeManual?' CHECKED':'') +'/> Upgrade items to +1 on manual delete.</td></tr>';
-
+			m += '<tr><td>Load salvage rules from file(Turns off Salvage until manual refresh and turn on):<input type="file" id="salvageFile" name="files[]" /></td></tr>';
+			m += '<tr><td>Save salvage rules to file:<input id=trSaveRulesFile type=button value="Save" /></td></tr>';
+						
             m += '<TR><td><div  class=trStat>Upgrade Options</div></td></TR>';
             m += '<tr><td width=25%>Retry interval (seconds): <INPUT id=trUpRefresh type=text size=3 maxlength=3 value="' +upgradeData.retryInterval+ '"/></td></tr>';
             m += '  <tr><td colspan=2><div style="white-space: pre;"><INPUT id=trAnyCity type=checkbox '+ (upgradeData.anyCity?' CHECKED':'') +'/> When primary city is low, use aetherstones from any city.  ';
@@ -4216,6 +4215,30 @@ Tabs.options = {
                 }
             });
 
+			var control = document.getElementById("salvageFile");
+			control.addEventListener("change", function(event) {
+				// When the control has changed, there are new files
+				var files = control.files;
+				var file = files[0];
+				var reader = new FileReader();
+				reader.onload = function(event) {
+					var contents = event.target.result;
+					salvageData.ruleSet = JSON.parse(contents);
+					salvageData.salvageActive = false;
+					clearInterval(Tabs.throneSalvage.sTimer);
+					clearInterval(Tabs.throneSalvage.delTimer);
+					Tabs.throneSalvage.deleting = false;
+					saveSalvageData();
+					alert('Salvage settings loaded from file');
+					Tabs.throneSalvage.init(Tabs.throneSalvage.myDiv);
+				};
+				reader.readAsText(file);
+			}, false);
+			
+			$("#trSaveRulesFile").click ( function () {
+				window.location ="data:application/octet-stream," + encodeURI(JSON.stringify(salvageData.ruleSet));
+			});
+			
             $("#optionScroll").css('height', upgradeData.optionH).css('width', upgradeData.optionW);
 
             $('#trDisableAnim').change( function (){
@@ -4296,7 +4319,7 @@ Tabs.options = {
             $('#trResetWidgets').click(
                     function() { resetGuardWidget();  resetPresetWidget(); }
             );
-
+			
 			$('#trSalMinCity').change( function(){
                 salvageData.minCity = document.getElementById('trSalMinCity').checked;
                 saveSalvageData();
@@ -4353,7 +4376,7 @@ Tabs.options = {
 			$("#trMinMethod").val(salvageData.minMethod);
             $("#trMinMethod").change( function() { salvageData.minMethod = $("#trMinMethod").val(); saveSalvageData();});
 
-
+			
             // read the preset names and descriptions
             $("input.trNameEntry").change(function ()  {
                 var id= $(this).attr('id');
@@ -4392,8 +4415,7 @@ Tabs.options = {
 
             disableAnimation(upgradeData.disableAnim);
         },
-
-
+		
         show : function () {
 
         },
@@ -4460,7 +4482,7 @@ Tabs.tags = {
         myDiv : null,
 
 		init : function (div){
-            var t = Tabs.tags
+            var t = Tabs.tags;
             t.myDiv = div;
 			
 			var m = '<Div id=optionScroll style=" position: static; width: 700px; height: 500px; overflow-x: auto; overflow-y: auto;">';
@@ -4494,7 +4516,8 @@ Tabs.tags = {
 			m += '<option value="yellowgreen">Yellow-Green</option>';
 			
 			m += '</select></td></tr>';
-			m += '<tr><td><INPUT id=chkTagShow type=checkbox '+ (tagData.showUtag?'CHECKED ':'') +'/> Show Universal Tags </td></tr></table>';
+			m += '<tr><td><INPUT id=chkTagShow type=checkbox '+ (tagData.showUtag?'CHECKED ':'') +'/> Show Universal Tags </td></tr>';
+			m += '<tr><td><INPUT id=addUnusedTag type=button value=" Add Tag to Unused Items "/></td><td></table>';
 			m += '<br/><hr/><br/>';
 			m += '<TABLE width=100% class="trTable">';
 				
@@ -4527,6 +4550,7 @@ Tabs.tags = {
 			$("#clearColorTags").click(function() {t.clearColorTags();});
 			$("#clearUTags").click(function() {t.presetTagRemove(0);});
 			$("#clearAllTags").click(function() {t.clearAllTags();});
+			$("#addUnusedTag").click(function() {t.addUnusedTag();});
 			
 			$(".setPresetTag").click( function () {
                 var id= $(this).attr('id');
@@ -4575,7 +4599,7 @@ Tabs.tags = {
 		
 		//add preset tags
 		presetTagAdd : function(presetId) {
-			var t = Tabs.tags
+			var t = Tabs.tags;
 			var id = parseInt(presetId);
 			var equipedItems = Seed.throne.slotEquip[id];
             if (equipedItems != null) {
@@ -4598,7 +4622,7 @@ Tabs.tags = {
 		
 		//clear tags applied to preset
 		presetTagRemove : function(presetId) {
-			var t = Tabs.tags
+			var t = Tabs.tags;
 			var id = parseInt(presetId);
 			
 			for (var x=0; x < tagData.itemColorList.length; x++) {
@@ -4615,7 +4639,7 @@ Tabs.tags = {
 		
 		// clear tags for currently select color
 		clearColorTags : function () {
-			var t = Tabs.tags
+			var t = Tabs.tags;
 			for (var x=0; x < tagData.itemColorList.length; x++) {
 				var itemColor = tagData.itemColorList[x];
 					
@@ -4640,6 +4664,30 @@ Tabs.tags = {
 			}
 			
 			saveTagData();
+		},
+		
+		//cycle through throne items and tag if not used in any preset
+		addUnusedTag : function() {
+			var t = Tabs.tags;
+			for (k in unsafeWindow.kocThroneItems) {
+				var throne_item = unsafeWindow.kocThroneItems[k];
+				var isUsed = false;
+				for (k= 1; k <= Seed.throne.slotNum; k++) {
+					var equipedItems = Seed.throne.slotEquip[k];
+					if (equipedItems != null) {
+						for (i =0; i < equipedItems.length; i++) {
+							if (equipedItems[i] == throne_item.id) {
+								isUsed = true;
+								break;
+							}
+						}
+					}
+				}
+	
+				if (isUsed==false) {
+					t.addTagItem(throne_item.id, 0);
+				}
+			}
 		},
 		
 		show : function (){
@@ -6692,6 +6740,13 @@ var CalterFuncModifier = function (funcName, findReplace) {
 
 };
 
+if (typeof module !== "undefined" && module !== null) {
+  module.exports = saveAs;
+} else if ((typeof define !== "undefined" && define !== null) && (define.amd != null)) {
+  define([], function() {
+    return saveAs;
+  });
+}
 
 //only run in the main iframe
 if (document.location.toString().match('src/main_src.php') ) trStartup ();
