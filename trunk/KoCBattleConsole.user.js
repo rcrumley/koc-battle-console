@@ -1,12 +1,8 @@
 // ==UserScript==
 // @name			KoC Battle Console
-// @version			20140502a
 // @namespace		kbc
-// @homepage		https://userscripts.org/scripts/show/170798
-// @updateURL		https://userscripts.org/scripts/source/170798.meta.js
-// @downloadURL		https://userscripts.org/scripts/source/170798.user.js
-// @icon			https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/chrome_quest_over.png
 // @description		Console for controlling battles in Kingdoms of Camelot
+// @icon			https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/chrome_quest_over.png
 // @include			*.kingdomsofcamelot.com/*main_src.php*
 // @grant			GM_getValue
 // @grant			GM_setValue
@@ -17,18 +13,19 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @releasenotes 	<p>IMPORTANT! Fix for Jewel Stats!</p><p>Performance improvements</p><p>All monitor links now use UID internally (not user name)</p>
+// @version			20140513a
+// @releasenotes 	<p>Choice of update URLs (Usersripts, Googlecode or Greasyfork)</p><p>Alternate sort order in Monitor (Range,Attack,Defence,Life,Speed,Accuracy,Load)</p><p>Link to profile from monitor window</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
-//	¦	This script can be found at http://userscripts.org/scripts/show/170798								¦
+//	¦	This script can be found at http://code.google.com/p/koc-battle-console/							¦
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	May 2014 Barbarossa69 (http://userscripts.org/users/272942)											¦
+//	¦	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140502a'; 
+var Version = '20140513a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -111,6 +108,9 @@ var Options = {
 	TRPresets           : {},
 	OverrideDashboard   : {},
 	MonitorFontSize		: 11,
+	UpdateLocation      : 0, // 0 - Userscripts, 1 - Googlecode, 2 - Greasyfork
+	USPort              : 8080,
+	AlternateSortOrder  : false,
 };
 
 var JSON2 = JSON; 
@@ -180,8 +180,8 @@ var FFVersion = getFirefoxVersion();
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
 var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102];
-var DefenceEffects = [2,18,25,30,35,40,45,51,104];
-var LifeEffects = [3,19,26,31,36,41,46,52];
+var DefenceEffects = [2,18,25,30,35,40,45,51];
+var LifeEffects = [3,19,26,31,36,41,46,52,104];
 var RangeEffects = [5,21,37,42,58,63];
 var SpeedEffects = [4,20,27,32,47,53,57,62];
 var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
@@ -189,6 +189,8 @@ var OtherCombatEffects = [8,9,13,14,15,16,73];
 var OtherPVPEffects = [6,22,48,54,59,64];
 
 var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
+
+var AlternateSortOrder = [5,37,58,21,42,63,1,24,34,44,56,102,17,29,39,50,61,2,25,35,45,18,30,40,51,3,26,36,46,104,19,31,41,52,4,27,47,57,20,32,53,62,7,28,38,49,60,23,33,43,55,65,6,48,59,22,54,64];
 
 var guardTypes = ["wood", "ore", "food", "stone"];
 var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
@@ -295,6 +297,12 @@ for (var ui in uW.cm.UNIT_TYPES){
 	}
 }	
 
+for (k in uW.cm.thronestats.effects) {
+	if (AlternateSortOrder.indexOf(parseInt(k)) == -1) {
+		AlternateSortOrder.push(parseInt(k));
+	}
+}
+
 var CurrLog = [];
 var LogUser = "";
 var	LogTR = [];
@@ -312,6 +320,9 @@ var ExpandChampion = false;
 var ExpandDefPreset = false;
 var citychamp;
 var marchchamp;
+
+var GoogleCodeURL = 'koc-battle-console.googlecode.com/svn/trunk/KoCBattleConsole.user.js'
+var GreasyForkURL = 'greasyfork.org/scripts/890-koc-battle-console/code/KoC Battle Console.user.js'
 
 var presetTimer = null;
 var presetFailures = 0;
@@ -633,6 +644,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=EnableOutgoingChk type=checkbox /></td><td class=xtab>Enable outgoing march monitoring functionality&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><td class=xtab><input id=btUS type=radio name=btuploc '+((Options.UpdateLocation==0)?'CHECKED':'')+'>Userscripts&nbsp;<INPUT class="btInput" style="width:30px;" id="btUSPort" type=text maxlength=6 value="'+Options.USPort+'">&nbsp;&nbsp;<input id=btGC type=radio name=btuploc '+((Options.UpdateLocation==1)?'CHECKED':'')+'>Googlecode&nbsp;&nbsp;<input id=btGF type=radio name=btuploc '+((Options.UpdateLocation==2)?'CHECKED':'')+'>Greasyfork</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><a id=btResetWindows class="inlineButton btButton brown11"><span>Reset ALL window positions!</span></a></td></tr>';
 	m += '</table></div>';
 	m += '<div class="divHeader" align="right"><a id=btMonOptionLink class=divLink >MONITOR OPTIONS&nbsp;<img id=btMonOptionArrow height="10" src="'+RightArrow+'"></a></div>';
@@ -642,6 +654,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont class=btInput') + '</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlternateSortOrderChk type=checkbox /></td><td class=xtab>Alternate sort order</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonPresetChk type=checkbox /></td><td class=xtab>Show throne room preset changer</td><td width="120" class=xtab>&nbsp;</td></tr>';
 	m += '<TR id=btMonPresetByNameOpts class="divHide"><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRMonPresetByNameChk type=checkbox /></td><td colspan="3" class=xtab>Select presets by name</td></tr>';
 	m += '</table></div>';
@@ -745,6 +758,7 @@ function btStartup (){
 	ToggleOption ('SoundChk', 'MonitorSound', SoundToggle);
 	ToggleOption ('MonitorColoursChk', 'MonitorColours');
 	ToggleOption ('PVPOnlyChk', 'PVPOnly');
+	ToggleOption ('AlternateSortOrderChk', 'AlternateSortOrder');
 	ToggleOption ('MonPresetChk', 'MonPresetChange', MonPresetToggle);
 	MonPresetToggle ();
 	ToggleOption ('CompareChampChk', 'ChampionCompare');
@@ -772,6 +786,21 @@ function btStartup (){
 
 	ToggleOption ('TRPresetByNameChk', 'TRPresetByName');
 	ToggleOption ('TRMonPresetByNameChk', 'TRMonPresetByName', PaintTRPresets);
+
+    document.getElementById('btUSPort').addEventListener('keyup', function () {
+		if (isNaN(document.getElementById('btUSPort').value)) { document.getElementById('btUSPort').value = 8080; }
+		Options.USPort = document.getElementById('btUSPort').value;
+		saveOptions();
+	}, false);
+    document.getElementById('btUS').addEventListener('change', function () {
+		if (document.getElementById('btUS').checked) { Options.UpdateLocation = 0; saveOptions(); }
+	}, false);
+    document.getElementById('btGC').addEventListener('change', function () {
+		if (document.getElementById('btGC').checked) { Options.UpdateLocation = 1; saveOptions(); }
+	}, false);
+    document.getElementById('btGF').addEventListener('change', function () {
+		if (document.getElementById('btGF').checked) { Options.UpdateLocation = 2; saveOptions(); }
+	}, false);
 	
     document.getElementById('btSacrificeLimit').addEventListener('keyup', function () {
 		if (isNaN(document.getElementById('btSacrificeLimit').value)) { document.getElementById('btSacrificeLimit').value = 0; }
@@ -2786,11 +2815,15 @@ function logit (msg){
 var AutoUpdater = {
     id: 170798,
 	name: 'KoC Battle Console',
+	homepage: 'http://code.google.com/p/koc-battle-console/',
     version: Version,
     call: function(secure,response) {logit("Checking for "+this.name+" Update!");
+		var CheckURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + this.id + '.meta.js';
+		if (Options.UpdateLocation == 1) {CheckURL = GoogleCodeURL;}
+		if (Options.UpdateLocation == 2) {CheckURL = GreasyForkURL;}
         GM_xmlhttpRequest({
             method: 'GET',
-        url: 'http'+(secure ? 's' : '')+'://userscripts.org/scripts/source/'+this.id+'.meta.js',
+        url: 'http'+(secure ? 's' : '')+'://'+CheckURL,
         onload: function(xpr) {AutoUpdater.compare(xpr,response);},
             onerror: function(xpr) {if (secure) AutoUpdater.call(false,response);}
         });
@@ -2813,8 +2846,7 @@ var AutoUpdater = {
         else {
 			if (response) {
 				uW.jQuery("#btMain_outer").hide();
-				href = 'http://userscripts.org/scripts/show/'+this.id;
-				unsafeWindow.Modal.showAlert('<div align="center">Unable to check for updates.<br>Please go to the <a href="'+href+'" target="_blank">script homepage</a></div>');
+				unsafeWindow.Modal.showAlert('<div align="center">Unable to check for updates.<br>Please go to the <a href="'+this.homepage+'" target="_blank">script homepage</a></div>');
 			}
 			logit("Unable to check for updates :(");
 			return;
@@ -2852,7 +2884,10 @@ function doBOTUpdate(){
 	unsafeWindow.cm.ModalManager.close();
 	var now = unixTime();
    	GM_setValue('updated_'+AutoUpdater.id, now);
-	location.href = 'http://userscripts.org/scripts/source/'+AutoUpdater.id+'.user.js';
+	var DownloadURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + AutoUpdater.id + '.user.js';
+	if (Options.UpdateLocation == 1) {CheckURL = GoogleCodeURL;}
+	if (Options.UpdateLocation == 2) {CheckURL = GreasyForkURL;}
+	location.href = 'https://'+DOwnloadURL;
 }
 
 function ShowUpdate(body){
@@ -2868,7 +2903,7 @@ function ShowUpdate(body){
 	    "class": "Warning",
 		curtain: false,
         width: 500,
-		height: 600,
+		height: 650,
 		left: 140,
 		top: 140
 	});
@@ -6023,7 +6058,7 @@ function eventPaintPlayerInfo (){
 	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin) +'</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
-  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile>(View Profile)</a></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
@@ -6033,6 +6068,7 @@ function eventPaintPlayerInfo (){
   	m += '<tr><TD class=xtab align="center" colspan="3">&nbsp;</td></tr></table>';
 
 	if (CheckForHTMLChange('btUserDiv',m)) {
+		document.getElementById('btProfile').addEventListener ('click', function(){showProfile()}, false);
 		PaintTRPresets(); 
 		ResetFrameSize('btMonitor',MonHeight,MonWidth);
 	}	
@@ -6077,7 +6113,12 @@ function eventPaintTRStats () {
 	
   	m = '<TABLE>';
 
-	for (k in HisStatEffects) {
+	var SortOrder = [];
+	if (Options.AlternateSortOrder) { for (z in AlternateSortOrder) SortOrder.push(AlternateSortOrder[z]); }
+	else { for (z in HisStatEffects) SortOrder.push(z);	}
+
+	for (z in SortOrder) {
+		var k = SortOrder[z];
 		var HisContent = "";
 		var LineStyle = '';
 		var EndStyle = '';
@@ -6338,6 +6379,10 @@ function MonitorTRLoop () {
 			TRStats(eventPaintTRStats);
 		}	
 	}
+}
+
+function showProfile () {
+	unsafeWindow.getInfoForAnUser(userInfo.userId);
 }
 
 function showTR () {
