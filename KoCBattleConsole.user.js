@@ -13,7 +13,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140513a
+// @version			20140513b
 // @releasenotes 	<p>Choice of update URLs (Usersripts, Googlecode or Greasyfork)</p><p>Alternate sort order in Monitor (Range,Attack,Defence,Life,Speed,Accuracy,Load)</p><p>Link to profile from monitor window</p>
 // ==/UserScript==
 
@@ -25,7 +25,7 @@
 //	¦	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140513a'; 
+var Version = '20140513b'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -2887,7 +2887,7 @@ function doBOTUpdate(){
 	var DownloadURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + AutoUpdater.id + '.user.js';
 	if (Options.UpdateLocation == 1) {CheckURL = GoogleCodeURL;}
 	if (Options.UpdateLocation == 2) {CheckURL = GreasyForkURL;}
-	location.href = 'https://'+DOwnloadURL;
+	location.href = 'https://'+DownloadURL;
 }
 
 function ShowUpdate(body){
