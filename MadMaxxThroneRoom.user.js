@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20140503b
+// @version        20140519a
 // @namespace      mmm
-// @homepage       http://userscripts.org/scripts/show/411452
+// @homepage       http://userscripts.org:8080/scripts/show/411452
 // @delay 2000
 // @priority -10
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
-// @updateURL      https://userscripts.org/scripts/source/411452.meta.js
-// @downloadURL    https://userscripts.org/scripts/source/411452.user.js
+// @updateURL      https://userscripts.org:8080/scripts/source/411452.meta.js
+// @downloadURL    https://userscripts.org:8080/scripts/source/411452.user.js
 // @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
@@ -24,15 +24,12 @@
 // @grant       GM_getResourceURL
 // @description    Organizes, upgrades and salvages KOC throne room items
 // @contributionURL https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZPJBNYUNXLLT4
-// @contributionAmount $3.00
-// @screenshot http://s3.amazonaws.com/uso_ss/icon/132329/large.png?1346825647 http://s3.amazonaws.com/uso_ss/icon/132329/thumb.png?1346825647
-// @screenshot http://s3.amazonaws.com/uso_ss/18392/large.png?1346825591 http://s3.amazonaws.com/uso_ss/18392/thumb.png?1346825591
 // ==/UserScript==
 
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140503b_Goat';
+var Version = '20140519a_Goat';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
@@ -255,36 +252,6 @@ var presetData = {
 
 var TABLE_SCALE =0.47;
 
-var upgradeStats = {
-        upgradeSuccess: {0: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-            1: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-            2: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-            3: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-            4: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-            5: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}    },
-
-            upgradeFailure: {0: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                1: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                2: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                3: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                4: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                5: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}    },
-
-                enhanceSuccess: {0: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                    1: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                    2: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                    3: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                    4: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                    5: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}    },
-
-                    enhanceFailure: {0: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                        1: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                        2: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                        3: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                        4: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0},
-                        5: {0: 0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}    }
-};
-
 var salvageData = {
         salvageActive : false,
         throneSaveNum : 40,
@@ -343,7 +310,6 @@ function trStartup (){
     if (upgradeData.uCityNum && upgradeData.uCityNum > Seed.cities.length -1 ) upgradeData.uCityNum = 0; 
     if (upgradeData.sCityNum && upgradeData.sCityNum > Seed.cities.length -1 ) upgradeData.sCityNum = 0;
 
-    readUpgradeStats();
     readSalvageData();
     readQueueData();
     readPresetData();
@@ -623,21 +589,19 @@ function trStartup (){
             <li><a href="#tabs-upgrade">Upgrade</a></li>\
             <li><a href="#tabs-salvage">Salvage</a></li>\
             <li><a href="#tabs-organize">Organize</a></li>\
-            <li><a href="#tabs-estats">Enhance Stats</a></li>\
-            <li><a href="#tabs-ustats">Upgrade Stats</a></li>\
             <li><a href="#tabs-options">Options</a></li>\
 			<li><a href="#tabs-caps">Caps</a></li>\
 			<li><a href="#tabs-tags">Tags</a></li>\
+			<li><a href="#tabs-jewels">Jewels</a></li>\
             <li><a href="#tabs-log">Log</a></li>\
             </ul>\
             <div id="tabs-upgrade">  Options tab    </div>\
             <div id="tabs-salvage">  Salvage tab    </div>\
             <div id="tabs-organize">  Organize tab    </div>\
-            <div id="tabs-estats">  EStats tab    </div>\
-            <div id="tabs-ustats">  UStats tab    </div>\
             <div id="tabs-options">  Options tab    </div>\
 			<div id="tabs-caps">  Caps tab    </div>\
 			<div id="tabs-tags">  Tags tab    </div>\
+			<div id="tabs-jewels">  Jewels tab    </div>\
             <div id="tabs-log">  Log tab    </div>\
     </div>');
 
@@ -673,10 +637,9 @@ function trStartup (){
     Tabs.upgrader.init($("#tabs-upgrade")[0]);
     Tabs.throneSalvage.init($("#tabs-salvage")[0]);
     Tabs.organizer.init($("#tabs-organize")[0]);
-    Tabs.ustats.init($("#tabs-ustats")[0]);
-    Tabs.estats.init($("#tabs-estats")[0]);
 	Tabs.caps.init($("#tabs-caps")[0]);
 	Tabs.tags.init($("#tabs-tags")[0]);
+	Tabs.jewels.init($("#tabs-jewels")[0]);
 
     $( "#tr_main" ).tabs( "refresh" ); 
 
@@ -1234,6 +1197,12 @@ function installHandlerFunctions() {
 			}		
 		}
 		
+		for (ii in unsafeWindow.kocThroneItems) { 
+			if (unsafeWindow.kocThroneItems[ii].jewel && unsafeWindow.kocThroneItems[ii].jewel.valid) { 
+				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/gemming/ico_filledJewelSlot.png'>"); 
+				} 
+			} 
+		
         $('div[id^="throneInventoryItem"]').bind("contextmenu",function(e){
             e.preventDefault();
             var theId = $(this).attr("id").split("throneInventoryItem")[1];
@@ -1308,6 +1277,12 @@ function installHandlerFunctions() {
 				}
 			}		
 		}
+		
+		for (ii in unsafeWindow.kocThroneItems) { 
+			if (unsafeWindow.kocThroneItems[ii].jewel && unsafeWindow.kocThroneItems[ii].jewel.valid) { 
+				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/gemming/ico_filledJewelSlot.png'>"); 
+			} 
+		} 
 		
         $("ul#throneInventoryList").css('height', '520px');
         $("div#throneInventoryContainer").css('height', '520px');
@@ -2036,11 +2011,6 @@ function saveSalvageData (){
     setTimeout (function (){GM_setValue ('SalvageDataMM2_'+serverID, JSON2.stringify(salvageData));}, 0);
 }
 
-function saveUpgradeStats (){
-    var serverID = getServerId();
-    setTimeout (function (){GM_setValue ('UpgradeStats_'+serverID, JSON2.stringify(upgradeStats));}, 0);
-}
-
 function savePresetPosition (){
     var serverID = getServerId();
     setTimeout (function (){ GM_setValue ('PresetPosition_'+serverID, JSON2.stringify(presetPosition));}, 0);
@@ -2155,21 +2125,6 @@ function readSalvageData (){
             rule.conditions[j].checkCondition = checkCondition;
         }
         salvageData.ruleSet[k] = rule;
-    }
-}
-
-function readUpgradeStats (){
-    var serverID = getServerId();
-    s = GM_getValue ('UpgradeStats_'+serverID);
-    if (s != null){
-        opts = JSON2.parse (s);
-        for (k in opts){
-            if (matTypeof(opts[k]) == 'object')
-                for (kk in opts[k])
-                    upgradeStats[k][kk] = opts[k][kk];
-            else
-                upgradeStats[k] = opts[k];
-        }
     }
 }
 
@@ -3201,7 +3156,7 @@ Tabs.organizer = {
             t.myDiv = div;
 
             // setup the tab
-            var m = '<Div><DIV id=trOrganizer class=trStat>ORGANIZER</div>';
+            var m = '<Div width: 750px><DIV id=trOrganizer class=trStat>ORGANIZER</div>';
             var effects = [];
             for (e in CM.thronestats.effects)
             {
@@ -4036,7 +3991,7 @@ Tabs.trActionLog = {
         init : function (div){
             var t = Tabs.trActionLog;
             t.myDiv = div;
-            t.myDiv.innerHTML = '<div id=logScroll style=" position: static; width: 710px; height: 500px; overflow-x: hidden; overflow-y: auto;" >\
+            t.myDiv.innerHTML = '<div id=logScroll style=" position: static; width: 750px; height: 500px; overflow-x: hidden; overflow-y: auto;" >\
                 <DIV class=trStat>UPGRADE LOG - VERSION: '+ Version+'</div>\
                 <DIV style="height:535px; max-height:535px;">\
                 <TABLE cellpadding=0 cellspacing=0 id=trsuccesslog class=trTabLined width=100%><TR><TD width=20%></td><TD width=80%></td></tr></table>\
@@ -4144,7 +4099,7 @@ Tabs.options = {
             t.myDiv = div;
 
             // header stuff
-            var m = '<Div id=optionScroll style=" position: static; width: 700px; height: 500px; overflow-x: hidden; overflow-y: auto;">';
+            var m = '<Div id=optionScroll style=" position: static; width: 750px; height: 500px; overflow-x: hidden; overflow-y: auto;">';
             m += '<DIV id=trOptions class=trStat>OPTIONS</div><TABLE id=trOptionTbl width=100% height=0% class=trTab>';
             m += '<TR><TD width=100%><INPUT id=trupdate type=checkbox '+ (TRGlobalOptions.trUpdate?'CHECKED ':'') +'/>Check for script updates on userscripts.org (all domains) &nbsp; &nbsp; <INPUT id=trupdatenow type=button value="Update Now" /></TD></TR>';
             m += '<TR><TD width=100%><INPUT id=trDisableAnim type=checkbox '+ (upgradeData.disableAnim?'CHECKED ':'') +'/> Disable failure animation (Big red X) </TD></TR>';
@@ -4187,7 +4142,7 @@ Tabs.options = {
             m += '<tr><td colspan=2><INPUT id=trMultiUp type=checkbox '+ (upgradeData.multiUpgrade?'CHECKED ':'') +'/> Add button for combined upgrade/enhancement</td></tr> ';
             m += '<tr><td colspan=2><INPUT id=trNoMassS type=checkbox '+ (upgradeData.noMassSalvage?'CHECKED ':'') +'/> Remove button for Mass Salvage</td></tr> ';
             m += '<tr><td colspan=2><INPUT id=trSalvageSafety type=checkbox '+ (upgradeData.salvageSafety?'CHECKED ':'') +'/> Remove Salvage button for the first <INPUT id=trSafetyNum type=text size=3 maxlength=3 value="' +upgradeData.numSafety+ '"/> items</td></tr> ';
-
+			
             m += '<TR><td><div  class=trStat>Organizer Options</div></td></TR>';
             m += '<TR><td><div style="text-align:center;"> Local Preset Names/Descriptions</div></td></TR>';
 
@@ -4485,7 +4440,7 @@ Tabs.tags = {
             var t = Tabs.tags;
             t.myDiv = div;
 			
-			var m = '<Div id=optionScroll style=" position: static; width: 700px; height: 500px; overflow-x: auto; overflow-y: auto;">';
+			var m = '<Div id=optionScroll style=" position: static; width: 750px; height: 500px; overflow-x: auto; overflow-y: auto;">';
 			//header
 			m += '<DIV id=trTags class=trStat width=100%>Tags Management</div>';
 			
@@ -4726,7 +4681,8 @@ Tabs.upgrader = {
                                                     1: {maxLev: 2, nextQual: 2 },
                                                     2: {maxLev: 3, nextQual: 4 },
                                                     3: {maxLev: 3, nextQual: 4 },
-                                                    4: {maxLev: 4, nextQual: 5 }
+                                                    4: {maxLev: 4, nextQual: 5 },
+													5: {maxLev: 4, nextQual: 6 },
                                                 },
 
                                                 repaint : function() {
@@ -4924,7 +4880,7 @@ Tabs.upgrader = {
 
                                                     var qual = +throne_item.quality;
                                                     var lev  = +throne_item.level;
-
+													
                                                     if (qual >= 6) {
                                                         logit("Item already at Miraculous");
                                                         return;
@@ -4933,10 +4889,14 @@ Tabs.upgrader = {
                                                     var maxLev = null;
                                                     var nextQual = null;
                                                     var qItem = null;
+													
+													window.alert(qual);
 
                                                     while (qual < 6) {
+														window.alert("YIPPIE!");
                                                         maxLev = t.upgradePath[qual].maxLev;
                                                         nextQual = t.upgradePath[qual].nextQual;
+														window.alert(maxLev);
 
                                                         if (lev < maxLev) {
                                                             qItem = new QueueItem();
@@ -5178,11 +5138,9 @@ Tabs.upgrader = {
                                                                         if (rslt.success)
                                                                         {
                                                                             //logit("successful enhancement");
-                                                                            upgradeStats.enhanceSuccess[y.quality][y.level]++;
                                                                             y.level = rslt.item.level;
                                                                             y.quality = rslt.item.quality
                                                                             y.status = rslt.item.status;
-                                                                            saveUpgradeStats();
                                                                             y.name = y.createName();
                                                                             Tabs.upgrader.repaint();
                                                                             t.setResult("Enhance successful.  "  + addCommas(rslt.aetherstones) + " aetherstones used.");
@@ -5225,11 +5183,9 @@ Tabs.upgrader = {
                                                                         {
                                                                             //logit("enhance failed");
                                                                             trActionLog('Enhance failed Throne room item '+unsafeWindow.kocThroneItems[eItem].name);
-                                                                            upgradeStats.enhanceFailure[y.quality][y.level]++;
                                                                             y.level = rslt.item.level;
                                                                             y.quality = rslt.item.quality;
                                                                             y.status = rslt.item.status;
-                                                                            saveUpgradeStats();
                                                                             if (rslt["break"]) 
                                                                             {
                                                                                 y.isBroken = true;
@@ -5377,8 +5333,6 @@ Tabs.upgrader = {
 
                                                                         if (bypass !=true)
                                                                         {
-                                                                            upgradeStats.upgradeSuccess[y.quality][y.level]++;
-                                                                            saveUpgradeStats();
                                                                             Tabs.upgrader.repaint();
 
                                                                             t.setResult("Upgrade successful.  "  + addCommas(rslt.aetherstones) + " aetherstones used.");
@@ -5429,8 +5383,6 @@ Tabs.upgrader = {
                                                                         y.name = y.createName();
                                                                         if (bypass !=true)
                                                                         {
-                                                                            upgradeStats.upgradeFailure[y.quality][y.level]++;
-                                                                            saveUpgradeStats();
                                                                             t.setResult("Upgrade failed.  "  + addCommas(rslt.aetherstones) + " aetherstones used");
 
                                                                             //t.setStatus("Starting repair ... ");
@@ -5893,202 +5845,42 @@ Tabs.upgrader = {
                                                 }
 };
 
-
-/** ***************** Throne Enhancing Stats ********************* */
-
-Tabs.estats = {
-        tabOrder: 300,
-        tabLabel: 'Enhance Stats',
-        tabDisabled : false,
+/** ********************************* Jewels Tab ********************************** */
+Tabs.jewels = {
+        tabOrder: 1000,
+        tabLabel : 'Jewels',
         myDiv : null,
 
-        init : function (div){
-            var t = Tabs.estats;
+		init : function (div){
+            var t = Tabs.tags;
             t.myDiv = div;
-            t.buildDisplay();
+			
+			var m = '<Div id=optionScroll style=" position: static; width: 750px; height: 500px; overflow-x: auto; overflow-y: auto;">';
+			//header
+			m += '<DIV id=trTable class=trStat width=100%>Jewels Inventory</div>';
+			m += '<TABLE id=trJewelInventory width=100%">';
+			m += '<TR><TD width="300px"><B>Jewel</b></td><TD width="250px"><B>Effect</b></td><TD width="75px"><B>Boost</b></td><TD width="50px"><B>Count</b></td></tr><TR>';
+			
+			for (var k in unsafeWindow.kocJewelItems) {
+                var item = unsafeWindow.kocJewelItems[k];
+                var quality = unsafeWindow.cm.thronestats.jewelGrowthLimit[item.quality];
+                var amount = unsafeWindow.cm.ThroneController.getEffectAmount(item,quality);
+                if (amount == 0) break;
+                var name = unsafeWindow.cm.ThroneController.jewelName(item);
+                var stat = unsafeWindow.cm.ThroneController.getEffectName(item.id);
+                var count = unsafeWindow.cm.ThroneController.getJewelQuantity(item);
+                m += '<td>' + name + '</td><td>' + stat + '</td><td>' + amount +  '%</td><td>' + count + '</td></tr>';
+            }
+			
+			
+			t.myDiv.innerHTML = m;		
         },
 
-        buildDisplay :function()   {
-            var t = Tabs.estats;
-            var m = '<DIV class=trstat style="margin-top:5px; margin-bottom:5px;"><DIV id=trStatsMain class=trStat>ENHANCEMENT STATISTICS</div>';
-            m += '<DIV id= trStatsTabDiv align=left style="margin-top:10px; margin-bottom:10px; margin-left: 30px;">';
-            m += '<TABLE class=trStatTab align=center cellspacing=0>';
-
-            m += '<TR valign=top align=center><TH colspan=6>Enhancing Numbers  (successes/failures)</TH></TR>';
-
-            var qstrings = new Array(uW.g_js_strings.throneRoom.simple,  uW.g_js_strings.throneRoom.common, uW.g_js_strings.throneRoom.uncommon,
-                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous,   uW.g_js_strings.throneRoom.miraculous);
-
-
-            m += '<TR valign=top align=center><th></th>';
-            for( q =1; q <=6; q++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (q%2+1) +"'  >";
-                m += qstrings[q];
-                m += '</td>';
-            }
-
-            m += '</tr>';
-
-
-            var st = [0,0,0,0,0];
-            var ft = [0,0,0,0,0];
-
-            for (l=0; l<= maxTrLevel; l++)
-            {
-                m += '<TR valign=top align=center>';
-                m += "<th>";
-                if (l !=0) m += "+";
-                m+=  l + '</th>';
-                for( q =0; q <5; q++)
-                {
-                    if (upgradeStats.enhanceSuccess[q][l] == null) upgradeStats.enhanceSuccess[q][l] =0;
-                    if (upgradeStats.enhanceFailure[q][l] == null) upgradeStats.enhanceFailure[q][l] =0;
-                    st[q] += upgradeStats.enhanceSuccess[q][l];
-                    ft[q] += upgradeStats.enhanceFailure[q][l];
-
-                    m += "<td class='td" + (q%2) +"'  >";
-                    m += upgradeStats.enhanceSuccess[q][l] + " / " + upgradeStats.enhanceFailure[q][l];
-                    m += "</td>";
-                }
-                m += '</TR>';
-            }
-
-            m += '<TR valign=top align=center><th> Totals: </th>';
-            for( q =0; q <6; q++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (q%2) +"'  >";
-                m += st[q] + " / " + ft[q];
-                m += "</td>";
-            }
-            m += '</TR>';
-
-            m += '<TR valign=top align=center><th> Percents: </th>';
-            for( q =0; q <6; q++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (q%2) +"'  >";
-                if ( (st[q] + ft[q]) == 0 )
-                    m += "--";
-                else
-                {
-                    var p = (100* st[q] / (st[q] + ft[q]));
-                    m += p.toFixed(2) + "%";
-                }
-                m += "</td>";
-            }
-            m += '</TR>';
-
-            m += '</TABLE></DIV>';
-
-            m += "<div id='trStats'></div>";
-            m += '</div>';
-            t.myDiv.innerHTML = m;
-        },
-
-        show: function(){
-            var t = Tabs.estats;
-            t.buildDisplay();
-        },
-
-        hide: function(){
-        }
-}
-
-/** ***************** Throne Upgrade Stats ********************* */
-
-Tabs.ustats = {
-        tabOrder: 400,
-        tabLabel: 'Upgrade Stats',
-        tabDisabled : false,
-        myDiv : null,
-
-        init : function (div){
-            var t = Tabs.ustats;
-            t.myDiv = div;
-            t.buildTab();
-        },
-
-        buildTab : function ()
-        {
-            var t = Tabs.ustats;
-            var maxLevel = maxTrLevel;
-
-            var m = '<DIV class=trstat style="margin-top:5px; margin-bottom:5px;"><DIV id=trStatsMain2 class=trStat>UPGRADE STATISTICS</div>';
-            m += '<DIV id= trStatsTabDiv2 align=left style="margin-top:10px; margin-bottom:10px; margin-left: 30px;">';
-            m += '<TABLE class=trStatTab align=center cellspacing=0>';
-
-            m += '<TR valign=top align=center><TH colspan=14>Upgrading Numbers  (successes/failures)</TH></TR>';
-
-            var qstrings = new Array(uW.g_js_strings.throneRoom.simple,  uW.g_js_strings.throneRoom.common, uW.g_js_strings.throneRoom.uncommon,
-                    uW.g_js_strings.throneRoom.rare,    uW.g_js_strings.throneRoom.epic,   uW.g_js_strings.throneRoom.wondrous,   uW.g_js_strings.throneRoom.miraculous);
-
-
-            m += '<TR valign=top align=center><th></th>';
-
-            for (l= 0; l< maxLevel; l++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (l%2) +"'  >";
-                m+= "+" +(l+1) + "</td>";
-            }
-            m += '</TR>';
-            var st = [0,0,0,0,0,0,0,0,0,0,0,0];
-            var ft = [0,0,0,0,0,0,0,0,0,0,0,0];
-
-            for( q =0; q <=5; q++)
-            {
-                m += '<TR valign=top align=center><th>' + qstrings[q] + '</th>';
-                for (l=0; l< maxTrLevel; l++)
-                {
-                    if (upgradeStats.upgradeSuccess[q][l] == null || isNaN(upgradeStats.upgradeSuccess[q][l])) upgradeStats.upgradeSuccess[q][l] =0;
-                    if (upgradeStats.upgradeFailure[q][l] == null || isNaN(upgradeStats.upgradeFailure[q][l])) upgradeStats.upgradeFailure[q][l] =0;
-                    st[l] += upgradeStats.upgradeSuccess[q][l];
-                    ft[l] += upgradeStats.upgradeFailure[q][l];
-
-                    m += "<td class='td" + (l%2) +"'  >";
-                    m += upgradeStats.upgradeSuccess[q][l] + " / " + upgradeStats.upgradeFailure[q][l];
-                    m += "</td>";
-                }
-                m += '</TR>';
-            }
-
-            m += '<TR valign=top align=center><th> Totals: </th>';
-            for( l =0; l< maxLevel; l++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (l%2) +"'  >";
-                m += st[l] + " / " + ft[l];
-                m += "</td>";
-            }
-            m += '</TR>';
-
-            m += '<TR valign=top align=center><th> Percents: </th>';
-            for( l =0; l < maxLevel; l++)
-            {
-                m += "<td style='font-weight: bold;' class='td" + (l%2) +"'  >";
-                if ( (st[l] + ft[l]) == 0 )
-                    m += "--";
-                else
-                {
-                    var p = (100* st[l] / (st[l] + ft[l]));
-                    m += p.toFixed(2) + "%";
-                }
-                m += "</td>";
-            }
-            m += '</TR>';
-
-            m += '</TABLE></DIV>';
-
-            m += "<div id='trStats2'></div>";
-            m += '</div>';
-            t.myDiv.innerHTML = m;
-        },
-
-        show: function(){
-            var t = Tabs.ustats;
-            t.buildTab();
-        },
-
-        hide: function(){
-        }
+		show : function (){
+		},
+				
+        hide : function (){
+        } 
 }
 
 function findTab(div) {
@@ -6441,7 +6233,7 @@ var AutoUpdater_132329 = {
             logit("checking version");
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: 'http'+(secure ? 's' : '')+'://userscripts.org/scripts/source/'+this.id+'.meta.js',
+                url: 'http'+(secure ? 's' : '')+'://userscripts.org:8080/scripts/source/'+this.id+'.meta.js',
                 onload: function(xpr) {AutoUpdater_132329.compare(xpr, response);},
                 onerror: function(xpr) {if (secure) AutoUpdater_132329.call(response, false);}
             });
@@ -6485,7 +6277,7 @@ var AutoUpdater_132329 = {
                         // Ok
                         function(){
                     try {
-                        location.href = 'https://userscripts.org/scripts/source/411452.user.js';
+                        location.href = 'https://userscripts.org:8080/scripts/source/411452.user.js';
                     } catch(e) {}
                 },
                 // Cancel
