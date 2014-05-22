@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            KoC Additional Throne Monitor
 // @namespace       kba
-// @description     Additional Throne Room Monitor for Kingdoms of Camelot - For use with Battle Console or Battle Monitor Lite
+// @description     Throne Room Monitor for Kingdoms of Camelot - For Standalone use as "Monitor Lite", or in conjunction with KoC Battle Console as an Additional Monitor.
 // @icon			https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/chrome_quest_over.png
 // @include         *.kingdomsofcamelot.com/*main_src.php*
 // @grant       	GM_getValue
@@ -13,8 +13,8 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140522a
-// @releasenotes 	<p>Option to change monitor refresh rate</p><p>Minor cosmetic improvements</p>
+// @version         20140522b
+// @releasenotes 	<p>Option to change monitor refresh rate</p><p>Standalone mode (Monitor Lite)</p><p>Minor cosmetic improvements</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -25,7 +25,7 @@
 //	│	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)												│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140522a';
+var Version = '20140522b';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -55,6 +55,7 @@ var Options = {
 	USPort              : 8080,
 	AlternateSortOrder  : false,
 	MonitorRefreshRate  : 3,
+	StandAlone 			: false,
 };
 
 var JSON2 = JSON; 
@@ -103,8 +104,6 @@ var AlternateSortOrder = [5,37,58,21,42,63,1,24,34,44,56,102,17,29,39,50,61,2,25
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
 var DivBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/resource_bar_ascension.png";
-var PresetImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_active.png";
-var PresetImage_SEL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_selected.png";
 
 var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
 var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
@@ -154,6 +153,27 @@ function btStartup (){
 
 	readOptions();	   
 
+	if (Options.StandAlone) {
+		uW.btMapMonitorTR = function(e) {if (e.user.id != "0") { initMonitor (e.user.id, false); }}
+
+		// allow access from external tools
+		// NAME CALL LINK PROVIDED FOR LEGACY ONLY - ALL FUTURE LINKS SHOULD USE UID CALL!
+
+		uW.btMonitorExternalCall = function(name) {
+			if (name !="") {
+				document.getElementById('btPlayer_'+NameSpace).value = name;
+				MonitorTRClick();
+			}	
+		}	
+
+		uW.btMonitorExternalCallUID = function(UID) {
+			if (UID !="") {
+				initMonitor (UID, false)
+			}	
+		}	
+		TitleSuffix = 'Lite';
+	}
+	
 	Seed = uW.seed;
 
 	Options.WinSize.x = 400;
@@ -162,7 +182,6 @@ function btStartup (){
 
 	var styles = '.xtab {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
 				.xtabHD {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#888888;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
-				.xtabHDDef {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#f00;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
 				.xtabBR {padding-right: 5px; border:none; background:none; white-space:normal;}\
 				.xtabBRTop {padding-right: 5px; border:none; background:none; white-space:normal; vertical-align:top;}\
 				tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
@@ -182,17 +201,12 @@ function btStartup (){
 				.divLink         {color:#000;text-decoration:none;}\
 				.divLink:Hover   {color:#000;text-decoration:none;}\
 				.divLink:Active  {color:#000;text-decoration:none;}\
-				.presetBut       {outline:0px; margin-left:0px; margin-right:0px; width:22px; height:22px; font-family: georgia,arial,sans-serif;font-size: 12px;color:white; line-height:19px;}\
-				.presetButNon    {background:url("'+ PresetImage +'") no-repeat center center;}\
-				.presetButSel    {background:url("'+ PresetImage_SEL +'") no-repeat center center;}\
-				.presetButDis    {opacity: 0.4;}\
 				div.ErrText      {color:#FF0000;}';
-				
 	
 	mainPop = new CPopup ('btMain_'+NameSpace, Options.WinPos.x, Options.WinPos.y, Options.WinSize.x, Options.WinSize.y, true, 
 		function (){saveOptions();});
 
-	mainPop.getTopDiv().innerHTML = '<DIV align=center><B>Additional Battle Monitor ('+TitleSuffix+')</B></DIV>';
+	mainPop.getTopDiv().innerHTML = '<DIV align=center><B>Battle Monitor ('+TitleSuffix+')</B></DIV>';
 
 	m = '<STYLE>'+ styles +'</style>';
   
@@ -202,6 +216,8 @@ function btStartup (){
 	m += '<div class="ErrText" align="center" id=btplayErr_'+NameSpace+'>&nbsp;</div>';
 	m += '<div class="divHeader" align="right"><a id=btOptionLink_'+NameSpace+' class=divLink >OPTIONS&nbsp;<img id=btOptionArrow_'+NameSpace+' height="10" src="'+RightArrow+'"></a></div>';
 	m += '<div id=btOption_'+NameSpace+' class=divHide><TABLE width="100%">';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab colspan=2 align=center><span style="font-size:9px;color:#800;">(options marked with * require a refresh)</span></td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=StandAloneChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use as standalone throne monitor (Monitor Lite)&nbsp;*</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
     m += '<TR id=btSoundOpts_'+NameSpace+' class="divHide"><TD colspan=2 class=xtab>&nbsp;</td><TD align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider_'+NameSpace+'></span></td><TD align=right id=btVolOut_'+NameSpace+' style="width:30px;">0</td></tr></table></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont_'+NameSpace+' class=btInput') + '&nbsp;pixels</td></tr>';
@@ -227,6 +243,7 @@ function btStartup (){
 
 	document.getElementById('btPlayerSubmit_'+NameSpace).addEventListener('mousedown',function(me) {ResetWindowPos (me,'btPlayerSubmit_'+NameSpace,popMon);}, true);  
   
+	ToggleOption ('StandAloneChk_'+NameSpace, 'StandAlone',function () {location.reload;});
 	ToggleOption ('SoundChk_'+NameSpace, 'MonitorSound', SoundToggle);
 	SoundToggle ();
 	
@@ -257,15 +274,46 @@ function btStartup (){
 	VolSlider.setValue (Options.Volume/100);
 	VolSlider.setChangeListener(VolumeChanged);
 	VolumeChanged (Options.Volume/100);
-  
-	AddMainTabLink('BATTLE ('+TitleSuffix+')', eventHideShow, mouseMainTab);
+	if (Options.StandAlone) {
+		AddMainTabLink('BATTLE', eventHideShow, mouseMainTab);
+	}
+	else {
+		AddMainTabLink('BATTLE ('+TitleSuffix+')', eventHideShow, mouseMainTab);
+	}
  
 	addScript ('uwuwuwFunc = function (text){ eval (text);  }');  
 
 	// position windows for the first time
  
-	DefaultWindowPos('MonPos','btPlayerSubmit');
+	DefaultWindowPos('MonPos','btPlayerSubmit_'+NameSpace);
   
+	if (Options.StandAlone) {
+		// throne room alteration
+	
+		var str = uW.cm.FETemplates.Throne.mainThrone.replace(
+			'<li id="throneStatTab" class="inactive"> Stats </li>',
+			'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> Stats </li>');
+		uW.cm.FETemplates.Throne.mainThrone = str;
+   
+		uW.btThroneMonitorTR = function() {
+			if (ThroneUID != 0) { initMonitor (ThroneUID, false); }	
+		}
+   
+		// intercept throne room view function to grey out monitor option for your own room...
+
+		var oldTRViewFunc = uW.cm.ThroneView.openThrone;
+		var newTRViewFunc = function(c) {
+			ThroneUID = 0;
+			if (c) {ThroneUID = c.id;}
+			oldTRViewFunc(c);
+			if (ThroneUID == 0) {uW.jQuery("#throneMonitor").attr("class","deactive"); }		
+		};
+		uW.cm.ThroneView.openThrone = newTRViewFunc;
+
+		// delay altering uW Functions by 5 seconds  
+  
+		setTimeout (function () {AlterUWFuncs();}, 5000);
+	}
 	AudioManager.init();
 
 	// start main looper
@@ -278,7 +326,33 @@ function btStartup (){
 	
 	// Set to check for updates in 15 seconds
 	
-	if (Options.AutoUpdates && !trusted) setTimeout(function(){AutoUpdater.check();},15000); 
+	if (Options.AutoUpdates) setTimeout(function(){AutoUpdater.check();},15000); 
+
+	// All done!
+	
+	if (Options.StandAlone) {
+		uW.btLoaded = true;
+	}	
+}
+
+function AlterUWFuncs() {
+
+	// add entries to the menu items and tooltips windows
+
+	for (jj in uW.cm.ContextMenuMapController.prototype.MapContextMenus.City) {
+		if (jj != 5) uW.cm.ContextMenuMapController.prototype.MapContextMenus.City[jj].push("MONI"); }
+  
+	var mod = new CalterUwFunc('cm.ContextMenuMapController.prototype.calcButtonInfo',
+			[['default:', 'case "MONI":' +
+			'b.text = "Monitor"; b.color = "green"; ' +
+			'b.action = function () { ' +
+			'btMapMonitorTR(e);' +
+			'}; ' +
+			'd.push(b); break; ' +
+			'default: ']]);
+	mod.setEnable(true);
+
+	logit('uW functions altered');    
 }
 
 function ChangeFontSize(evt) {
@@ -1507,7 +1581,7 @@ function logit (msg){
 
 var AutoUpdater = {
     id: 285996,
-	name: "KoC Additional Throne Monitor",
+	name: "KoC Battle Monitor",
 	homepage: 'http://code.google.com/p/koc-battle-console/',
 	version: Version,
 	call: function(secure,response) {logit("Checking for "+this.name+" Update!");
@@ -1729,7 +1803,12 @@ function CreateMonitorWindow () {
 	
 	popMon = new CPopup('btMonitor_'+NameSpace, Options.MonPos.x, Options.MonPos.y, MonWidth, MonHeight, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
 	popMon.getMainDiv().innerHTML = m;
-	popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor ('+TitleSuffix+')</B></DIV>';
+	if (Options.StandAlone) {
+		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor</B></DIV>';
+	}
+	else {
+		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor ('+TitleSuffix+')</B></DIV>';
+	}	
 	popMon.show(true);
 }
 
@@ -2042,10 +2121,22 @@ function MonitorTRLoop () {
 	document.getElementById('btCountdownDiv_'+NameSpace).innerHTML = m;
 	
 	if (MonitoringPaused) {
-		if (MonitorTimedOut)
-			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Timed Out</B></DIV>'; }
-		else
-			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Paused</B></DIV>'; }
+		if (MonitorTimedOut) {
+			if (Options.StandAlone) {
+				popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Timed Out</B></DIV>'; 
+			}
+			else {
+				popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Timed Out</B></DIV>'; 
+			}	
+		}	
+		else {
+			if (Options.StandAlone) {
+				popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Paused</B></DIV>'; 
+			}
+			else {
+				popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Paused</B></DIV>'; 
+			}
+		}	
 		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Resume</span>'; 
 	}	
 	else {	
@@ -2054,8 +2145,13 @@ function MonitorTRLoop () {
 		for (var s=0; s<=1; s++) {
 			if (s < rem) {dots+="*";}
 		}
-	
-		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring ('+TitleSuffix+')&nbsp;'+dots+'</B></DIV>'; 
+
+		if (Options.StandAlone) {
+			popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring&nbsp;'+dots+'</B></DIV>'; 
+		}
+		else {
+			popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring ('+TitleSuffix+')&nbsp;'+dots+'</B></DIV>'; 
+		}	
 		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span>'; 
 		
 		if (((MonitorLooper % MonitorInterval) == 1) || (MonitorInterval == 1)) { 
