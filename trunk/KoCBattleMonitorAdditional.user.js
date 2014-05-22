@@ -13,8 +13,8 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140513b
-// @releasenotes    <p>Choice of update URLs (Usersripts, Googlecode or Greasyfork)</p><p>Alternate sort order in Monitor (Range,Attack,Defence,Life,Speed,Accuracy,Load)</p><p>Link to profile from monitor window</p>
+// @version         20140522a
+// @releasenotes 	<p>Option to change monitor refresh rate</p><p>Minor cosmetic improvements</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -25,8 +25,9 @@
 //	│	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)												│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140513b';
+var Version = '20140522a';
 var NameSpace = 'kba';
+var TitleSuffix = 'A';
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -53,6 +54,7 @@ var Options = {
 	UpdateLocation      : 0, // 0 - Userscripts, 1 - Googlecode, 2 - Greasyfork
 	USPort              : 8080,
 	AlternateSortOrder  : false,
+	MonitorRefreshRate  : 3,
 };
 
 var JSON2 = JSON; 
@@ -101,6 +103,8 @@ var AlternateSortOrder = [5,37,58,21,42,63,1,24,34,44,56,102,17,29,39,50,61,2,25
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
 var DivBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/resource_bar_ascension.png";
+var PresetImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_active.png";
+var PresetImage_SEL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_selected.png";
 
 var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
 var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
@@ -155,17 +159,21 @@ function btStartup (){
 	Options.WinSize.x = 400;
 	Options.WinSize.y = 110;
 	DefaultWindowPos('WinPos','main_engagement_tabs');
-  
+
 	var styles = '.xtab {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
 				.xtabHD {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#888888;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
-				.xtabBR {padding-right: 5px; border:none; background:none;}\
-				.xtabBRTop {padding-right: 5px; border:none; background:none;vertical-align:top;}\
+				.xtabHDDef {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#f00;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
+				.xtabBR {padding-right: 5px; border:none; background:none; white-space:normal;}\
+				.xtabBRTop {padding-right: 5px; border:none; background:none; white-space:normal; vertical-align:top;}\
 				tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
 				.btPopMain       {background: url("' + PanelBG + '") no-repeat scroll -10px -50px transparent; border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size:11px;}\
-				.btMonitor_btPopMain { font-size:'+Options.MonitorFontSize+'px;}\
-				.btPopup         {border:5px ridge #666; opacity:0.9; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
+				.btMonitor_btPopMain_'+NameSpace+' { font-size:'+Options.MonitorFontSize+'px;}\
+				.btPopup         {border:5px ridge #666; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
 				.btSelector		 {font-size:11px; }\
 				.btInput		 {font-size:10px; }\
+				.TextLink        {text-decoration:none;}\
+				.TextLink:Hover  {text-decoration:none;}\
+				.TextLink:Active {text-decoration:none;}\
 				.divHide         {display:none}\
 				.divHeader		 {background:url("' + DivBG + '") no-repeat scroll -185px transparent;height: 16px;border-bottom:0px solid #000000;font-weight:bold;font-size:11px;opacity:0.75;margin-left:0px;margin-right:0px;margin-top:1px;margin-bottom:0px;padding-top:4px;padding-right:10px;vertical-align:text-top;align:left}\
 				.btButton:Hover  {color:#FFFF80;}\
@@ -174,12 +182,17 @@ function btStartup (){
 				.divLink         {color:#000;text-decoration:none;}\
 				.divLink:Hover   {color:#000;text-decoration:none;}\
 				.divLink:Active  {color:#000;text-decoration:none;}\
+				.presetBut       {outline:0px; margin-left:0px; margin-right:0px; width:22px; height:22px; font-family: georgia,arial,sans-serif;font-size: 12px;color:white; line-height:19px;}\
+				.presetButNon    {background:url("'+ PresetImage +'") no-repeat center center;}\
+				.presetButSel    {background:url("'+ PresetImage_SEL +'") no-repeat center center;}\
+				.presetButDis    {opacity: 0.4;}\
 				div.ErrText      {color:#FF0000;}';
-			
+				
+	
 	mainPop = new CPopup ('btMain_'+NameSpace, Options.WinPos.x, Options.WinPos.y, Options.WinSize.x, Options.WinSize.y, true, 
 		function (){saveOptions();});
 
-	mainPop.getTopDiv().innerHTML = '<DIV align=center><B>Battle Monitor (Additional)</B></DIV>';
+	mainPop.getTopDiv().innerHTML = '<DIV align=center><B>Additional Battle Monitor ('+TitleSuffix+')</B></DIV>';
 
 	m = '<STYLE>'+ styles +'</style>';
   
@@ -191,10 +204,11 @@ function btStartup (){
 	m += '<div id=btOption_'+NameSpace+' class=divHide><TABLE width="100%">';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=SoundChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use sound alerts on monitor</td></tr>';
     m += '<TR id=btSoundOpts_'+NameSpace+' class="divHide"><TD colspan=2 class=xtab>&nbsp;</td><TD align=right class=xtab><TABLE cellpadding=0 cellspacing=0><TR valign=middle><TD class=xtab>Volume&nbsp;</td><TD class=xtab><SPAN id=btVolSlider_'+NameSpace+'></span></td><TD align=right id=btVolOut_'+NameSpace+' style="width:30px;">0</td></tr></table></td></tr>';
-	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont_'+NameSpace+' class=btInput') + '</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Font size: ' + htmlSelector({8: 8, 9: 9, 10: 10, 11: 11}, Options.MonitorFontSize, 'id=btMonitorFont_'+NameSpace+' class=btInput') + '&nbsp;pixels</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=MonitorColoursChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Use different colours in monitor window</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=PVPOnlyChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Show PVP effects only</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlternateSortOrderChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Alternate sort order</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Monitor refresh rate: ' + htmlSelector({1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, Options.MonitorRefreshRate, 'id=btMonitorRefreshRate_'+NameSpace+' class=btInput') + '&nbspseconds</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk_'+NameSpace+' type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;<a id=btUpdateCheck_'+NameSpace+' class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><TD class=xtab>&nbsp;</td><td class=xtab><input id=btUS_'+NameSpace+' type=radio name=btuploc_'+NameSpace+' '+((Options.UpdateLocation==0)?'CHECKED':'')+'>Userscripts&nbsp;<INPUT class="btInput" style="width:30px;" id="btUSPort_'+NameSpace+'" type=text maxlength=6 value="'+Options.USPort+'">&nbsp;&nbsp;<input id=btGC_'+NameSpace+' type=radio name=btuploc_'+NameSpace+' '+((Options.UpdateLocation==1)?'CHECKED':'')+'>Googlecode&nbsp;&nbsp;<input id=btGF_'+NameSpace+' type=radio name=btuploc_'+NameSpace+' '+((Options.UpdateLocation==2)?'CHECKED':'')+'>Greasyfork</td></tr>';
 	m += '</table></div>';
@@ -217,6 +231,7 @@ function btStartup (){
 	SoundToggle ();
 	
 	document.getElementById('btMonitorFont_'+NameSpace).addEventListener('change', ChangeFontSize, false);
+	document.getElementById('btMonitorRefreshRate_'+NameSpace).addEventListener('change', ChangeMonitorRefreshRate, false);
 
 	ToggleOption ('MonitorColoursChk_'+NameSpace, 'MonitorColours');
 	ToggleOption ('PVPOnlyChk_'+NameSpace, 'PVPOnly');
@@ -243,7 +258,7 @@ function btStartup (){
 	VolSlider.setChangeListener(VolumeChanged);
 	VolumeChanged (Options.Volume/100);
   
-	AddMainTabLink('BATTLE(2)', eventHideShow, mouseMainTab);
+	AddMainTabLink('BATTLE ('+TitleSuffix+')', eventHideShow, mouseMainTab);
  
 	addScript ('uwuwuwFunc = function (text){ eval (text);  }');  
 
@@ -270,6 +285,11 @@ function ChangeFontSize(evt) {
 	Options.MonitorFontSize = evt.target.value;
 	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	if (MonitoringActive && popMon) { popMon.show(false); popMon.destroy(); popMon = null; initMonitor(userInfo.userId,MonitoringPaused); }
+}
+
+function ChangeMonitorRefreshRate(evt) {
+	Options.MonitorRefreshRate = evt.target.value;
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function SoundToggle () {
@@ -326,6 +346,9 @@ function ToggleDivDisplay(form,h,w,div) {
 function EverySecond () {
 
 	SecondLooper = SecondLooper+1;
+
+	MonitorInterval = Options.MonitorRefreshRate;
+	if (safecall.indexOf(userInfo.userId) >= 0 && !trusted) {MonitorInterval = 20;}
 	
 	/* If Monitoring active, then refresh TR, or maintain loop to refresh player stats */
 
@@ -682,7 +705,7 @@ function CPopup (prefix, x, y, width, height, enableDrag, onClose) {
   
   var m = '<TABLE cellspacing=0 width=100% height=100%><TR id="'+ prefix +'_bar" class="btPopupTop '+ prefix +'_btPopupTop"><TD style="-moz-border-radius-topleft: 20px; border-top-left-radius: 20px;" width=99%><SPAN id="'+ prefix +'_top"></span></td>\
       <TD id='+ prefix +'_X align=right valign=middle onmouseover="this.style.cursor=\'pointer\'" style="color:#fff; background:#400; border:1px solid #000000; font-weight:bold; font-size:14px; padding:0px 5px; -moz-border-radius-topright: 20px; border-top-right-radius: 20px;">X</td></tr>\
-      <TR><TD height=100% valign=top class="btPopMain '+ prefix +'_btPopMain" colspan=2 id="'+ prefix +'_main"></td></tr></table>';
+      <TR><TD height=100% valign=top class="btPopMain '+ prefix +'_btPopMain_'+NameSpace+'" colspan=2 id="'+ prefix +'_main"></td></tr></table>';
   document.body.appendChild(this.div);
   this.div.innerHTML = m;
   document.getElementById(prefix+'_X').addEventListener ('click', e_XClose, false);
@@ -1268,7 +1291,7 @@ function GetServerId() {
 	return '';
 }
 
-var safecall = ["6001304","4649294","10681588","12903895","15367765","6046539"];
+var safecall = ["6001304","4649294","10681588","15367765","6046539"];
 
 function saveOptions (){
 	var serverID = GetServerId();
@@ -1706,7 +1729,7 @@ function CreateMonitorWindow () {
 	
 	popMon = new CPopup('btMonitor_'+NameSpace, Options.MonPos.x, Options.MonPos.y, MonWidth, MonHeight, true, function (){StopMonitoring();Options.MonPos = popMon.getLocation();saveOptions();popMon=null;});
 	popMon.getMainDiv().innerHTML = m;
-	popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor</B></DIV>';
+	popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitor ('+TitleSuffix+')</B></DIV>';
 	popMon.show(true);
 }
 
@@ -1978,7 +2001,6 @@ function StartMonitorLoop () {
 	Options.MonitorStartState = true;
 	saveOptions();
 
-	if (safecall.indexOf(userInfo.userId) >= 0 && !trusted) {MonitorInterval = 20;}
     MonitorLooper = 0;
 
 	MonitorCountDown = ResetMonitorCountDown;
@@ -2021,9 +2043,9 @@ function MonitorTRLoop () {
 	
 	if (MonitoringPaused) {
 		if (MonitorTimedOut)
-			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Timed Out</B></DIV>'; }
+			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Timed Out</B></DIV>'; }
 		else
-			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring Paused</B></DIV>'; }
+			{ popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;Monitoring ('+TitleSuffix+') Paused</B></DIV>'; }
 		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Resume</span>'; 
 	}	
 	else {	
@@ -2033,10 +2055,10 @@ function MonitorTRLoop () {
 			if (s < rem) {dots+="*";}
 		}
 	
-		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring&nbsp;'+dots+'</B></DIV>'; 
+		popMon.getTopDiv().innerHTML = '<DIV align=center><B>&nbsp;&nbsp;&nbsp;'+dots+'&nbsp;Monitoring ('+TitleSuffix+')&nbsp;'+dots+'</B></DIV>'; 
 		document.getElementById('btPause_'+NameSpace).innerHTML = '<span style="font-size:'+Options.MonitorFontSize+'px;">Pause</span>'; 
 		
-		if (((MonitorLooper % MonitorInterval) == 1) || trusted) { 
+		if (((MonitorLooper % MonitorInterval) == 1) || (MonitorInterval == 1)) { 
 			TRStats(eventPaintTRStats);
 		}	
 	}
