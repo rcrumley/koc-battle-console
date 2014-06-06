@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140606a
+// @version        20140606b
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140606a';
+var Version = '20140606b';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -21182,11 +21182,15 @@ Tabs.Attack = {
 
 	addListeners : function(Troop) {
 		var T1 = 'R1'+Troop;
-		document.getElementById(T1).addEventListener('keyup', function(){ if (isNaN(document.getElementById(T1).value)) document.getElementById(T1).value=0;}, false);
-		document.getElementById(T1).addEventListener('change', function(){CrestOptions[T1] = document.getElementById(T1).value;} , false);
+		if (document.getElementById(T1)) {
+			document.getElementById(T1).addEventListener('keyup', function(){ if (isNaN(document.getElementById(T1).value)) document.getElementById(T1).value=0;}, false);
+			document.getElementById(T1).addEventListener('change', function(){CrestOptions[T1] = document.getElementById(T1).value;} , false);
+		}	
 		var T2 = 'R2'+Troop;
-		document.getElementById(T2).addEventListener('keyup', function(){ if (isNaN(document.getElementById(T2).value)) document.getElementById(T2).value=0;}, false);
-		document.getElementById(T2).addEventListener('change', function(){CrestOptions[T2] = document.getElementById(T2).value;} , false);
+		if (document.getElementById(T2)) {
+			document.getElementById(T2).addEventListener('keyup', function(){ if (isNaN(document.getElementById(T2).value)) document.getElementById(T2).value=0;}, false);
+			document.getElementById(T2).addEventListener('change', function(){CrestOptions[T2] = document.getElementById(T2).value;} , false);
+		}	
 	},
 
 	checkDisableRound : function(r,disabled) {
