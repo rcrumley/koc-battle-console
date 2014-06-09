@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140606b
+// @version        20140609a
 // @namespace      mat
 // @homepage       https://userscripts.org/scripts/show/101052
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140606b';
+var Version = '20140609a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -13709,7 +13709,7 @@ Tabs.Reassign = {
 				if ( parseInt(Seed.cities[y][0]) == r[i].city) var cityname = Seed.cities[y][1];
 			}    
 			var queueId = i;
-			t._addTab(queueId,cityname, r[i].target_x, r[i].target_y, r[i].target_city, r[i].SendSupplyTroop,r[i].SupplyTroop, r[i].SendMilitiaman, r[i].Militiaman, r[i].SendScout, r[i].Scout, r[i].SendPikeman, r[i].Pikeman, r[i].SendSwordsman, r[i].Swordsman, r[i].SendArchers, r[i].Archers, r[i].SendCavalry, r[i].Cavalry, r[i].SendHeavyCavalry, r[i].HeavyCavalry, r[i].SendSupplyWagons, r[i].SupplyWagons, r[i].SendBallista, r[i].Ballista, r[i].SendBatteringRam, r[i].BatteringRam, r[i].SendCatapult, r[i].Catapult, r[i].SendBloodThorn, r[i].BloodThorn, r[i].SendExecutioner, r[i].Executioner, r[i].SendSiegeTower, r[i].SiegeTower, r[i].SendFlameArcher, r[i].FlameArcher, r[i].SendHussar, r[i].Hussar, r[i].SendHalberdier, r[i].Halberdier, r[i].SendOnager, r[i].Onager);
+			t._addTab(queueId,cityname, r[i].target_x, r[i].target_y, r[i].target_city, r[i].SendSupplyTroop,r[i].SupplyTroop, r[i].SendMilitiaman, r[i].Militiaman, r[i].SendScout, r[i].Scout, r[i].SendPikeman, r[i].Pikeman, r[i].SendSwordsman, r[i].Swordsman, r[i].SendArcher, r[i].Archer, r[i].SendCavalry, r[i].Cavalry, r[i].SendHeavyCavalry, r[i].HeavyCavalry, r[i].SendSupplyWagon, r[i].SupplyWagon, r[i].SendBallista, r[i].Ballista, r[i].SendBatteringRam, r[i].BatteringRam, r[i].SendCatapult, r[i].Catapult, r[i].SendBloodThorn, r[i].BloodThorn, r[i].SendExecutioner, r[i].Executioner, r[i].SendSiegeTower, r[i].SiegeTower, r[i].SendFlameArcher, r[i].FlameArcher, r[i].SendHussar, r[i].Hussar, r[i].SendHalberdier, r[i].Halberdier, r[i].SendOnager, r[i].Onager);
 		}
 	},
      
@@ -13866,7 +13866,7 @@ Tabs.Reassign = {
 		t.doReassign(t.count);
 		t.count++;
         if(t.count < t.reassignRoutes.length && t.reassignState.running){
-			t.checkdoreassigntimeout = setTimeout(t.checkdoReassign, 10000); // 10 secs between each reassign
+			t.checkdoreassigntimeout = setTimeout(t.checkdoReassign, 5000); // 5 secs between each reassign
 		}
 		else {
 			var now = new Date().getTime()/1000.0;
@@ -21913,16 +21913,19 @@ var March = {
       return slots;
    },
    getMarchSlots : function (cityId){
-        var t = this;
+      var t = this;
       cityId = "city"+cityId;
       var slots=0;
+	  var now = unixTime();
       if (Seed.queue_atkp[cityId] != undefined){
          for(var k in Seed.queue_atkp[cityId]){
             var m = Seed.queue_atkp[cityId][k];
             if(m.marchType == 9) {
                if(m.botMarchStatus < 3 || m.botMarchStatus > 9)slots++; //If raid is stopped take it as empty slot
             } else {
-               slots++;          
+				if (m.returnUnixTime > now){
+					slots++;          
+				}	
             }
          }
          if(Seed.queue_atkp[cityId].toSource() == "[]")
