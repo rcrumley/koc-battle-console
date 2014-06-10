@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140502a
+// @version        20140610a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140502a';
+var Version = '20140610a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1426,7 +1426,9 @@ var ChatStuff = {
 		if (m[0].indexOf('UID:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bUID:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 		if (m[0].indexOf('TRC:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bTRC:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 
-		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
+				if (m[0].indexOf('March id:')){ msg = msg.replace (/(\bMarch\sid:\s([0-9]+))/g, '<a onclick=\'ptfetchmarch($2)\'>Additional March details ---></a>'); }
+
+msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
 		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/101052")>$2</a>$3');
 		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/103659")>$2</a>$3');
 		msg = msg.replace(/(\W)(tro)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/132329")>$2</a>$3');
@@ -12176,21 +12178,25 @@ Tabs.Accuracy = {
 		var t = Tabs.Accuracy;
 		t.cont = div;
 		var main = '<DIV class=ptstat>ACCURACY MATRIX<TABLE align=center cellpadding=1 cellspacing=0></table></div>';
-		main += '<DIV style="height:450px; width:720px; overflow-x:scroll;"><TABLE class=ptTab align=left><TR>';
+		main += '<DIV style="height:500px; width:720px; overflow-x:scroll;"><TABLE class=ptTab align=left><TR>';
 		main += '<TD></td><TD>Target</td></tr>';
 		main += '<TR><TD></td>';
 		var z = uW.cm.WorldSettings.getSettingAsObject("UNIT_ACCURACY_MODIFIER");
 		var keyz = unsafeWindow.Object.keys(z);
 		var troopa, troopb;
 		var unitsarr = [];
-		for (j in unsafeWindow.unitcost)
+		for (j in unsafeWindow.unitcost) {
 			unitsarr.push(0);
-		for (iu = 1; iu < unitsarr.length + 2; iu++)
+		}	
+		
+		for (iu = 1; iu < unitsarr.length + 2; iu++) {
 			if (iu < 13) main += '<TD>' + uW.unitcost['unt' + iu][0] + '</td>';
 			else if (iu == 13) main += '<TD>WM Crossbow</td>';
-		else if (iu > 19) main += '<TD>' + uW.unitcost['unt' + (iu + 1)][0] + '</td>';
-		else main += '<TD>' + uW.unitcost['unt' + (iu - 1)][0] + '</td>';
+			else if (iu > 19) main += '<TD>' + uW.unitcost['unt' + (iu + 1)][0] + '</td>';
+			else main += '<TD>' + uW.unitcost['unt' + (iu - 1)][0] + '</td>';
+		}	
 		main += '</tr>';
+
 		for (iu = 1; iu < unitsarr.length + 2; iu++) {
 			if (iu < 13) main += '<TR><TD>' + uW.unitcost['unt' + iu][0] + '</td>';
 			else if (iu == 13) main += '<TR><TD>WM Crossbow</td>';
@@ -12199,7 +12205,10 @@ Tabs.Accuracy = {
 			troopa = keyz[iu - 1];
 			for (ju = 1; ju < unitsarr.length + 2; ju++) {
 				troopb = keyz[ju - 1];
-				main += '<TD>' + z[troopa][troopb] + '</td>';
+				if (!z[troopa] || !z[troopa][troopb])
+					main += '<TD>???</td>';
+				else
+					main += '<TD>' + z[troopa][troopb] + '</td>';
 			}
 			main += '</tr>';
 		}
@@ -16553,4 +16562,504 @@ function MonitorLinkUID(n) {
 	return m.join('');
 }
 
-ptStartup();
+
+pt/***************************** MARCH FUCKERY ***********************************/
+
+var marchtimer;
+var marchETA;
+var	marchDIR = '';
+var Marches = new Array();
+var MarchIndex = new Array();
+var UIDSearch = '';
+var CityIDSearch = '';
+var MarchSearching = false;
+var MarchCrawling = false;
+var SearchIndex = 0;
+var SearchList = new Array();
+var CrawlList = new Array();
+
+unsafeWindow.ptfetchmarch = function (mid) {fetchmarch(mid,MarchPopup);}
+unsafeWindow.ptsearchmarch = function () {MarchSearchPopup();}
+function fetchmarch(mid,notify,qc) {
+	if (document.getElementById('ptfetchmarch')) document.getElementById('ptfetchmarch').innerHTML = "Fetching March...";
+ 	var uW = unsafeWindow;
+
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	params.rid = mid;
+	var atimer = setTimeout(function() {notify ({errorMsg:'Fetch march timed out (March ID '+mid+')'});}, 6000);
+	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (message) {
+			clearTimeout(atimer);
+			var rslt = eval("(" + message.responseText + ")");
+			if (rslt.ok){
+				if (qc) {
+					var ui = [];
+					var n = {name:'???'}
+					ui.push(n);
+					notify ({userInfo:ui},{userInfo:ui},rslt.march);
+				}
+				else {
+					fetchmarchPlayerInfo(rslt.march.fromPlayerId, rslt.march.toPlayerId, notify, rslt.march);
+				}	
+			}
+			else {
+				notify ({errorMsg:'Fetch march error (March ID '+mid+')'});
+			}
+		},
+	    onFailure: function () {
+			clearTimeout(atimer);
+			notify ({errorMsg:'AJAX error'});
+		},
+	});		
+};
+
+function fetchmarchPlayerInfo(uid, uid2, notify, march, uidrslt){
+	
+   var uW = unsafeWindow;
+   var CM = uW.cm;
+   var Seed = uW.seed;
+   var params = uW.Object.clone(uW.g_ajaxparams);
+   params.uid = uid;
+   new uW.Ajax.Request(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
+     method: "post",
+     parameters: params,
+     onSuccess: function (rslt) {
+		if (uid2 && uid2 != 0) {
+			fetchmarchPlayerInfo(uid2,0,notify,march,eval("(" + rslt.responseText + ")"));
+		}
+		else {
+			if (!uidrslt) {
+				notify (eval("(" + rslt.responseText + ")"),uidrslt,march);
+			}
+			else {
+				notify (uidrslt,eval("(" + rslt.responseText + ")"),march);
+			}
+		}	
+     },
+     onFailure: function (rslt) {
+       notify ({errorMsg:'AJAX error'});
+     },
+   });
+};
+
+function UpdateMarchTime() {
+	clearTimeout(marchtimer);
+	var now = unixTime();
+	var arrivalTime = marchETA - now;
+	if (arrivalTime >= 0) {
+		marchtime = uW.timestr(arrivalTime);	
+		marchtimer = setTimeout(UpdateMarchTime, 1000);
+	}	
+	else {
+		if (marchDIR == "") {
+			marchtime = 'Landed! (Please Refresh)';	
+		}
+		else {
+			marchtime = "Completed.";
+		}
+	}
+	if (document.getElementById('ptmarchtime')) {
+		document.getElementById('ptmarchtime').innerHTML = marchtime+marchDIR;
+	}	
+}
+
+function CrawlResult (rslt,rslt2,march) {
+	setTimeout( function () {catalogMarch(rslt,rslt2,march);},0); // get around unsafewindow GM_SetValue error
+}	
+
+
+function MarchPopup (rslt,rslt2,march) {
+	clearTimeout(marchtimer);
+	
+	var n = '<table align=center width=95% cellspacing=0 cellpadding=0>';
+	n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+	n += '<tr><td class=xtabBR colspan=2><a id=ptsearchmarch>Search for Marches in March Directory</a></td></tr>';
+	n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+  
+	if (rslt.userInfo) {
+
+		setTimeout( function () {catalogMarch(rslt,rslt2,march);},0); // get around unsafewindow GM_SetValue error
+
+		var u = rslt.userInfo[0];
+		var alli = 'None';
+		if (u.allianceName)
+			alli = u.allianceName +' ('+ getDiplomacy(u.allianceId) + ')';
+
+		var u2;
+		if (rslt2 && rslt2.userInfo) {
+			u2 = rslt2.userInfo[0];
+			var alli2 = 'None';
+			if (u2.allianceName)
+				alli2 = u2.allianceName +' ('+ getDiplomacy(u2.allianceId) + ')';
+		}	
+		
+		var a = march;
+	
+		n += '<tr><td class=xtabBR width=150>March ID</td><td class=xtab><b><input type=text id=ptmid value="'+a.marchId+'">&nbsp;&nbsp;<a id=ptfetchmarch>Refresh</a></b></td></tr>';
+		n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+
+		var marchStatus = parseInt(a.marchStatus);
+		var now = unixTime();
+		var destinationUnixTime = Tabs.AllianceList.convertTime(new Date(a["destinationEta"].replace(" ", "T"))) - now;
+		var returnUnixTime = Tabs.AllianceList.convertTime(new Date(a["returnEta"].replace(" ", "T"))) - now;
+			
+		if ((destinationUnixTime < 0) || (marchStatus == 8) || (marchStatus == 2))
+			marchdir = "Return";
+		else
+			marchdir = "Count";	
+	
+		if (destinationUnixTime >= 0) {
+			marchtime = uW.timestr(destinationUnixTime);	
+			marchETA = Tabs.AllianceList.convertTime(new Date(a["destinationEta"].replace(" ", "T")));
+			marchDIR = '';
+			marchtimer = setTimeout(UpdateMarchTime, 1000);
+		}	
+		else {
+			if (marchStatus == 2) {
+				marchtime = 'Encamped';
+			}
+			else {
+				if (returnUnixTime < 0) {
+					marchtime = "Completed ("+uW.timestr(returnUnixTime*(-1)) +" ago)";
+				}
+				else {
+					if (marchStatus == 8) {
+						marchtime = uW.timestr(returnUnixTime)+' (Returning)';
+						marchETA = Tabs.AllianceList.convertTime(new Date(a["returnEta"].replace(" ", "T")));
+						marchDIR = ' (Returning)';
+						marchtimer = setTimeout(UpdateMarchTime, 1000);
+					}
+					else {
+						marchtime = "Waiting";
+					}	
+				}	
+			}
+		}
+		n += '<tr><td class=xtab>Time/Status</td><td class=xtabBR id=ptmarchtime><b>'+marchtime+'</b></td></tr>';
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		n += '<tr><td class=xtab>Name</td><td class=xtabBR><b>' + u.genderAndName + '</b><td></tr>';
+		n += '<tr><td class=xtab>UID</td><td class=xtabBR><b>' + MonitorLinkUID(a.fromPlayerId)+'</b></td></tr>';
+		n += '<tr><td class=xtab>Might</td><td class=xtabBR>' + addCommas(parseInt(u.might))+'</td></tr>';
+		n += '<tr><td class=xtab>Alliance</td><td class=xtabBR>'+ alli +'</td></tr>';
+
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		var marchType = parseInt(a.marchType);
+		if (marchType == 10) marchType=4; // Change Dark Forest type to Attack!
+		var	hint = "";
+		switch (marchType) {
+			case 1: hint=uW.g_js_strings.commonstr.transport;break;
+			case 2: hint=uW.g_js_strings.commonstr.reinforce;break;
+			case 3: hint=uW.g_js_strings.commonstr.scout;break;
+			case 4: hint=uW.g_js_strings.commonstr.attack;break;
+			case 5: hint=uW.g_js_strings.commonstr.reassign;break;
+		} 
+		n += '<tr><td class=xtab>March Type</td><td class=xtabBR><b>'+hint+'</b></td></tr>';
+		n += '<tr><td class=xtab>From</td><td class=xtabBR><b>'+coordLink(a.fromXCoord,a.fromYCoord)+'</b></td></tr>';
+		n += '<tr><td class=xtab>CityID</td><td class=xtabBR>'+a.fromCityId+'</td></tr>';
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+	
+		var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
+		var totile = tileTypes[parseInt(a["toTileType"])];
+		if (a["toTileType"] == 51) {
+			if (!a["toPlayerId"]) { totile = "???"; }
+			else { if (a["toPlayerId"] == 0) totile = 'Barb Camp'; }
+		}	
+		totile = 'Lvl '+a["toTileLevel"]+' '+totile;
+		n += '<tr><td class=xtab>To</td><td class=xtabBR><b>'+coordLink(a.toXCoord,a.toYCoord)+'&nbsp;'+totile+'</b></td></tr>';
+		if (a["toCityId"] != 0) n += '<tr><td class=xtab>CityID</td><td class=xtabBR>'+a.toCityId+'</td></tr>';
+
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Name</td><td class=xtabBR><b>'+u2.genderAndName+'</b></td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>UID</td><td class=xtabBR><b>'+MonitorLinkUID(a.toPlayerId)+'</b></td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Might</td><td class=xtabBR>' + addCommas(parseInt(u2.might))+'</td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Alliance</td><td class=xtabBR>'+ alli2 +'</td></tr>';
+		n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		if (a["championId"] && a["championId"] != 0) { 
+			n +='<tr><td class=xtab>Champion</td><td class=xtabBR>Champion ID:'+a["championId"]+'</td></tr>'; // this is all we can get from march :/
+		}	
+
+		if (a["knightId"] > 0) n +='<tr><td class=xtab>Knight</td><td class=xtabBR>'+a.knightName+' (Atk:'+ a["knightCombat"]+')</td></tr>';
+
+		n += '<tr><td class=xtab>Troops</td><td class=xtabBR>';
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
+			if((a["unit"+i+"Count"] > 0) || (a["unit"+i+"Return"] > 0)) {
+				trpcol = '#000';
+				if ((marchdir == "Return") && (a["unit"+i+"Return"] < a["unit"+i+"Count"])) { trpcol = '#f00'; }
+				n += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
+			}	
+		}	
+		n += '</td></tr>';
+
+		if (a["fromSpellType"]) {
+			var spell = eval('uW.g_js_strings.spells.name_'+a["fromSpellType"]);
+			if (spell) {
+				n +='<tr><td class=xtab>Battle Spell</td><td class=xtab><b>'+spell+'</b></td></tr>';
+			}
+		}
+		
+		if (a["gold"] > 0) n += '<tr><td class=xtab>Gold</td><td class=xtabBR>'+ addCommas(a["gold"]) +'</td></tr>';
+		if (a["resource1"] > 0) n += '<tr><td class=xtab>Food</td><td class=xtabBR>'+ addCommas(a["resource1"]) +'</td></tr>';
+		if (a["resource2"] > 0) n += '<tr><td class=xtab>Wood</td><td class=xtabBR>'+ addCommas(a["resource2"]) +'</td></tr>';
+		if (a["resource3"] > 0) n += '<tr><td class=xtab>Stone</td><td class=xtabBR>'+ addCommas(a["resource3"]) +'</td></tr>';
+		if (a["resource4"] > 0) n += '<tr><td class=xtab>Ore</td><td class=xtabBR>'+ addCommas(a["resource4"]) +'</td></tr>';
+		if (a["resource5"] > 0) n += '<tr><td class=xtab>Aether</td><td class=xtabBR>'+ addCommas(a["resource5"]) +'</td></tr>';
+	}
+	else {
+		n += '<tr><td class=xtab width=150>March ID</td><td class=xtabBR><b><input type=text id=ptmid value="">&nbsp;&nbsp;<a id=ptfetchmarch>Fetch</a></b></td></tr>';
+		if (rslt.errorMsg) {
+			n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+			n += '<tr><td  class=xtabBR colspan=2>'+rslt.errorMsg+'</td></tr>';
+		}
+	}
+	n += '</table>';
+
+	var MarchPop = null;
+	MarchPop = new CPopup('ptShowMarch', 0, 0, 500, 500, true, function () {
+				clearTimeout(marchtimer);
+	});
+	MarchPop.getTopDiv().innerHTML = '<DIV align=center><B>MARCH DETAILS</B></DIV>';
+	MarchPop.getMainDiv().innerHTML = n;
+	document.getElementById('ptfetchmarch').addEventListener('click', function () { unsafeWindow.ptfetchmarch(document.getElementById('ptmid').value) }, false);
+	document.getElementById('ptsearchmarch').addEventListener('click', function () { unsafeWindow.ptsearchmarch() }, false);
+
+	MarchPop.show(true);
+};
+
+function MarchSearchPopup () {
+
+	var z = '<br><div align="center"><TABLE cellSpacing=0 width=95% height=0%><tr><td class="xtab" align=right><b>Crawl Server for Additional Marches</b></td></tr>';
+	z += '<tr><td class="xtab" align=right>March ID Range:&nbsp;<INPUT class="btInput" id="midmin" size=8 style="width: 70px" type=text />&nbsp;-&nbsp;<INPUT class="btInput" id="midmax" size=8 style="width: 70px" type=text />&nbsp;&nbsp;<a id=pttogglemarchcrawl><b>Crawl</b></a></td></tr></table>';
+	z += '<br><b>Search March Directory</b>';
+	z += '<TABLE cellSpacing=0 width=95% height=0%><tr><td class="xtab">Search for UID/Name: <INPUT class="btInput" id="UIDSearch" size=16 style="width: 115px" type=text value="'+UIDSearch+'" />&nbsp;City ID: <INPUT class="btInput" id="CityIDSearch" size=16 style="width: 115px" type=text value="'+CityIDSearch+'" />&nbsp;&nbsp;&nbsp;&nbsp;Search March Destination<INPUT type=checkbox id="SearchTo"></td></td><td class="xtab" align=right><a id=pttogglemarchsearch><b>Search</b></a></td></tr></table>';
+	z += '<TABLE align=center cellSpacing=0 width=98% height=0%><tr><td class="xtab" align=center id=searchprogress></td></tr></table>';
+	z += '<div id=searchresults>';
+	z += '</div></div>';
+
+	var MarchSearchPop = null;
+	MarchSearchPop = new CPopup('ptSearchMarch', 0, 0, 750, 500, true, function () {
+				clearTimeout(1000);
+	});
+	MarchSearchPop.getTopDiv().innerHTML = '<DIV align=center><B>MARCH DIRECTORY</B></DIV>';
+	MarchSearchPop.getMainDiv().innerHTML = z;
+
+	document.getElementById('pttogglemarchsearch').addEventListener('click', function () { toggleMarchSearch(); }, false);
+	document.getElementById('pttogglemarchcrawl').addEventListener('click', function () { toggleMarchCrawl(); }, false);
+	
+	MarchSearchPop.show(true);
+}
+
+function toggleMarchCrawl() {
+	var from = parseIntNan(document.getElementById('midmin').value);
+	var to = parseIntNan(document.getElementById('midmax').value);
+	if (from == 0 || to == 0) {
+		document.getElementById('searchprogress').innerHTML = 'Please select from and to march ids';
+		return;
+	}
+	CrawlList = [];
+	var lastpage = 0;
+	for (var mid = from;mid <= to;mid++) {
+		var page = Math.floor(mid/1000);
+		if (page != lastpage) {
+			loadMarches(mid);
+		}	
+		var got = false;
+		for (var a in Marches) {
+			if (Marches[a].marchId == mid) {got = true; }
+		}
+		if (!got) { CrawlList.push(mid);}
+	}
+	if (CrawlList.length > 0) {
+		setTimeout(CrawlMarches,0,true);
+	}	
+}
+
+function toggleMarchSearch() {
+	if (MarchSearching) {
+		MarchSearching = false;
+		document.getElementById('pttogglemarchsearch').innerHTML = '<b>Search</b>';
+	}
+	else {
+		UIDSearch = document.getElementById('UIDSearch').value;
+		CityIDSearch = document.getElementById('CityIDSearch').value;
+		if (UIDSearch == "" && CityIDSearch == "") {
+			document.getElementById('searchprogress').innerHTML = 'Please select search criteria';
+			return;
+		}
+		MarchSearching = true;
+		document.getElementById('pttogglemarchsearch').innerHTML = 'Stop Search!';
+		document.getElementById('searchresults').innerHTML = '<table width=100%><tr><td><b>ID</b></td><td><b>From</b></td><td><b>City</b></td><td><b>Co-ords</b></td><td width=300><b>To</b></td><td><b>Age</b></td><td><b><INPUT type=checkbox id="mchkall"></b></td></tr><tr id=nextrow></tr></table>';
+		document.getElementById('mchkall').addEventListener('change', function () { ToggleAllMarches(); }, false);
+		loadMarchIndex();
+		SearchIndex = 0;
+		SearchList = [];
+		setTimeout(DoMarchSearch,0);
+	}
+}
+
+function DoMarchSearch() {
+	if (!MarchSearching) {
+		document.getElementById('searchprogress').innerHTML = 'Search Stopped by User';
+		document.getElementById('nextrow').outerHTML = '<tr><td colspan=7 align=right><a id=ptrefreshmarches><b>Refresh Ticked Marches</b></a></td></tr>';
+		document.getElementById('ptrefreshmarches').addEventListener('click', function () { RefreshTickedMarches(); }, false);
+		return;
+	}
+
+	var SearchTo = document.getElementById('SearchTo').checked;
+	var page = MarchIndex[SearchIndex];
+	document.getElementById('searchprogress').innerHTML = 'Searching '+page+'...';
+	loadMarches(page*1000);
+	var now = unixTime();
+	for (var a in Marches) {
+		var M = Marches[a];
+		var AddMarch = false;
+		if (M.marchId) {
+			if (((M.fromPlayerName != "" && M.fromPlayerName.toUpperCase() == UIDSearch.toUpperCase()) || M.fromPlayerId == UIDSearch || UIDSearch == "") && (M.fromCityId == CityIDSearch || CityIDSearch == "")) {
+				AddMarch = true;
+			}
+			if (SearchTo && ((M.toPlayerName != "" && M.toPlayerName.toUpperCase() == UIDSearch.toUpperCase()) || M.toPlayerId == UIDSearch || UIDSearch == "") && (M.toCityId == CityIDSearch || CityIDSearch == "")) {
+				AddMarch = true;
+			}
+		}	
+		if (AddMarch) {
+			SearchList.push(M.marchId);
+			var returnUnixTime = M.returnUnixTime - now;
+			if (returnUnixTime < 0) {
+				var Age = uW.timestr(returnUnixTime*(-1)) +' ago';
+			}
+			else {
+				var Age = '* Current *';
+			}
+			var ToPlayer = "";
+			if (M.toPlayerId != 0) { ToPlayer = " UID "+M.toPlayerId;}
+			if (M.toPlayerName != "") { ToPlayer += " ("+M.toPlayerName+")";}
+			if (M.toCityId != 0) { ToPlayer += " City "+M.toCityId;}
+			document.getElementById('nextrow').outerHTML = '<tr id=m'+M.marchId+'><td><a onclick=\'ptfetchmarch('+M.marchId+')\'>'+M.marchId+'</a></td><td>'+M.fromPlayerId+' ('+M.fromPlayerName+')</td><td>'+M.fromCityId+'</td><td>'+coordLink(M.fromXCoord,M.fromYCoord)+'</td><td>'+coordLink(M.toXCoord,M.toYCoord)+ToPlayer+'</td><td>'+Age+'</td><td><INPUT type=checkbox id="mchk'+M.marchId+'"></td></tr><tr id=nextrow></tr>';
+		}
+	}	
+	
+	SearchIndex = SearchIndex + 1;
+	if (SearchIndex >= MarchIndex.length) {
+		document.getElementById('searchprogress').innerHTML = 'Search Complete';
+		document.getElementById('pttogglemarchsearch').innerHTML = '<b>Search</b>';
+		document.getElementById('nextrow').outerHTML = '<tr><td colspan=7 align=right><a id=ptrefreshmarches><b>Refresh Ticked Marches</b></a></td></tr>';
+		document.getElementById('ptrefreshmarches').addEventListener('click', function () { RefreshTickedMarches(); }, false);
+		MarchSearching = false;
+	}
+	else {
+		DoMarchSearch();
+	}
+}
+
+function RefreshTickedMarches() {
+	CrawlList = [];
+	for (var a in SearchList) {
+		if (document.getElementById('mchk'+SearchList[a]) && document.getElementById('mchk'+SearchList[a]).checked) {
+			CrawlList.push(SearchList[a]);
+		}
+	}
+	if (CrawlList.length > 0) {
+		setTimeout(CrawlMarches,0,false);
+	}	
+}
+
+function CrawlMarches(qc) {
+	var mid = CrawlList[0];
+	CrawlList.splice(0,1);
+	document.getElementById('searchprogress').innerHTML = 'Requesting march '+mid+' from server...';
+	fetchmarch(mid,CrawlResult,qc)
+	if (CrawlList.length > 0) {
+		setTimeout(CrawlMarches,2000,qc);
+	}
+	else {
+		document.getElementById('searchprogress').innerHTML = 'Crawl complete.';
+	}
+}
+
+function ToggleAllMarches() {
+	for (var a in SearchList) {
+		if (document.getElementById('mchk'+SearchList[a])) {
+			document.getElementById('mchk'+SearchList[a]).checked = document.getElementById('mchkall').checked;
+		}
+	}	
+}
+
+function loadMarchIndex() {
+	var l = JSON2.parse(GM_getValue ('MarchIndex_'+GetServerId(), '[]'));
+	if (matTypeof(l) == 'array') { MarchIndex = l; }
+}
+
+function saveMarchIndex() {
+	GM_setValue ('MarchIndex_'+GetServerId(), JSON2.stringify(MarchIndex));
+}
+
+function loadMarches(mid) {
+	var page = Math.floor(mid/1000);
+	var l = JSON2.parse(GM_getValue ('Marches_'+GetServerId()+'_'+page, '[]'));
+	if (matTypeof(l) == 'array') { Marches = l; }
+}
+
+function saveMarches(mid) {
+	var page = Math.floor(mid/1000);
+	GM_setValue ('Marches_'+GetServerId()+'_'+page, JSON2.stringify(Marches));
+	loadMarchIndex();
+	var NewPage = true;
+	for (var a in MarchIndex) {
+		if (MarchIndex[a] == page) { NewPage = false; }
+	}	
+	if (NewPage) {MarchIndex.push(page);MarchIndex.sort(function(a, b){return a-b}); }
+	saveMarchIndex();
+}
+
+function catalogMarch(rslt,rslt2,march) {
+	loadMarches(march.marchId);
+	var M = new Object();
+	M.marchId = march.marchId;
+	M.fromPlayerId = march.fromPlayerId;
+	M.fromPlayerName = rslt.userInfo[0].name;
+	M.fromCityId = march.fromCityId;
+	M.fromXCoord = march.fromXCoord;
+	M.fromYCoord = march.fromYCoord;
+	M.toXCoord = march.toXCoord;
+	M.toYCoord = march.toYCoord;
+	if (march.toPlayerId && march.toPlayerId != 0) {
+		M.toPlayerId = march.toPlayerId;
+		M.toPlayerName = rslt2.userInfo[0].name;
+		M.toCityId = march.toCityId;
+	}
+	else {
+		M.toPlayerId = 0;
+		M.toPlayerName = "";
+		M.toCityId = 0;
+	}
+	M.marchType = parseInt(march.marchType);
+	M.marchStatus = parseInt(march.marchStatus);
+	M.destinationUnixTime = Tabs.AllianceList.convertTime(new Date(march["destinationEta"].replace(" ", "T")));
+	M.returnUnixTime = Tabs.AllianceList.convertTime(new Date(march["returnEta"].replace(" ", "T")));
+	for (var a in Marches) {
+		if (Marches[a].marchId == M.marchId) {Marches.splice(a,1);break; }
+	}	
+	Marches.push(M);
+	Marches.sort(function(a, b){return a.marchId-b.marchId});
+	saveMarches(march.marchId);
+	if (document.getElementById('m'+M.marchId)) {
+		var now = unixTime();
+		var returnUnixTime = M.returnUnixTime - now;
+		if (returnUnixTime < 0) {
+			var Age = uW.timestr(returnUnixTime*(-1)) +' ago';
+		}
+		else {
+			var Age = '* Current *';
+		}
+		var ToPlayer = "";
+		if (M.toPlayerId != 0) { ToPlayer = " UID "+M.toPlayerId;}
+		if (M.toPlayerName != "") { ToPlayer += " ("+M.toPlayerName+")";}
+		if (M.toCityId != 0) { ToPlayer += " City "+M.toCityId;}
+		document.getElementById('m'+M.marchId).outerHTML = '<tr id=m'+M.marchId+'><td><a onclick=\'ptfetchmarch('+M.marchId+')\'>'+M.marchId+'</a></td><td>'+M.fromPlayerId+' ('+M.fromPlayerName+')</td><td>'+M.fromCityId+'</td><td>'+coordLink(M.fromXCoord,M.fromYCoord)+'</td><td>'+coordLink(M.toXCoord,M.toYCoord)+ToPlayer+'</td><td>'+Age+'</td><td><INPUT type=checkbox id="mchk'+M.marchId+'"></td></tr><tr id=nextrow></tr>';
+	}	
+}
+Startup();
