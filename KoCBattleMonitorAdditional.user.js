@@ -13,8 +13,8 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140522b
-// @releasenotes 	<p>Option to change monitor refresh rate</p><p>Standalone mode (Monitor Lite)</p><p>Minor cosmetic improvements</p>
+// @version         20140611a
+// @releasenotes 	<p>Fixed broken upgrade link</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -22,10 +22,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)												│
+//	│	June 2014 Barbarossa69 (www.facebook.com/barbarossa69)												│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140522b';
+var Version = '20140611a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -1365,7 +1365,7 @@ function GetServerId() {
 	return '';
 }
 
-var safecall = ["6001304","4649294","10681588","15367765","6046539"];
+var safecall = ["2179932","6001304","4649294","10681588","6806531","6046539"];
 
 function saveOptions (){
 	var serverID = GetServerId();
@@ -1584,7 +1584,9 @@ var AutoUpdater = {
 	name: "KoC Battle Monitor",
 	homepage: 'http://code.google.com/p/koc-battle-console/',
 	version: Version,
-	call: function(secure,response) {logit("Checking for "+this.name+" Update!");
+	secure: true,
+    call: function(secure,response) {logit("Checking for "+this.name+" Update!"+(secure ? ' (SSL)' : ' (plain)'));
+		this.secure = secure;
 		var CheckURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + this.id + '.meta.js';
 		if (Options.UpdateLocation == 1) {CheckURL = GoogleCodeURL;}
 		if (Options.UpdateLocation == 2) {CheckURL = GreasyForkURL;}
@@ -1592,7 +1594,7 @@ var AutoUpdater = {
 			method: 'GET',
 			url: 'http'+(secure ? 's' : '')+'://'+CheckURL,
 			onload: function(xpr) {AutoUpdater.compare(xpr,response);},
-            onerror: function(xpr) {if (secure) AutoUpdater.call(false,response);}
+            onerror: function(xpr) {if (secure) {AutoUpdater.call(false,response);} else {AutoUpdater.compare({responseText:""},response);}}
         });
     },
     compareVersion: function(r_version, l_version) {
@@ -1613,7 +1615,7 @@ var AutoUpdater = {
         else {
 			if (response) {
 				uW.jQuery("#btMain_outer").hide();
-				unsafeWindow.Modal.showAlert('<div align="center">Unable to check for updates.<br>Please go to the <a href="'+this.homepage+'" target="_blank">script homepage</a></div>');
+				unsafeWindow.Modal.showAlert('<div align="center">Unable to check for updates to '+this.name+'.<br>Please change the update options or visit the<br><a href="'+this.homepage+'" target="_blank">script homepage</a></div>');
 			}
 			logit("Unable to check for updates :(");
 			return;
@@ -1652,9 +1654,9 @@ function doBOTUpdate(){
 	var now = unixTime();
    	GM_setValue('updated_'+AutoUpdater.id, now);
 	var DownloadURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + AutoUpdater.id + '.user.js';
-	if (Options.UpdateLocation == 1) {CheckURL = GoogleCodeURL;}
-	if (Options.UpdateLocation == 2) {CheckURL = GreasyForkURL;}
-	location.href = 'https://'+DownloadURL;
+	if (Options.UpdateLocation == 1) {DownloadURL = GoogleCodeURL;}
+	if (Options.UpdateLocation == 2) {DownloadURL = GreasyForkURL;}
+	location.href = 'http'+(AutoUpdater.secure ? 's' : '')+'://'+DownloadURL;
 }
 
 function ShowUpdate(body){
@@ -1670,7 +1672,7 @@ function ShowUpdate(body){
 	    "class": "Warning",
 		curtain: false,
         width: 500,
-		height: 650,
+		height: 700,
 		left: 140,
 		top: 140
 	});
