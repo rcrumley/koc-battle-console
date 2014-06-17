@@ -43,7 +43,7 @@ var http =  window.location.protocol+"\/\/";
 // These switches are for testing, all should be set to false for released version:
 var DEBUG_TRACE = false;
 var DEBUG_SEARCH = false;
-var ENABLE_TEST_TAB = true;
+var ENABLE_TEST_TAB = false;
 var ENABLE_ATTACK_TAB = false;
 var ENABLE_SAMPLE_TAB = false;
 var DISABLE_BULKADD_LIST = false;
@@ -25831,12 +25831,12 @@ function GuardianTT () {
 
 
 function AutoUpdater (prom) {
-	var greasyfork = http+'greasyfork.org/scripts/892-koc-power-bot/code/KOC Power Bot.user.js';
+	var userscripts = http+'greasyfork.org/scripts/892-koc-power-bot/code/KOC Power Bot.user.js';
 	var googlecode = http+'code.google.com/p/koc-battle-console/source/browse/trunk/174296.user.js';
 	switch(GlobalOptions.pbupdatebeta)
 	{
 		case "0":
-		var scriptpage = greasyfork;
+		var scriptpage = userscripts;
 		break;
 		case "1":
 		var scriptpage = googlecode;
