@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140609a
+// @version        20140617a
 // @namespace      mat
-// @homepage       https://userscripts.org/scripts/show/101052
+// @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *.kingdomsofcamelot.com/*platforms/kabam*
 // @include        *apps.facebook.com/kingdomsofcamelot/*
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140609a';
+var Version = '20140617a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -43,7 +43,7 @@ var http =  window.location.protocol+"\/\/";
 // These switches are for testing, all should be set to false for released version:
 var DEBUG_TRACE = false;
 var DEBUG_SEARCH = false;
-var ENABLE_TEST_TAB = false;
+var ENABLE_TEST_TAB = true;
 var ENABLE_ATTACK_TAB = false;
 var ENABLE_SAMPLE_TAB = false;
 var DISABLE_BULKADD_LIST = false;
@@ -4789,7 +4789,7 @@ Tabs.Throne = {
 		if (!document.getElementById('ThroneTRS')) return;
 		if (document.getElementById('ThroneTRS').innerHTML.indexOf('The below values are alpha and may not be accurate') != -1) return;
 		m = document.getElementById('ThroneTRS').innerHTML;
-		m += '<br><table><font color=red>The below values are alpha and may not be accurate<br> please inform of inaccuracies via https://userscripts.org/scripts/discuss/101052</font>';
+		m += '<br><table><font color=red>The below values are alpha and may not be accurate<br> please inform of inaccuracies via https://code.google.com/p/koc-power-bot/issues/list</font>';
 		for (i in unsafeWindow.cm.thronestats.effects) {
 			//            var z = unsafeWindow.cm.ThroneController.effectBonus(Number(i));
 			var z = equippedthronestats(Number(i));
@@ -12785,7 +12785,7 @@ Tabs.Options = {
         <TR><TD><INPUT id=pbHideOnGoto type=checkbox /></td><TD>'+translate("Hide window when clicking on map coordinates")+'</td></tr>\
         <TR><TD><INPUT id=pbWideOpt type=checkbox '+ (GlobalOptions.pbWideScreen?'CHECKED ':'') +'/></td><TD>'+translate("Enable widescreen style:")+' '+ htmlSelector({normal:'Normal', wide:'Widescreen', ultra:'Ultra'},GlobalOptions.pbWideScreenStyle,'id=selectScreenMode') +' '+translate("(all domains, requires refresh)")+'</td></tr>\
         <TR><TD><INPUT id=pbsendmeaway type=checkbox '+ (GlobalOptions.pbNoMoreKabam?'CHECKED ':'')+'/></td><TD>'+translate("Send me away from Kabam!")+'</td></tr>\
-        <TR><TD><INPUT id=pbupdate type=checkbox '+ (GlobalOptions.pbupdate?'CHECKED ':'') +'/></td><TD>'+translate("Check updates on")+' '+ htmlSelector({0:'Userscripts', 1:'Google Code'},GlobalOptions.pbupdatebeta,'id=pbupdatebeta') +' '+translate("(all domains)")+' &nbsp; &nbsp; <INPUT id=pbupdatenow type=submit value="'+translate("Update Now")+'" /></td></tr>\
+        <TR><TD><INPUT id=pbupdate type=checkbox '+ (GlobalOptions.pbupdate?'CHECKED ':'') +'/></td><TD>'+translate("Check updates on")+' '+ htmlSelector({0:'Greasyfork', 1:'Google Code'},GlobalOptions.pbupdatebeta,'id=pbupdatebeta') +' '+translate("(all domains)")+' &nbsp; &nbsp; <INPUT id=pbupdatenow type=submit value="'+translate("Update Now")+'" /></td></tr>\
         <TR><TD>&nbsp;&nbsp;&nbsp;-</td><TD>'+translate("Change window transparency between \"0.7 - 2\" ")+'&nbsp <INPUT id=pbtogOpacity type=text size=3 /> <span style="color:#800; font-weight:bold"><sup>'+translate("*Requires Refresh")+'</sup></span></td></tr>\
         <TR><td>&nbsp;&nbsp;&nbsp;-</td><TD>'+translate("Throttle Map Requests:")+' '+ htmlSelector({1200:translate('1.2x Fast'), 4000:translate('4x Normal'), 8000:translate('8x Slow'), 15000:translate('15x Slow'), 20000:translate('20x Slow'), 30000:translate('30x Slow')},Options.MAP_DELAY,'id=pbMAP_DELAY')+'</td></tr>\
       <TR><TD><INPUT id=pblogperms type=checkbox '+ (Options.plog?'CHECKED ':'') +'/></td><TD>'+translate("Occasional logging of data to help with script development")+'</td></tr>\
@@ -14724,17 +14724,19 @@ var RefreshEvery  = {
      var Left = parseInt(t.NextRefresh - now);
      if(Options.detAFK) {
      if ( Left < 0 && isAFK){
+		clearTimeout (t.timer);
         Left = 0;
         t.doit();
      }    	
      } else {
     if ( Left < 0){
+		clearTimeout (t.timer);
         Left = 0;
         t.doit();
      }
  
      };
-     if (Left < -1) text += '<BR>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=white>'+translate("Next refresh in")+': <B>'+ timestr(Left) +'</b></font></div>';
+     if (Left < -1) text += '<BR>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=white>'+translate("Waiting for AFK")+': <B>'+ timestr(Left*-1) +'</b></font></div>';
      else if ( Left < 60) text += '<BR>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=white>'+translate("Next refresh in")+': </font><FONT color=red><B>'+ timestr(Left) +'</b></font></div>';
      else text += '<BR>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=white>'+translate("Next refresh in")+': <B>'+ timestr(Left) +'</b></font></div>';
 
@@ -14818,8 +14820,10 @@ function KOCnotFound(secs){
   function countdown (){
     var secsLeft = endSecs - (new Date().getTime()/1000);
     document.getElementById('pbwdsecs').innerHTML = timestr(secsLeft);
-    if (secsLeft < 0)
+    if (secsLeft < 0) {
+	  clearTimeout (countdownTimer);
       reloadKOC();
+	}  
   }
   function cancel (){
     clearTimeout (countdownTimer);
@@ -17315,14 +17319,15 @@ function strButton20 (label, tags){
 function reloadKOC (){
   var serverId = getServerId();
   var goto = window.location.protocol+'//apps.facebook.com/kingdomsofcamelot/?s='+serverId;
-  if(document.URL.match(/standalone=1/i)){
+  if (document.URL.search(/kabam.com\/games\/kingdoms-of-camelot\/play/i) >= 0 || document.URL.match(/standalone=1/i)){
     goto = window.location.protocol+'//www.kabam.com/games/kingdoms-of-camelot/play?s='+serverId;
   };
-  var t = '<FORM target="_top" action="'+ goto +'" method=post><INPUT id=xxpbButReload type=submit value=RELOAD><INPUT type=hidden name=s value="'+ serverId +'"</form>';
-  var e = document.createElement ('div');
-  e.innerHTML = t;
-  document.body.appendChild (e);
-  setTimeout (function (){document.getElementById('xxpbButReload').click();}, 0);
+//  var t = '<FORM target="_top" rel="noreferrer" action="'+ goto +'" method=post><INPUT id=xxpbButReload type=submit value=RELOAD><INPUT type=hidden name=s value="'+ serverId +'"</form>';
+//  var e = document.createElement ('div');
+//  e.innerHTML = t;
+//  document.body.appendChild (e);
+//  setTimeout (function (){document.getElementById('xxpbButReload').click();}, 0);
+	setTimeout (function (){window.top.location = goto;}, 0);
 }
   
 function htmlSelector (valNameObj, curVal, tags){
@@ -22850,7 +22855,7 @@ Tabs.gifts = {
         m+='</select> </td><td> <INPUT id=pbaugift type=checkbox '+ (GiftDB.agift?' CHECKED':'') +'\>Auto gift when available </td><td> <INPUT id=pbadgift type=checkbox '+ (GiftDB.adgift?' CHECKED':'') +'\> Scan and delete gift messages</td><td> Total sent:</td><td id=giftnumber></td></tr></table></DIV>';
 	m+='<table><TR><TD><INPUT id=resetlist type=submit value="Reset Gift List"> Reset gifting list (may take a day to re-populate)</td></tr></table></DIV>';
         m += '<DIV class=pbStat></DIV>';
-        m+= '<DIV>For reasons unknown the server picks and chooses the recipients.  You will find the counter is an accurate representation of who kabam says they sent the gifts to.  I invite you to try theories, gift combinations and see if you can get the numbers higher.  each type of gift sent is a separate request to the server.  You may update us on working scenarios <a href=https://userscripts.org/scripts/discuss/101052>here</a></DIV>';
+        m+= '<DIV>For reasons unknown the server picks and chooses the recipients.  You will find the counter is an accurate representation of who kabam says they sent the gifts to.  I invite you to try theories, gift combinations and see if you can get the numbers higher.  each type of gift sent is a separate request to the server.  You may update us on working scenarios <a href=https://code.google.com/p/koc-power-bot/issues/list>here</a></DIV>';
         m += '<DIV class=pbStat></DIV>';
         m += '<DIV style="height:250px; max-height:250px; overflow-y:auto" id=GiftsTAB></DIV>';
         div.innerHTML = m;
@@ -25437,7 +25442,7 @@ TTpaintstats : function () {
 	if(!document.getElementById('ChampionTRS'))return;
    if(document.getElementById('ChampionTRS').innerHTML.indexOf('The below values are alpha and may not be accurate') != -1)return;
             m= document.getElementById('ChampionTRS').innerHTML;
-         m+='<br><table><font color=red>The below values are alpha and may not be accurate<br> please inform of inaccuracies via https://userscripts.org/scripts/discuss/101052</font>';
+         m+='<br><table><font color=red>The below values are alpha and may not be accurate<br> please inform of inaccuracies via https://code.google.com/p/koc-power-bot/issues/list</font>';
          for(i in t.Effects) {
 //            var z = unsafeWindow.cm.ChampionController.effectBonus(Number(i));
 	    var z = equippedChampionstats(Number(i));
@@ -25826,18 +25831,18 @@ function GuardianTT () {
 
 
 function AutoUpdater (prom) {
-	var userscripts = http+'userscripts.org/scripts/source/174296.user.js';
+	var greasyfork = http+'greasyfork.org/scripts/892-koc-power-bot/code/KOC Power Bot.user.js';
 	var googlecode = http+'code.google.com/p/koc-battle-console/source/browse/trunk/174296.user.js';
 	switch(GlobalOptions.pbupdatebeta)
 	{
 		case "0":
-		var scriptpage = userscripts;
+		var scriptpage = greasyfork;
 		break;
 		case "1":
 		var scriptpage = googlecode;
 		break;
 		default:
-		var scriptpage = userscripts;;
+		var scriptpage = googlecode;
 		break;
 	};
 	GM_xmlhttpRequest({
@@ -25867,7 +25872,7 @@ function AutoUpdater (prom) {
                 // Cancel
                 function() {
                 	try {
-                	if(lobalOptions.pbupdate) {
+                	if(GlobalOptions.pbupdate) {
                         if(confirm('Do you want to turn off auto updating for this script?')) {
                             //GM_setValue('updated_101052', 'off');
                             GlobalOptions.pbupdate = false;
