@@ -410,6 +410,7 @@ function trStartup (){
         div.trCard div.description div.briton.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_statue_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.briton.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_candelabrum_normal_1_5.png") top left no-repeat;}\
 		div.trCard div.description div.briton.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.briton.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_tapestry_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.druid.advisor{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_advisor_normal_1.png") top left no-repeat;}\
         div.trCard div.description div.druid.banner{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_banner_normal_1.png") top left no-repeat;}\
         div.trCard div.description div.druid.chair{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_chair_normal_1.png") top left no-repeat;}\
@@ -419,6 +420,7 @@ function trStartup (){
         div.trCard div.description div.druid.hero{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_hero_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.druid.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_statue_normal_1_5.png") top left no-repeat;}\
 		div.trCard div.description div.druid.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.druid.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_tapestry_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.druid.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_candelabrum_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.fey.advisor{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_advisor_normal_1.png") top left no-repeat;}\
         div.trCard div.description div.fey.banner{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_banner_normal_1.png") top left no-repeat;}\
@@ -430,6 +432,7 @@ function trStartup (){
         div.trCard div.description div.fey.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_statue_normal_1_5.png") top left no-repeat;}\
         div.trCard div.description div.fey.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_candelabrum_normal_1_5.png") top left no-repeat;}\
 		div.trCard div.description div.fey.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.fey.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_tapestry_normal_1_5.png") top left no-repeat;}\
         div.trCard{font:bold 16px Georiga; overflow: hidden;}\
         div.trCard>div{float:left;border:1px solid #a56631;margin:0px;padding:0px;width:200px; height: 300px;background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/modal_med_bg_4.png") -200px 0 no-repeat;}\
         div.trCard div.title{font:bold 16px Georgia;border-bottom:1px solid #703200;padding:4px 3px 5px 8px;background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/panel/modal/item_bg.png") -20px -100px no-repeat;}\
@@ -1234,6 +1237,7 @@ function installHandlerFunctions() {
         $("#trophyContainer").draggable();
         $("#statueContainer").draggable();
 		$("#petContainer").draggable();
+		$("#tapestryContainer").draggable();
         
         Tabs.throneSalvage.updateTRTab();
         Tabs.upgrader.updateTRTab();
@@ -2298,6 +2302,7 @@ Tabs.throneSalvage = {
             m += '  <option value="hero">Hero</option>';
             m += '  <option value="statue">Statue</option>';
 			m += '  <option value="pet">Pet</option>';
+			m += '  <option value="tapestry">Tapestry</option>';
             m += '</select></span></div></td>';
             m += '<td align="right"><INPUT id=trAddRule type=button value="Create Rule"/></td>';
             m += '</tr></table>';
@@ -3139,7 +3144,7 @@ Tabs.organizer = {
         tabDisabled : false,
         myDiv : null,
         itemLists : [],
-        itemTypes : { chair: 0, table: 1, window: 2, banner: 3, advisor: 4, trophy: 5, candelabrum: 6, hero: 7, statue: 8, pet: 9},
+        itemTypes : { chair: 0, table: 1, window: 2, banner: 3, advisor: 4, trophy: 5, candelabrum: 6, hero: 7, statue: 8, pet: 9, tapestry: 10},
         selectedItems : [],
         panelId: -1,
         panelType: "upgrade",
@@ -3156,7 +3161,7 @@ Tabs.organizer = {
             t.myDiv = div;
 
             // setup the tab
-            var m = '<Div width: 750px><DIV id=trOrganizer class=trStat>ORGANIZER</div>';
+            var m = '<Div><DIV id=trOrganizer class=trStat>ORGANIZER</div>';
             var effects = [];
             for (e in CM.thronestats.effects)
             {
@@ -3259,11 +3264,11 @@ Tabs.organizer = {
 
             m += "<div id='trScrollDiv' style='position: static; width: " + upgradeData.organizeW + "; height: " + upgradeData.organizeH + "; overflow-x: auto; overflow-y: auto;'>";
 
-            var ii = Math.max(t.itemLists['chair'].length, t.itemLists['table'].length, t.itemLists['window'].length, t.itemLists['banner'].length, t.itemLists['advisor'].length, t.itemLists['trophy'].length, t.itemLists['candelabrum'].length, t.itemLists['hero'].length, t.itemLists['statue'].length, t.itemLists['pet'].length );
+            var ii = Math.max(t.itemLists['chair'].length, t.itemLists['table'].length, t.itemLists['window'].length, t.itemLists['banner'].length, t.itemLists['advisor'].length, t.itemLists['trophy'].length, t.itemLists['candelabrum'].length, t.itemLists['hero'].length, t.itemLists['statue'].length, t.itemLists['pet'].length,t.itemLists['tapestry'].length  );
 
             m += "<div id='trTableDiv' style='width: 100%;'>";
             m += '<TABLE id=trDisplayTable width=100% height=0% class=trTab>';
-            m += "<tr align=center valign=top><th width=10%>Chairs</th><th width=10%>Tables</th><th width=10%>Windows</th><th width=10%>Banners</th><th width=10%>Advisors</th><th width=10%>Throphies</th><th width=10%>Candelabra</th><th width=10%>Heroes</th><th width=10%>Statues</th><th width=10%>Pets</th></tr>";
+            m += "<tr align=center valign=top><th width=5%>Chairs</th><th width=5%>Tables</th><th width=5%>Windows</th><th width=5%>Banners</th><th width=5%>Advisors</th><th width=5%>Throphies</th><th width=5%>Candelabra</th><th width=5%>Heroes</th><th width=5%>Statues</th><th width=5%>Pets</th><th width=5%>Tapestry</th></tr>";
             m += '</table></div>';
             m += '</div>';
             m += '</div>';
@@ -3619,9 +3624,9 @@ Tabs.organizer = {
             var m = "";
             var mm;
             var tab = document.getElementById('trDisplayTable');
-            var ii = Math.max(t.itemLists['chair'].length, t.itemLists['table'].length, t.itemLists['window'].length, t.itemLists['banner'].length, t.itemLists['advisor'].length, t.itemLists['trophy'].length, t.itemLists['candelabrum'].length, t.itemLists['hero'].length, t.itemLists['statue'].length, t.itemLists['pet'].length);
+            var ii = Math.max(t.itemLists['chair'].length, t.itemLists['table'].length, t.itemLists['window'].length, t.itemLists['banner'].length, t.itemLists['advisor'].length, t.itemLists['trophy'].length, t.itemLists['candelabrum'].length, t.itemLists['hero'].length, t.itemLists['statue'].length, t.itemLists['pet'].length,t.itemLists['tapestry'].length );
 
-            m += "<tr align=center valign=top><th width=10%>Chairs</th><th width=10%>Tables</th><th width=10%>Windows</th><th width=10%>Banners</th><th width=10%>Advisors</th><th width=10%>Throphies</th><th width=10%>Candelabra</th><th width=10%>Heroes</th><th width=10%>Statues</th><th width=10%>Pets</th></tr>";
+            m += "<tr align=center valign=top><th width=5%>Chairs</th><th width=5%>Tables</th><th width=5%>Windows</th><th width=5%>Banners</th><th width=5%>Advisors</th><th width=5%>Throphies</th><th width=5%>Candelabra</th><th width=5%>Heroes</th><th width=5%>Statues</th><th width=5%>Pets</th><th width=5%>Tapestry</th></tr>";
             for (var k= 0; k < ii ; k++)
             {
                 mm = '<TR  align=left valign=top style="height: auto;">';
