@@ -1,10 +1,19 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140610a
+// @version        20140714a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
+// @grant       unsafeWindow
+// @grant       GM_deleteValue
+// @grant       GM_getValue
+// @grant       GM_setValue
+// @grant       GM_listValues
+// @grant       GM_addStyle
+// @grant       GM_xmlhttpRequest
+// @grant       GM_log
+// @grant       GM_registerMenuCommand
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -15,7 +24,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140610a';
+var Version = '20140714a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -93,7 +102,7 @@ var Options = {
 	fixTower2: true,
 	fixMapDistance: true,
 	fixMsgCount: true,
-	fixMarchUnits: true,
+	fixMarchUnits: false,
 	fixLoadCap: true,
 	fixPageNav: true,
 	enhanceViewMembers: true,
@@ -365,7 +374,7 @@ var ptStartupTimer = null;
 var uW = unsafeWindow;
 var seed_player_g = uW.seed.player.g;
 var ResetColors = false;
-var nTroopType = 19;
+var nTroopType = 20;
 var reportpos = {
 	x: -999,
 	y: -999
@@ -518,7 +527,7 @@ function ptStartup() {
 	GMTclock.init();
 	DispReport.init();
 	mapinfoFix.init();
-	MarchUnitsFix.init();
+//	MarchUnitsFix.init(); fixed by kabam
 	LoadCapFix.init();
 	ApothTimeFix.init();
 	TRAetherCostFix.init();
@@ -546,7 +555,6 @@ function ptStartup() {
 	AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
 
 	if (uW.tvuid == "6046539") AddMainTabLink('DEBUG', debugWin.doit);
-
 	//  var ss_onload = unsafeWindow.seed.ss;
 	//  multiBrowserOverride();
 	//TestSomething.init ();  
@@ -1426,11 +1434,12 @@ var ChatStuff = {
 		if (m[0].indexOf('UID:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bUID:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 		if (m[0].indexOf('TRC:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bTRC:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 
+		
 		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
-		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/101052")>$2</a>$3');
-		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/103659")>$2</a>$3');
-		msg = msg.replace(/(\W)(tro)(\W)/gi, '$1<a onclick=window.open("https://userscripts.org/scripts/show/132329")>$2</a>$3');
-		msg = msg.replace(/(\W)(kocers\.com)(\W)/gi, '$1<a onclick=window.open("https://kocscripters.com")>kocscripters.com</a>&nbsp;$3');
+		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-bot/")>$2</a>$3');
+		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-tools/")>$2</a>$3');
+		msg = msg.replace(/(\W)(tro)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/ne0-kocbot/")>$2</a>$3');
+		msg = msg.replace(/(\W)(kocmon)(\W)/gi, '$1<a onclick=window.open("http://kocmon.com/</a>&nbsp;$3');
 		msg = msg.replace(/(\W)(forums)(\W)/gi, '$1<a onclick=window.open("http://community.kabam.com/forums/forumdisplay.php?4-Kingdoms-of-Camelot")>$2</a>$3');
 		var m = /(Lord|Lady) (.*?)</im.exec(msg);
 		if (m != null)
@@ -2983,6 +2992,99 @@ Tabs.Tournament = {
 		var t = Tabs.Tournament;
 		return t.cont;
 	},
+	getTrainTime: function (n, p, cid) {
+		if (p < 1) {
+			return 0
+		}
+		var h =  + (uW.unitcost["unt" + n][7]) * p,
+		c,
+		f = {},
+		g = Seed.buildings["city" + cid],
+		b = {},
+		e = Seed.knights["city" + cid],
+		l,
+		q = Seed.leaders["city" + cid];
+		f.barracks = 0;
+		f.workshop = 0;
+		f.stable = 0;
+		f.tech = 0;
+		f.knight = 0;
+		f.ultimate = 0;
+		uW.jQuery.each(g, function (v, u) {
+			u.id =  + (u[0]);
+			u.level =  + (u[1]);
+			var t = (parseInt(n) == 13 || parseInt(n) == 14 || parseInt(n) == 15);
+			u.isPrestige = (parseInt(u[2]) >= 100 && parseInt(u[2]) <= 105);
+			if ((u.id === 13 || u.id === 22 || u.id === 24 || u.id === 26) && u.level > 0) {
+				if ((t && u.isPrestige) || (!t && !u.isPrestige)) {
+					f.barracks += (u.level + 9)
+				}
+			}
+			if (u.id === 16 && u.level > 0) {
+				if ( + (n) >= 9 &&  + (n) < 13) {
+					f.workshop = u.level
+				}
+			}
+			if (u.id === 17 && u.level > f.stable) {
+				if ( + (n) >= 7 &&  + (n) < 13) {
+					f.stable = u.level
+				}
+			}
+		});
+		c = f.barracks / 10;
+		h = Math.max(1, Math.ceil(h / c));
+		c = 1;
+		if (e) {
+			l = e["knt" + q.combatKnightId];
+			if (l) {
+				f.knight = ( + (l.combatBoostExpireUnixtime) - uW.unixtime() > 0) ? (l.combat * 1.25) : l.combat
+			} else {
+				f.knight = 0
+			}
+		}
+		if (Seed.tech) {
+			f.tech = Seed.tech.tch5
+		}
+		f.ultimate = f.workshop + f.stable + f.tech;
+		c = c * (1 + (0.1 * f.ultimate) + (0.005 * f.knight));
+		var d = uW.cm.ThroneController.effectBonus(77);
+		c = c * (1 + (d / 100));
+		if (uW.cm.WorldSettings.isOn("GUARDIAN_MARCH_EFFECT")) {
+			var j = uW.cm.guardianModalModel.getStoneTrainingSpeedBonus();
+			c = c * (1 + j)
+		}
+		h = Math.max(1, Math.ceil(h / c));
+		if (uW.cm.PrestigeModel.isPrestige(cid)) {
+			var a = uW.cm.PrestigeModel.getPrestigeLevel(cid);
+			if (a > 0) {
+				var m = uW.cm.WorldSettings.getSetting("ASCENSION_BARRACKS_BOOST"),
+				k = JSON.parse(m),
+				o = k.values[a - 1][1],
+				i = parseFloat(o);
+				h = Math.ceil(h * i)
+			}
+		}
+		var r = uW.cm.BlessingSystemModel.isBlessingActive(uW.cm.BlessingSystemModel.getBlessing().DEATH_FROM_AFAR);
+		if (n == 6 && r) {
+			h = Math.ceil(h - (h * uW.cm.BlessingSystemModel.applyBlessing(uW.cm.BlessingSystemModel.getBlessing().DEATH_FROM_AFAR, cid, {})))
+		}
+		h = Math.ceil(h - (h * uW.cm.BlessingSystemModel.applyBlessing(uW.cm.BlessingSystemModel.getBlessing().EXPEDITED_SENTENCING, cid, {
+						traintime : true,
+						unitid : n
+					})));
+		h = Math.ceil(h - (h * uW.cm.BlessingSystemModel.applyBlessing(uW.cm.BlessingSystemModel.getBlessing().TO_THE_FRONT_LINES, cid, {
+						unitid : n
+					})));
+		h = Math.ceil(h - (h * uW.cm.BlessingSystemModel.applyBlessing(uW.cm.BlessingSystemModel.getBlessing().PRIORITIZED_CONSTRUCTION, cid, {
+						unittype : n
+					})));
+		if (uW.cm.VipModel.isActive()) {
+			var s = uW.cm.VipModel.getBoostValue("benefitTraining");
+			h = Math.ceil(h - (h * (s / 100)))
+		}
+		return h
+	},
+	
 	show: function () {
 		var t = Tabs.Tournament;
 		t.cont.style.overflowY = 'auto';
@@ -3010,9 +3112,13 @@ Tabs.Tournament = {
 		mhtl += "&nbsp;/h</td>";
 		var temps = [];
 		for (var i = 0; i < Cities.numCities; i++) {
-			temps[i] = ((Cities.cities[i]['Troop' + Options.TourneyTroopType + 'Time'] > 0) ? (3600 / Cities.cities[i]['Troop' + Options.TourneyTroopType + 'Time']) : 0);
-			temps[i] = temps[i] + parseInt(temps[i] * equippedthronestats(77) / 100);
-			mhtl += "<td>" + addCommas(parseInt(temps[i])) + "</td>";
+			temps[i] = (3600 / (t.getTrainTime(Options.TourneyTroopType,100000,Cities.cities[i].id)/100000));
+			if (!isNaN(temps[i])) {
+				mhtl += "<td>" + addCommas(parseInt(temps[i])) + "</td>";
+			}	
+			else {
+				mhtl += "<td>N/A</td>";
+			}	
 		}
 		mhtl += "</tr><tr><td><img height=18 src=https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/population_40.png title=Population> Population/h</td>";
 		var pop = [];
@@ -3024,14 +3130,11 @@ Tabs.Tournament = {
 		mhtl += "</tr><tr><td><b>Difference</b></td>";
 		var diff = 0;
 		for (var i = 0; i < Cities.numCities; i++) {
-			if (temps[i] <= 0) {
-				diff = 'N/A';
-			}
 			diff = parseInt(pop[i] - temps[i]);
 			var couleur = " style='font-color:green' ";
 			if (diff < 0) couleur = " style='background-color:red' ";
-			if (temps[i] <= 0) {
-				mhtl += "<td style='background-color:red'><center><b>n/a</b></center></td>";
+			if (isNaN(diff)) {
+				mhtl += "<td style='background-color:red'><center><b>N/A</b></center></td>";
 			} else {
 				mhtl += "<td " + couleur + "><b>" + addCommas(parseInt(diff)) + "</b></td>";
 			}
@@ -5071,7 +5174,12 @@ ajax/viewCourt.php:
 			parameters: params,
 			onSuccess: function (transport) {
 				var rslt = eval("(" + transport.responseText + ")");
-				if (rslt.ok) test = rslt.userInfo[0].name;
+				if (rslt.ok) {
+					test = rslt.userInfo[0].name;
+					document.getElementById('altInput').innerHTML = '';
+					document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>' + uW.g_js_strings.commonstr.loadingddd + '</center>';
+					t.fetchPlayerList(test, t.eventGotPlayerList);
+				}	
 				else document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>' + uW.g_js_strings.barbarian.erroroccured + '</center>';
 			},
 			onFailure: function (rslt) {
@@ -5079,10 +5187,6 @@ ajax/viewCourt.php:
 				return;
 			},
 		});
-		t.pName = t.asName;
-		document.getElementById('altInput').innerHTML = '';
-		document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>' + uW.g_js_strings.commonstr.loadingddd + '</center>';
-		setTimeout(t.fetchPlayerList, 500, test, t.eventGotPlayerList);
 	},
 	clickedPlayerDetail: function (span, uid) {
 		var t = Tabs.AllianceList;
@@ -6119,7 +6223,7 @@ ajax/viewCourt.php:
 			notify(rsltA);
 		}
 		var params = uW.Object.clone(uW.g_ajaxparams);
-		params.allianceName = allianceName;
+		params.allianceName = allianceName.replace(/\ /g,"_");
 		new MyAjaxRequest(uW.g_ajaxpath + "ajax/allianceGetSearchResults.php" + uW.g_ajaxsuffix, {
 			method: "post",
 			parameters: params,
@@ -6367,6 +6471,7 @@ Tabs.Test = {
 		  <TR><TD align=right># of Hussars: </td><TD><INPUT type=text size=9 value=0 id=faketroop16></td></tr>\
 		  <TR><TD align=right># of Halberdiers: </td><TD><INPUT type=text size=9 value=0 id=faketroop17></td></tr>\
 		  <TR><TD align=right># of Onagers: </td><TD><INPUT type=text size=9 value=0 id=faketroop18></td></tr>\
+		  <TR><TD align=right># of Saboteurs: </td><TD><INPUT type=text size=9 value=0 id=faketroop19></td></tr>\
 		  <TR><TD align=right>Fake name to use: </td><TD><INPUT type=text size=15 value=oftheNOOBS id=fakeName></td></tr>\
 		  <TR><TD align=right>Target city: </td><TD>' + citySelect + '</td></tr>\
         <TR><TD colspan=2 align=center><INPUT id=testSendMarch type=submit value="Fake Attack" \></td></tr></table>\
@@ -6624,7 +6729,7 @@ Tabs.Options = {
 			}, Options.whisperplay, 'id=ptwhisplay') + '</td></tr>';
 			m += '<TR><TD><INPUT id=ptEnableTowerAlert type=checkbox /></td><TD>Enable sound alert on tower alert in chat</td></tr>';
 			m += '<TR><TD><INPUT id=ptupdate type=checkbox ' + (GlobalOptions.ptupdate ? 'CHECKED ' : '') + '/></td><TD>Check updates on ' + htmlSelector({
-				0: 'Userscripts',
+				0: 'GreasyFork',
 				1: 'Google Code'
 			}, GlobalOptions.ptupdatebeta, 'id=ptupdatebeta') + ' (all domains) &nbsp; &nbsp; <INPUT id=ptupdatenow type=submit value="Update Now" /></td></tr>';
 			m += '<TR><TD><INPUT id=ptEnableMiniRefresh type=checkbox ' + (Options.miniRefresh ? 'CHECKED ' : '') + '/></td><TD> Refresh data/marches every ';
@@ -6652,7 +6757,7 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togMapInfo type=checkbox /></td><TD>Fix reassign button on maptile info</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo2 type=checkbox /></td><TD>Add reassign button when clicked on own city</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo3 type=checkbox /></td><TD>Include player name / city name in new bookmarks</td></tr>';
-			m += '<TR><TD><INPUT id=togMarchUnits type=checkbox /></td><TD>Fix march size calculation in march screen</td></tr>';
+			m += '<TR><TD><INPUT id=togMarchUnits type=checkbox disabled/></td><TD>Fix march size calculation in march screen (Fixed by Kabam)</td></tr>';
 			m += '<TR><TD><INPUT id=togLoadCapFix type=checkbox /></td><TD>Limit load capacity to not exceed throne room load cap</td></tr>';
 			m += '<TR><TD><INPUT id=togApothTimeFix type=checkbox /></td><TD>Fix revival time calculator (not working for max button clicked)</td></tr>';
 			m += '<TR><TD><INPUT id=togTRAetherCostFix type=checkbox /></td><TD>Fix display of aetherstones for throne room upgrade/enhance</td></tr>';
@@ -6689,7 +6794,7 @@ Tabs.Options = {
 			t.togOpt('togMapInfo2', 'mapInfo2', mapinfoFix.setEnable2, mapinfoFix.isAvailable2);
 			t.togOpt('togMapInfo3', 'mapInfo3', mapinfoFix.setEnable3, mapinfoFix.isAvailable3);
 			t.togOpt('togMapInfo4', 'dispStatus', mapinfoFix.setEnableDispStatus, mapinfoFix.isAvailableDispStatus);
-			t.togOpt('togMarchUnits', 'fixMarchUnits', MarchUnitsFix.setEnable, MarchUnitsFix.isAvailable);
+//			t.togOpt('togMarchUnits', 'fixMarchUnits', MarchUnitsFix.setEnable, MarchUnitsFix.isAvailable);
 			t.togOpt('togLoadCapFix', 'fixLoadCap', LoadCapFix.setEnable, LoadCapFix.isAvailable);
 			t.togOpt('togApothTimeFix', 'fixApothTime', ApothTimeFix.setEnable, ApothTimeFix.isAvailable);
 			t.togOpt('togTRAetherCostFix', 'fixTRAetherCost', TRAetherCostFix.setEnable, TRAetherCostFix.isAvailable);
@@ -7255,20 +7360,20 @@ Tabs.Train = {
 		var TotalTimeArthur = TroopTime * 0.5;
 		var TotalTimeMerlin = TroopTime * 0.3;
 		var TotalTTS = unsafeWindow.cm.ThroneController.effectBonus(77);
-		var baseTime = t.calcBaseTrainTime(TroopTypeID, NumOfTroops);
+		var baseTime = t.calcBaseTrainTime(TroopTypeID, NumOfTroops,t.selectedCity.id);
 		message = '<TABLE align=center><TR>';
 		message += '<TR><TD><B>Base Time NO TR: ' + timestr(baseTime, true) + ' </b></td></tr>';
 		message += '<TR><TD>Time with ' + TotalTTS + '% Throne Boost : </td><TD>' + timestr(TroopTime, true) + '</td></tr>';
-		message += '<TR><TD>Time with Lacelot\'s : </td><TD>' + timestr(TotalTimeLancelot, true) + ' </td></tr>';
+		message += '<TR><TD>Time with Lancelot\'s : </td><TD>' + timestr(TotalTimeLancelot, true) + ' </td></tr>';
 		message += '<TR><TD>Time with Arthur\'s : </td><TD>' + timestr(TotalTimeArthur, true) + ' </td></tr>';
 		message += '<TR><TD>Time with Merlin\'s : </td><TD>' + timestr(TotalTimeMerlin, true) + '</td></tr>';
 		message += '<TR><TD>Time with 2x Reso : </td><TD>' + timestr(TotalTime2x15, true) + ' - ' + timestr(TotalTime2x5, true) + ' </td></tr>';
 		message += '<TR><TD>Time with 4x Reso : </td><TD>' + timestr(TotalTime4x25, true) + ' - ' + timestr(TotalTime4x10, true) + ' </td></tr></table>';
 		document.getElementById('pbTroopTimeEst').innerHTML = message;
 	},
-	calcBaseTrainTime: function (d, f) {
+	calcBaseTrainTime: function (d, f, c) {
 		var t = Tabs.Train;
-		var cityId = t.selectedCity.id;
+		var cityId = c;
 		var uw = unsafeWindow;
 		var c = +(uw.unitcost["unt" + d][7]) * f,
 			e, k = {},
@@ -7826,9 +7931,11 @@ Tabs.Train = {
 		t.stats.barracks = (isSpecial) ? (getCityBuilding(cityId, 22).count + getCityBuilding(cityId, 24).count + getCityBuilding(cityId, 26).count) : getCityBuilding(cityId, 13).count;
 		var m = '<CENTER><B>' + Cities.byID[cityId].name + ' &nbsp; (' + Cities.byID[cityId].x + ',' + Cities.byID[cityId].y + ')</b></center><HR>';
 		m += '<TABLE class=ptTab width=100%><TR align=center>';
-		for (i = 1; i <= 9; i++) {
+		for (i = 1; i <= 10; i++) {
+			j=i+10;
+			if (j > 18) j=j+2;
 			m += '<TR><TD width=75px>' + uW.unitcost['unt' + i][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + i])) + '</td>';
-			m += '<TD width=75px>' + uW.unitcost['unt' + (i + 9)][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + (i + 9)])) + '</td>';
+			m += '<TD width=75px>' + uW.unitcost['unt' + j][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + j])) + '</td>';
 			if (i <= 4) m += '<TD width=75px><SPAN id=ptttr_' + uW.resourceinfo['rec' + i] + '>' + uW.resourceinfo['rec' + i] + '</span></td><TD width=60px><SPAN id=ptttr2_' + uW.resourceinfo['rec' + i] + '>' + addCommas(parseInt(Seed.resources['city' + cityId]['rec' + i][0] / 3600)) + '</span></td>';
 			if (i == 5) m += '<TD width=75px><SPAN id=ptttr_gold>' + uW.resourceinfo['rec0'] + '</span></td><TD width=60px><SPAN id=ptttr2_gold>' + addCommas(Seed.citystats['city' + cityId].gold[0]) + '</span></td>';
 			if (i == 6) m += '<TD width=75px><SPAN id=ptttr_pop>Available Population</td><TD width=60px><SPAN id=ptttr2_pop>' + addCommas(t.stats.idlePop) + '</td>';
@@ -7836,8 +7943,6 @@ Tabs.Train = {
 			if (i > 7) m += '<TD width=75px></td><TD width=60px></td>';
 			m += '</tr>';
 		}
-		m += '<TR><TD width=75px></td><TD width=60px></td>';
-		m += '<TD width=75px>' + uW.unitcost['unt' + (21)][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + (21)])) + '</td>';
 		m += '</table>';
 		document.getElementById('divSTtop').innerHTML = m;
 		// troop queue .... 
@@ -9280,17 +9385,19 @@ Tabs.OverView = {
 		t.Overv.style.overflowX = 'scroll';
 		clearTimeout(t.displayTimer);
 		//Useful links
-		var u = '<DIV class=ptstat>USEFULL LINKS</div><DIV id=ptLinks><TABLE align=center cellpadding=1 cellspacing=0><TR>';
+		var u = '<DIV class=ptstat>USEFUL LINKS</div><DIV id=ptLinks><TABLE align=center cellpadding=1 cellspacing=0><TR>';
 		u += '<TD width="300px" ; border:none">Scripts</td><TD width="300px" ; border:none">Information sites</td></tr>';
-		u += '<TR><TD width="300px" ; border:none"><a href="https://userscripts.org/scripts/show/103659" target="_blank">Power Tools (Koc Scripters)</a></td>';
+		u += '<TR><TD width="300px" ; border:none"><a href="https://code.google.com/p/koc-power-tools" target="_blank">Power Tools (Koc Scripters)</a></td>';
 		u += '<TD width="300px" ; border:none"><a href="http://koctools.com/index.php?pageid=servers" target="_blank">KOCTools</a></td></tr>';
 		u += '<TR><TD width="100px" ; border:none"><a href="https://code.google.com/p/koc-power-tools/wiki/Home?tm=6" target="_blank">Power Tools WIKI</a></td>';
 		u += '<TD width="300px" ; border:none"><a href="http://koc.dunno.com/index.sjs?f=ListServers" target="_blank">KOC Mapper</a></td></tr>';
-		u += '<TR><TD width="100px" ; border:none"><a href="https://userscripts.org/scripts/show/101052" target="_blank">Power Bot (Koc Scripters)</a></td>';
-		u += '<TD width="300px" ; border:none"><a href="https://kocscripters.com/">KOC scripters site</a></td></tr>';
+		u += '<TR><TD width="100px" ; border:none"><a href="https://code.google.com/p/koc-power-bot" target="_blank">Power Bot (Koc Scripters)</a></td>';
+		u += '<TD width="300px" ; border:none"><a href="http://kocmon.com/">Kocmon</a></td></tr>';
 		u += '<TR><TD width="100px" ; border:none"><a href="https://code.google.com/p/koc-power-bot/wiki/Home?tm=6" target="_blank">Power Bot WIKI</a></td>';
 		u += '<TD width="300px" ; border:none"><a href="http://koc.wikia.com/wiki/" target="_blank">Koc Wikia</a></td></tr>';
-		u += '<TR><TD width="100px" ; border:none"><a href="https://addons.mozilla.org/en/firefox/addon/greasemonkey/" target="_blank">Greasemonkey</a></td><TD width="100px" ; border:none"></td>';
+		u += '<TR><TD width="300px" ; border:none"><a href="https://code.google.com/p/koc-battle-console/" target="_blank">Battle Console</a></td><TD width="100px" ; border:none"></td></tr>';
+		u += '<TR><TD width="300px" ; border:none"><a href="https://code.google.com/p/ne0-kocbot/" target="_blank">Combined TR/Champ Organiser (Ne0)</a></td><TD width="100px" ; border:none"></td></tr>';
+		u += '<TR><TD width="100px" ; border:none"><a href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/versions/?page=1#version-1.15" target="_blank">Greasemonkey (1.15)</a></td><TD width="100px" ; border:none"></td>';
 		u += '<TR><TD width="100px" ; border:none"><a href="https://addons.mozilla.org/en/firefox/addon/scriptish/" target="_blank">Scriptish</a></td><TD width="100px" ; border:none"></td>';
 		u += '</tr></table></div><BR>';
 		//Crest info
@@ -9445,6 +9552,7 @@ Tabs.OverView = {
 		_displayrow("Hussar", infoRows[23]);
 		_displayrow("Halberdier", infoRows[24]);
 		_displayrow("Onager", infoRows[25]);
+		_displayrow("Saboteur", infoRows[26]);
 		u += "<TR><TD></TD><TD nowrap align=center colspan=" + (Cities.numCities) + "><B>Wall Defense Hourly Production</B></TD></TR>";
 		_displayrow("XBow", infoRows[nTroopType + 7]);
 		_displayrow("Trebuchet", infoRows[nTroopType + 8]);
@@ -9620,6 +9728,7 @@ Tabs.OverView = {
 			str += _row('Hussar', rows[17]);
 			str += _row('Halberdier', rows[18]);
 			str += _row('Onager', rows[19]);
+			str += _row('Saboteur', rows[20]);
 			str += '<TR><TD colspan=11><BR></td></tr>';
 			row = [];
 			for (i = 0; i < Cities.numCities; i++) {
@@ -13557,7 +13666,7 @@ var AutoUpdater_103659 = {
 	call: function (response, secure) {
 		GM_xmlhttpRequest({
 			method: 'GET',
-			url: this.beta ? this.betaUrl : 'http' + (secure ? 's' : '') + '://userscripts.org/scripts/source/' + this.id + '.meta.js',
+			url: this.beta ? this.betaUrl : 'http' + (secure ? 's' : '') + '://greasyfork.org/scripts/893-koc-power-tools/code/KOC Power Tools.user.js',
 			onload: function (xpr) {
 				AutoUpdater_103659.compare(xpr, response);
 			},
@@ -13602,7 +13711,7 @@ var AutoUpdater_103659 = {
 				// Ok
 				function () {
 					try {
-						location.href = this.beta ? this.betaUrl : 'https://userscripts.org/scripts/source/' + this.id + '.user.js';
+						location.href = this.beta ? this.betaUrl : 'https://greasyfork.org/scripts/893-koc-power-tools/code/KOC Power Tools.user.js';
 					} catch (e) {}
 				},
 				// Cancel
