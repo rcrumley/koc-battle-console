@@ -307,6 +307,7 @@ function chStartup (){
     logit ("Champion organizer loaded");
 
     var styles = '.xtab {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
+		#itemInventory {min-height: 420px; background-color:#884422}\
         .xtabBR {padding-right: 5px; border:none; background:none;}\
         .greenBorder { margin-right: -100%; margin-bottom: -100%; height: 72%; width: 72%; padding: 4%; border: 3px solid cyan; background: transparent;}\
         div.greenBorder2 { position: relative; }\
@@ -679,8 +680,8 @@ function alterChampHall() {
     }
 
     function addBorders() {
-        $("#itemInvetory div").removeClass('blueBorder');
-        $("#itemInvetory div").removeClass('yellowBorder');
+		$("#itemInventory div").removeClass('blueBorder');
+        $("#itemInventory div").removeClass('yellowBorder');
 
         for (ii in queueData.list) {
             var list_item = queueData.list[ii];
