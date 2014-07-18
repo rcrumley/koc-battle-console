@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140714a
+// @version        20140718a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -24,7 +24,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140714a';
+var Version = '20140718a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -104,13 +104,14 @@ var Options = {
 	fixMsgCount: true,
 	fixMarchUnits: false,
 	fixLoadCap: true,
+	DontFilterTransportTroops: true,
 	fixPageNav: true,
 	enhanceViewMembers: true,
 	enhanceARpts: true,
 	allowAlterAR: true,
 	enhanceMsging: true,
 	ptWinIsOpen: false,
-	ptWinDrag: false,
+	ptWinDrag: true,
 	ptWinPos: {},
 	enableFoodWarn: true,
 	enableFoodTower: false,
@@ -1434,7 +1435,6 @@ var ChatStuff = {
 		if (m[0].indexOf('UID:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bUID:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 		if (m[0].indexOf('TRC:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bTRC:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 
-		
 		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
 		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-bot/")>$2</a>$3');
 		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-tools/")>$2</a>$3');
@@ -4229,6 +4229,10 @@ var AttackDialog = {
 				knightVal = 1;
 			selector.selectedIndex = knightVal;
 		}
+		if (Options.DontFilterTransportTroops) {
+			var sf = document.getElementById('modal_attack_supplyfilter_checkbox');
+			if (sf) { if (sf.checked) { sf.click(); }}
+		}
 	},
 }
 var DispReport = {
@@ -5154,7 +5158,7 @@ ajax/viewCourt.php:
 				cl = 'class=ptOddrow ';
 			else
 				cl = '';
-			m += '<TR ' + cl + 'valign=top><TD>' + u.genderAndName + '</td><TD><A target="_tab" href="https://kocscripters.com/player/server/' + GetServerId() + '/tvuid/' + u.userId + '/">' + u.userId + '</a></td><TD align=right>' + addCommas(u.might) + '</td>\
+			m += '<TR ' + cl + 'valign=top><TD>' + u.genderAndName + '</td><TD><A target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + u.userId + '">' + u.userId + '</a></td><TD align=right>' + addCommas(u.might) + '</td>\
           <TD>' + (rslt.data[u.userId] ? "&nbsp;<SPAN class=boldDarkRed>" + uW.g_js_strings.commonstr.online + "</span>" : "") + '</td>\
           <TD align=center><A target="_tab" href="https://www.facebook.com/profile.php?id=' + u.fbuid + '">' + uW.g_js_strings.commonstr.profile + '</a></td>\
           <TD><SPAN onclick="PTpd(this, ' + u.userId + ')"><A>' + uW.g_js_strings.modaltitles.memberdetails + '</a> &nbsp; <BR></span><SPAN onclick="PTpl2(this,' + u.userId + ',' + rslt.data[u.userId] + ')"><A>' + uW.g_js_strings.modaltitles.leaderboard + '</a><BR></span><SPAN onclick="PCplo(this, \'' + u.userId + '\')"><A>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</a></span></td></tr>';
@@ -6759,6 +6763,7 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togMapInfo3 type=checkbox /></td><TD>Include player name / city name in new bookmarks</td></tr>';
 			m += '<TR><TD><INPUT id=togMarchUnits type=checkbox disabled/></td><TD>Fix march size calculation in march screen (Fixed by Kabam)</td></tr>';
 			m += '<TR><TD><INPUT id=togLoadCapFix type=checkbox /></td><TD>Limit load capacity to not exceed throne room load cap</td></tr>';
+			m += '<TR><TD><INPUT id=togFilterTroopsFix type=checkbox /></td><TD>Don\'t filter troop types for transport</td></tr>';
 			m += '<TR><TD><INPUT id=togApothTimeFix type=checkbox /></td><TD>Fix revival time calculator (not working for max button clicked)</td></tr>';
 			m += '<TR><TD><INPUT id=togTRAetherCostFix type=checkbox /></td><TD>Fix display of aetherstones for throne room upgrade/enhance</td></tr>';
 			m += '<TR><TD><INPUT id=togMMBImageFix type=checkbox /></td><TD>Post correct image to facebook for Merlin Box</td></tr>';
@@ -6796,6 +6801,7 @@ Tabs.Options = {
 			t.togOpt('togMapInfo4', 'dispStatus', mapinfoFix.setEnableDispStatus, mapinfoFix.isAvailableDispStatus);
 //			t.togOpt('togMarchUnits', 'fixMarchUnits', MarchUnitsFix.setEnable, MarchUnitsFix.isAvailable);
 			t.togOpt('togLoadCapFix', 'fixLoadCap', LoadCapFix.setEnable, LoadCapFix.isAvailable);
+			t.togOpt('togFilterTroopsFix', 'DontFilterTransportTroops');
 			t.togOpt('togApothTimeFix', 'fixApothTime', ApothTimeFix.setEnable, ApothTimeFix.isAvailable);
 			t.togOpt('togTRAetherCostFix', 'fixTRAetherCost', TRAetherCostFix.setEnable, TRAetherCostFix.isAvailable);
 			t.togOpt('togMMBImageFix', 'fixMMBImage', mmbImageFix.setEnable, mmbImageFix.isAvailable);
@@ -16617,7 +16623,7 @@ var Market = new CalterUwFunc('modal_marketplace', [
 ]);
 Market.setEnable(true);
 
-function Sendcourtdata(courtdata) {
+function Sendcourtdata(courtdata) {return; // no send data to kocscripters.com
 	if (Math.floor((Math.random() * 1000) + 1) > throttle) return;
 	var params = {};
 	params.courtdata = btoa(RawDeflate.deflate(JSON.stringify(courtdata)));
