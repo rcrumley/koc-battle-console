@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140718a
+// @version        20140718b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -24,7 +24,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140718a';
+var Version = '20140718b';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -4188,6 +4188,10 @@ var AttackDialog = {
 		}
 		if (Options.attackCityPicker) {
 			setTimeout(t.initCityPicker, 0);
+		}
+		if (Options.DontFilterTransportTroops) {
+			var sf = document.getElementById('modal_attack_supplyfilter_checkbox');
+			if (sf) { if (sf.checked) { sf.click(); }}
 		}
 	},
 	initCityPicker: function () {
