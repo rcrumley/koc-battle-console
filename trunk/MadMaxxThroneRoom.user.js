@@ -1,15 +1,12 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20140519a
+// @version        20140721a
 // @namespace      mmm
-// @homepage       http://userscripts.org:8080/scripts/show/411452
 // @delay 2000
 // @priority -10
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
-// @updateURL      https://userscripts.org:8080/scripts/source/411452.meta.js
-// @downloadURL    https://userscripts.org:8080/scripts/source/411452.user.js
 // @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
@@ -23,20 +20,19 @@
 // @grant       GM_getResourceText
 // @grant       GM_getResourceURL
 // @description    Organizes, upgrades and salvages KOC throne room items
-// @contributionURL https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZPJBNYUNXLLT4
 // ==/UserScript==
 
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140519a_Goat';
+var Version = '20140721a';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
 
 var maxTrLevel = 17;
-
+var JewelImages = {1 : "http://i.imgur.com/SecBRT5.png", 2 : "http://i.imgur.com/dnrId1I.png", 3 : "http://i.imgur.com/fjgZUh9.png", 4 : "http://i.imgur.com/h7tMQaB.png", 5 : "http://i.imgur.com/BZSuCiN.png"};
 /*
  * Modifiedd from object.watch polyfill
  *
@@ -434,7 +430,7 @@ function trStartup (){
 		div.trCard div.description div.fey.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_pet_normal_1_5.png") top left no-repeat;}\
 		div.trCard div.description div.fey.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_tapestry_normal_1_5.png") top left no-repeat;}\
         div.trCard{font:bold 16px Georiga; overflow: hidden;}\
-        div.trCard>div{float:left;border:1px solid #a56631;margin:0px;padding:0px;width:200px; height: 300px;background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/modal_med_bg_4.png") -200px 0 no-repeat;}\
+        div.trCard>div{float:left;border:1px solid #a56631;margin:0px;padding:0px;width:200px; background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/modal_med_bg_4.png") -200px 0 no-repeat;}\
         div.trCard div.title{font:bold 16px Georgia;border-bottom:1px solid #703200;padding:4px 3px 5px 8px;background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/panel/modal/item_bg.png") -20px -100px no-repeat;}\
         div.trCard div.title span.icon{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/equip.png") top right no-repeat;display:block;height:20px;width:20px;top:12px;right:12px;position:absolute;}\
         div.trCard .disabled{opacity:.5;}\   div.trCard ul{margin:0px;padding:0;list-style:none;}\
@@ -1202,7 +1198,7 @@ function installHandlerFunctions() {
 		
 		for (ii in unsafeWindow.kocThroneItems) { 
 			if (unsafeWindow.kocThroneItems[ii].jewel && unsafeWindow.kocThroneItems[ii].jewel.valid) { 
-				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/gemming/ico_filledJewelSlot.png'>"); 
+				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='"+JewelImages[unsafeWindow.kocThroneItems[ii].jewel.quality]+"'>"); 
 				} 
 			} 
 		
@@ -1284,7 +1280,7 @@ function installHandlerFunctions() {
 		
 		for (ii in unsafeWindow.kocThroneItems) { 
 			if (unsafeWindow.kocThroneItems[ii].jewel && unsafeWindow.kocThroneItems[ii].jewel.valid) { 
-				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/gemming/ico_filledJewelSlot.png'>"); 
+				$("div#throneInventoryItem" + unsafeWindow.kocThroneItems[ii].id).append("<img style='float:right;' src='"+JewelImages[unsafeWindow.kocThroneItems[ii].jewel.quality]+"'>"); 
 			} 
 		} 
 		
@@ -4106,7 +4102,7 @@ Tabs.options = {
             // header stuff
             var m = '<Div id=optionScroll style=" position: static; width: 750px; height: 500px; overflow-x: hidden; overflow-y: auto;">';
             m += '<DIV id=trOptions class=trStat>OPTIONS</div><TABLE id=trOptionTbl width=100% height=0% class=trTab>';
-            m += '<TR><TD width=100%><INPUT id=trupdate type=checkbox '+ (TRGlobalOptions.trUpdate?'CHECKED ':'') +'/>Check for script updates on userscripts.org (all domains) &nbsp; &nbsp; <INPUT id=trupdatenow type=button value="Update Now" /></TD></TR>';
+            m += '<TR><TD width=100%><INPUT id=trupdate type=checkbox '+ (TRGlobalOptions.trUpdate?'CHECKED ':'') +'/>Check for script updates (all domains) &nbsp; &nbsp; <INPUT id=trupdatenow type=button value="Update Now" /></TD></TR>';
             m += '<TR><TD width=100%><INPUT id=trDisableAnim type=checkbox '+ (upgradeData.disableAnim?'CHECKED ':'') +'/> Disable failure animation (Big red X) </TD></TR>';
             m += '<TR><TD width=100%><INPUT id=trPresetOption type=checkbox '+ (upgradeData.presetWidget?'CHECKED ':'') +'/> Enable preset selector widget (requires refresh)</TD></TR>';
             m += '<TR><TD width=100%>Reset guardian/preset widget locations<INPUT id=trResetWidgets type=button value="Reset" /></TD></TR>';
@@ -4755,7 +4751,7 @@ Tabs.upgrader = {
                                                     m += '<tr><td colspan=4><hr/</td></tr>';
                                                     m += '<tr><td colspan=4><div id=trQScroll style=" position: static; width: 700px; height: 300px; overflow-x: visible; overflow-y: auto;"><div id=trQDiv /></div></td></tr>';
 
-                                                    m += '<tr align=center><div><td><input style="float: left;" id=trClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2><a id=trpplink><img id=trpp /></a></td></tr>';
+                                                    m += '<tr align=center><div><td><input style="float: left;" id=trClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2></a></td></tr>';
                                                     m += '</table>';
 
                                                     m+='</div>';
@@ -4780,14 +4776,6 @@ Tabs.upgrader = {
                                                     });
 
                                                     $("#trQScroll").css('height', upgradeData.upgradeH).css('width', upgradeData.upgradeW);
-
-                                                    $("#trpplink")
-                                                    .attr('href', 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=ZPJBNYUNXLLT4')
-                                                    .attr('target', '_blank');
-                                                    $("#trpp")
-                                                    .attr( 'src', 'https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif')
-                                                    .attr( 'alt', 'dontae')
-                                                    .css( 'cursor', 'pointer');
 
                                                     document.getElementById('trUpgraderPower').addEventListener('click', function(){t.togglePower(this);} , false);
 
@@ -6238,7 +6226,7 @@ var AutoUpdater_132329 = {
             logit("checking version");
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: 'http'+(secure ? 's' : '')+'://userscripts.org:8080/scripts/source/'+this.id+'.meta.js',
+                url: 'http'+(secure ? 's' : '')+'://koc-battle-console.googlecode.com/svn/trunk/MadMaxxThroneRoom.user.js',
                 onload: function(xpr) {AutoUpdater_132329.compare(xpr, response);},
                 onerror: function(xpr) {if (secure) AutoUpdater_132329.call(response, false);}
             });
@@ -6282,7 +6270,7 @@ var AutoUpdater_132329 = {
                         // Ok
                         function(){
                     try {
-                        location.href = 'https://userscripts.org:8080/scripts/source/411452.user.js';
+                        location.href = 'https://koc-battle-console.googlecode.com/svn/trunk/MadMaxxThroneRoom.user.js';
                     } catch(e) {}
                 },
                 // Cancel
