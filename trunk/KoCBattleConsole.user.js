@@ -12,9 +12,9 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
-// @grant			uW
-// @version			20140722a
-// @releasenotes 	<p>Portal buttons on dashboard</p>
+// @grant			unsafeWindow
+// @version			20140724a
+// @releasenotes 	<p>Partial Rollback to fix instability</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -25,7 +25,7 @@
 //	¦	July 2014 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140722a'; 
+var Version = '20140724a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -127,7 +127,8 @@ var Castles;
 var Champs;
 
 var uW = unsafeWindow;
-var Seed = uW.seed;
+var Seed = unsafeWindow.seed;
+var CM = unsafeWindow.cm;
 
 var RefreshingSeed = false;
 
@@ -226,7 +227,6 @@ var MistImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/i
 var DoveImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/901.jpg";
 var RefugeImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/911.jpg";
 var OrderImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/912.jpg";
-
 var	GoldImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/gold_30.png';
 var FoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/food_30.png';
 var WoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/wood_30.png';
@@ -348,22 +348,20 @@ if (typeof SOUND_FILES.monitor == 'undefined'){
 	SOUND_FILES.monitor.DEFAULT = '<span><object type="application/x-shockwave-flash" data="http://koc.god-like.org/power/swf/pdxminiplayer.swf" width="160" height="20"><param name="wmode" value="transparent" /><param name="movie" value="http://koc.god-like.org/power/swf/pdxminiplayer.swf" /><param name="flashvars" value="mp3=http://koc-power-tools.googlecode.com/svn/trunk/sounds/DoorBell.mp3&amp;autostart=1&amp;showtime=1&amp;volume=100" /></object></span>';
 }
 
-// Add unsafeWindow Objects
-
 uW.btDoveOfPeace = function (iid){
 	// popup
-	uW.Modal.multiButton({	buttons: [	{ txt: "Use Dove of Peace", exe: function () {uW.Modal.hideModal();UseDove(iid);}},
-										{ txt: "Cancel Request", exe: function () {uW.Modal.hideModal();}}],
-							body: "<center> Please confirm you want to use a Dove of Peace?</center>",
-							title: "Confirm Dove"
-						});
+	unsafeWindow.Modal.multiButton({	buttons: [	{ txt: "Use Dove of Peace", exe: function () {unsafeWindow.Modal.hideModal();UseDove(iid);}},
+													{ txt: "Cancel Request", exe: function () {unsafeWindow.Modal.hideModal();}}],
+										body: "<center> Please confirm you want to use a Dove of Peace?</center>",
+										title: "Confirm Dove"
+									});
 }									
 
 uW.btShowCity = function (idx) {
 	var l = document.getElementById("citysel_" + idx);
 	uW.citysel_click(l);
 	uW.changeview_city(document.getElementById("mod_views_city"));
-	uW.btShowDashboard();
+	uW.btShowDefenceWindow();
 }
 
 uW.btGotoMapHide = function (x, y){
@@ -482,16 +480,16 @@ uW.btCreateChampionPopUp = function (elem,chkcityId,localchamp) {
 	}	
 
 	td = document.getElementById(elem.id+'td');
-	uW.jQuery('#'+td.id).children("span").remove();
+	unsafeWindow.jQuery('#'+td.id).children("span").remove();
 	if (localchamp) {
-		uW.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+oureffects+'</td></tr></table></span>');
+		unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+oureffects+'</td></tr></table></span>');
 	}
 	else {
 		if (Options.ChampionCompare) {
-			uW.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+effects.value+'</td><td class=xtab>'+oureffects+'</td></tr></table></span>');
+			unsafeWindow.jQuery('#'+td.id).append('<span class="trtip"><table cellspacing=0><tr style="vertical-align:top;"><td class=xtab>'+effects.value+'</td><td class=xtab>'+oureffects+'</td></tr></table></span>');
 		}
 		else {
-			uW.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
+			unsafeWindow.jQuery('#'+td.id).append('<span class="trtip">'+effects.value+'</span>');
 		}
 	}	
 }
@@ -504,7 +502,7 @@ uW.btStopRitual = function (sacNo) {StopRitual(sacNo);}
 uW.btQuickSacrifice = function (tt) {QuickSacrifice(tt);}
 uW.btSetMaxTroops = function () {SetMaxTroops();}
 uW.btSendHome = function (marchId) {SendHome(marchId);}
-uW.btShowDashboard = function () {ShowDashboard (Cities.byID[uW.currentcityid]);}
+uW.btShowDefenceWindow = function () {ShowWatchTower (Cities.byID[uW.currentcityid]);}
 uW.btMapMonitorTR = function(e) {if (e.user.id != "0") { initMonitor (e.user.id, false); }}
 uW.btShowLog = function (entry) {ShowLog(entry);}
 uW.btDeleteLog = function (entry) {DeleteLog(entry);}
@@ -562,10 +560,6 @@ uW.btMonitorExternalCallUID = function(UID) {
 
 function btStartup (){
 	clearTimeout (btStartupTimer);
-
-	uW = unsafeWindow;
-	Seed = uW.seed;
-	
 	if (uW.btLoaded)
 		return;
 	var metc = getClientCoords(document.getElementById('main_engagement_tabs'));
@@ -574,11 +568,10 @@ function btStartup (){
 		return;
 	}
 
-	AddMainTabLink('BATTLE', eventHideShow, mouseMainTab);
-	
 	readOptions();	   
 	if (!trusted) {Options.RefreshSeed = false; saveOptions ();}
 
+	Seed = uW.seed;
 	SelectiveDefending = uW.g_serverType != uW.cm.SERVER_TYPES.PVP;
 	
 	Options.WinSize.x = 400;
@@ -842,6 +835,8 @@ function btStartup (){
 		BuildTRPresetStats(i);
 	}	
 	
+	AddMainTabLink('BATTLE', eventHideShow, mouseMainTab);
+ 
 	addScript ('uwuwuwFunc = function (text){ eval (text);  }');  
 
 	// position windows for the first time
@@ -882,7 +877,7 @@ function btStartup (){
 		var el1 = document.getElementById('mod_cityinfo');
 		var el2 = el1.getElementsByClassName('hd');
 		for (e in el2) {
-			el2[e].innerHTML += '&nbsp;<a class="inlineButton btButton blue14" style="position:static;" onclick="btShowDashboard(); return false;"><span style="width:57px;">Battle</span></a>';
+			el2[e].innerHTML += '&nbsp;<a class="inlineButton btButton blue14" style="position:static;" onclick="btShowDefenceWindow(); return false;"><span style="width:57px;">Battle</span></a>';
 			var el3 = el2[e].getElementsByClassName('button14');
 			for (e2 in el3) {
 				el3[e2].style["position"] = "static";
@@ -927,18 +922,18 @@ function btStartup (){
 
 function ChangeFontSize(evt) {
 	Options.MonitorFontSize = evt.target.value;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	if (MonitoringActive && popMon) { popMon.show(false); popMon.destroy(); popMon = null; initMonitor(userInfo.userId,MonitoringPaused); }
 }
 
 function ChangeGeneralRefreshRate(evt) {
 	Options.GeneralRefreshRate = evt.target.value;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function ChangeMonitorRefreshRate(evt) {
 	Options.MonitorRefreshRate = evt.target.value;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function ResetDash () {
@@ -947,7 +942,7 @@ function ResetDash () {
 		document.getElementById('dashDisp'+p).checked = DefaultDashboard[p].Display;
 	}
 	Options.OverrideDashboard = {};
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	if (popDef) { popDef.show(false); popDef = null; ToggleDashboard(Options.CurrentCity); }
 }
 
@@ -965,7 +960,7 @@ function OverrideDash (sect) {
 	NewObj.Sequence = document.getElementById('dashSeq'+sect).value;
 	NewObj.Display = document.getElementById('dashDisp'+sect).checked;
 	Options.OverrideDashboard[sect] = NewObj;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	if (popDef) { popDef.show(false); popDef = null; ToggleDashboard(Options.CurrentCity); }
 }
 
@@ -975,7 +970,7 @@ function UpdatePresetLabel(elem,entry) {
 	if (elem.value == "") { elem.value = 'Preset '+entry; }
 	
 	Options.TRPresets[entry].name = elem.value;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	PaintTRPresets(); 
 }
 
@@ -991,7 +986,7 @@ function DefaultWindowPos(OptPos,elem,force) {
 		var c = getClientCoords (document.getElementById(elem));
 		Options[OptPos].x = c.x+4;
 		Options[OptPos].y = c.y+c.height;
-		setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+		setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	}
 }
 
@@ -1012,7 +1007,7 @@ function AlterUWFuncs() {
 	mod.setEnable(true);
 
 	var mod4 = new CalterUwFunc("citysel_click",[['cm.PrestigeCityView.render()','cm.PrestigeCityView.render();btCityChanged();']]);
-    uW.btCityChanged = function () {if (popDef) uW.btShowDashboard(); };
+    unsafeWindow.btCityChanged = function () {if (popDef) uW.btShowDefenceWindow(); };
     mod4.setEnable(true);
 
 	/* check dashboard div position now other scripts have loaded */
@@ -1083,7 +1078,7 @@ function ShowHideRow(div,tf) {
 }
 
 function RefreshSeed() {
-	var params = uW.Object.clone(uW.g_ajaxparams);
+	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
 	// stop update_seed_ajax
 	uW.g_update_seed_ajax_do = true;
 	RefreshingSeed = true;
@@ -1112,20 +1107,20 @@ function RefreshSeed() {
 	    		result = result.substr(4);
 	    		var seed = eval(result);
 
-//	    		Seed = seed; // would do it all!
+//	    		unsafeWindow.seed = seed; // would do it all!
 // 				only copy what we need to copy
-	    		Seed.ss = seed.ss;
-	    		Seed.queue_atkinc = seed.queue_atkinc;
-	    		Seed.queue_atkp = seed.queue_atkp;
-	    		Seed.player = seed.player;
-	    		Seed.players = seed.players;
-	    		Seed.playerEffects = seed.playerEffects;
-				Seed.queue_sacr = seed.queue_sacr; 
-				Seed.units = seed.units; 
-				Seed.defunits = seed.defunits; 
+	    		unsafeWindow.seed.ss = seed.ss;
+	    		unsafeWindow.seed.queue_atkinc = seed.queue_atkinc;
+	    		unsafeWindow.seed.queue_atkp = seed.queue_atkp;
+	    		unsafeWindow.seed.player = seed.player;
+	    		unsafeWindow.seed.players = seed.players;
+	    		unsafeWindow.seed.playerEffects = seed.playerEffects;
+				unsafeWindow.seed.queue_sacr = seed.queue_sacr; 
+				unsafeWindow.seed.units = seed.units; 
+				unsafeWindow.seed.defunits = seed.defunits; 
 				
-	    		uW.document.seed = Seed;
-	    		Seed = Seed;
+	    		unsafeWindow.document.seed = unsafeWindow.seed;
+	    		Seed = unsafeWindow.seed;
 	    	}
 			SecondLooper = 1;	
 			// let update_seed_ajax run again
@@ -1153,7 +1148,7 @@ function RefreshSeed() {
 	});
 }
 
-/*var kabam_usa = uW.update_seed_ajax;
+/*var kabam_usa = unsafeWindow.update_seed_ajax;
 var battle_usa = function (marchForceUpdateFlag, updateSeedDoneCallback, isCancelTraining) {
 	// kabam introduced their own "force" flag, which messes up my refresh logic...
 	// so if they are determined to force this one through, then do it my way.
@@ -1165,7 +1160,7 @@ var battle_usa = function (marchForceUpdateFlag, updateSeedDoneCallback, isCance
 		kabam_usa(true, updateSeedDoneCallback, isCancelTraining); // always force marches
 	}	
 }
-uW.update_seed_ajax = battle_usa; */
+unsafeWindow.update_seed_ajax = battle_usa; */
 
 function ForceUpdateSeed() {
 	if (uW.g_update_seed_ajax_do && (ForceTries < 10)) { // refresh seed is occurring? But we need to make sure this runs, so delay for 1 second  and try up to 10 times ...
@@ -1174,7 +1169,7 @@ function ForceUpdateSeed() {
 		setTimeout(function() {ForceUpdateSeed();}, 1000);
 	}
 	logit('force update seed - request sent to server');
-	setTimeout(function() {uW.update_seed_ajax(true, function () {logit('force update seed - response received from server');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 250);
+	setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('force update seed - response received from server');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 250);
 }
 
 function EverySecond () {
@@ -1314,7 +1309,7 @@ function Copy_Local_ATKINC(m) {
 }
 
 function CheckForIncoming () {
-	Seed = Seed;
+	Seed = uW.seed;
 
 	var atype = "";
 	var atime = "";
@@ -1403,22 +1398,22 @@ function CheckForIncoming () {
 				//uW.jQuery("#promoTimeLeft").hide();
 				//document.getElementById('impendingAttackContainer').innerHTML = msgcontainer+msgtable+msglink1+'btAlertIncoming'+msglink2+name+msglink3+msgend+'</div>';
 				document.getElementById('btGemContainer').innerHTML = '<br><center><span style="color:#800;"><b>RED ALERT!</b></span></center>'+msgcontainer+msgtable+msglink1+'btAlertIncoming'+msglink2+name+msglink3+msgend+'</div><center>'+bywho+'</center>';
-				document.getElementById('btAlertIncoming').addEventListener ('click', function(){ShowDashboard(to)}, false);
+				document.getElementById('btAlertIncoming').addEventListener ('click', function(){ShowWatchTower(to)}, false);
 			}	
 			if (TRVisible) {
 				GemContainer.innerHTML = msgcontainer+msgtable+msglink1+'btAlertIncoming2'+msglink2+name+msglink3+msgend+'</div>';	
 				GemContainer.style.width=250+'px';
-				document.getElementById('btAlertIncoming2').addEventListener ('click', function(){ShowDashboard(to)}, false);
+				document.getElementById('btAlertIncoming2').addEventListener ('click', function(){ShowWatchTower(to)}, false);
 			}	
 			if (ChampVisible) {
 				GemContainer2.innerHTML = msgcontainer+msgtable+msglink1+'btAlertIncoming3'+msglink2+name+msglink3+msgend+'</div>';	
 				GemContainer2.style.width=250+'px';
-				document.getElementById('btAlertIncoming3').addEventListener ('click', function(){ShowDashboard(to)}, false);
+				document.getElementById('btAlertIncoming3').addEventListener ('click', function(){ShowWatchTower(to)}, false);
 			}	
 		}  
 		document.getElementById('btAttackAlert').innerHTML = msgcontainer+msgtable+msglink1+'btIncoming'+msglink2+name+msglink3+bywho+msgend+'</div>';
 		uW.jQuery("#btAttackAlert").attr("style","background-color:red;height:30px;");
-		document.getElementById('btIncoming').addEventListener ('click', function(){ShowDashboard(to)}, false);
+		document.getElementById('btIncoming').addEventListener ('click', function(){ShowWatchTower(to)}, false);
 	}
   
 	if (Incoming && !StillComing) {
@@ -1480,7 +1475,7 @@ function CheckForIncoming () {
 	}
 }  
 
-function ShowDashboard (city) {
+function ShowWatchTower (city) {
 
 	ToggleSleep(false);
 
@@ -1488,6 +1483,13 @@ function ShowDashboard (city) {
 		ToggleDashboard(city.idx);
 	else
 		Castles.selectBut(city.idx);
+
+//	var l = document.getElementById("citysel_" + (city.idx + 1));
+//	uW.citysel_click(l);
+//	var k = uW.cm.WatchTowerList.getCityWatchTower(city.id);
+//	if (k) {
+//		uW.modal_build(k.getSlot())
+//	}
 }
 
 function SoundToggle () {
@@ -1564,7 +1566,7 @@ function DashboardToggle () {
 //		Dash.style.overflow = 'auto';
 		document.getElementById('kocContainer').appendChild(Dash);
 		CheckDashPosition();
-		// if dashboard on display, destroy and recreate
+		// if city defence on display, destroy and recreate
 		if (popDef) { popDef.show(false); popDef.destroy(); popDef = null; }
 		if (uW.btLoaded) {ToggleDashboard(Options.CurrentCity);}
 	}
@@ -1572,7 +1574,7 @@ function DashboardToggle () {
 		// remove dashboard div from koc container if it exists	
 		var elem = document.getElementById('btDashboard');
 		if (elem) {
-			// if dashboard on display, move to main doc before removing div
+			// if city defence on display, move to main doc before removing div
 			if (popDef) { document.body.appendChild(popDef.div); popDef.show(false); popDef.destroy(); popDef = null; ToggleDashboard(Options.CurrentCity); }
 			elem.parentNode.removeChild(elem);
 		}
@@ -1606,7 +1608,7 @@ function CheckDefaultRitual (sel) {
 	document.getElementById('btDefaultRitualSeconds').value = BlankifZero(sec);
 	Options.DefaultSacrificeMin = BlankifZero(min);
 	Options.DefaultSacrificeSec = BlankifZero(sec);
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 
 }
 
@@ -1703,7 +1705,7 @@ function AddMainTabLink(text, eventListener, mouseListener) {
 
 function ToggleSleep (sleep) {
 	Options.SleepMode = sleep;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	var a=document.getElementById('btTab');
 	if (Options.SleepMode) {
 		uW.jQuery("#btMain_outer").hide();
@@ -2280,7 +2282,7 @@ function getClientCoords(e){
 //CalterFuncModifier allows multiple modifier string pairs to be applied.  For individual control of specific mods, access the 'modIndex'
 //member to determine the index of the first mod and then directly call the operations of the 'funcModifier' member.
 
-//This implementation creates/uses a registry of CalterFuncModifier's that is added to the uW object so that changes
+//This implementation creates/uses a registry of CalterFuncModifier's that is added to the unsafeWindow object so that changes
 //to the same function in different scripts is possible.
 
 //****************************
@@ -2297,19 +2299,19 @@ var CalterUwFunc = function (funcName, findReplace) {
    this.numberMods = 0;
 
    // find an existing CalterUwFunc if it already exists
-   if (!uW.calterRegistry) uW.calterRegistry = {};
+   if (!unsafeWindow.calterRegistry) unsafeWindow.calterRegistry = {};
    var calterF = null;
 
-   if (uW.calterRegistry[funcName]) {
+   if (unsafeWindow.calterRegistry[funcName]) {
       // use the existing function modifier
-      calterF = uW.calterRegistry[funcName];
+      calterF = unsafeWindow.calterRegistry[funcName];
       for (i=0; i< findReplace.length; i++) {
          calterF.addModifier(findReplace[i]);
       }
    } else {
       // create and register the new calter
       calterF = new CalterFuncModifier(funcName, findReplace);
-      uW.calterRegistry[funcName] = calterF;
+      unsafeWindow.calterRegistry[funcName] = calterF;
    }
    this.funcModifier = calterF;
 
@@ -2353,7 +2355,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
 
    try {
       var x = this.funcName.split('.');
-      var f = uW;
+      var f = unsafeWindow;
       for (var i=0; i<x.length; i++)
          f = f[x[i]];
 //      ft = JSON2.stringify(f);
@@ -2422,7 +2424,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
          } else {
             // set to the original function
             var x1 = this.funcName.split('.');
-            var f1 = uW;
+            var f1 = unsafeWindow;
             for (var i=0; i<x1.length-1; i++)
                f1 = f1[x1[i]];
             f1[x1[x1.length-1]] = this.funcOld;
@@ -2643,7 +2645,7 @@ function onUnload (){
 }
 
 function unixTime (){
-	return parseInt (new Date().getTime() / 1000) + uW.g_timeoff;
+	return parseInt (new Date().getTime() / 1000) + unsafeWindow.g_timeoff;
 }
 
 function formatDateTime(a) {
@@ -2873,7 +2875,7 @@ var AutoUpdater = {
         else {
 			if (response) {
 				uW.jQuery("#btMain_outer").hide();
-				uW.Modal.showAlert('<div align="center">Unable to check for updates to '+this.name+'.<br>Please change the update options or visit the<br><a href="'+this.homepage+'" target="_blank">script homepage</a></div>');
+				unsafeWindow.Modal.showAlert('<div align="center">Unable to check for updates to '+this.name+'.<br>Please change the update options or visit the<br><a href="'+this.homepage+'" target="_blank">script homepage</a></div>');
 			}
 			logit("Unable to check for updates :(");
 			return;
@@ -2894,7 +2896,7 @@ var AutoUpdater = {
 			logit("No updates available :(");
 			if (response) {
 				uW.jQuery("#btMain_outer").hide();
-				uW.Modal.showAlert('<div align="center">No updates available for '+this.name+' at this time.</div>');
+				unsafeWindow.Modal.showAlert('<div align="center">No updates available for '+this.name+' at this time.</div>');
 			}
         } 		
     },
@@ -2907,8 +2909,8 @@ var AutoUpdater = {
 };
 
 function doBOTUpdate(){
-	uW.cm.ModalManager.closeAll();
-	uW.cm.ModalManager.close();
+	unsafeWindow.cm.ModalManager.closeAll();
+	unsafeWindow.cm.ModalManager.close();
 	var now = unixTime();
    	GM_setValue('updated_'+AutoUpdater.id, now);
 	var DownloadURL = 'userscripts.org:'+Options.USPort+'/scripts/source/' + AutoUpdater.id + '.user.js';
@@ -2919,13 +2921,13 @@ function doBOTUpdate(){
 
 function ShowUpdate(body){
 	var now = unixTime();	 
-	uW.cm.ModalManager.addMedium({
+	unsafeWindow.cm.ModalManager.addMedium({
 	    title: AutoUpdater.name,
 	   	body: body,
 	   	closeNow: false,
 	    close: function () {
 	    	GM_setValue('updated_'+AutoUpdater.id, now);
-	    	uW.cm.ModalManager.closeAll();
+	    	unsafeWindow.cm.ModalManager.closeAll();
 	    },
 	    "class": "Warning",
 		curtain: false,
@@ -3770,7 +3772,7 @@ function UpdateMarch (cityId,marchId) {
 	local_atkp["m"+marchId].btRequestSent = 2; // delay any further requests for 2 seconds
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.rid = marchId;
-	new MyAjaxRequest(uW.g_ajaxpath + "ajax/fetchMarch.php" + uW.g_ajaxsuffix, {
+	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
 		method: "post",
 		parameters: params,
 		onSuccess: function (rslt) {
@@ -3805,7 +3807,7 @@ function UpdateIncomingMarch (marchId) {
 	local_atkinc["m"+marchId].btRequestSent = 2; // delay any further requests for 2 seconds
 	var params = uW.Object.clone(uW.g_ajaxparams);
 	params.rid = marchId;
-	new MyAjaxRequest(uW.g_ajaxpath + "ajax/fetchMarch.php" + uW.g_ajaxsuffix, {
+	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
 		method: "post",
 		parameters: params,
 		onSuccess: function (rslt) {
@@ -3862,11 +3864,11 @@ function Recall (marchId,cityview) {
 		parameters: params,
 		onSuccess: function (rslt) {
 			if (rslt.ok){
-				var march = Seed.queue_atkp["city" + params.cid]["m" + params.mid];
+				var march = uW.seed.queue_atkp["city" + params.cid]["m" + params.mid];
 				march.marchStatus = 8;
 				var marchtime = parseInt(march.returnUnixTime) - parseInt(march.destinationUnixTime);
 				var ut = unixTime();
-				if (Seed.playerEffects.returnExpire > unixTime())
+				if (uW.seed.playerEffects.returnExpire > unixTime())
 					marchtime *= 0.5
 				march.returnUnixTime = ut + marchtime;
 				march.destinationUnixTime = ut;
@@ -4050,7 +4052,7 @@ function ToggleDashboard (Curr){
 		ResetFrameSize('btDefence',100,DashWidth);
 		Options.DefenceStartState = true;
 	}
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function ToggleAutoRefresh() {
@@ -4093,7 +4095,7 @@ function SetCurrentCity(cityId) {
 
 	Curr = Cities.byID[cityId].idx;
 	Options.CurrentCity = Curr;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 
 	uW.Modal.hideModal();
 	
@@ -5205,7 +5207,7 @@ function ToggleDefenceMode (cityId) {
     var params = uW.Object.clone(uW.g_ajaxparams);
     params.cid = cityId;
     params.state = state;
-    new MyAjaxRequest(uW.g_ajaxpath + "ajax/gate.php" + uW.g_ajaxsuffix, {
+    new MyAjaxRequest(uW.g_ajaxpath + "ajax/gate.php" + unsafeWindow.g_ajaxsuffix, {
         method: "post",
         parameters: params,
         onSuccess: function (rslt) {
@@ -5300,7 +5302,7 @@ function SelectDefenders (sel,def) {
 
 function ChangeDefendingTroops (cityId, MoveArray, Replace, notify) {
 	setTroopMessage('Sending Request...');
-	var params = uW.Object.clone(uW.g_ajaxparams)
+	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams)
 	params.cid = cityId;
 	for (var ui in uW.cm.UNIT_TYPES){
 		i = uW.cm.UNIT_TYPES[ui];
@@ -5317,21 +5319,21 @@ function ChangeDefendingTroops (cityId, MoveArray, Replace, notify) {
 			var rslt = transport;
 			if (rslt.ok) {
 				var unitsarr = [];
-				for (j in uW.unitcost)
+				for (j in unsafeWindow.unitcost)
 					unitsarr.push(0);
 				for (i = 0; i <= unitsarr.length; i++)
 					if (params["u"+i])
 						unitsarr[i] = params["u"+i];
-				if (rslt.updateSeed) {uW.update_seed(rslt.updateSeed)};
+				if (rslt.updateSeed) {unsafeWindow.update_seed(rslt.updateSeed)};
 				if (rslt.def != null) {
-					var unitlist = Seed.defunits["city" + cityId];
+					var unitlist = unsafeWindow.seed.defunits["city" + cityId];
 					uW.jQuery.each (rslt.def, function (key, val) {
 						var key1 = key.replace ("u", "unt");
 						unitlist[key1] = val
 					})
 				}
 				if (rslt.res != null) {
-					var unitlist = Seed.units["city" + cityId];
+					var unitlist = unsafeWindow.seed.units["city" + cityId];
 					uW.jQuery.each (rslt.res, function(key, val) {
 						var key1 = key.replace("u", "unt");
 						unitlist[key1] = val
@@ -5469,7 +5471,7 @@ function SaveDefPreset() {
 	}	
 	
 	Options.DefPresets[SavePN][0] =document.getElementById('btDefPresetName').value;
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	ExpandDefPreset = false;
 	InitPresetNumber = SavePN;
 	SetCurrentCity(Seed.cities[Curr][0]);
@@ -5489,7 +5491,7 @@ function DelDefPreset() {
 
 	Options.DefPresets[PN.value]={};
 	delete Options.DefPresets[PN.value];
-	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveOptions ();},0); // get around GM_SetValue unsafeWindow error
 	ExpandDefPreset = false;
 	SetCurrentCity(Seed.cities[Curr][0]);
 }
@@ -5554,14 +5556,14 @@ function SendHome (marchId) {
 					i = uW.cm.UNIT_TYPES[ui];
 					upkeep += parseInt(march["unit" + i + "Return"]) * parseInt(uW.unitupkeeps[i])
 				}	
-				Seed.resources["city"+ march.toCityId].rec1[3] -= upkeep;
+				uW.seed.resources["city"+ march.toCityId].rec1[3] -= upkeep;
 				if (parseInt(march.fromPlayerId) == parseInt(uW.tvuid)) {
-					var mymarch = Seed.queue_atkp["city" + march.fromCityId]["m" + marchId];
+					var mymarch = uW.seed.queue_atkp["city" + march.fromCityId]["m" + marchId];
 					var marchtime = Math.abs(parseInt(mymarch.destinationUnixTime) - parseInt(mymarch.eventUnixTime));
 					mymarch.returnUnixTime = unixTime() + marchtime;
 					mymarch.marchStatus = 8;
 				}
-				delete Seed.queue_atkinc["m" + marchId];
+				delete uW.seed.queue_atkinc["m" + marchId];
 			} else {
 				setReinError(rslt.errorMsg);
 			}
@@ -5597,7 +5599,7 @@ function StartRitual (QS) {
 	
 	// see if we need to claw back units from defending units
 	
-	var clawback = Seed.units["city" + CurrentCityId]['unt'+unitid] - numUnits; 
+	var clawback = uW.seed.units["city" + CurrentCityId]['unt'+unitid] - numUnits; 
 	if (clawback < 0) {
 		var MoveArray = [];
 		MoveArray[unitid] = clawback;
@@ -5613,10 +5615,10 @@ function StartRitual (QS) {
 		parameters : params,
 		onSuccess : function (rslt) {
 			if (rslt.ok) {
-				Seed.queue_sacr["city" + CurrentCityId].push(rslt.queue_sacr);
-				Seed.units["city" + CurrentCityId] = rslt.units;
-				Seed.cityData.city[CurrentCityId].population = rslt.cityData_city.population;
-				Seed.cityData.city[CurrentCityId].populationCap = rslt.cityData_city.populationCap;
+				uW.seed.queue_sacr["city" + CurrentCityId].push(rslt.queue_sacr);
+				uW.seed.units["city" + CurrentCityId] = rslt.units;
+				uW.seed.cityData.city[CurrentCityId].population = rslt.cityData_city.population;
+				uW.seed.cityData.city[CurrentCityId].populationCap = rslt.cityData_city.populationCap;
 				
 				setSacError('&nbsp;');
 				document.getElementById('btRitualTroops').value = 0;
@@ -5646,7 +5648,7 @@ function setSacError(msg) {
 function StopRitual (sacNo, notify){
 	uW.jQuery('#btStopRitual'+sacNo).addClass("disabled");
 	ResetHTMLRegister('btSacrificeCell');
-	var queue = Seed.queue_sacr["city" + CurrentCityId][sacNo];
+	var queue = uW.seed.queue_sacr["city" + CurrentCityId][sacNo];
     var params = uW.Object.clone(uW.g_ajaxparams);
 	var cityId = CurrentCityId;
 	params.cid = cityId;
@@ -5659,7 +5661,7 @@ function StopRitual (sacNo, notify){
 		parameters : params,
 		onSuccess : function (rslt) {
 			if (rslt.ok) {
-				Seed.queue_sacr["city" + CurrentCityId].splice(sacNo, 1);
+				uW.seed.queue_sacr["city" + CurrentCityId].splice(sacNo, 1);
 				if (CurrentCityId==cityId) {PaintCityInfo(cityId);}
 			} 
 			uW.jQuery('#btStopRitual'+sacNo).removeClass("disabled");
@@ -5685,7 +5687,7 @@ function SwitchGuardian (elem) {
 	GuardDelay = 999;
 	setGuardMessage('Sending request...');
 	
-    var params = uW.Object.clone(uW.g_ajaxparams);
+    var params = uW.Object.clone(unsafeWindow.g_ajaxparams);
     params.ctrl = "Guardian";
     params.action = "summon";
     params.cityId = uW.currentcityid;
@@ -5696,15 +5698,15 @@ function SwitchGuardian (elem) {
 		parameters: params,
 		onSuccess: function (rslt) {
 			if (rslt.ok) {
-				var g = uW.cm.guardianModalModel.gObj();
+				var g = unsafeWindow.cm.guardianModalModel.gObj();
 				g.summonGuardian = {
 					summonFinishTime: parseInt(rslt.summonFinishTime),
 					level: rslt.summonGuardian.cl0,
 					type: rslt.summonGuardian.type,
 					upgrading: false
 				};
-				Seed.guardian[Options.CurrentCity].type = type;
-				Seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
+				unsafeWindow.seed.guardian[Options.CurrentCity].type = type;
+				unsafeWindow.seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
 				var GType = 0;
 				switch(type) {
 					case "wood":  GType=50;break;
@@ -5712,15 +5714,15 @@ function SwitchGuardian (elem) {
 					case "food":  GType=52;break;
 					case "stone": GType=53;break;
 				}
-				Seed.buildings["city"+ uW.currentcityid].pos500[0] = GType;
+				unsafeWindow.seed.buildings["city"+ uW.currentcityid].pos500[0] = GType;
 				// need to delay 8 seconds before allowing again
 				GuardDelay = 8;
 				PaintGuardianSelector();
 				var time = parseInt(rslt.summonFinishTime) - unixTime();
 				setTimeout(function(){
-					Seed.guardian[Options.CurrentCity].type = type;
-					Seed.buildings["city"+ uW.currentcityid].pos500[0] = GType;
-					Seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
+					unsafeWindow.seed.guardian[Options.CurrentCity].type = type;
+					unsafeWindow.seed.buildings["city"+ uW.currentcityid].pos500[0] = GType;
+					unsafeWindow.seed.guardian[Options.CurrentCity].level = rslt.summonGuardian.cl0;
 				},(time*1000));
 			} 
 			else {
@@ -5748,11 +5750,11 @@ function SwitchThroneRoom (elem) {
 	ThroneDelay = 999;
 	setThroneMessage('Sending request...');
 
-    var params = uW.Object.clone(uW.g_ajaxparams);
+    var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
     params.ctrl = 'throneRoom\\ThroneRoomServiceAjax';
     params.action = 'setPreset';
     params.presetId = NewPreset;
-    new MyAjaxRequest(uW.g_ajaxpath + "ajax/_dispatch53.php" + uW.g_ajaxsuffix, {
+    new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
         method: "post",
         parameters: params,
         loading: true,
@@ -5761,7 +5763,7 @@ function SwitchThroneRoom (elem) {
 				var H = Seed.throne.slotEquip[NewPreset];
 				Seed.throne.activeSlot = NewPreset;
 				// set the right items as equiped
-				uW.jQuery.each(uW.kocThroneItems, function (I, J) {
+				uW.jQuery.each(unsafeWindow.kocThroneItems, function (I, J) {
 					C = uW.jQuery.inArray(J.id, H) > -1;
 					if (C) {
 						J.isEquipped = true;
@@ -5864,9 +5866,9 @@ function PaintTRPresets () {
 function BuildTRPresetStats(slot){
 	var StatEffects = [];
 	var m="";
-	for (var k in uW.cm.thronestats.effects) StatEffects[k] = 0;
-	for (var k in uW.kocThroneItems){
-		y = uW.kocThroneItems[k];
+	for (var k in unsafeWindow.cm.thronestats.effects) StatEffects[k] = 0;
+	for (var k in unsafeWindow.kocThroneItems){
+		y = unsafeWindow.kocThroneItems[k];
     	for (var ii=0;ii<Seed.throne.slotEquip[slot].length;ii++) {
 			if (Seed.throne.slotEquip[slot][ii] == y.id) {
 				for (var O in y["effects"]) {
@@ -5874,8 +5876,8 @@ function BuildTRPresetStats(slot){
 					id = y["effects"]["slot"+i]["id"];
 					tier = parseInt(y["effects"]["slot"+i]["tier"]);
 					level = y["level"];
-					p = uW.cm.thronestats.tiers[id][tier];
-					while (!p && (tier > 0)) { tier--; p = uW.cm.thronestats.tiers[id][tier]; } 
+					p = unsafeWindow.cm.thronestats.tiers[id][tier];
+					while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
 					if (!p) continue; // can't find stats for tier
 					if (y["effects"]["slot"+i].fromJewel && (level > uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
 						level = uW.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
@@ -5921,9 +5923,9 @@ function SetMarshall() {
 			uW.jQuery('#btSetMarshall').removeClass("disabled");
 			if (rslt.ok) {
 				if (kid == 0) {
-					Seed.leaders["city" + uW.currentcityid].combatKnightId = "0";
+					uW.seed.leaders["city" + uW.currentcityid].combatKnightId = "0";
 				} else {
-					Seed.leaders["city" + uW.currentcityid].combatKnightId = kid.toString();
+					uW.seed.leaders["city" + uW.currentcityid].combatKnightId = kid.toString();
 				ExpandMarshall = false;
 				PaintCityInfo(Seed.cities[Options.CurrentCity][0]);	
 				}
@@ -5947,8 +5949,8 @@ function BoostMarshall() {
 		onSuccess : function (rslt) {
 			uW.jQuery('#btBoostMarshall').removeClass("disabled");
 			if (rslt.ok) {
-				Seed.knights["city" + uW.currentcityid]["knt" + kid].combatBoostExpireUnixtime = rslt.expiration.toString();
-				Seed.items[item] = parseInt(Seed.items[item]) - 1;
+				uW.seed.knights["city" + uW.currentcityid]["knt" + kid].combatBoostExpireUnixtime = rslt.expiration.toString();
+				uW.seed.items[item] = parseInt(uW.seed.items[item]) - 1;
 				uW.ksoItems[item.substring(1)].subtract();
 				uW.cm.MixPanelTracker.track("item_use", {
 					item : itemlist[item].name,
@@ -6060,8 +6062,8 @@ function createChampionToolTip (elem,c) {
 	if (!gottroop) { TempcText += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
 	TempcText+="</table>";
 	
-	uW.jQuery('#'+elem.id).children("span").remove();
-	uW.jQuery('#'+elem.id).append('<span class="trtip">'+TempcText+'</span>');
+	unsafeWindow.jQuery('#'+elem.id).children("span").remove();
+	unsafeWindow.jQuery('#'+elem.id).append('<span class="trtip">'+TempcText+'</span>');
 }
 
 /********************* MONITOR FUNCTIONS *******************************/
@@ -6315,12 +6317,12 @@ function fetchCourtInfo (notify) {
 }
 
 function TRStats (notify) {
-  	var params = uW.Object.clone(uW.g_ajaxparams);
+  	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
 	params.ctrl = 'throneRoom\\ThroneRoomServiceAjax';
 	params.action = 'getEquipped';
 	params.playerId = userInfo.userId;
 
-  	new MyAjaxRequest(uW.g_ajaxpath + "ajax/_dispatch53.php" + uW.g_ajaxsuffix, {
+  	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch53.php" + unsafeWindow.g_ajaxsuffix, {
 		method: "post",
 		parameters: params,
 		loading: true,
@@ -6455,7 +6457,7 @@ function MonitorTRLoop () {
 }
 
 function showProfile () {
-	uW.getInfoForAnUser(userInfo.userId);
+	unsafeWindow.getInfoForAnUser(userInfo.userId);
 }
 
 function showTR () {
@@ -6494,7 +6496,7 @@ function saveLog() {
 
 function ClearLog() {
 	CurrLog = [];
-	setTimeout(function () {saveLog ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 	if (popLog) PaintLog();
 }
 
@@ -6535,7 +6537,7 @@ function AddToLog(ID,Name,Alliance) {
 		}
 	}  
     CurrLog.push ({ts:ts, id:ID, name:Name, alliance:Alliance, tr:HisStatEffects.slice(), keep:okeep, label:olabel});
-	setTimeout(function () {saveLog ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 	if (popLog) PaintLog();
 }
 
@@ -6626,8 +6628,8 @@ function createToolTip (title,elem,TempStatEffects) {
 		if (HisContent != "") { TempcText += HisContent + "<br>"; }
 	}
 	
-	uW.jQuery('#'+elem.id).children("span").remove();
-	uW.jQuery('#'+elem.id).append('<span class="trtip">'+TempcText+'</span>');
+	unsafeWindow.jQuery('#'+elem.id).children("span").remove();
+	unsafeWindow.jQuery('#'+elem.id).append('<span class="trtip">'+TempcText+'</span>');
 }
 
 function ShowLog(entry) {
@@ -6640,13 +6642,13 @@ function ShowLog(entry) {
 
 function ToggleKeep(entry) {
 	CurrLog[entry].keep = !CurrLog[entry].keep;
-	setTimeout(function () {saveLog ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function UpdateLabel(elem,entry) {
 	if (KeyTimer) { clearTimeout(KeyTimer); }
 	CurrLog[entry].label = elem.value;
-	setTimeout(function () {saveLog ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 }
 
 function PostLog(entry) {
@@ -6674,7 +6676,7 @@ function PostLog(entry) {
 
 function DeleteLog(entry) {
 	CurrLog.splice(entry,1);
-	setTimeout(function () {saveLog ();},0); // get around GM_SetValue uW error
+	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 	if (popLog) PaintLog();
 }
 
