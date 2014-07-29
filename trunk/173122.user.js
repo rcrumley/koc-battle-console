@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140723a
+// @version        20140729a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -24,7 +24,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140723a';
+var Version = '20140729a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -2348,13 +2348,15 @@ var Rpt = {
 			m += '<div class="ptdivHeader" style="background: #99CCFF;" align=left><a id=reportBoostsHdr class=ptdivLink >Troop Adjustments:&nbsp;<img id=reportBoostsArrow height="10" src="' + GameIcons.DownArrow + '"></a></div>';
 			//summary
 			m += '<div id=reportBoosts>';
-			if (rslt['s1atkBoost'] || rslt['s1defBoost'] || rslt['s0atkBoost'] || rslt['s0defBoost']) {
+			if (rslt['s1atkBoost'] || rslt['s1defBoost'] || rslt['s1lifeBoost'] || rslt['s0atkBoost'] || rslt['s0defBoost'] || rslt['s0lifeBoost']) {
 				m += '<div style="width:50%;float:left;">';
 				m += '<b>Item Boosts</b><br>';
 				if (rslt['s1atkBoost'])
 					m += 'Attack Boosted: ' + 100 * rslt['s1atkBoost'] + '%<br>';
 				if (rslt['s1defBoost'])
 					m += 'Defense Boosted: ' + 100 * rslt['s1defBoost'] + '%<br>';
+				if (rslt['s1lifeBoost'])
+					m += 'Health Boosted: ' + 100 * rslt['s1lifeBoost'] + '%<br>';
 				m += '</div>'; //attacker
 				m += '<div style="width:50%;float:left;">';
 				m += '<b>Item Boosts</b><br>';
@@ -2362,6 +2364,8 @@ var Rpt = {
 					m += 'Attack Boosted: ' + 100 * rslt['s0atkBoost'] + '%<br>';
 				if (rslt['s0defBoost'])
 					m += 'Defense Boosted: ' + 100 * rslt['s0defBoost'] + '%<br>';
+				if (rslt['s0lifeBoost'])
+					m += 'Health Boosted: ' + 100 * rslt['s0lifeBoost'] + '%<br>';
 				m += '</div>'; //defender
 				m += '<div style="clear:both">&nbsp;</div>';
 			}
