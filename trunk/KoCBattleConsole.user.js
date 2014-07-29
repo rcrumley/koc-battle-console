@@ -13,8 +13,8 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140724a
-// @releasenotes 	<p>Partial Rollback to fix instability</p>
+// @version			20140729a
+// @releasenotes 	<p>Include health boost banners on Dashboard</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -25,7 +25,7 @@
 //	¦	July 2014 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140724a'; 
+var Version = '20140729a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -218,6 +218,8 @@ var BloodFuryImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/
 var BarkSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/271.jpg";
 var StoneSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/272.jpg";
 var IronSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/281.jpg";
+var StaunchBannerImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/282.jpg";
+var VigourBannerImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/283.jpg";
 var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
 var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
 var ThroneImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/bonus_throne.png";
@@ -3945,14 +3947,14 @@ function ToggleDashboard (Curr){
 		for (p in order) {
 			if (order[p].name == 'Overview') {
 				m += '<div id=btStatusHeader><div class="divHeader" align="right"><a id=btStatusLink class=divLink >OVERVIEW&nbsp;<img id=btStatusArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btStatus align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
+				m += '<div id=btStatus align=center class="divHide"><TABLE width="98%"><tr><td class=xtab align="center" id=btStatusCell></td></tr>';
 				m += '</table></div></div>';
 				OverviewShow = order[p].Display;
 			}	
 
 			if (order[p].name == 'Sacrifices') {
 				m += '<div id=btSacrificeHeader><div class="divHeader" align="right"><a id=btSacrificeLink class=divLink >SACRIFICES&nbsp;<img id=btSacrificeArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btSacrifice align=center class="divHide"><TABLE width="96%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
+				m += '<div id=btSacrifice align=center class="divHide"><TABLE width="98%"><tr><td class=xtab align=center id=btSacrificeCell></td></tr><tr><td class=xtab align=center>';
 				m += '<div id=btNewSacrificeCell align="center" class="divHide">&nbsp;</div></td></tr>';
 				m += '</table></div></div>';
 				SacrificeShow = order[p].Display;
@@ -3960,7 +3962,7 @@ function ToggleDashboard (Curr){
 			
 			if (order[p].name == 'Troops') {
 				m += '<div id=btTroopHeader><div class="divHeader" align="right"><a id=btTroopLink class=divLink >TROOPS&nbsp;<img id=btTroopArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btTroop align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
+				m += '<div id=btTroop align=center class=divHide><TABLE width="98%"><tr><td class=xtabBR align=center id=btTroopCell></td></tr><tr><td class=xtab align=center>';
 				m += '<div id=btTroopAddCell align="center">&nbsp;</div></td></tr>';
 				m += '</table></div></div>';
 				TroopShow = order[p].Display;
@@ -3968,14 +3970,14 @@ function ToggleDashboard (Curr){
 		
 			if (order[p].name == 'Reinforcements') {
 				m += '<div id=btReinforceHeader><div class="divHeader" align="right"><a id=btReinforceLink class=divLink >REINFORCEMENTS&nbsp;<img id=btReinforceArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btReinforce align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
+				m += '<div id=btReinforce align=center class=divHide><TABLE width="98%"><tr><td class=xtabBR align=center id=btReinforceCell></td></tr>';
 				m += '</table></div></div>';
 				ReinforceShow = order[p].Display;
 			}	
 		
 			if (order[p].name == 'Fortifications') {
 				m += '<div id=btWallDefenceHeader><div class="divHeader" align="right"><a id=btWallDefenceLink class=divLink >FORTIFICATIONS&nbsp;<img id=btWallDefenceArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btWallDefence align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
+				m += '<div id=btWallDefence align=center class=divHide><TABLE width="98%"><tr><td class=xtabBR align=center id=btWallDefenceCell></td></tr>';
 				m += '</table></div></div>';
 				FortificationShow = order[p].Display;
 			}
@@ -3983,7 +3985,7 @@ function ToggleDashboard (Curr){
 			if (Options.EnableOutgoing) {
 				if (order[p].name == 'Outgoing Attacks') {
 					m += '<div id=btCityAttackHeader><div class="divHeader" align="right"><a id=btCityAttackLink class=divLink >OUTGOING ATTACKS&nbsp;<img id=btCityAttackArrow height="10" src="'+RightArrow+'"></a></div>';
-					m += '<div id=btCityAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
+					m += '<div id=btCityAttack align=center class=divHide><TABLE width="98%"><tr><td class=xtabBR align=center id=btCityAttackCell></td></tr>';
 					m += '</table></div></div>';
 					CityAttackShow = order[p].Display;
 				}	
@@ -3991,7 +3993,7 @@ function ToggleDashboard (Curr){
 			
 			if (order[p].name == 'Incoming Attacks') {
 				m += '<div id=btAttackHeader><div class="divHeader" align="right"><a id=btAttackLink class=divLink >INCOMING ATTACKS&nbsp;<img id=btAttackArrow height="10" src="'+RightArrow+'"></a></div>';
-				m += '<div id=btAttack align=center class=divHide><TABLE width="96%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
+				m += '<div id=btAttack align=center class=divHide><TABLE width="98%"><tr><td class=xtabBR align=center id=btAttackCell></td></tr>';
 				m += '</table></div></div><br>';
 				AttackShow = order[p].Display;
 			}
@@ -4440,12 +4442,16 @@ function PaintCityInfo(cityId) {
 
 	Status += '<tr><td class=xtab valign=top><a onClick="btShowChampion()">Champion</a></td><td class=xtab colspan=2><b>'+Champion+'</b></span></b></td></tr>';
 
+	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
+
 	BloodLusts = Seed.items.i261;
 	BloodFrenzies = Seed.items.i262;
 	BloodFuries = Seed.items.i280;
 	BarkSkins = Seed.items.i271;
 	StoneSkins = Seed.items.i272;
 	IronSkins = Seed.items.i281;
+	StaunchBanners = Seed.items.i282;
+	VigourBanners = Seed.items.i283;
 	
 	var now = unixTime();
 
@@ -4467,6 +4473,10 @@ function PaintCityInfo(cityId) {
 			defboost = '<span style="color:#f80"><b>20% for '+uW.timestr(Seed.playerEffects.defExpire-now)+'</b></span>';
 		}
 	}	
+	lifeboost = '<span style="color:#f00"><b>No Active Boost!</b></span>';
+	if (Seed.playerEffects.lifeExpire >now) {
+		lifeboost = '<span style="color:#080"><b>10% for '+uW.timestr(Seed.playerEffects.lifeExpire-now)+'</b></span>';
+	}
 	
 	boosts = '<table cellspacing=0 cellpadding=0><tr>';
 	if (BloodLusts) {
@@ -4487,11 +4497,18 @@ function PaintCityInfo(cityId) {
 	if (IronSkins) {
 		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'281\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+IronSkinImage+'" title="Iron Skin (Def:50%) ('+IronSkins+')"></a></td>';
 	}
+	if (StaunchBanners) {
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'282\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+StaunchBannerImage+'" title="Staunch Banner (Life:10%) ('+StaunchBanners+')"></a></td>';
+	}
+	if (VigourBanners) {
+		boosts += '<td class=xtab><a onClick="cm.ItemController.use(\'283\')"><img height=28 style="opacity:0.8;vertical-align:text-top;" src="'+VigourBannerImage+'" title="Banner of Vigor (Life:10%) ('+VigourBanners+')"></a></td>';
+	}
+
 	boosts += '</tr></table>'
-	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab id=atkboostcell>&nbsp;</td><td class=xtab rowspan=2 align=right>'+boosts+'</td></tr>';
+	Status += '<tr><td class=xtab valign=top>Attack</td><td class=xtab id=atkboostcell>&nbsp;</td><td class=xtab rowspan=3 align=right>'+boosts+'</td></tr>';
 	Status += '<tr><td class=xtab valign=top>Defence</td><td class=xtab id=defboostcell>&nbsp;</td></tr>';
+	Status += '<tr><td class=xtab valign=top>Health</td><td class=xtab id=lifeboostcell>&nbsp;</td></tr>';
 	
-	Status += '<tr><td class=xtab><a onClick="btShowGuardians('+Curr+')">Guardian</a></td><td class=xtab colspan=2 id="btGuardianSelector"></td></tr>';
 	Status += '</table>';
 
 	Status += '<div id=btTRPresets></div>'; 
@@ -4506,6 +4523,7 @@ function PaintCityInfo(cityId) {
 	}
 	document.getElementById('atkboostcell').innerHTML = atkboost;
 	document.getElementById('defboostcell').innerHTML = defboost;
+	document.getElementById('lifeboostcell').innerHTML = lifeboost;
 	document.getElementById('prestigeexpcell').innerHTML = prestigeexp;
 
 	// sacrifices
