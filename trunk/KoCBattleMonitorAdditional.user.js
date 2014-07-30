@@ -14,6 +14,7 @@
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
 // @version         20140611a
+// @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
 // @releasenotes 	<p>Fixed broken upgrade link</p>
 // ==/UserScript==
 
