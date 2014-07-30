@@ -14,6 +14,7 @@
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
 // @version			20140729a
+// @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
 // @releasenotes 	<p>Include health boost banners on Dashboard</p>
 // ==/UserScript==
 
