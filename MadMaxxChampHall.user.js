@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20140731b
+// @version        20140731c
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
@@ -29,7 +29,7 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140731b';
+var Version = '20140731c';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
