@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20140721a
+// @version        20140731a
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
@@ -29,7 +29,7 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140721a';
+var Version = '20140731a';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
@@ -290,6 +290,12 @@ function chStartup (){
 
     uW.chLoaded = Version;
 
+	var iTypes = unsafeWindow.cm.CHAMPION.getEquipmentNames();
+	for (ii in iTypes) {
+		var i_type = iTypes[ii];
+		itemTypes[i_type] = parseInt(ii);
+	}
+	
     readUpgradeData();
 
     if (upgradeData.uCityNum && upgradeData.uCityNum > Seed.cities.length -1 ) upgradeData.uCityNum = 0; 
@@ -1980,7 +1986,7 @@ function addCondition(c)
     this.conditions.push(c);
 }
 
-var itemTypes = {"weapon": 1, "chest": 2, "helm":3, "shield": 5};
+var itemTypes = {};
 
 function applyRule(id)
 {
