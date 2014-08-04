@@ -24,6 +24,7 @@
 // @grant       GM_getResourceText
 // @grant       GM_getResourceURL
 // @screenshot http://s3.amazonaws.com/uso_ss/24187/large.png?1385254902
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 

@@ -20,6 +20,7 @@
 // @grant       GM_getResourceText
 // @grant       GM_getResourceURL
 // @description    Organizes, upgrades and salvages KOC throne room items
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 
