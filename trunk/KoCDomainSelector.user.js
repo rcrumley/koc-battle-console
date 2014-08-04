@@ -16,6 +16,7 @@
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
 // @version			0.2a
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 //

@@ -3,6 +3,7 @@
 // @namespace   kfn
 // @include	     *.kingdomsofcamelot.com/*main_src.php*
 // @description Move Throne Room Furniture about in Kingdoms of Camelot
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 var trstyles = 'div#throneMainContainer div#tableContainer{width:80px;height:213px;top:400px;left:450px;}\
