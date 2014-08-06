@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.2a
+// @version			0.3a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -745,6 +745,8 @@ function TokenPopup (){
 
 		var styles = "";
 
+		var NumTokens = unsafeWindow.seed.items.i599;
+		
 		if (!unsafeWindow.btLoaded) {
 			var styles = '.xtab {padding-right: 5px; border:none; background:none; white-space:nowrap;}\
 					.xtabHD {padding-right: 5px; border-bottom:1px solid #888888; background:none; white-space:nowrap;font-weight:bold;font-size:11px;color:#888888;margin-left:10px;margin-right:10px;margin-top:5px;margin-bottom:5px;vertical-align:text-top;align:left}\
@@ -754,6 +756,7 @@ function TokenPopup (){
 					tr.btPopupTop td {background: url("' + TitleBG + '") no-repeat scroll -10px -10px transparent; border:1px solid #000000; height: 21px;  padding:0px; color:#FFFFFF;}\
 					.btPopMain       {background: url("' + PanelBG + '") no-repeat scroll -10px -50px transparent; border:1px solid #000000; -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size:11px;}\
 					.btPopup         {border:5px ridge #666; -moz-border-radius:25px; border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
+					.divHide         {display:none}\
 					.btInput		 {font-size:10px; }';
 		}		
 		
@@ -769,10 +772,17 @@ function TokenPopup (){
 		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0>';
 		n += '<tr><td class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!"></td></tr>';
 		n += '</table>';
-		n += '<div align="center" style="font-size:10px;opacity:0.3;">KoC Domain Selector v0.2a<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.</div>';
-		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 260, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
+		n += '<div align="center" style="font-size:10px;opacity:0.3;">KoC Domain Selector v0.3a<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
+		n += '<div id=tkmessage align="center" style="font-size:10px;opacity:0.6">&nbsp;</div>';
+		n += '<div align=center style="font-size:10px;" id=tktokenusebutton><a id=tktokenuse class="inlineButton btButton brown8"><span>Use a Token</span></a></div></div>';
+		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 300, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
 		TokenPop.getTopDiv().innerHTML = '<DIV align=center><B>TOKEN OPTIONS</B></DIV>';
 		TokenPop.getMainDiv().innerHTML = n;
+		
+		if (NumTokens < 1) {
+			unsafeWindow.jQuery('#tktokenusebutton').addClass('divHide');
+		}
+		
 		document.getElementById('tkdomain').addEventListener('keyup', function () {
 			if (isNaN(document.getElementById('tkdomain').value)) { document.getElementById('tkdomain').value = ""; }
 			KOCAutoAcceptGifts.options.UserDomain = document.getElementById('tkdomain').value;
@@ -795,14 +805,14 @@ function TokenPopup (){
 			if (document.getElementById('tklink').value != "") { 
 				KOCAutoAcceptGifts.options.BuildLink = document.getElementById('tklink').value;
 				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
-				document.getElementById('tkbuildlink').title = KOCAutoAcceptGifts.options.BuildLink;
+				document.getElementById('tkbuildlink').title = document.getElementById('tklink').value;
 			}	
 		}, false);
 		document.getElementById('tktokenbmk').addEventListener('click', function () {
 			if (document.getElementById('tklink').value != "") { 
 				KOCAutoAcceptGifts.options.TokenLink = document.getElementById('tklink').value;
 				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
-				document.getElementById('tktokenlink').title = KOCAutoAcceptGifts.options.TokenLink;
+				document.getElementById('tktokenlink').title = document.getElementById('tklink').value;
 			}	
 		}, false);
 		document.getElementById('tktokenlink').addEventListener('click', function () {
@@ -839,7 +849,58 @@ function TokenPopup (){
 				setTimeout (function (){window.top.location = goto;}, 0);
 			}	
 		}, false);
-
+		document.getElementById('tktokenuse').addEventListener('click', function () {
+			document.getElementById('tkmessage').innerHTML = 'Sending request...';
+			var params=unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+			params.ftflag=0;
+			new unsafeWindow.Ajax.Request(unsafeWindow.g_ajaxpath+"ajax/magicalboxPreview.php"+unsafeWindow.g_ajaxsuffix,{
+				method:"post",
+				parameters:params,
+				onSuccess:function(message){
+					var rslt=eval("("+message.responseText+")");
+					if(rslt.ok){
+						var params=unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+						new unsafeWindow.Ajax.Request(unsafeWindow.g_ajaxpath+"ajax/magicalboxPick.php"+unsafeWindow.g_ajaxsuffix,{
+							method:"post",
+							parameters:params,
+							onSuccess:function(transport){
+								var rslt=eval("("+transport.responseText+")");
+								if(rslt.ok){
+									var itemId=rslt.prize;
+									if (unsafeWindow.seed.items["i"+itemId]) {
+										unsafeWindow.seed.items["i"+itemId] = parseInt(unsafeWindow.seed.items["i"+itemId])+1;
+										unsafeWindow.ksoItems[itemId].add();
+									}
+									else {
+										unsafeWindow.seed.items["i"+itemId] = 1;
+										unsafeWindow.ksoItems[itemId].add();
+									}
+									var NumTokens = parseInt(unsafeWindow.seed.items.i599);
+									if (NumTokens > 0) {
+										NumTokens = NumTokens - 1;
+										unsafeWindow.seed.items.i599 = (NumTokens).toString();
+										unsafeWindow.ksoItems[599].subtract();
+									}
+									document.getElementById('tkmessage').innerHTML = '<span style="color:#080"><b>You won '+unsafeWindow.itemlist["i"+rslt.prize].name+'!</b></span>';
+									document.getElementById('tknum').innerHTML = parseInt(unsafeWindow.seed.items.i599)
+									if (NumTokens < 1) {
+										unsafeWindow.jQuery('#tokenusebutton').addClass('divHide');
+									}
+									
+								}
+								else { 
+									document.getElementById('tkmessage').innerHTML = '<span style="color:#f00">'+rslt.msg+'</span>';
+								}
+							}
+						});
+					}
+					else {
+						document.getElementById('tkmessage').innerHTML = '<span style="color:#f00">'+rslt.msg+'</span>';
+					}
+				}
+			});
+		}, false);
+		
 		KOCAutoAcceptGifts.options.OpenState = true;
 		KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		
@@ -1020,7 +1081,7 @@ var TokenPop = null;
 
 var ChestImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/treasurechest_icon.png';
 var TokenImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/merlin_magical_token.jpg';
-var BuildImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/build_help_construction.jpg';
+var BuildImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/new_city_outskirts.jpg';
 
 if ((document.URL.search(/main_src.php/i) == -1) && (KOCAutoAcceptGifts.options.Enabled)){
 	KOCAutoAcceptGifts.Listen();
