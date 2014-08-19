@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140729a
+// @version        20140819a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -14,6 +14,7 @@
 // @grant       GM_xmlhttpRequest
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -24,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140729a';
+var Version = '20140819a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -322,6 +323,7 @@ var AutoTrainOptions = {
 	doCalrops:			{1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false},
 	doSpikes:			{1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false},
 	doXbows:			{1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false},
+	doTrebs:			{1:false,2:false,3:false,4:false,5:false,6:false,7:false,8:false},
 	troopType:			{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
 	keepFood:				{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
 	keepWood:				{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
@@ -7280,17 +7282,19 @@ Tabs.Train = {
         <TD width=75%><INPUT id='pttdButMaxSlots' type=submit value='" + uW.g_js_strings.commonstr.max + "'\>&nbsp; (\
         " + uW.g_js_strings.commonstr.max + " <span id=pttdSpMaxSlots>1</span>)</td></tr>\
       <TR align=center><TD colspan=3><SPAN id=pttdSpace></span></td></tr>\
-	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoTraps" + (AutoTrainOptions.doTraps[1] ? ' CHECKED ' : '') + ">Max Traps (Min=1 Max=5)</TD></TR>\
-   	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoCaltrops" + (AutoTrainOptions.doCalrops[1] ? ' CHECKED ' : '') + ">Max Caltraps (Min=1 Max=5)</TD></TR>\
-	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoSpikes" + (AutoTrainOptions.doSpikes[1] ? ' CHECKED ' : '') + ">Max Spikes (Min=1 Max=5)</TD></TR>\
-   	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoXbows" + (AutoTrainOptions.doXbows[1] ? ' CHECKED ' : '') + ">Max Xbows (Min=1 Max=5)</TD></TR>\
       <TR><TD colspan=3 align=center><DIV style='height:10px'>\
       <SELECT id=siege>\
       <option value='0'><CENTER>--- " + uW.g_js_strings.commonstr.speedup + " ---</center></option>\
       <option value='26'>" + uW.itemlist.i26.name + "</option>\
       </select></div>\
-      <BR><INPUT id='pttdButDo' type=submit value='" + uW.g_js_strings.modal_openWalls.builddefenses + "'\></td></tr></table>\
-      </td></tr></table></div></div>\
+      <BR><INPUT id='pttdButDo' type=submit value='" + uW.g_js_strings.modal_openWalls.builddefenses + "'\></td></tr>\
+	 <TR><TD align=center colspan=3><b>AUTOBUILD</b><br>Will queue small amounts<br>until all available wall space used</TD></TR>\
+	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoTraps" + (AutoTrainOptions.doTraps[1] ? ' CHECKED ' : '') + ">Traps</TD></TR>\
+   	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoCaltrops" + (AutoTrainOptions.doCalrops[1] ? ' CHECKED ' : '') + ">Caltrops</TD></TR>\
+	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoSpikes" + (AutoTrainOptions.doSpikes[1] ? ' CHECKED ' : '') + ">Spiked Barriers</TD></TR>\
+   	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoXbows" + (AutoTrainOptions.doXbows[1] ? ' CHECKED ' : '') + ">Crossbows</TD></TR>\
+   	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoTrebs" + (AutoTrainOptions.doTrebs[1] ? ' CHECKED ' : '') + ">Defensive Trebuchets</TD></TR>\
+      </table></td></tr></table></div></div>\
       <TABLE align=center width=425 class=ptTab><TR><TD><div id=ptTrainStatus style='overflow-y:auto; max-height:78px; height: 78px;'></div></td></tr></table>\
       <div style='height: 330px; background: #e8ffe8'>\
       <TABLE width=100% class=ptTab><TR><TD colspan=3><DIV id=divSTtop></div></td></tr>\
@@ -7354,6 +7358,7 @@ Tabs.Train = {
 		document.getElementById('chkDoCaltrops').addEventListener('change', t.clickCheckDoCaltrops, false);
 		document.getElementById('chkDoSpikes').addEventListener('change', t.clickCheckDoSpikes, false);
 		document.getElementById('chkDoXbows').addEventListener('change', t.clickCheckDoXbows, false);
+		document.getElementById('chkDoTrebs').addEventListener('change', t.clickCheckDoTrebs, false);
 		document.getElementById('pttrgamble').addEventListener('change', t.changeTroopSelect, false);
 		document.getElementById('chkPop').addEventListener('change', t.clickCheckIdlePop, false);
 		t.changeTroopSelect();
@@ -7602,6 +7607,14 @@ Tabs.Train = {
 		t.displayCityStats();
 		t.changeDefSelect();
 	},
+	clickCheckDoTrebs: function () {
+		var t = Tabs.Train;
+		var cityNo = Cities.byID[t.selectedCity.id].idx + 1;
+		AutoTrainOptions.doTrebs[cityNo] = (document.getElementById('chkDoTrebs').checked)
+		saveAutoTrainOptions();
+		t.displayCityStats();
+		t.changeDefSelect();
+	},
 	limitingFactor: null,
 	changeTroopSelect: function () {
 		var t = Tabs.Train;
@@ -7765,6 +7778,11 @@ Tabs.Train = {
     </b><BR>' + uW.g_js_strings.modal_openWalls.walldef + ': \
     ' + (t.stats.wallSpaceUsed + t.stats.wallSpaceQueued) + '/<B>' + t.stats.wallSpace + '</b><BR>\
         ' + uW.g_js_strings.modal_openWalls.fielddef + ': ' + (t.stats.fieldSpaceUsed + t.stats.fieldSpaceQueued) + '/<B>' + t.stats.fieldSpace + '</b>';
+		document.getElementById('chkDoTraps').checked = AutoTrainOptions.doTraps[Cities.byID[t.selectedCity.id].idx + 1];
+		document.getElementById('chkDoCaltrops').checked = AutoTrainOptions.doCalrops[Cities.byID[t.selectedCity.id].idx + 1];
+		document.getElementById('chkDoSpikes').checked = AutoTrainOptions.doSpikes[Cities.byID[t.selectedCity.id].idx + 1];
+		document.getElementById('chkDoXbows').checked = AutoTrainOptions.doXbows[Cities.byID[t.selectedCity.id].idx + 1];
+		document.getElementById('chkDoTrebs').checked = AutoTrainOptions.doTrebs[Cities.byID[t.selectedCity.id].idx + 1];
 	},
 	changeDefSelect: function () {
 		var t = Tabs.Train;
@@ -7797,7 +7815,6 @@ Tabs.Train = {
 				var b = getCityBuilding(cityId, k.substr(1));
 				if (isPrestige) {
 					var bid = parseInt(k.substr(1));
-					logit(bid);
 					switch (bid) {
 					case 17: //Stable
 						b.maxLevel = 12;
@@ -7807,8 +7824,6 @@ Tabs.Train = {
 						b.maxLevel = 12;
 					}
 				}
-				logit(isPrestige);
-				logit(inspect(b, 3, 1));
 				if (b.maxLevel < uc[8][k][1]) {
 					t.stats.MaxDefTrain = 0;
 					break;
@@ -8231,6 +8246,7 @@ Tabs.Train = {
 			t.stopTraining('<SPAN class=boldRed>' + uW.g_js_strings.barbarian.erroroccured + ' ' + err.message + '</span>');
 		}
 	},
+	
 	doAutoTraps: function (cityNo) {
 		var t = Tabs.Train;
 		wall = {};
@@ -8238,12 +8254,14 @@ Tabs.Train = {
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
 		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
-		if (availableSpace > 0 && wall.slotsBusy < 3) {
+		var MaxSlots = wall.wallLevel;
+		if (MaxSlots > 5) MaxSlots = 5;
+		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
 			var food = parseInt(Seed.resources['city' + cityId].rec1[0] / 3600);
 			var wood = parseInt(Seed.resources['city' + cityId].rec2[0] / 3600);
 			var stone = parseInt(Seed.resources['city' + cityId].rec3[0] / 3600);
 			var ore = parseInt(Seed.resources['city' + cityId].rec4[0] / 3600);
-			availableSlots = 3 - wall.slotsBusy;
+			availableSlots = MaxSlots - wall.slotsBusy;
 			var foodRes = AutoTrainOptions.keepFood[cityNo];
 			var woodRes = AutoTrainOptions.keepWood[cityNo];
 			var stoneRes = AutoTrainOptions.keepStone[cityNo];
@@ -8253,7 +8271,7 @@ Tabs.Train = {
 			var availStone = stone - stoneRes;
 			var availOre = ore - oreRes;
 			secsPerTrap = Cities.byID[cityId]['Def60Time'];
-			if (secsPerTrap > 0 && availableSpace > 2 && availableSlots > 0) {
+			if (secsPerTrap > 0 && availableSpace >= 4 && availableSlots > 0) {
 				if (availFood > 400 && availWood > 800 & availStone > 200 & availOre > 400) {
 					var numberToTrain = 9999999999;
 					if ((availFood / 400) < numberToTrain)
@@ -8264,15 +8282,13 @@ Tabs.Train = {
 						numberToTrain = parseInt(availStone / 200);
 					if ((availOre / 400) < numberToTrain)
 						numberToTrain = parseInt(availOre / 400);
-					if (numberToTrain > 5)
-						numberToTrain = 5;
-					if (wall.Trap + wall.TrapTraining < 10 || availableSpace < 15) {
-						numberToTrain = 1;
-						actionLog('Building 1 Trap in city ' + Cities.byID[cityId].name);
-					} else
-						actionLog('Building ' + numberToTrain + ' Traps in city ' + Cities.byID[cityId].name);
+					if ((availableSpace / 4) < numberToTrain)
+						numberToTrain = parseInt(availableSpace / 4);
+					if (numberToTrain > 50)
+						numberToTrain = 50;
+					logit('Building ' + numberToTrain + ' Traps in city ' + Cities.byID[cityId].name);
 					try {
-						doDefTrain(cityId, 60, numberToTrain);
+						doDefTrain(cityId, 0, 60, numberToTrain);
 					} catch (err) {
 						logit(inspect(err, 8, 1));
 					}
@@ -8287,12 +8303,14 @@ Tabs.Train = {
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
 		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
-		if (availableSpace > 0 && wall.slotsBusy < 3) {
+		var MaxSlots = wall.wallLevel;
+		if (MaxSlots > 5) MaxSlots = 5;
+		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
 			var food = parseInt(Seed.resources['city' + cityId].rec1[0] / 3600);
 			var wood = parseInt(Seed.resources['city' + cityId].rec2[0] / 3600);
 			var stone = parseInt(Seed.resources['city' + cityId].rec3[0] / 3600);
 			var ore = parseInt(Seed.resources['city' + cityId].rec4[0] / 3600);
-			availableSlots = 3 - wall.slotsBusy;
+			availableSlots = MaxSlots - wall.slotsBusy;
 			var foodRes = AutoTrainOptions.keepFood[cityNo];
 			var woodRes = AutoTrainOptions.keepWood[cityNo];
 			var stoneRes = AutoTrainOptions.keepStone[cityNo];
@@ -8302,22 +8320,20 @@ Tabs.Train = {
 			var availStone = stone - stoneRes;
 			var availOre = ore - oreRes;
 			secsPerCaltrop = Cities.byID[cityId]['Def61Time'];
-			if (secsPerCaltrop > 0 && availableSpace > 2 && availableSlots > 0) {
+			if (secsPerCaltrop > 0 && availableSpace >= 1 && availableSlots > 0) {
 				if (availFood > 100 && availWood > 400) {
 					var numberToTrain = 9999999999;
 					if ((availFood / 100) < numberToTrain)
 						numberToTrain = parseInt(availFood / 100);
 					if ((availWood / 400) < numberToTrain)
 						numberToTrain = parseInt(availWood / 400);
-					if (numberToTrain > 5)
-						numberToTrain = 5;
-					if (wall.Caltrops + wall.CaltropsTraining < 10 || availableSpace < 15) {
-						numberToTrain = 1;
-						actionLog('Building 1 Caltrop in city ' + Cities.byID[cityId].name);
-					} else
-						actionLog('Building ' + numberToTrain + ' Caltrops in city ' + Cities.byID[cityId].name);
+					if ((availableSpace) < numberToTrain)
+						numberToTrain = parseInt(availableSpace);
+					if (numberToTrain > 50)
+						numberToTrain = 50;
+					logit('Building ' + numberToTrain + ' Caltrops in city ' + Cities.byID[cityId].name);
 					try {
-						doDefTrain(cityId, 61, numberToTrain);
+						doDefTrain(cityId, 0, 61, numberToTrain);
 					} catch (err) {
 						logit(inspect(err, 8, 1));
 					}
@@ -8332,12 +8348,14 @@ Tabs.Train = {
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
 		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
-		if (availableSpace > 0 && wall.slotsBusy < 3) {
+		var MaxSlots = wall.wallLevel;
+		if (MaxSlots > 5) MaxSlots = 5;
+		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
 			var food = parseInt(Seed.resources['city' + cityId].rec1[0] / 3600);
 			var wood = parseInt(Seed.resources['city' + cityId].rec2[0] / 3600);
 			var stone = parseInt(Seed.resources['city' + cityId].rec3[0] / 3600);
 			var ore = parseInt(Seed.resources['city' + cityId].rec4[0] / 3600);
-			availableSlots = 3 - wall.slotsBusy;
+			availableSlots = MaxSlots - wall.slotsBusy;
 			var foodRes = AutoTrainOptions.keepFood[cityNo];
 			var woodRes = AutoTrainOptions.keepWood[cityNo];
 			var stoneRes = AutoTrainOptions.keepStone[cityNo];
@@ -8347,7 +8365,7 @@ Tabs.Train = {
 			var availStone = stone - stoneRes;
 			var availOre = ore - oreRes;
 			secsPerSpike = Cities.byID[cityId]['Def62Time'];
-			if (secsPerSpike > 0 && availableSpace > 2 && availableSlots > 0) {
+			if (secsPerSpike > 0 && availableSpace >= 3 && availableSlots > 0) {
 				if (availFood > 150 && availWood > 750 & availStone > 50) {
 					var numberToTrain = 9999999999;
 					if ((availFood / 150) < numberToTrain)
@@ -8356,15 +8374,13 @@ Tabs.Train = {
 						numberToTrain = parseInt(availWood / 750);
 					if ((availStone / 50) < numberToTrain)
 						numberToTrain = parseInt(availStone / 50);
-					if (numberToTrain > 5)
-						numberToTrain = 5;
-					if (wall.SpikedBarrier + wall.SpikedBarrierTraining < 10 || availableSpace < 15) {
-						numberToTrain = 1;
-						actionLog('Building 1 Spike in city ' + Cities.byID[cityId].name);
-					} else
-						actionLog('Building ' + numberToTrain + ' Spikes in city ' + Cities.byID[cityId].name);
+					if ((availableSpace / 3) < numberToTrain)
+						numberToTrain = parseInt(availableSpace / 3);
+					if (numberToTrain > 50)
+						numberToTrain = 50;
+					logit('Building ' + numberToTrain + ' Spikes in city ' + Cities.byID[cityId].name);
 					try {
-						doDefTrain(cityId, 61, numberToTrain);
+						doDefTrain(cityId, 0, 62, numberToTrain);
 					} catch (err) {
 						logit(inspect(err, 8, 1));
 					}
@@ -8379,12 +8395,14 @@ Tabs.Train = {
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
 		availableSpace = wall.wallSpace - wall.wallSpaceUsed;
-		if (availableSpace > 0 && wall.slotsBusy < 2) {
+		var MaxSlots = wall.wallLevel;
+		if (MaxSlots > 5) MaxSlots = 5;
+		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
 			var food = parseInt(Seed.resources['city' + cityId].rec1[0] / 3600);
 			var wood = parseInt(Seed.resources['city' + cityId].rec2[0] / 3600);
 			var stone = parseInt(Seed.resources['city' + cityId].rec3[0] / 3600);
 			var ore = parseInt(Seed.resources['city' + cityId].rec4[0] / 3600);
-			availableSlots = 2 - wall.slotsBusy;
+			availableSlots = MaxSlots - wall.slotsBusy;
 			var foodRes = AutoTrainOptions.keepFood[cityNo];
 			var woodRes = AutoTrainOptions.keepWood[cityNo];
 			var stoneRes = AutoTrainOptions.keepStone[cityNo];
@@ -8394,7 +8412,7 @@ Tabs.Train = {
 			var availStone = stone - stoneRes;
 			var availOre = ore - oreRes;
 			secsPerXbow = Cities.byID[cityId]['Def53Time'];
-			if (secsPerXbow > 0 && availableSpace > 2 && availableSlots > 0) {
+			if (secsPerXbow > 0 && availableSpace >= 2 && availableSlots > 0) {
 				if (availFood > 250 && availWood > 2000 & availStone > 750 & availOre > 500) {
 					var numberToTrain = 9999999999;
 					if ((availFood / 250) < numberToTrain)
@@ -8405,15 +8423,62 @@ Tabs.Train = {
 						numberToTrain = parseInt(availStone / 750);
 					if ((availOre / 500) < numberToTrain)
 						numberToTrain = parseInt(availOre / 500);
-					if (numberToTrain > 5)
-						numberToTrain = 5;
-					if (wall.Crossbows + wall.CrossbowsTraining < 10 || availableSpace < 15) {
-						numberToTrain = 1;
-						actionLog('Building 1 Crossbow in city ' + Cities.byID[cityId].name);
-					} else
-						actionLog('Building ' + numberToTrain + ' Crossbows in city ' + Cities.byID[cityId].name);
+					if ((availableSpace / 2) < numberToTrain)
+						numberToTrain = parseInt(availableSpace / 2);
+					if (numberToTrain > 50)
+						numberToTrain = 50;
+					logit('Building ' + numberToTrain + ' Crossbows in city ' + Cities.byID[cityId].name);
 					try {
-						doDefTrain(cityId, 53, numberToTrain);
+						doDefTrain(cityId, 0, 53, numberToTrain);
+					} catch (err) {
+						logit(inspect(err, 8, 1));
+					}
+				}
+			}
+		}
+	},
+	doAutoTrebs: function (cityNo) {
+		var t = Tabs.Train;
+		wall = {};
+		var cityId = Cities.cities[cityNo - 1].id
+		var cityID = 'city' + cityId;
+		getWallInfo(cityId, wall);
+		availableSpace = wall.wallSpace - wall.wallSpaceUsed;
+		var MaxSlots = wall.wallLevel;
+		if (MaxSlots > 5) MaxSlots = 5;
+		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
+			var food = parseInt(Seed.resources['city' + cityId].rec1[0] / 3600);
+			var wood = parseInt(Seed.resources['city' + cityId].rec2[0] / 3600);
+			var stone = parseInt(Seed.resources['city' + cityId].rec3[0] / 3600);
+			var ore = parseInt(Seed.resources['city' + cityId].rec4[0] / 3600);
+			availableSlots = MaxSlots - wall.slotsBusy;
+			var foodRes = AutoTrainOptions.keepFood[cityNo];
+			var woodRes = AutoTrainOptions.keepWood[cityNo];
+			var stoneRes = AutoTrainOptions.keepStone[cityNo];
+			var oreRes = AutoTrainOptions.keepOre[cityNo];
+			var availFood = food - foodRes;
+			var availWood = wood - woodRes;
+			var availStone = stone - stoneRes;
+			var availOre = ore - oreRes;
+			secsPerTreb = Cities.byID[cityId]['Def55Time'];
+			if (secsPerTreb > 0 && availableSpace >= 4 && availableSlots > 0) {
+				if (availFood > 500 && availWood > 3500 & availStone > 1800 & availOre > 1200) {
+					var numberToTrain = 9999999999;
+					if ((availFood / 500) < numberToTrain)
+						numberToTrain = parseInt(availFood / 500);
+					if ((availWood / 3500) < numberToTrain)
+						numberToTrain = parseInt(availWood / 3500);
+					if ((availStone / 1800) < numberToTrain)
+						numberToTrain = parseInt(availStone / 1800);
+					if ((availOre / 1200) < numberToTrain)
+						numberToTrain = parseInt(availOre / 1200);
+					if ((availableSpace / 4) < numberToTrain)
+						numberToTrain = parseInt(availableSpace / 4);
+					if (numberToTrain > 50)
+						numberToTrain = 50;
+					logit('Building ' + numberToTrain + ' Trebuchets in city ' + Cities.byID[cityId].name);
+					try {
+						doDefTrain(cityId, 0, 55, numberToTrain);
 					} catch (err) {
 						logit(inspect(err, 8, 1));
 					}
@@ -8437,6 +8502,7 @@ Tabs.Train = {
 			if (slots > 0 && secsPerTroop > 0)
 				t.doAutoTroopTrain(cityNo);
 		}
+		
 		if (AutoTrainOptions.doTraps[cityNo])
 			t.doAutoTraps(cityNo);
 		if (AutoTrainOptions.doCalrops[cityNo])
@@ -8445,6 +8511,9 @@ Tabs.Train = {
 			t.doAutoSpikes(cityNo);
 		if (AutoTrainOptions.doXbows[cityNo])
 			t.doAutoCrossbows(cityNo);
+		if (AutoTrainOptions.doTrebs[cityNo])
+			t.doAutoTrebs(cityNo);
+			
 		if (cityNo == Cities.numCities)
 			t.nextAuto = setTimeout(function () {
 				t.doAutoTrain(1);
@@ -8536,6 +8605,7 @@ var GMTclock = {
 		objOut.wallLevel = 0;
 		objOut.wallSpace = 0;
 		objOut.fieldSpace = 0;
+		objOut.slotsBusy = 0;
 		var b = Seed.buildings["city" + cityId];
 		if (b.pos1 == null)
 			return;
@@ -8553,7 +8623,10 @@ var GMTclock = {
 			else
 				objOut.fieldSpaceUsed += parseInt(uW.fortstats["unt" + id][5]) * parseInt(fort[k]);
 		}
+		var queue = Seed.queue_fort["city" + cityId];
+		objOut.slotsBusy = queue.length;
 	}
+	
 Tabs.OverView = {
 	tabOrder: 1,
 	tabLabel: uW.g_js_strings.commonstr.overview,
@@ -15257,7 +15330,7 @@ function doDefTrain(cityId, siege, unitId, num, notify) {
 			if (notify != null)
 				notify(rslt.errorMsg);
 		},
-	});
+	},true); // noretry
 }
 
 function doTrain(cityId, tut, gamble, unitId, num, notify) {
