@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140806a
+// @version        20140821a
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -18,7 +18,7 @@
 // @grant       GM_xmlhttpRequest
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
-// @license			http://creativecommons.org/licenses/by-nc-sa/3.0
+// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
 // ==/UserScript==
 
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140806a';
+var Version = '20140821a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -131,7 +131,7 @@ var Options = {
   pbWideMap    : false,
   pbFoodAlert  : false,
   pbFoodAlertInt  : 6,
-  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{}},
+  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,emailapp:0,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{}},
   alertSound   : {enabled:false, soundUrl:DEFAULT_ALERT_SOUND_URL, repeat:true, playLength:20, repeatDelay:0.5, volume:100, alarmActive:false, expireTime:0},
   spamconfig   : {aspam:false, spamvert:'Join my Alliance!!', spammins:'30', atime:2 , spamstate:'a'},
   giftDomains  : {valid:false, list:{}},
@@ -249,20 +249,20 @@ var CrestOptions = {
   CrestCity    :  0,
   RoundOne     :  false,
   RoundTwo     :  true,
-  lastRoundOne :  0,
-  lastRoundTwo :  0,
+  lastRoundOne    :  0,
+  lastRoundTwo    :  0,
   X            :  0,
   Y            :  0,
   R1ST         :  0,
   R1MM         :  0,
   R1Scout      :  0,
-  R1Pike       :  0,
+  R1Pike    :  0,
   R1Sword      :  0,
-  R1Arch       :  0,
+  R1Arch    :  0,
   R1LC         :  0,
   R1HC         :  0,
   R1SW         :  0,
-  R1Ball       :  0,
+  R1Ball    :  0,
   R1Ram        :  0,
   R1Cat        :  0,
   R1Blood      :  0,
@@ -271,18 +271,18 @@ var CrestOptions = {
   R1Flame      :  0,
   R1Huss       :  0,
   R1Halb       :  0,
-  R1Onager     :  0,
+  R1Onager       :  0,
   R1Sabo       :  0,
   R2ST         :  0,
   R2MM         :  0,
   R2Scout      :  0,
-  R2Pike       :  0,
+  R2Pike    :  0,
   R2Sword      :  0,
-  R2Arch       :  0,
+  R2Arch    :  0,
   R2LC         :  0,
   R2HC         :  0,
   R2SW         :  0,
-  R2Ball       :  0,
+  R2Ball    :  0,
   R2Ram        :  0,
   R2Cat        :  0,
   R2Blood      :  0,
@@ -291,7 +291,7 @@ var CrestOptions = {
   R2Flame      :  0,
   R2Huss       :  0,
   R2Halb       :  0,
-  R2Onager     :  0,
+  R2Onager       :  0,
   R2Sabo       :  0,
   isWild       :  false,
   isMerc       :  false,
@@ -312,13 +312,13 @@ var CrestData = new Array();
       if (Arr == undefined)
          Arr = CrestOptions;
 
-      this.Running      =  true;
+      this.Running      =     true;
       this.curRound     =  1,
-      this.CrestCity    =  Arr.CrestCity;
+      this.CrestCity       =  Arr.CrestCity;
       this.RoundOne     =  Arr.RoundOne;
       this.RoundTwo     =  true;
-      this.lastRoundOne =  0;
-      this.lastRoundTwo =  0;
+      this.lastRoundOne    =  0;
+      this.lastRoundTwo    =  0;
       this.X            =  Arr.X;
       this.Y            =  Arr.Y;
       this.R1ST         =  Arr.R1ST;
@@ -396,6 +396,10 @@ var TrainOptions = {
   CraftingNbFix : {3000:false,3001:false,3002:false,3003:false,3004:false,3005:false,3006:false,3007:false,3008:false,3009:false,3010:false,3011:false},
   CraftingStats : {3000:[0,0],3001:[0,0],3002:[0,0],3003:[0,0],3004:[0,0],3005:[0,0],3006:[0,0],3007:[0,0],3008:[0,0],3009:[0,0],3010:[0,0],3011:[0,0]},
   CraftingCities : {1:true,2:true,3:true,4:true,5:true,6:true,7:true,8:true},
+  CraftUseMH : false,
+  CraftUseGH : false,
+  CraftUseKH : false,
+  CraftUseSH : false,
   tr  :  false,
   trset  :  0,
   actr:     false,
@@ -409,7 +413,7 @@ var TrainOptions = {
   AsMax        : {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
 };
 var FarmOptions = {
-   RallyClip: 0,
+	RallyClip: 0,
     Running: false,
     MinMight: 30000000,
     MaxMight: 75000000,
@@ -427,7 +431,7 @@ var FarmOptions = {
     FarmMarches: [],
     farmMarches: {},
     Attacks:0,
-   Checks:0,
+	Checks:0,
 };
 var ThroneOptions = {
     Active:false,
@@ -560,6 +564,37 @@ var CombatOptions = {
                {unt1:{},unt2:{},unt3:{},unt4:{},unt5:{},unt6:{},unt7:{},unt8:{},unt9:{},unt10:{},unt11:{},unt12:{}}],
 }
 
+var HourGlassTDLabel = {
+                    1: 'Time: 1 Min | Conditions: 30s+',
+                    2: 'Time: 15 Min | Conditions: 5m & 1s+',
+                    3: 'Time: 1 Hour | Conditions: 45m & 1s+',
+                    4: 'Time: 2.5 Hours | Conditions: 2h & 1s+',
+                    5: 'Time: 8 Hours | Conditions: 7h & 30m & 1s+'
+};
+
+var HourGlassName = {
+                    1: "Squire's Hourglass",
+                    2: "Knight's Hourglass",
+                    3: "Guinevere's Hourglass",
+                    4: "Morgana's Hourglass",
+                    5: "Arthur's Hourglass"
+};
+
+var HOURGLASSES_TIME = {
+    minute1 : 60,
+    minute15 : 900,
+    hour1 : 3600,
+    hour25 : 9000,
+    hour8 : 28800
+}
+
+var HOURGLASSES_TIME_MIN_THRESHOLD = {
+    minute1 : 30, //30 seconds and up will use 1m speedup
+    minute15 : 301, //5 minute 1 second and up will use 15m speedup
+    hour1 : 2701, // 45 minutes 1 second and up will use 1hr speedup
+    hour25 : 7201, // 2 hour 1 second and up will use 2.5hr speedup
+    hour8 : 26101 // 7 hours 30 minutes 1 second and up will use 8hr speedup
+}
 
 // Get element by id shortform with parent node option
 function $(ID,root) {return (root||document).getElementById(ID);}
@@ -979,6 +1014,12 @@ function pbStartup (){
   afkwatcher();
   loadchecker();
   QuickScout();	
+  
+  if (Options.alertConfig.emailapp == 1) {
+	unsafeWindow.koc2Mail = koc2Mail;
+	koc2Mail.init();  
+  }
+  
 }
 
 
@@ -1519,9 +1560,9 @@ Tabs.farm = {
                             if ((l_marchStatus==8 &&Seed.queue_atkp[cityId][marchId].hasUpdated)||(l_marchStatus==5)){
 			//actionLog('CityNo '+cityNo + '; i ='+i+'; farmNo'+farmNo+';marchID-'+marchID+';marchstatus'+l_marchStatus+'. '+Seed.queue_atkp[cityId][marchId].hasUpdated);
 
-                                   FarmOptions.Checks++;
-                                    FarmOptions.FarmMarches.splice(i,1);
-                                    saveFarmOptions();
+            FarmOptions.Checks++;
+            FarmOptions.FarmMarches.splice(i,1);
+			saveFarmOptions();
             //document.getElementById('FarmCheck').innerHTML = "Attacks: " + FarmOptions.Attacks + " - Checks:" +			FarmOptions.Checks+' (Last city '+cityNo+')';
 
 			t.getRetMarchInfo (marchID,cityNo,farmNo,
@@ -1539,7 +1580,7 @@ Tabs.farm = {
                 }    
         }
      },    
-    
+
    checkInactives : function (citynumber,city,FarmNumber,xcoord,ycoord,kid,uid,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12){
         var t = Tabs.farm;
         var now = new Date().getTime()/1000.0;
@@ -1853,9 +1894,9 @@ if (l_debug_on==1) actionLog('City-'+cityNum+'||FOOD-'+  Math.round(ret.reso[1]/
 								&&(t.FarmArray[i][j]['enabled']||(!(t.FarmArray[i][j]['enabled'])&&(now-t.FarmArray[i][j]['time']<25*60)))
 								) {
 								deletes1.push(k.substr(2));
+								}
                     }
             }    
-        }
         }
         if(deletes1.length > 0){
             t.deletereports(deletes1);
@@ -1916,7 +1957,7 @@ if (l_debug_on==1) actionLog('City-'+cityNum+'||FOOD-'+  Math.round(ret.reso[1]/
           }
     t.FilterFarms();
   },
-compactFarmData: function(){
+ compactFarmData: function(){
       var t = Tabs.farm;
       for (cityNum=1;cityNum<=Seed.cities.length;cityNum++){
 	  var n =0;
@@ -1991,7 +2032,7 @@ compactFarmData3: function(){
 	reloadKOC();
   },
 
-   FilterFarms: function() {
+  FilterFarms: function() {
     var t = Tabs.farm;
     if (t.searchRunning) return;
     t.FarmArray = new Array();
@@ -2051,7 +2092,7 @@ compactFarmData3: function(){
         FarmOptions.Running = true;
 		FarmOptions.DeleteReports = true;
         obj.value = "Farm = ON";
-      if(document.getElementById('FarmToggleTab'))document.getElementById('FarmToggleTab').innerHTML = '<span style="color: #FFFF00">'+unsafeWindow.g_js_strings.grove.farms+': On</span>';
+		if(document.getElementById('FarmToggleTab'))document.getElementById('FarmToggleTab').innerHTML = '<span style="color: #FFFF00">'+unsafeWindow.g_js_strings.grove.farms+': On</span>';
         saveFarmOptions();
         t.checkFarmData();
         t.nextattack = setInterval(t.getnextCity,(parseInt(Math.random()*3)*100+FarmOptions.SendInterval*1000));
@@ -2083,7 +2124,7 @@ compactFarmData3: function(){
 	   //t.rallypointlevel = March.getRallypointLevel(cityID);
        t.rallypointlevel = March.getTotalSlots(citynumber);
        numMarches = t.rallypointlevel;
-       var slots = March.getMarchSlots(citynumber);
+       var slots= March.getMarchSlots(citynumber);
        
        var element2 = 'pddataFarmarray'+(city-1);
        document.getElementById(element2).innerHTML =  'RP: (' + slots + '/' + numMarches +')';
@@ -2117,7 +2158,7 @@ compactFarmData3: function(){
          while (checkas == 0){
 		 var Hourss =0;
          checkas=1;
-               for (i=1;i<=12;i++){
+		 for (i=1;i<=12;i++){
                       if (FarmOptions.Troops[i] > parseInt(Seed.units[cityID]['unt'+i])) checkas=0;
                }
            if (FarmOptions.Troops[1] == 0 && FarmOptions.Troops[2] == 0 && FarmOptions.Troops[3] == 0 && FarmOptions.Troops[4] == 0 && FarmOptions.Troops[5] == 0 && FarmOptions.Troops[6] == 0 && FarmOptions.Troops[7] == 0 && FarmOptions.Troops[8] == 0 && FarmOptions.Troops[9] == 0 &&FarmOptions.Troops[10] == 0 && FarmOptions.Troops[11] == 0 && FarmOptions.Troops[12] == 0) checkas=0;
@@ -2144,7 +2185,7 @@ compactFarmData3: function(){
 				   saveFarmOptions();
 				   document.getElementById(element2).innerHTML =  'Checked all '+ (Farms_count) + ' farms';
                     //return; //
-                    break;
+					break;
             }
        }
 //if (t.FarmArray[city] == undefined) {document.getElementById(element2).innerHTML = 'No Data'; return;}
@@ -2191,26 +2232,26 @@ compactFarmData3: function(){
   },
   
   doBarb: function(cityID,counter,number,xcoord,ycoord,kid,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12){
-          var t = Tabs.farm;
-          var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-          params.cid=cityID;
-          params.type=4;
-        params.kid=kid;
-          params.xcoord = xcoord;
-          params.ycoord = ycoord;
-          if (u1>0) params.u1=u1;
-          if (u2>0)params.u2=u2;
-          if (u3>0)params.u3=u3;
-          if (u4>0)params.u4=u4;
-          if (u5>0)params.u5=u5;
-          if (u6>0)params.u6=u6;
-          if (u7>0)params.u7=u7;
-          if (u8>0)params.u8=u8;
-          if (u9>0)params.u9=u9;
-          if (u10>0)params.u10=u10;
-          if (u11>0)params.u11=u11;
-          if (u12>0)params.u12=u12;
-          params.gold =0;
+        var t = Tabs.farm;
+        var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+        params.cid=cityID;
+        params.type=4;
+		params.kid=kid;
+        params.xcoord = xcoord;
+        params.ycoord = ycoord;
+        if (u1>0) params.u1=u1;
+        if (u2>0)params.u2=u2;
+        if (u3>0)params.u3=u3;
+        if (u4>0)params.u4=u4;
+        if (u5>0)params.u5=u5;
+        if (u6>0)params.u6=u6;
+        if (u7>0)params.u7=u7;
+        if (u8>0)params.u8=u8;
+        if (u9>0)params.u9=u9;
+        if (u10>0)params.u10=u10;
+        if (u11>0)params.u11=u11;
+        if (u12>0)params.u12=u12;
+        params.gold =0;
       params.r1=0;
       params.r2=0;
       params.r3=0;
@@ -2218,18 +2259,18 @@ compactFarmData3: function(){
       params.r5=0;
       
 	           March.addMarch(params, function(rslt){
-                 if (rslt.ok) {
+                  if (rslt.ok) {
 					var slots=March.getMarchSlots(cityID);
-                 var element1 = 'pddataFarmarray'+(counter-1);
-                 document.getElementById(element1).innerHTML =  'RP: (' + slots + '/' + t.rallypointlevel +')';
-                   var now = new Date().getTime()/1000.0;
-                   now = now.toFixed(0);
-                   t.FarmArray[counter][number]['time'] = now;
-                 t.FarmArray[counter][number]['attacked']++;
-                 FarmOptions.FarmMarches.push ({city:counter,cityId:cityID,marchId:rslt.marchId,number:number});
-                 FarmOptions.FarmNumber[counter]++;
-                 FarmOptions.Attacks++;
-                 saveFarmOptions();
+					var element1 = 'pddataFarmarray'+(counter-1);
+					document.getElementById(element1).innerHTML =  'RP: (' + slots + '/' + t.rallypointlevel +')';
+					var now = new Date().getTime()/1000.0;
+					now = now.toFixed(0);
+					t.FarmArray[counter][number]['time'] = now;
+					t.FarmArray[counter][number]['attacked']++;
+					FarmOptions.FarmMarches.push ({city:counter,cityId:cityID,marchId:rslt.marchId,number:number});
+					FarmOptions.FarmNumber[counter]++;
+					FarmOptions.Attacks++;
+					saveFarmOptions();
 					document.getElementById('FarmCheck').innerHTML = "Attacks: " + FarmOptions.Attacks + " - Checks:" + FarmOptions.Checks + ' (Sent last march from city -' +counter+' Farm No.'+(number+1)+')';
                  for (i=0;i<t.helpArray[counter].length;i++){
                         for (j=0;j<t.FarmArray[counter].length;j++){
@@ -2246,7 +2287,7 @@ compactFarmData3: function(){
                   actionLog('Send farm march FAIL :' + Seed.cities[counter-1][1] + "   To: (" + xcoord + ',' + ycoord +')'
 				  +'    -> ' + rslt.error_code + ' -  ' + rslt.msg + ' -  ' + rslt.feedback);
                   }
-           });
+          });
 		  
 
   },
@@ -3348,7 +3389,7 @@ Tabs.Throne = {
 			TapestryCount = 0;
 			document.getElementById('populatebox').addEventListener('click', function () {
 				document.getElementById('displayTR').value = JSON2.stringify(unsafeWindow.kocThroneItems)
-								document.getElementById('apearMessageReceipt').innerHTML = '<TD>Send in message to- <INPUT id=pbMessageTo type=text value=""></input><INPUT id=pbSendMessage type=submit value="Send in Message"></input>';
+				document.getElementById('apearMessageReceipt').innerHTML = '<TD>Send in message to- <INPUT id=pbMessageTo type=text value=""></input><INPUT id=pbSendMessage type=submit value="Send in Message"></input>';
 				document.getElementById('pbSendMessage').addEventListener('click', function () {
 					t.sendAsMessage();
 				})
@@ -3756,8 +3797,8 @@ Tabs.Throne = {
 		var m = ':::.|' + y.name;
 		for (var O in y["effects"]) {
 			var i = +(O.split("slot")[1]);
-			id = y["effects"]["slot"+i]["id"];
-			tier = parseInt(y["effects"]["slot"+i]["tier"]);
+			id = y["effects"]["slot" + i]["id"];
+			tier = parseInt(y["effects"]["slot" + i]["tier"]);
 			level = y["level"];
 			p = unsafeWindow.cm.thronestats.tiers[id][tier];
 			while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
@@ -3814,8 +3855,8 @@ Tabs.Throne = {
 		m += '<TR><TD style="background-color:#D5C795"><FONT color=' + color + '><B>[' + y.id + ']</b></font></td>';
 		for (var O in y["effects"]) {
 			var i = +(O.split("slot")[1]);
-			id = y["effects"]["slot"+i]["id"];
-			tier = parseInt(y["effects"]["slot"+i]["tier"]);
+			id = y["effects"]["slot" + i]["id"];
+			tier = parseInt(y["effects"]["slot" + i]["tier"]);
 			level = y["level"];
 			p = unsafeWindow.cm.thronestats.tiers[id][tier];
 			while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
@@ -4433,8 +4474,8 @@ Tabs.Throne = {
 		m = "<TABLE width=80% height=0% align='center' class=pbTab><TR><TD><B>Current</b></td><TD><B>Next</b></td>";
 		for (var O in y["effects"]) {
 			var i = +(O.split("slot")[1]);
-			id = y["effects"]["slot"+i]["id"];
-			tier = parseInt(y["effects"]["slot"+i]["tier"]);
+			id = y["effects"]["slot" + i]["id"];
+			tier = parseInt(y["effects"]["slot" + i]["tier"]);
 			level = y["level"];
 			p = unsafeWindow.cm.thronestats.tiers[id][tier];
 			while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
@@ -4472,8 +4513,8 @@ Tabs.Throne = {
 		m = "<TABLE width=80% height=0% align='center' class=pbTab>";
 		for (var O in y["effects"]) {
 			var i = +(O.split("slot")[1]);
-			id = y["effects"]["slot"+i]["id"];
-			tier = parseInt(y["effects"]["slot"+i]["tier"]);
+			id = y["effects"]["slot" + i]["id"];
+			tier = parseInt(y["effects"]["slot" + i]["tier"]);
 			level = y["level"];
 			p = unsafeWindow.cm.thronestats.tiers[id][tier];
 			while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; } 
@@ -4915,22 +4956,38 @@ Complex loop that browsers can't handle =/. replaced with multiple loops above.
 			t.Uniques();
 	},
 }
+
+function FullDateTime(str){
+ 	var time = new Date(str*1000);
+	D = addZero(time.getDate());
+	M = addZero(time.getMonth()+1);
+	Y = addZero(time.getFullYear());
+	h = addZero(time.getHours());
+	m = addZero(time.getMinutes());
+	s = addZero(time.getUTCSeconds());
+	var fullDate =  D +"/"+ M +"/"+ Y +"  "+ h + ":" + m + ":" + s;
+	return fullDate;
+}
+function addZero(i){
+	if (i<10) i="0" + i;	 
+	return i;
+}
 /****************************  Tower Tab  ******************************/
 Tabs.tower = {
-  tabOrder: 1,
-  tabLabel: 'Tower',
-  myDiv: null,
-  generateIncomingFunc : null,
-  fixTargetEnabled : false,
-  secondTimer : null,
-  soundPlaying : false,
-  defMode : {},  
-  soundRepeatTimer : null,
-  soundStopTimer : null,
-  towerMarches: [],
-  updatemarchfunc : null,
-  origUCL : null,
-  Providers : {
+	tabOrder: 1,
+	tabLabel: 'Tower',
+	myDiv: null,
+	generateIncomingFunc : null,
+	fixTargetEnabled : false,
+	secondTimer : null,
+	soundPlaying : false,
+	defMode : {},  
+	soundRepeatTimer : null,
+	soundStopTimer : null,
+	towerMarches: [],
+	updatemarchfunc : null,
+	origUCL : null,
+	Providers : {
         0: { 'country': "--Country--", 'provider': "--Provider--" },
         1: { 'country': "AUSTRALIA", 'provider': "T-Mobile" },
         2: { 'country': "AUSTRALIA", 'provider': "Optus Zoo" },
@@ -5044,1262 +5101,1265 @@ Tabs.tower = {
         112: { 'country': "UNITED STATES", 'provider': "Viaero" },
         113: { 'country': "CANADA", 'provider': "Wind Mobile" },
         114: { 'country': "UNITED STATES", 'provider': "Sprint PCS" }
-    },
-  init: function(div){
-     var t = Tabs.tower;
-    if(unsafeWindow.update_march) {
-      t.updatemarchfunc = new CalterUwFunc ('update_march', [[/var\s*w\s*=\s*cm.IncomingAttackManager.getAllAttacks/i,'var Dar = seed.queue_atkinc\[o\];Dar.marchStatus = D.marchStatus;RecIncT\(Dar\);var w = cm.IncomingAttackManager.getAllAttacks']]);
-      unsafeWindow.RecIncT = Tabs.tower.newIncoming;
-      t.updatemarchfunc.setEnable(true);
-   };
-    t.myDiv = div;
-    if (GM_getValue ('towerMarches_'+getServerId()) != null)
-      GM_deleteValue ('towerMarches_'+getServerId());   // remove deprecated data if it exists
+	},
+	
+	init: function(div){
+		var t = Tabs.tower;
+		if(unsafeWindow.update_march) {
+			t.updatemarchfunc = new CalterUwFunc ('update_march', [[/var\s*w\s*=\s*cm.IncomingAttackManager.getAllAttacks/i,'var Dar = seed.queue_atkinc\[o\];Dar.marchStatus = D.marchStatus;RecIncT\(Dar\);var w = cm.IncomingAttackManager.getAllAttacks']]);
+			unsafeWindow.RecIncT = Tabs.tower.newIncoming;
+			t.updatemarchfunc.setEnable(true);
+		};
+		t.myDiv = div;
+		if (GM_getValue ('towerMarches_'+getServerId()) != null)
+			GM_deleteValue ('towerMarches_'+getServerId());   // remove deprecated data if it exists
  
-    var m = '<DIV class=pbStat>TOWER ALERTS</div><TABLE class=pbTab><TR align=center>';
+		var m = '<DIV class=pbStat>TOWER ALERTS</div><TABLE class=pbTab><TR align=center>';
 
-      for (var i=0; i<Cities.cities.length; i++)
-      m += '<TD width=95><SPAN id=pbtacity_'+ i +'>' + Cities.cities[i].name + '</span></td>';
-    m += '</tr><TR align=center>';
-      for (var cityId in Cities.byID)
-        m += '<TD><INPUT type=submit id=pbtabut_'+ cityId +' value=""></td>';
-    m += '</tr><TR align=center>';
-      for (var cityId in Cities.byID)
-       m += '<TD><CENTER><INPUT id=pbattackqueue_' + cityId + ' type=submit value="A 0 | S 0"></center></td>';
-  		  m += '</tr><TR align=center>';
-      for (var cityId in Cities.byID) {
-      m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text size=10 name='+cityId+' value='+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'></CENTER></TD>';
-       };
-    m += '</tr></table><BR><DIV><CENTER><INPUT id=pbSoundStop type=submit value="'+translate("Stop Sound Alert")+'"></center></div><DIV id=pbSwfPlayer></div>';
-    m += '<BR><DIV class=pbStat>'+translate("SETUP")+'</div><TABLE class=pbTab>\
-    <tr><td align=left><INPUT id=pbcellenable type=checkbox '+ (Options.celltext.atext?'CHECKED ':'') +'/></td>\
-    <td align=left>'+translate("Text message incoming attack to")+': <INPUT id=pbnum1 type=text size=4 maxlength=4 value="'+ Options.celltext.num1 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\>\
-&nbsp;<INPUT id=pbnum2 type=text size=3 maxlength=3 value="'+ Options.celltext.num2 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\>\
-&nbsp;<INPUT id=pbnum3 type=text size=4 maxlength=4 value="'+ Options.celltext.num3 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\> <span style="color:#800; font-weight:bold"><sup>*'+translate("Standard text messaging rates apply")+'</sup></span></td></tr><tr><td></td>\
-    <TD align=left>'+translate("Country")+': <select id="pbfrmcountry">';
-    for (var i in t.Providers) {
-       var ret=m.indexOf(t.Providers[i].country);
-       if (ret==-1) {
-         if(t.Providers[Options.celltext.provider]){
-          if (t.Providers[i].country==t.Providers[Options.celltext.provider].country) {
-            m += '<option value="'+t.Providers[i].country+'" selected="selected">'+t.Providers[i].country+'</option>'; // Load Previous Provider Selection
-          } else {
-            m += '<option value="'+t.Providers[i].country+'">'+t.Providers[i].country+'</option>';
-          }
-         } else {
-           m += '<option value="'+t.Providers[i].country+'">'+t.Providers[i].country+'</option>';
-         }
-       }
-    }
-    
-    m += '</select>\
-    <select id="pbfrmprovider" '+(Options.celltext.provider==0?'DISABLED':'')+'><option value=0 >--'+translate("Provider")+'--</option>';
-    for (var i in t.Providers) {
-         if(t.Providers[Options.celltext.provider]){
-         if(t.Providers[i].country == t.Providers[Options.celltext.provider].country)
-            if(Options.celltext.provider == i)
-               m += '<option value="'+i+'" selected="selected">'+t.Providers[i].provider+'</option>'; // Load Previous Provider Selection
-            else {
-               m += '<option value="'+i+'">'+t.Providers[i].provider+'</option>';
-            }
-       } else {
-         m += '<option value="'+i+'">'+t.Providers[i].provider+'</option>';
-       }
-    }
-
-    m += '</select> <FONT COLOR=RED>REQUIRED </FONT> PIN:<INPUT id=pbcellpin type=text size=6 maxlength=5 value="'+ (GlobalOptions.cellpin?GlobalOptions.cellpin:'') +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\> <INPUT id=pbgetpin type=submit value="'+translate("GET PIN CODE")+'" ></td></tr>';
-    m += '<tr><td align=left><INPUT id=pbcellextended type=checkbox '+ (Options.celltext.extended?'CHECKED ':'') +'/></td>\
-    <td align=left>'+translate("Send troop info in text")+'<span style="color:#800; font-weight:bold"><sup>*'+translate("Multiple text messages per attack. Standard text messaging rates apply")+'</sup></span></td></tr><tr><td></td>';
-    m += '<TR><td align=center>-</td><TD align=left>'+translate("Minimum # of troops to trigger tower options")+':<INPUT id=pbalertTroops type=text size=7 value="'+ Options.alertConfig.minTroops +'" \> <span style="color:#800; font-weight:bold"><sup>*NEW! Controls All Tower Options</sup></span></td></tr>';
-
-    m += '<TR><TD><INPUT id=pbalertemail type=checkbox '+ (Options.alertConfig.email?'CHECKED ':'') +'/></td><TD>'+translate("e-mail on incoming attack")+'<INPUT id=pbathemail type=submit value='+translate("Authenticate")+' >.</td></tr>\
-      <TR><TD><INPUT id=pbalertEnable type=checkbox '+ (Options.alertConfig.aChat?'CHECKED ':'') +'/></td><TD>'+translate("Automatically post incoming attacks to alliance chat")+'.</td></tr>\
-        <TR><TD></td><TD><TABLE cellpadding=0 cellspacing=0>\
-            <TR><TD align=right>'+translate("Message Prefix")+': &nbsp; </td><TD><INPUT id=pbalertPrefix type=text size=60 maxlength=120 value="'+ Options.alertConfig.aPrefix +'" \></td></tr>\
-            <TR><TD align=right>'+translate("Alert on scouting")+': &nbsp; </td><TD><INPUT id=pbalertScout type=checkbox '+ (Options.alertConfig.scouting?'CHECKED ':'') +'/></td></tr>\
-            <TR><TD align=right>'+translate("Alert on wild attack")+': &nbsp; </td><TD><INPUT id=pbalertWild type=checkbox '+ (Options.alertConfig.wilds?'CHECKED ':'') +'/></td></tr>\
-            <TR><TD align=right>'+translate("Display defend status")+': &nbsp; </td><TD><INPUT id=pbalertDefend type=checkbox '+ (Options.alertConfig.defend?'CHECKED ':'') +'/></td></tr>\
-            </table></td></tr>\
-        <TR><TD align=right><INPUT id=pbalertraid type=checkbox '+ (Options.alertConfig.raid?'CHECKED':'') +'/></td><TD>'+translate("Stop raids on impending")+'.</td></tr>\
-    <TR><TD align=right><INPUT id=pbalertTR type=checkbox '+ (Options.alertConfig.alertTR?'CHECKED ':'') +'/></td><TD> '+translate("Toggle to TR set ")+' <INPUT id=pbalertTRset type=text size=2 maxlength=2 value="'+ Options.alertConfig.alertTRset +'"> '+translate("on impending");
-    m+= '<INPUT id=pbalertTRAFK type=checkbox '+ (Options.alertConfig.AFK?'CHECKED ':'') +'/> Only when AFK</td></tr>\
-    <TR><TD><INPUT id=pbalerttoff type=checkbox '+ (Options.alertConfig.alertTRtoff?'CHECKED ':'') +'/></td><td>'+translate("Stop auto outgoing marches on impending")+'</td></tr>\
-    <TR><TD align=right><INPUT id=pbalertguard type=checkbox '+ (Options.alertConfig.guardian?'CHECKED ':'') +'/></td><TD> '+translate("Toggle to wood guardian on impending (uses same afk setting as TR toggle)")+'</td></tr>\
-    <TR><TD align=right><INPUT id=pbalertTR2 type=checkbox '+ (Options.alertConfig.alertTR2?'CHECKED ':'') +'/></td><TD> '+translate("Toggle TR, guardian, and marches back after: ")+' <INPUT id=pbalertTRsetmin type=text size=3 maxlength=3 value="'+ Options.alertConfig.alertTRsetwaittime +'"> '+translate("minutes without incoming attack")+'</td></tr>\
-    <TR><TD></TD><TD><INPUT id=pboldattacks type=submit value="'+unsafeWindow.g_js_strings.commonstr.post+' '+unsafeWindow.g_js_strings.ImpendingAttacks.incoming+' '+unsafeWindow.g_js_strings.commonstr.totx+' '+unsafeWindow.g_js_strings.commonstr.chat+'"/><BR></td></tr>\
-        <TR><TD><INPUT id=pbSoundEnable type=checkbox '+ (Options.alertSound.enabled?'CHECKED ':'') +'/></td><TD>'+translate("Play sound on incoming attack/scout")+'</td></tr>\
-        <TR><TD></td><TD><DIV id=pbLoadingSwf>'+translate("Loading SWF player")+'</div><DIV style="display:none" id=pbSoundOpts><TABLE cellpadding=0 cellspacing=0>\
-            <TR><TD align=right>'+translate("Sound file")+': &nbsp; </td><TD><INPUT id=pbsoundFile type=text size=40 maxlength=1000 value="'+ Options.alertSound.soundUrl +'" \>\
-             &nbsp; </td><TD><INPUT id=pbSoundLoad type=submit value='+translate("Load")+' ><INPUT id=pbSoundDefault type=submit value='+translate("Default")+' ></td></tr>\
-            <TR><TD align=right>'+translate("Volume")+': &nbsp; </td><TD><TABLE cellpadding=0 cellspacing=0 class=pbTab><TR valign=middle><TD><SPAN id=pbVolSlider></span></td><TD width=15></td><TD align=right id=pbVolOut>0</td></td></table></td><TD align=center><SPAN id=pbLoadStat>xx</span></td></tr>\
-            <TR><TD align=right><INPUT id=pbSoundRepeat type=checkbox '+ (Options.alertSound.repeat?'CHECKED ':'') +'/></td><TD> '+translate("Repeat every")+' <INPUT id=pbSoundEvery type=text size=2 maxlength=5 value="'+ Options.alertSound.repeatDelay +'"> '+translate("minutes")+'</td></tr>\
-            <TR><TD></td><TD>Play for <INPUT id=pbSoundLength type=text size=3 maxlength=5 value="'+ Options.alertSound.playLength +'"> '+translate("seconds")+'</td></tr>\
-            <TR><TD></td><TD><INPUT type=submit value="'+translate("Play Now")+'" id=pbPlayNow></td></tr></table></div></td></tr>\
-        </table><BR>';
-      t.myDiv.innerHTML = m;
-
-
-//   t.mss = new CmatSimpleSound(SWF_PLAYER_URL, null, {height:36, width:340}, t.e_swfLoaded, 'debug=y');
-    t.mss = new CmatSimpleSound(SWF_PLAYER_URL, null, {height:0, width:0}, t.e_swfLoaded, 'debug=n');
-    //t.mss.swfDebug = function (m){ logit ('SWF: '+ m)};
-    t.mss.swfPlayComplete = t.e_soundFinished;
-    t.mss.swfLoadComplete = t.e_soundFileLoaded;
-    unsafeWindow.matSimpleSound01 = t.mss;   // let swf find it
-
-    t.volSlider = new SliderBar (document.getElementById('pbVolSlider'), 200, 21, 0);
-    t.volSlider.setChangeListener(t.e_volChanged);
-		document.getElementById('pbcellpin').addEventListener ('change', function(){
-              GlobalOptions.cellpin = this.value;
-            GM_setValue ('Options_??', JSON2.stringify(GlobalOptions));
-      },false);  
-    document.getElementById('pbPlayNow').addEventListener ('click', function (){t.playSound(false)}, false);
-    document.getElementById('pbathemail').addEventListener ('click', t.e_authenticate, false);
-    document.getElementById('pbSoundStop').addEventListener ('click', t.stopSoundAlerts, false);
-    document.getElementById('pbSoundRepeat').addEventListener ('change', function (e){Options.alertSound.repeat = e.target.checked}, false);
-    document.getElementById('pbSoundEvery').addEventListener ('change', function (e){Options.alertSound.repeatDelay = e.target.value}, false);
-    document.getElementById('pbSoundLength').addEventListener ('change', function (e){Options.alertSound.playLength = e.target.value}, false);
-    document.getElementById('pbSoundEnable').addEventListener ('change', function (e){Options.alertSound.enabled = e.target.checked}, false);
-    document.getElementById('pbcellenable').addEventListener ('change', function (e){Options.celltext.atext = e.target.checked;}, false);
-    document.getElementById('pbcellextended').addEventListener ('change', function (e){Options.celltext.extended = e.target.checked;}, false);
-    document.getElementById('pbSoundStop').disabled = true;
-    document.getElementById('pbalertemail').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertEnable').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertPrefix').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertScout').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertWild').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertDefend').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTroops').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbfrmcountry').addEventListener ('change', t.setCountry, false);
-    document.getElementById('pbfrmprovider').addEventListener ('change', t.setProvider, false);
-    document.getElementById('pbnum1').addEventListener ('change', t.phonenum, false);
-    document.getElementById('pbnum2').addEventListener ('change', t.phonenum, false);
-    document.getElementById('pbnum3').addEventListener ('change', t.phonenum, false);
-    document.getElementById('pbalertraid').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTR').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTRset').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertguard').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTR2').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalerttoff').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTRsetmin').addEventListener ('change', t.e_alertOptChanged, false);
-    document.getElementById('pbalertTRAFK').addEventListener ('click', t.e_alertOptChanged, false);
-    document.getElementById('pboldattacks').addEventListener ('click', t.oldIncoming, false);
-    document.getElementById('pbgetpin').addEventListener ('click', t.getpinauth, false);
-    document.getElementById('pbsoundFile').addEventListener ('change', function (){
-        Options.alertSound.soundUrl = document.getElementById('pbsoundFile').value;
-        t.loadUrl (Options.alertSound.soundUrl);
-      }, false);
-    document.getElementById('pbSoundDefault').addEventListener ('click', function (){
-        document.getElementById('pbsoundFile').value = DEFAULT_ALERT_SOUND_URL;
-        Options.alertSound.soundUrl = DEFAULT_ALERT_SOUND_URL;
-        t.loadUrl (DEFAULT_ALERT_SOUND_URL);
-      }, false);
-
-    for (var cityId in Cities.byID){
-    	
-      //m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text size=10 value='+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'></CENTER></TD>';
-    	document.getElementById ('towertext_'+ cityId).addEventListener('change',function(e){Options.alertConfig.towercitytext[e.target.name] = e.target.value;saveOptions();},false);
-    	
-    	
-    	
-        var but = document.getElementById ('pbtabut_'+ cityId);
-        addListener (but, cityId);
-        t.defMode[cityId] =  parseInt(Seed.citystats["city" + cityId].gate);
-        t.displayDefMode (cityId);
-      var btnNameT = 'pbattackqueue_' + cityId;
-      addTowerEventListener(cityId, btnNameT);
-      }
-    function addListener (but, i){
-      but.addEventListener ('click', function (){t.butToggleDefMode(i)}, false);
-    }
-    function addTowerEventListener(cityId, name){
-        document.getElementById(name).addEventListener('click', function(){
-            t.showTowerIncoming(cityId);
-        }, false);
-    }    
-    setInterval (t.eachSecond, 2000);
-       
-       GM_addStyle("a.city.defending { border-top: 4px; border-bottom: 4px; border-left: 0px; border-right: 0px; border-style: solid; margin-top: 0px; border-color: red;}");
-       GM_addStyle("a.city.hiding    { border-top: 4px; border-bottom: 4px; border-left: 0px; border-right: 0px; border-style: solid; margin-top: 0px; border-color: blue;}");
-       t.origUCL = unsafeWindow.update_citylist;
-       t.cityBtnColor();
-       
-  },      
-
-  show : function (){
-  },
-  
-  hide : function (){
-  },
-getpinauth : function () {
- 	var dt = {};
-    dt.provider = Options.celltext.provider;
-    dt.num1 = Options.celltext.num1;
-    dt.num2 = Options.celltext.num2;
-    dt.num3 = Options.celltext.num3;
-
-  GM_xmlhttpRequest({
-    method: 'POST',
-    url: http+'baos.kocscripters.com/getpin.php',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    },
-    data: implodeUrlArgs(dt),
-		onload: function (message) {
-            if(message.status != 200) alert('request failed, try again');
-            else {
-      			var rslt = eval("(" + message.responseText + ")");
-      			//alert(inspect(rslt));
-            	if(rslt.ok) alert("check for text containing pin code");
-            	else if(rslt.dup) alert('duplicate record, pin already sent');
-            	else if(rslt.inv) alert('Invalid request');
-            	else alert('Bad Mojo going on, try again later');
-				};
-		  },
-
-    });
- },
-  cityBtnColor : function () {
-
-     // override update_citylist function
-     // 
-     var usl = function ()
-     {
-        var t =Tabs.tower;
-
-        // call the kabam function
-        t.origUCL();
-        
-        // fix the borders
-        for (var cityId in Cities.byID){
-           if (Seed.citystats["city" + cityId].gate != t.defMode[cityId]){     // user changed def mode
-              t.defMode[cityId] = Seed.citystats["city"+ cityId].gate;
-           }
-           t.displayDefMode (cityId);
-        }
-
-     };
-
-     if (Options.colorCityTabs) {
-        unsafeWindow.update_citylist = usl;
-     }
-     else
-     {
-        unsafeWindow.jQuery("a.city").removeClass("defending");
-        unsafeWindow.jQuery("a.city").removeClass("hiding");
-        unsafeWindow.update_citylist = Tabs.tower.origUCL;
-     }
-  },
- 
-  loadUrl : function (url){
-    var t = Tabs.tower;
-    t.mss.load (1, url, true);
-    document.getElementById('pbLoadStat').innerHTML = translate('Loading');
-  },
-  phonenum : function() {
-   Options.celltext.num1 = document.getElementById('pbnum1').value;
-   Options.celltext.num2 = document.getElementById('pbnum2').value;
-   Options.celltext.num3 = document.getElementById('pbnum3').value;
-   saveOptions();
-  },
-
-  setCountry : function(){
-    var t = Tabs.tower;
-    var myselect=document.getElementById("pbfrmprovider");
-    myselect.innerHTML = '<option value=0 >--'+translate("Provider")+'--</option>';
-    myselect.disabled = true;
-    for (var i in t.Providers) {
-     if (t.Providers[i].country == document.getElementById("pbfrmcountry").value){
-        var addoption = document.createElement('option');
-        addoption.value = i;
-        addoption.text = t.Providers[i].provider;
-      myselect.add(addoption, null) //add new option to end of "Providers"
-     }
-    }
-    myselect.disabled = false;
-   },
-
-  setProvider : function(){
-    var ddProvider = document.getElementById("pbfrmprovider").wrappedJSObject;
-     Options.celltext.provider=ddProvider.options[ddProvider.selectedIndex].value;
-    if(ddProvider.selectedIndex > 0){
-        document.getElementById("pbnum1").disabled = false;
-        document.getElementById("pbnum2").disabled = false;
-        document.getElementById("pbnum3").disabled = false;
-    } else {
-        document.getElementById("pbnum1").disabled = true;
-        document.getElementById("pbnum2").disabled = true;
-        document.getElementById("pbnum3").disabled = true;
-    }
-    //alert(Options.celltext.provider);
-   },
-
-  e_swfLoaded : function (){
-    var t = Tabs.tower;
-    document.getElementById('pbLoadingSwf').style.display = 'none';
-    document.getElementById('pbSoundOpts').style.display = 'inline';
-    t.volSlider.setValue (Options.alertSound.volume/100);
-    setTimeout (function (){t.loadUrl (Options.alertSound.soundUrl);},500);
-    setTimeout (function (){t.mss.setVolume (1, Options.alertSound.volume);}, 1000);
-    if (Options.alertSound.alarmActive && Options.alertSound.expireTime>unixTime())   
-      t.soundTheAlert();
-  },
-  e_authenticate: function (){
-	  var x = window.open();
-	  x.location=http+"baos.kocscripters.com/kocalert/index.php";
-  },
-  e_alertOptChanged : function (){
-    var t = Tabs.tower;
-    Options.alertConfig.email = document.getElementById('pbalertemail').checked;
-    Options.alertConfig.aChat = document.getElementById('pbalertEnable').checked;
-    Options.alertConfig.aPrefix=document.getElementById('pbalertPrefix').value;      
-    Options.alertConfig.scouting=document.getElementById('pbalertScout').checked;      
-    Options.alertConfig.wilds=document.getElementById('pbalertWild').checked;
-    Options.alertConfig.defend=document.getElementById('pbalertDefend').checked;
-    Options.alertConfig.raid=document.getElementById('pbalertraid').checked;
-    Options.alertConfig.alertTR=document.getElementById('pbalertTR').checked;
-    Options.alertConfig.alertTR2=document.getElementById('pbalertTR2').checked;
-    Options.alertConfig.alertTRtoff=document.getElementById('pbalerttoff').checked;
-    Options.alertConfig.guardian=document.getElementById('pbalertguard').checked;
-    Options.alertConfig.AFK=document.getElementById('pbalertTRAFK').checked;
-    var trset = parseInt(document.getElementById('pbalertTRset').value);
-    Options.alertConfig.alertTRset = trset;
-    var trsetwait = parseInt(document.getElementById('pbalertTRsetmin').value);
-    Options.alertConfig.alertTRsetwaittime = trsetwait;
-    var mt = parseInt(document.getElementById('pbalertTroops').value);
-    if (mt<1 || mt>1500000){
-	  document.getElementById('pbalertTroops').value = Options.alertConfig.minTroops;
-      document.getElementById('pbalerterr').innerHTML = '<font color=#600000><B>'+translate("INVALID")+'</b></font>';
-      setTimeout (function (){document.getElementById('pbalerterr').innerHTML =''}, 2000);
-      return;
-    }
-    Options.alertConfig.minTroops = mt;
-    saveOptions();
-  },
-  
-  e_volChanged : function (val){
-    var t = Tabs.tower;
-    document.getElementById('pbVolOut').innerHTML = parseInt(val*100);
-    Options.alertSound.volume = parseInt(val*100);
-    t.mss.setVolume (1, Options.alertSound.volume);
-  },
-  
-  butToggleDefMode : function (cityId){
-    var t = Tabs.tower;
-    var mode = 1;
-    if (Seed.citystats["city" + cityId].gate != 0)
-      mode = 0;
-    t.ajaxSetDefMode (cityId, mode, function (newMode){
-        t.defMode[cityId] = newMode;
-        t.displayDefMode (cityId);
-      });
-  },
-      
-  displayDefMode : function (cityId){
-    var t = Tabs.tower;
-    var but = document.getElementById('pbtabut_'+ cityId);
-    
-    var city_num = Cities.byID[cityId].idx +1;
-    
-    if (t.defMode[cityId]){
-      but.className = 'pbDefButOn';
-      but.value = 'Def = ON';  
-      if (Options.colorCityTabs) unsafeWindow.jQuery("#citysel_" + city_num).removeClass("hiding").addClass("defending");
-    } else {
-      but.className = 'pbDefButOff';
-      but.value = 'Def = OFF';  
-      if (Options.colorCityTabs) unsafeWindow.jQuery("#citysel_" + city_num).removeClass("defending").addClass("hiding");
-    }  
-  },
-    
-  eachSecond : function (){
-	var t = Tabs.tower;
-	for (var cityId in Cities.byID) {
-		if (Seed.citystats["city" + cityId].gate != t.defMode[cityId]) {     // user changed def mode
-			t.defMode[cityId] = Seed.citystats["city"+ cityId].gate;
-			t.displayDefMode (cityId);
-		}
-		Options.alertConfig.raidautoswitch[cityId] = false;
-		Options.alertConfig.guardautoswitch[cityId] = false;
-	}
-	var now = unixTime();
-	var incomming = false;
-	for (var k in Seed.queue_atkinc) {   // check each incoming march
-		var m = Seed.queue_atkinc[k];
-		if (m.marchType==3 || m.marchType==4) {
-			if(Options.alertConfig.lastatkarr.indexOf(Number(m.mid)) == -1) {
-				Options.alertConfig.lastatkarr.push(Number(m.mid));
-				Options.alertConfig.lastarrtime.push(Number(m.arrivalTime));
-				if (Number(m.arrivalTime) > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = Number(m.arrivalTime);//for tr toggle back
-				saveOptions();
-				t.newIncoming (m);
+		for (var i=0; i<Cities.cities.length; i++)
+			m += '<TD width=95><SPAN id=pbtacity_'+ i +'>' + Cities.cities[i].name + '</span></td>';
+			m += '</tr><TR align=center>';
+			for (var cityId in Cities.byID)
+				m += '<TD><INPUT type=submit id=pbtabut_'+ cityId +' value=""></td>';
+			m += '</tr><TR align=center>';
+			for (var cityId in Cities.byID)
+				m += '<TD><CENTER><INPUT id=pbattackqueue_' + cityId + ' type=submit value="A 0 | S 0"></center></td>';
+			m += '</tr><TR align=center><td colspan='+Cities.cities.length+'>City-specific chat alert text :-</td></tr><TR align=center>';
+			for (var cityId in Cities.byID) {
+				m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text style="width: 80px;" name='+cityId+' value="'+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'"></CENTER></TD>';
 			};
-			incomming = true;
+			m += '</tr></table><BR><DIV><CENTER><INPUT id=pboldattacks type=submit value="'+unsafeWindow.g_js_strings.commonstr.post+' '+unsafeWindow.g_js_strings.ImpendingAttacks.incoming+' '+unsafeWindow.g_js_strings.commonstr.totx+' '+unsafeWindow.g_js_strings.commonstr.chat+'"/>&nbsp;<INPUT id=pbSoundStop type=submit value="'+translate("Stop Sound Alert")+'">&nbsp;<INPUT type=submit value="'+translate("Play Sound Alert Now")+'" id=pbPlayNow></center></div><DIV id=pbSwfPlayer></div>';
+			m += '<BR><DIV class=pbStat>'+translate("SETUP")+'</div><TABLE class=pbTab>';
+			m += '<TR><td align=center>&nbsp;</td><TD align=left><b>'+translate("Minimum number of troops to trigger tower options")+':&nbsp;<INPUT id=pbalertTroops type=text size=7 value="'+ Options.alertConfig.minTroops +'" \></b>&nbsp;<span style="color:#800; font-weight:bold"><sup>*Controls All Tower Options</sup></span></td></tr>';
+			m += '<TR><TD><INPUT id=pbalertEnable type=checkbox '+ (Options.alertConfig.aChat?'CHECKED ':'') +'/></td><TD>'+translate("Automatically post incoming attacks to alliance chat")+'.</td></tr>\
+					<TR><TD>&nbsp;</td><TD><TABLE cellpadding=0 cellspacing=0>\
+					<TR><TD colspan=6>'+translate("Message Prefix")+':&nbsp;<INPUT id=pbalertPrefix type=text size=60 maxlength=120 value="'+ Options.alertConfig.aPrefix +'" \></td><tr>\
+					<TR><TD><INPUT id=pbalertScout type=checkbox '+ (Options.alertConfig.scouting?'CHECKED ':'') +'/></td><TD>'+translate("Alert on scouting")+'&nbsp;&nbsp;</td>\
+					<TD><INPUT id=pbalertWild type=checkbox '+ (Options.alertConfig.wilds?'CHECKED ':'') +'/></td><TD>'+translate("Alert on wild attack")+'&nbsp;&nbsp;</td>\
+					<TD><INPUT id=pbalertDefend type=checkbox '+ (Options.alertConfig.defend?'CHECKED ':'') +'/></td><TD>'+translate("Display defend status")+'&nbsp;&nbsp;</td>\
+					</table></td></tr>';
+			m += '<TR><TD><INPUT id=pbalertemail type=checkbox '+ (Options.alertConfig.email?'CHECKED ':'') +'/></td><TD>'+translate("Email on incoming attack")+':&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Email App: <input id=pbKoctomail type=radio name=pbemailapp '+((Options.alertConfig.emailapp==1)?'CHECKED':'')+'>Koc2Mail (Moshimo)&nbsp;<span style="color:#800; font-weight:bold"><sup>*Requires refresh</sup></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id=pbKocalert type=radio name=pbemailapp '+((Options.alertConfig.emailapp==0)?'CHECKED':'')+'>KocAlert (Baos)&nbsp;<INPUT id=pbathemail type=submit value='+translate("Authenticate")+' ></td></tr>';
+			m += '</table>';
+			m += '<BR><DIV class=pbStat>'+translate("Actions")+'</div><TABLE class=pbTab>\
+					<TR><TD><INPUT id=pbalertraid type=checkbox '+ (Options.alertConfig.raid?'CHECKED':'') +'/></td><td>'+translate("Stop raids on impending")+'</td></tr>\
+					<TR><TD><INPUT id=pbalerttoff type=checkbox '+ (Options.alertConfig.alertTRtoff?'CHECKED ':'') +'/></td><td>'+translate("Stop auto outgoing marches on impending")+'</td></tr>\
+					<TR><TD><INPUT id=pbalertTRAFK type=checkbox '+ (Options.alertConfig.AFK?'CHECKED ':'') +'/></td><td>Only do the following when AFK... (untick this to always do these actions on impending)</td></tr>\
+					<TR><TD>&nbsp;</td><TD><INPUT id=pbalertTR type=checkbox '+ (Options.alertConfig.alertTR?'CHECKED ':'') +'/>&nbsp;'+translate("Toggle to TR set ")+' <INPUT id=pbalertTRset type=text size=2 maxlength=2 value="'+ Options.alertConfig.alertTRset +'"> '+translate("on impending")+'</td></tr>\
+					<TR><TD>&nbsp;</td><TD><INPUT id=pbalertguard type=checkbox '+ (Options.alertConfig.guardian?'CHECKED ':'') +'/>&nbsp;'+translate("Toggle to wood guardian on impending")+'</td></tr>\
+					<TR><TD><INPUT id=pbalertTR2 type=checkbox '+ (Options.alertConfig.alertTR2?'CHECKED ':'') +'/></td><TD> '+translate("Revert TR, Guardian, and Marches back after: ")+' <INPUT id=pbalertTRsetmin type=text size=3 maxlength=3 value="'+ Options.alertConfig.alertTRsetwaittime +'"> '+translate("minutes without incoming attack")+'</td></tr>';
+			
+			m += '</table>';
+			m += '<BR><DIV class=pbStat>'+translate("Text Messaging Options")+'</div><TABLE class=pbTab>\
+					<tr><td align=left><INPUT id=pbcellenable type=checkbox '+ (Options.celltext.atext?'CHECKED ':'') +'/></td>\
+					<td align=left>'+translate("Text message incoming attack to")+': <INPUT id=pbnum1 type=text size=4 maxlength=4 value="'+ Options.celltext.num1 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\>\
+					&nbsp;<INPUT id=pbnum2 type=text size=3 maxlength=3 value="'+ Options.celltext.num2 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\>\
+					&nbsp;<INPUT id=pbnum3 type=text size=4 maxlength=4 value="'+ Options.celltext.num3 +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\> <span style="color:#800; font-weight:bold"><sup>*'+translate("Standard text messaging rates apply")+'</sup></span></td></tr><tr><td></td>\
+					<TD align=left>'+translate("Country")+': <select id="pbfrmcountry">';
+			for (var i in t.Providers) {
+				var ret=m.indexOf(t.Providers[i].country);
+				if (ret==-1) {
+					if(t.Providers[Options.celltext.provider]){
+						if (t.Providers[i].country==t.Providers[Options.celltext.provider].country) {
+							m += '<option value="'+t.Providers[i].country+'" selected="selected">'+t.Providers[i].country+'</option>'; // Load Previous Provider Selection
+						} else {
+							m += '<option value="'+t.Providers[i].country+'">'+t.Providers[i].country+'</option>';
+						}
+					} else {
+						m += '<option value="'+t.Providers[i].country+'">'+t.Providers[i].country+'</option>';
+					}
+				}
+			}
+    
+			m += '</select>\
+			<select id="pbfrmprovider" '+(Options.celltext.provider==0?'DISABLED':'')+'><option value=0 >--'+translate("Provider")+'--</option>';
+			for (var i in t.Providers) {
+				if(t.Providers[Options.celltext.provider]){
+					if(t.Providers[i].country == t.Providers[Options.celltext.provider].country)
+						if(Options.celltext.provider == i)
+							m += '<option value="'+i+'" selected="selected">'+t.Providers[i].provider+'</option>'; // Load Previous Provider Selection
+						else {
+							m += '<option value="'+i+'">'+t.Providers[i].provider+'</option>';
+						}
+				} else {
+					m += '<option value="'+i+'">'+t.Providers[i].provider+'</option>';
+				}
+			}
 
+			m += '</select> <FONT COLOR=RED>REQUIRED </FONT> PIN:<INPUT id=pbcellpin type=text size=6 maxlength=5 value="'+ (GlobalOptions.cellpin?GlobalOptions.cellpin:'') +'"  '+(Options.celltext.provider==0?'DISABLED':'')+'\> <INPUT id=pbgetpin type=submit value="'+translate("GET PIN CODE")+'" ></td></tr>';
+			m += '<tr><td align=left><INPUT id=pbcellextended type=checkbox '+ (Options.celltext.extended?'CHECKED ':'') +'/></td>\
+					<td align=left>'+translate("Send troop info in text")+'<span style="color:#800; font-weight:bold"><sup>*'+translate("Multiple text messages per attack. Standard text messaging rates apply")+'</sup></span></td></tr><tr><td></td></table>';
+					
+			m += '<BR><DIV class=pbStat>'+translate("Sound Alert Options")+'</div><TABLE class=pbTab>\
+					<TR><TD><INPUT id=pbSoundEnable type=checkbox '+ (Options.alertSound.enabled?'CHECKED ':'') +'/></td><TD>'+translate("Play sound on incoming attack/scout")+'</td></tr>\
+					<TR><TD></td><TD><DIV id=pbLoadingSwf>'+translate("Loading SWF player")+'</div><DIV style="display:none" id=pbSoundOpts><TABLE cellpadding=0 cellspacing=0>\
+					<TR><TD align=right>'+translate("Sound file")+': &nbsp; </td><TD><INPUT id=pbsoundFile type=text size=40 maxlength=1000 value="'+ Options.alertSound.soundUrl +'" \>\
+					&nbsp; </td><TD><INPUT id=pbSoundLoad type=submit value='+translate("Load")+' ><INPUT id=pbSoundDefault type=submit value='+translate("Default")+' ></td></tr>\
+					<TR><TD align=right>'+translate("Volume")+': &nbsp; </td><TD><TABLE cellpadding=0 cellspacing=0 class=pbTab><TR valign=middle><TD><SPAN id=pbVolSlider></span></td><TD width=15></td><TD align=right id=pbVolOut>0</td></td></table></td><TD align=center><SPAN id=pbLoadStat>xx</span></td></tr>\
+					<TR><TD align=right><INPUT id=pbSoundRepeat type=checkbox '+ (Options.alertSound.repeat?'CHECKED ':'') +'/></td><TD> '+translate("Repeat every")+' <INPUT id=pbSoundEvery type=text size=2 maxlength=5 value="'+ Options.alertSound.repeatDelay +'"> '+translate("minutes")+'</td></tr>\
+					<TR><TD></td><TD>Play for <INPUT id=pbSoundLength type=text size=3 maxlength=5 value="'+ Options.alertSound.playLength +'"> '+translate("seconds")+'</td></tr>\
+					</table></div></td></tr>\
+					</table><BR>';
+			t.myDiv.innerHTML = m;
+
+//   		t.mss = new CmatSimpleSound(SWF_PLAYER_URL, null, {height:36, width:340}, t.e_swfLoaded, 'debug=y');
+			t.mss = new CmatSimpleSound(SWF_PLAYER_URL, null, {height:0, width:0}, t.e_swfLoaded, 'debug=n');
+			//t.mss.swfDebug = function (m){ logit ('SWF: '+ m)};
+			t.mss.swfPlayComplete = t.e_soundFinished;
+			t.mss.swfLoadComplete = t.e_soundFileLoaded;
+			unsafeWindow.matSimpleSound01 = t.mss;   // let swf find it
+
+			t.volSlider = new SliderBar (document.getElementById('pbVolSlider'), 200, 21, 0);
+			t.volSlider.setChangeListener(t.e_volChanged);
+			document.getElementById('pbcellpin').addEventListener ('change', function(){
+				GlobalOptions.cellpin = this.value;
+				GM_setValue ('Options_??', JSON2.stringify(GlobalOptions));
+			},false);  
+			document.getElementById('pbPlayNow').addEventListener ('click', function (){t.playSound(false)}, false);
+			document.getElementById('pbathemail').addEventListener ('click', t.e_authenticate, false);
+			document.getElementById('pbSoundStop').addEventListener ('click', t.stopSoundAlerts, false);
+			document.getElementById('pbSoundRepeat').addEventListener ('change', function (e){Options.alertSound.repeat = e.target.checked}, false);
+			document.getElementById('pbSoundEvery').addEventListener ('change', function (e){Options.alertSound.repeatDelay = e.target.value}, false);
+			document.getElementById('pbSoundLength').addEventListener ('change', function (e){Options.alertSound.playLength = e.target.value}, false);
+			document.getElementById('pbSoundEnable').addEventListener ('change', function (e){Options.alertSound.enabled = e.target.checked}, false);
+			document.getElementById('pbcellenable').addEventListener ('change', function (e){Options.celltext.atext = e.target.checked;}, false);
+			document.getElementById('pbcellextended').addEventListener ('change', function (e){Options.celltext.extended = e.target.checked;}, false);
+			document.getElementById('pbSoundStop').disabled = true;
+			document.getElementById('pbalertemail').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbKoctomail').addEventListener('change', function () {
+				if (document.getElementById('pbKoctomail').checked) { Options.alertConfig.emailapp=1; saveOptions(); }
+			}, false);
+			document.getElementById('pbKocalert').addEventListener('change', function () {
+				if (document.getElementById('pbKocalert').checked) { Options.alertConfig.emailapp=0; saveOptions(); }
+			}, false);
+			document.getElementById('pbalertEnable').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertPrefix').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertScout').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertWild').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertDefend').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTroops').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbfrmcountry').addEventListener ('change', t.setCountry, false);
+			document.getElementById('pbfrmprovider').addEventListener ('change', t.setProvider, false);
+			document.getElementById('pbnum1').addEventListener ('change', t.phonenum, false);
+			document.getElementById('pbnum2').addEventListener ('change', t.phonenum, false);
+			document.getElementById('pbnum3').addEventListener ('change', t.phonenum, false);
+			document.getElementById('pbalertraid').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTR').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTRset').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertguard').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTR2').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalerttoff').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTRsetmin').addEventListener ('change', t.e_alertOptChanged, false);
+			document.getElementById('pbalertTRAFK').addEventListener ('click', t.e_alertOptChanged, false);
+			document.getElementById('pboldattacks').addEventListener ('click', t.oldIncoming, false);
+			document.getElementById('pbgetpin').addEventListener ('click', t.getpinauth, false);
+			document.getElementById('pbsoundFile').addEventListener ('change', function (){
+				Options.alertSound.soundUrl = document.getElementById('pbsoundFile').value;
+				t.loadUrl (Options.alertSound.soundUrl);
+			}, false);
+			document.getElementById('pbSoundDefault').addEventListener ('click', function (){
+			document.getElementById('pbsoundFile').value = DEFAULT_ALERT_SOUND_URL;
+				Options.alertSound.soundUrl = DEFAULT_ALERT_SOUND_URL;
+				t.loadUrl (DEFAULT_ALERT_SOUND_URL);
+			}, false);
+
+			for (var cityId in Cities.byID){
+				//m+= '<TD><CENTER><INPUT id=towertext_'+cityId+' type=text size=10 value='+(Options.alertConfig.towercitytext[cityId]?Options.alertConfig.towercitytext[cityId]:"")+'></CENTER></TD>';
+				document.getElementById ('towertext_'+ cityId).addEventListener('change',function(e){Options.alertConfig.towercitytext[e.target.name] = e.target.value;saveOptions();},false);
+    	
+				var but = document.getElementById ('pbtabut_'+ cityId);
+				addListener (but, cityId);
+				t.defMode[cityId] =  parseInt(Seed.citystats["city" + cityId].gate);
+				t.displayDefMode (cityId);
+				var btnNameT = 'pbattackqueue_' + cityId;
+				addTowerEventListener(cityId, btnNameT);
+			}
+			function addListener (but, i){
+				but.addEventListener ('click', function (){t.butToggleDefMode(i)}, false);
+			}
+			function addTowerEventListener(cityId, name){
+				document.getElementById(name).addEventListener('click', function(){
+				t.showTowerIncoming(cityId);
+			}, false);
+		}    
+		setInterval (t.eachSecond, 2000);
+       
+		GM_addStyle("a.city.defending { border-top: 4px; border-bottom: 4px; border-left: 0px; border-right: 0px; border-style: solid; margin-top: 0px; border-color: red;}");
+		GM_addStyle("a.city.hiding    { border-top: 4px; border-bottom: 4px; border-left: 0px; border-right: 0px; border-style: solid; margin-top: 0px; border-color: blue;}");
+		t.origUCL = unsafeWindow.update_citylist;
+		t.cityBtnColor();
+	},      
+
+	show : function (){
+	},
+  
+	hide : function (){
+	},
+	
+	getpinauth : function () {
+		var dt = {};
+		dt.provider = Options.celltext.provider;
+		dt.num1 = Options.celltext.num1;
+		dt.num2 = Options.celltext.num2;
+		dt.num3 = Options.celltext.num3;
+
+		GM_xmlhttpRequest({
+			method: 'POST',
+			url: http+'baos.kocscripters.com/getpin.php',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', },
+			data: implodeUrlArgs(dt),
+			onload: function (message) {
+				if(message.status != 200) alert('request failed, try again');
+				else {
+					var rslt = eval("(" + message.responseText + ")");
+					//alert(inspect(rslt));
+					if(rslt.ok) alert("check for text containing pin code");
+					else if(rslt.dup) alert('duplicate record, pin already sent');
+					else if(rslt.inv) alert('Invalid request');
+					else alert('Bad Mojo going on, try again later');
+				};
+			},
+		});
+	},
+  
+	cityBtnColor : function () {
+		// override update_citylist function
+		// 
+		var usl = function () {
+			var t =Tabs.tower;
+
+			// call the kabam function
+			t.origUCL();
+        
+			// fix the borders
+			for (var cityId in Cities.byID){
+				if (Seed.citystats["city" + cityId].gate != t.defMode[cityId]){     // user changed def mode
+					t.defMode[cityId] = Seed.citystats["city"+ cityId].gate;
+				}
+				t.displayDefMode (cityId);
+			}
+
+		};
+
+		if (Options.colorCityTabs) {
+			unsafeWindow.update_citylist = usl;
 		}
-	}      
-	if (Options.alertConfig.raid && incomming){
-		Options.alertConfig.raidautoswitch[m.toCityId] = true;
-	};
-	if (Options.alertConfig.guard && incomming){
-		Options.alertConfig.guardautoswitch[m.toCityId] = true;
-	}
-	if(!incomming) Options.alertConfig.lastatkarr = new Array();
-	saveOptions();
-	if(Options.alertConfig.RecentActivity) {
-		if(Options.alertConfig.alertTR2) {
-			if(!incomming) {
-				var switchtime = parseInt(Options.alertConfig.lastAttack)+Options.alertConfig.alertTRsetwaittime*60;
-				if (switchtime < now) {
-					if(Options.alertConfig.alertTRtoff) {
-						if(Options.SaveState.transport && !Tabs.transport.traderState.running)Tabs.transport.toggleTraderState();
-						if(Options.SaveState.farm && !FarmOptions.Running)Tabs.farm.toggleBarbState();
-						if(Options.SaveState.darkforest && !AttackOptions.Running)Tabs.Barb.toggleBarbState();
-						if(Options.SaveState.crest && !Options.crestRunning)Tabs.Attack.toggleCrestState();
-					};
-					if (Options.SaveState.trset != Seed.throne.activeSlot)
-						if(Options.alertConfig.AFK) {
-							if(isAFK) {
+		else { 
+			unsafeWindow.jQuery("a.city").removeClass("defending");
+			unsafeWindow.jQuery("a.city").removeClass("hiding");
+			unsafeWindow.update_citylist = Tabs.tower.origUCL;
+		}
+	},
+ 
+	loadUrl : function (url){
+		var t = Tabs.tower;
+		t.mss.load (1, url, true);
+		document.getElementById('pbLoadStat').innerHTML = translate('Loading');
+	},
+	
+	phonenum : function() {
+		Options.celltext.num1 = document.getElementById('pbnum1').value;
+		Options.celltext.num2 = document.getElementById('pbnum2').value;
+		Options.celltext.num3 = document.getElementById('pbnum3').value;
+		saveOptions();
+	},
+
+	setCountry : function(){
+		var t = Tabs.tower;
+		var myselect=document.getElementById("pbfrmprovider");
+		myselect.innerHTML = '<option value=0 >--'+translate("Provider")+'--</option>';
+		myselect.disabled = true;
+		for (var i in t.Providers) {
+			if (t.Providers[i].country == document.getElementById("pbfrmcountry").value){
+				var addoption = document.createElement('option');
+				addoption.value = i;
+				addoption.text = t.Providers[i].provider;
+				myselect.add(addoption, null) //add new option to end of "Providers"
+			}
+		}
+		myselect.disabled = false;
+	},
+
+	setProvider : function(){
+		var ddProvider = document.getElementById("pbfrmprovider").wrappedJSObject;
+		Options.celltext.provider=ddProvider.options[ddProvider.selectedIndex].value;
+		if(ddProvider.selectedIndex > 0){
+			document.getElementById("pbnum1").disabled = false;
+			document.getElementById("pbnum2").disabled = false;
+			document.getElementById("pbnum3").disabled = false;
+		} else {
+			document.getElementById("pbnum1").disabled = true;
+			document.getElementById("pbnum2").disabled = true;
+			document.getElementById("pbnum3").disabled = true;
+		}
+		//alert(Options.celltext.provider);
+	},
+
+	e_swfLoaded : function (){
+		var t = Tabs.tower;
+		document.getElementById('pbLoadingSwf').style.display = 'none';
+		document.getElementById('pbSoundOpts').style.display = 'inline';
+		t.volSlider.setValue (Options.alertSound.volume/100);
+		setTimeout (function (){t.loadUrl (Options.alertSound.soundUrl);},500);
+		setTimeout (function (){t.mss.setVolume (1, Options.alertSound.volume);}, 1000);
+		if (Options.alertSound.alarmActive && Options.alertSound.expireTime>unixTime())   
+			t.soundTheAlert();
+	},
+	
+	e_authenticate: function (){
+		var x = window.open();
+		x.location=http+"baos.kocscripters.com/kocalert/index.php";
+	},
+	
+	e_alertOptChanged : function (){
+		var t = Tabs.tower;
+		Options.alertConfig.email = document.getElementById('pbalertemail').checked;
+		Options.alertConfig.aChat = document.getElementById('pbalertEnable').checked;
+		Options.alertConfig.aPrefix=document.getElementById('pbalertPrefix').value;      
+		Options.alertConfig.scouting=document.getElementById('pbalertScout').checked;      
+		Options.alertConfig.wilds=document.getElementById('pbalertWild').checked;
+		Options.alertConfig.defend=document.getElementById('pbalertDefend').checked;
+		Options.alertConfig.raid=document.getElementById('pbalertraid').checked;
+		Options.alertConfig.alertTR=document.getElementById('pbalertTR').checked;
+		Options.alertConfig.alertTR2=document.getElementById('pbalertTR2').checked;
+		Options.alertConfig.alertTRtoff=document.getElementById('pbalerttoff').checked;
+		Options.alertConfig.guardian=document.getElementById('pbalertguard').checked;
+		Options.alertConfig.AFK=document.getElementById('pbalertTRAFK').checked;
+		var trset = parseInt(document.getElementById('pbalertTRset').value);
+		Options.alertConfig.alertTRset = trset;
+		var trsetwait = parseInt(document.getElementById('pbalertTRsetmin').value);
+		Options.alertConfig.alertTRsetwaittime = trsetwait;
+		var mt = parseInt(document.getElementById('pbalertTroops').value);
+		if (mt<1 || mt>1500000){
+			document.getElementById('pbalertTroops').value = Options.alertConfig.minTroops;
+			document.getElementById('pbalerterr').innerHTML = '<font color=#600000><B>'+translate("INVALID")+'</b></font>';
+			setTimeout (function (){document.getElementById('pbalerterr').innerHTML =''}, 2000);
+			return;
+		}
+		Options.alertConfig.minTroops = mt;
+		saveOptions();
+	},
+  
+	e_volChanged : function (val){
+		var t = Tabs.tower;
+		document.getElementById('pbVolOut').innerHTML = parseInt(val*100);
+		Options.alertSound.volume = parseInt(val*100);
+		t.mss.setVolume (1, Options.alertSound.volume);
+	},
+  
+	butToggleDefMode : function (cityId){
+		var t = Tabs.tower;
+		var mode = 1;
+		if (Seed.citystats["city" + cityId].gate != 0)
+			mode = 0;
+		t.ajaxSetDefMode (cityId, mode, function (newMode){
+			t.defMode[cityId] = newMode;
+			t.displayDefMode (cityId);
+		});
+	},
+      
+	displayDefMode : function (cityId){
+		var t = Tabs.tower;
+		var but = document.getElementById('pbtabut_'+ cityId);
+    
+		var city_num = Cities.byID[cityId].idx +1;
+    
+		if (t.defMode[cityId]){
+			but.className = 'pbDefButOn';
+			but.value = 'Def = ON';  
+			if (Options.colorCityTabs) unsafeWindow.jQuery("#citysel_" + city_num).removeClass("hiding").addClass("defending");
+		} else {
+			but.className = 'pbDefButOff';
+			but.value = 'Def = OFF';  
+			if (Options.colorCityTabs) unsafeWindow.jQuery("#citysel_" + city_num).removeClass("defending").addClass("hiding");
+		}  
+	},
+    
+	eachSecond : function (){
+		var t = Tabs.tower;
+		for (var cityId in Cities.byID) {
+			if (Seed.citystats["city" + cityId].gate != t.defMode[cityId]) {     // user changed def mode
+				t.defMode[cityId] = Seed.citystats["city"+ cityId].gate;
+				t.displayDefMode (cityId);
+			}
+			Options.alertConfig.raidautoswitch[cityId] = false;
+			Options.alertConfig.guardautoswitch[cityId] = false;
+		}
+		var now = unixTime();
+		var incomming = false;
+		for (var k in Seed.queue_atkinc) {   // check each incoming march
+			var m = Seed.queue_atkinc[k];
+			if (m.marchType==3 || m.marchType==4) {
+				if(Options.alertConfig.lastatkarr.indexOf(Number(m.mid)) == -1) {
+					Options.alertConfig.lastatkarr.push(Number(m.mid));
+					Options.alertConfig.lastarrtime.push(Number(m.arrivalTime));
+					if (Number(m.arrivalTime) > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = Number(m.arrivalTime);//for tr toggle back
+					saveOptions();
+					t.newIncoming (m);
+				};
+				incomming = true;
+			}
+		}      
+		if (Options.alertConfig.raid && incomming){
+			Options.alertConfig.raidautoswitch[m.toCityId] = true;
+		};
+		if (Options.alertConfig.guard && incomming){
+			Options.alertConfig.guardautoswitch[m.toCityId] = true;
+		}
+		if(!incomming) Options.alertConfig.lastatkarr = new Array();
+		saveOptions();
+		if(Options.alertConfig.RecentActivity) {
+			if(Options.alertConfig.alertTR2) {
+				if(!incomming) {
+					var switchtime = parseInt(Options.alertConfig.lastAttack)+Options.alertConfig.alertTRsetwaittime*60;
+					if (switchtime < now) {
+						if(Options.alertConfig.alertTRtoff) {
+							if(Options.SaveState.transport && !Tabs.transport.traderState.running)Tabs.transport.toggleTraderState();
+							if(Options.SaveState.farm && !FarmOptions.Running)Tabs.farm.toggleBarbState();
+							if(Options.SaveState.darkforest && !AttackOptions.Running)Tabs.Barb.toggleBarbState();
+							if(Options.SaveState.crest && !Options.crestRunning)Tabs.Attack.toggleCrestState();
+						};
+						if (Options.SaveState.trset != Seed.throne.activeSlot)
+							if(Options.alertConfig.AFK) {
+								if(isAFK) {
+									Tabs.Throne.doPreset(Options.SaveState.trset);
+									if(Options.alertConfig.guardian) {
+										for (var cityId in Cities.byID){
+											if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
+												t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
+											Options.alertConfig.guardautoswitch[cityId] = false;
+										}
+									};
+								}
+							} else {
 								Tabs.Throne.doPreset(Options.SaveState.trset);
-		     if(Options.alertConfig.guardian) {
 								for (var cityId in Cities.byID){
 									if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
 										t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
 									Options.alertConfig.guardautoswitch[cityId] = false;
 								}
-	          };
 							}
-						} else {
-							Tabs.Throne.doPreset(Options.SaveState.trset);
-							for (var cityId in Cities.byID){
-								if(Options.SaveState.guardian[cityId] && Seed.buildings["city"+ cityId].pos500[0] != Options.SaveState.guardian[cityId]) 
-									t.changeGuardian(cityId,parseInt(Options.SaveState.guardian[cityId]));
-								Options.alertConfig.guardautoswitch[cityId] = false;
-							}
-						}
 						Options.alertConfig.RecentActivity = false;
 						saveOptions();
+					}
 				}
 			}
 		}
-	}
-	if (incomming && !document.getElementById("towersirentab") && Options.alertSound.enabled){
-		AddSubTabLink('!Silence Alarm!',t.stopSoundAlerts, 'towersirentab');
-		document.getElementById('towersirentab').innerHTML = '<span style="color: red">Silence Alarm!</span>';
-	}
-	if (Options.alertSound.alarmActive && (now > Options.alertSound.expireTime)){
+		if (incomming && !document.getElementById("towersirentab") && Options.alertSound.enabled){
+			AddSubTabLink('!Silence Alarm!',t.stopSoundAlerts, 'towersirentab');
+			document.getElementById('towersirentab').innerHTML = '<span style="color: red">Silence Alarm!</span>';
+		}
+		if (Options.alertSound.alarmActive && (now > Options.alertSound.expireTime)){
+			var element = document.getElementById('towersirentab');
+			if(element)
+				element.parentNode.removeChild(element);
+			t.stopSoundAlerts();
+		}
+
+		t.towerMarches = [];
+		for (var i = 0; i < Cities.cities.length; i++) {
+			var cId = Cities.cities[i].id;
+			t['attackCount_' + cId] = 0;
+			t['scoutCount_' + cId] = 0;
+		}
+		if (matTypeof(Seed.queue_atkinc) != 'array') {
+			for (var k in Seed.queue_atkinc) {
+				var m = Seed.queue_atkinc[k];
+				if ((m.marchType == 3 || m.marchType == 4) && parseIntNan(m.arrivalTime) > now) {
+					t.handleTowerData(m);
+
+				}
+			}
+		}
+		for (var i = 0; i < Cities.cities.length; i++) {
+			var cId = Cities.cities[i].id;
+			document.getElementById('pbattackqueue_' + cId).value = 'A ' + t['attackCount_' + cId] + ' | S ' + t['scoutCount_' + cId];
+		}    
+	},   
+  
+	e_soundFinished : function (chan){ // called by SWF when sound finishes playing
+		var t = Tabs.tower;
+		if (chan != 1)
+			return;
+		if (!Options.alertSound.alarmActive){
+			document.getElementById('pbSoundStop').disabled = true;
+		}
+	},
+
+	e_soundFileLoaded : function (chan, isError){ // called by SWF when sound file finishes loading
+		if (chan != 1)
+			return;
+		if (isError)  
+			document.getElementById('pbLoadStat').innerHTML = translate("Error")+"!";
+		else
+			document.getElementById('pbLoadStat').innerHTML = translate("Loaded");
+	},  
+  
+	playSound : function (doRepeats){
+		var t = Tabs.tower;
+		document.getElementById('pbSoundStop').disabled = false;
+		clearTimeout (t.soundStopTimer);
+		clearTimeout (t.soundRepeatTimer);
+		t.mss.play (1, 0);
+		t.soundStopTimer = setTimeout (function(){t.mss.stop(1); t.e_soundFinished(1)}, Options.alertSound.playLength*1000);
+		if (doRepeats && Options.alertSound.repeat)
+			t.soundRepeatTimer = setTimeout (function (){t.playSound(true)}, Options.alertSound.repeatDelay*60000);
+		else
+			Options.alertSound.alarmActive = false;
+	},
+        
+	soundTheAlert : function (){
+		var t = Tabs.tower;
+		Options.alertSound.alarmActive = true;
+		new t.playSound(true);
+	},
+     
+	stopSoundAlerts : function (){
+		var t = Tabs.tower;
+		t.mss.stop (1);
 		var element = document.getElementById('towersirentab');
 		if(element)
 			element.parentNode.removeChild(element);
-		t.stopSoundAlerts();
-	}
-
-	t.towerMarches = [];
-	for (var i = 0; i < Cities.cities.length; i++) {
-		var cId = Cities.cities[i].id;
-		t['attackCount_' + cId] = 0;
-		t['scoutCount_' + cId] = 0;
-	}
-	if (matTypeof(Seed.queue_atkinc) != 'array') {
-		for (var k in Seed.queue_atkinc) {
-			var m = Seed.queue_atkinc[k];
-			if ((m.marchType == 3 || m.marchType == 4) && parseIntNan(m.arrivalTime) > now) {
-				t.handleTowerData(m);
-
-			}
-		}
-	}
-	for (var i = 0; i < Cities.cities.length; i++) {
-		var cId = Cities.cities[i].id;
-		document.getElementById('pbattackqueue_' + cId).value = 'A ' + t['attackCount_' + cId] + ' | S ' + t['scoutCount_' + cId];
-	}    
-  },   
-  
-  e_soundFinished : function (chan){ // called by SWF when sound finishes playing
-    var t = Tabs.tower;
-    if (chan != 1)
-      return;
-    if (!Options.alertSound.alarmActive){
-      document.getElementById('pbSoundStop').disabled = true;
-    }
-  },
-
-  e_soundFileLoaded : function (chan, isError){ // called by SWF when sound file finishes loading
-    if (chan != 1)
-      return;
-    if (isError)  
-      document.getElementById('pbLoadStat').innerHTML = translate("Error")+"!";
-    else
-      document.getElementById('pbLoadStat').innerHTML = translate("Loaded");
-  },  
-  
-  playSound : function (doRepeats){
-    var t = Tabs.tower;
-    document.getElementById('pbSoundStop').disabled = false;
-    clearTimeout (t.soundStopTimer);
-    clearTimeout (t.soundRepeatTimer);
-    t.mss.play (1, 0);
-    t.soundStopTimer = setTimeout (function(){t.mss.stop(1); t.e_soundFinished(1)}, Options.alertSound.playLength*1000);
-    if (doRepeats && Options.alertSound.repeat)
-      t.soundRepeatTimer = setTimeout (function (){t.playSound(true)}, Options.alertSound.repeatDelay*60000);
-    else
-      Options.alertSound.alarmActive = false;
-  },
-        
-  soundTheAlert : function (){
-    var t = Tabs.tower;
-    Options.alertSound.alarmActive = true;
-    new t.playSound(true);
-  },
-     
-  stopSoundAlerts : function (){
-    var t = Tabs.tower;
-    t.mss.stop (1);
-    var element = document.getElementById('towersirentab');
-   if(element)
-      element.parentNode.removeChild(element);
-    clearTimeout (t.soundStopTimer);
-    clearTimeout (t.soundRepeatTimer);
-    document.getElementById('pbSoundStop').disabled = true;
-    Options.alertSound.alarmActive = false;
-    Options.alertSound.expireTime = 0;
-  },
-
-  newIncoming : function (m){
-    var t = Tabs.tower;
-    var totTroops = 0;
-    for (k in m.unts){
-      totTroops += Number(m.unts[k]);
-    }
-    if (totTroops < Options.alertConfig.minTroops){
-      return;
-    }
-    t.postToChat (m);
-    if(m.marchStatus == 9)return;
-    if (Options.alertConfig.alertTR){
-      if(Options.alertConfig.alertTR2) {
-         if(Options.alertConfig.RecentActivity == false) {
-            if(Options.alertConfig.alertTRtoff) {
-               Options.SaveState.transport = Tabs.transport.traderState.running;
-               if(Options.SaveState.transport)Tabs.transport.toggleTraderState();
-               Options.SaveState.farm = FarmOptions.Running;
-               if(Options.SaveState.farm)Tabs.farm.toggleBarbState();
-               Options.SaveState.darkforest = AttackOptions.Running;
-               if(Options.SaveState.darkforest)Tabs.Barb.toggleBarbState();
-               Options.SaveState.crest = Options.crestRunning;
-               if(Options.SaveState.crest)Tabs.Attack.toggleCrestState();
-            };
-            Options.SaveState.trset = Seed.throne.activeSlot;
-            if(Options.alertConfig.guardian && Seed.buildings["city"+ m.toCityId].pos500 && Seed.buildings["city"+ m.toCityId].pos500[0] !=50) Options.SaveState.guardian[m.toCityId]=Seed.buildings["city"+ m.toCityId].pos500[0];
-         };
-         Options.alertConfig.RecentActivity = true;
-         saveOptions();
-      };
-      var currentset = Seed.throne.activeSlot;
-      if (Options.alertConfig.alertTRset != currentset){
-            var preset = Options.alertConfig.alertTRset
-          if(Options.alertConfig.AFK) {
-            if(isAFK)Tabs.Throne.doPreset(preset);
-         }else Tabs.Throne.doPreset(preset);
-      }
-    }
-    if (Options.alertConfig.guardian){
-         if(Options.alertConfig.AFK) {
-            if(isAFK) if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
-         } else if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
-   }
-  },
-  
-  oldIncoming : function () {
-   var t = Tabs.tower;
-    var attacker = unsafeWindow.g_js_strings.commonstr.attacker;
-    var troops = unsafeWindow.g_js_strings.commonstr.troops;
-    var estimatedarrival = unsafeWindow.g_js_strings.attack_generateincoming.estimatedarrival;
-    var attack = unsafeWindow.g_js_strings.commonstr.attacker;
-    var attacking = unsafeWindow.g_js_strings.commonstr.attacking;
-    var scouting = unsafeWindow.g_js_strings.commonstr.scouting;
-    var mtype = unsafeWindow.g_js_strings.modal_openRallypoint_movement.marchtype;
-    var troops = unsafeWindow.g_js_strings.commonstr.troops;
-    var sentfrom = unsafeWindow.g_js_strings.openEmbassy.sentfrom;
-    var wilderness = unsafeWindow.g_js_strings.commonstr.wilderness;
-    var barbarians = unsafeWindow.g_js_strings.commonstr.barbarians;
-    var target = unsafeWindow.g_js_strings.commonstr.target;
-    var fchar = Filter[Options.fchar];
-     var inc = Seed.queue_atkinc;
-     var msg = ':::.|';
-     for(n in inc) {
-      var name;
-      var a = inc[n];
-      if(!(a.marchType == 4||a.marchType == 3))continue;
-      if(a.marchType == 3)var atype = scouting;
-      else var atype = attacking;
-      var to = Cities.byID[a.toCityId];
-      if ( to.tileId == a.toTileId )
-      name = to.name;
-      else name = wilderness;
-      var who;
-      if (Seed.players['u'+a.pid])who = Seed.players['u'+a.pid].n;
-      else if (m.players && m.players['u'+a.pid])who = m.players['u'+a.pid].n;
-      else who = barbarians;
-      msg+= target+': '+name+' ('+to.x+','+to.y+')| '+mtype+': '+atype+'| '+sentfrom+': '+who+'('+a.fromXCoord+','+a.fromYCoord+') ||'+troops+':|';
-      for (k in a.unts){
-         var uid = parseInt(k.substr (1));
-         var UNTCOUNT = String(String(a.unts[k]).split("")).replace(/,/g,fchar)// forced on, sucks that some people will get the funny A, but it's better than missing values of 80085 incoming troops
-         msg += UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
-      }
-      msg+= '||'+estimatedarrival+': ('+ unsafeWindow.timestr(parseInt(a.arrivalTime - unixTime())) +')|| ||';
-     };
-     msg = msg.substring(0, Number(msg.length-5));
-     sendChat ("/a "+  msg);
-  },
-
-  changeGuardian : function (cityId,guardiantype){
-    var t = Tabs.tower;
-    var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-    params.ctrl = "Guardian";
-    params.action = "summon";
-    params.cityId = cityId;
-    switch(guardiantype) {
-      case 50:
-	params.type = "wood";
-	break;
-      case 51:
-	params.type = "ore";
-	break;
-      case 52:
-	params.type = "food";
-	break;
-      case 53:
-	params.type = "stone";
-	break;
-    }
-    new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch.php" + unsafeWindow.g_ajaxsuffix, {
-	method: "post",
-	parameters: params,
-	onSuccess: function (rslt) {
-		if (rslt.ok) {
-			unsafeWindow.seed.buildings["city"+ cityId].pos500[0]=guardiantype;
-		} 
+		clearTimeout (t.soundStopTimer);
+		clearTimeout (t.soundRepeatTimer);
+		document.getElementById('pbSoundStop').disabled = true;
+		Options.alertSound.alarmActive = false;
+		Options.alertSound.expireTime = 0;
 	},
-	onFailure: function () {
-                return;
-	}
-    })
-  },
-  
-  sendalert : function (m){
-    var t = Tabs.tower;
-    var now = unixTime();
-    if (Options.celltext.atext)
-      t.postToCell (m);
-    if (Options.alertSound.enabled){
-      t.soundTheAlert(m);
-      if (m.arrivalTime > Options.alertSound.expireTime)
-        Options.alertSound.expireTime = m.arrivalTime;
-    }
-    if (Options.alertConfig.raid){
-        Tabs.Raid.StopCityRaids(m.toCityId);
-        Options.alertConfig.raidautoswitch[m.toCityId] = true;
-    }  
-  },
 
-
-  ajaxSetDefMode : function (cityId, state, notify){
-        var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-        params.cid = cityId;
-        params.state = state;
-        new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/gate.php" + unsafeWindow.g_ajaxsuffix, {
-            method: "post",
-            parameters: params,
-            onSuccess: function (rslt) {
-                if (rslt.ok) {
-                    Seed.citystats["city" + cityId].gate = state;
-                    notify (state);
-                }
-            },
-            onFailure: function () {
-            }
-        })
-  },
-  
-  onUnload : function (){
-  },
-
-
-
-  postToCell : function (m){
-    var t = Tabs.tower;
-    var data = {};
-    if (m.marchType == null)      // bogus march (returning scouts)
-      return;
-    if (m.marchType == 3){
-      if (!Options.alertConfig.scouting)
-        return;
-      data.atkType = 'scout';
-    } else if (m.marchType == 4){
-      data.atkType = 'atk';
-    } else {
-      return;
-    }
-    var city = Cities.byID[m.toCityId];
-    if ( city.tileId == m.toTileId )
-      data.target = 'city ('+ city.x +','+ city.y+')';
-    else {
-      if (!Options.alertConfig.wilds)
-        return;
-      data.target = 'wild';
-      for (k in Seed.wilderness['city'+m.toCityId]){
-        if (Seed.wilderness['city'+m.toCityId][k].tileId == m.toTileId){
-          data.target += Seed.wilderness['city'+m.toCityId][k].xCoord +','+ Seed.wilderness['city'+m.toCityId][k].yCoord;
-          break;
-        }
-      }
-    }
-    if (Seed.players['u'+m.pid])
-      data.who = Seed.players['u'+m.pid].n;
-    else if (m.players && m.players['u'+m.pid])
-      data.who = m.players['u'+m.pid].n;
-    else
-      data.who = 'Unknown';
-  
-    if (m.fromXCoord)
-      data.who += m.fromXCoord +','+ m.fromYCoord;
-     data.arrival = unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime()));
-
-
-    if ( city.tileId == m.toTileId ){
-      var emb = getCityBuilding(m.toCityId, 8);
-      if (emb.count > 0){
-        var availSlots = emb.maxLevel;
-        for (k in Seed.queue_atkinc){
-          if (Seed.queue_atkinc[k].marchType==2 && Seed.queue_atkinc[k].toCityId==m.toCityId && Cities.byID[Seed.queue_atkinc[k].fromCityId]==null){
-            --availSlots;
-          }
-        }
-        data.embassy = 'EMB '+ availSlots +'of'+ emb.maxLevel;
-        if (t.defMode[m.toCityId] == 0 && Options.alertConfig.defend==true)
-        {
-            data.stat = 'HIDING';
-        }
-        if (t.defMode[m.toCityId] == 1 && Options.alertConfig.defend==true)
-        {
-            data.stat = 'DEFENDING';
-        }
-      }
-    }
-    
-    var inctroops = '';
-    if (Options.celltext.extended) {
-        for (k in m.unts){
-            var uid = parseInt(k.substr (1));
-            inctroops += String(m.unts[k]) +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
-        }
-    }
-    inctroops = inctroops.slice (0, -2);
-    data.provider = Options.celltext.provider;
-    data.num1 = Options.celltext.num1;
-    data.num2 = Options.celltext.num2;
-    data.num3 = Options.celltext.num3;
-    data.serverId = getServerId();
-    data.player = Seed.player['name'];
-    data.city = city.name;
-    data.troops = inctroops;
-    data.extended = Options.celltext.extended;
-    data.pin = GlobalOptions.cellpin;
-
-  GM_xmlhttpRequest({
-    method: 'POST',
-    url: http+'baos.kocscripters.com/index.php',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    },
-    data: implodeUrlArgs(data),
-
-    });
-  },
-  
-  postToChat : function (m){
-    var t = Tabs.tower;
-    if (DEBUG_TRACE) logit ("checkTower(): INCOMING at "+ unixTime()  +": \n"+ inspect (m, 8, 1));
-    if (m.marchType == null)      // bogus march (returning scouts)
-      return;
-    if (ENABLE_TEST_TAB) Tabs.Test.addDiv (translate("Incoming")+"!<BR><PRE style='margin:0px;'>" + inspect (m, 8, 1) +'</pre>');
-    var target, atkType, who;
-    var attacker = unsafeWindow.g_js_strings.commonstr.attacker;
-    var scoutingat = '';
-    var attack = unsafeWindow.g_js_strings.commonstr.attacker;
-    var attackrecalled = unsafeWindow.g_js_strings.incomingattack.attackrecalled;
-    var troops = unsafeWindow.g_js_strings.commonstr.troops;
-    var wilderness = unsafeWindow.g_js_strings.commonstr.wilderness;
-    var estimatedarrival = unsafeWindow.g_js_strings.attack_generateincoming.estimatedarrival;
-    var encampall = unsafeWindow.g_js_strings.openEmbassy.encampall;
-    var defending = unsafeWindow.g_js_strings.commonstr.defending;
-    var status = unsafeWindow.g_js_strings.commonstr.status;
-   var hidesanct = unsafeWindow.g_js_strings.openCastle.hidesanct;
-   var orderdefend = unsafeWindow.g_js_strings.openCastle.orderdefend;
-   var technology = unsafeWindow.g_js_strings.commonstr.technology;
-   var chEffect1 = {201:"Damage",202:"Bonus Damage",203:"Armor",204:"Strength",205:"Dexterity",206:"Health",207:"Hit Chance",208:"Crit Chance",209:"Block"};
-   var chEff1Base = {"Damage":30,"Bonus Damage":0,"Armor":7,"Strength":27,"Dexterity":27,"Health":60,"Hit Chance":4,"Crit Chance":3,"Block":3};
-   var chEffect2 = {1:"Attack",2:"Defense",3:"Life",4:"Combat Speed",5:"Range",6:"Load",7:"Accuracy",17:"Attack Debuff",18:"Defense Debufff",19:"Life Debuff",20:"Combat Speed Debuff",21:"Range Debuff",22:"Load Debuff",23:"Accuracy Debuff"};
-   var chEff1Net;
-    if (m.marchType == 3){
-      if (!Options.alertConfig.scouting)
-        return;
-        var scoutingat = unsafeWindow.g_js_strings.modal_messages_viewreports_view.scoutingat;
-    } else if (m.marchType == 4){//do nothing
-    } else {
-      return;
-    }
-    var city = Cities.byID[m.toCityId];
-    if ( city.tileId == m.toTileId ) {
-      target = unsafeWindow.g_js_strings.commonstr.city+ ' '+city.name+' ('+ city.x +','+ city.y + ')';
-		if(Options.alertConfig.towercitytext[m.toCityId]) {
-   	 	target += '|'+Options.alertConfig.towercitytext[m.toCityId];
- 	   };
-      
-      
-   } else {
-      if (!Options.alertConfig.wilds)
-        return;
-      target = wilderness;
-      for (k in Seed.wilderness['city'+m.toCityId]){
-        if (Seed.wilderness['city'+m.toCityId][k].tileId == m.toTileId){
-          target += '('+ Seed.wilderness['city'+m.toCityId][k].xCoord +','+ Seed.wilderness['city'+m.toCityId][k].yCoord + ')';
-          break;
-        }
-      }
-    }
-    if (Seed.players['u'+m.pid])
-      who = Seed.players['u'+m.pid].n;
-    else if (m.players && m.players['u'+m.pid])
-      who = m.players['u'+m.pid].n;
-    else
-      who = translate('Unknown');
-  
-    if (m.fromXCoord)
-      who += '('+ m.fromXCoord +','+ m.fromYCoord + ')';
-    who += ' ('+getDiplomacy(m.aid)+')';
-    
-    if(m.marchStatus == 9)
-        msg = '.::.|'+scoutingat+' '+target+' || '+attacker+' '+ who +' || '+attackrecalled;
-    else
-        msg = '..:.|'+Options.alertConfig.aPrefix +' || '+scoutingat+' '+target+' || '+attacker+' '+ who +' || '+estimatedarrival+' ('+ unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())) +')';        
-        //msg = Options.alertConfig.aPrefix +' My '+ target +' is being '+ atkType  +' by '+ who +' Incoming Troops (arriving in '+ unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())) +') : ';        
-	msg+= ' || UID: ' + m.pid;
-	msg+= ' || '+troops+': ';
-   var fchar = Filter[Options.fchar];
-    for (k in m.unts){
-      var uid = parseInt(k.substr (1));
-      var UNTCOUNT = String(String(m.unts[k]).split("")).replace(/,/g,fchar)// forced on, sucks that some people will get the funny A, but it's better than missing values of 80085 incoming troops
-      msg += '|'+UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
-    }
-     if(m.reportId) {
-     		setTimeout(function(){delete Seed.queue_atkinc['m'+m.reportId]},15000);//cleanup for fake tower attack
-     		msg += '||Report No: '+m.reportId;//added spaces for strange bug removing 2 characters
-		};
-    if (m.championInfo) {
-      msg += ' || Champion Item Stats:';
-      for (k in m.championInfo.effects[1]) {
-        chEff1Net = m.championInfo.effects[1][k]-chEff1Base[chEffect1[k]];
-        chEff1Net = chEff1Net.toFixed(1);
-	if (chEff1Net > 0.0) msg += '|' +chEffect1[k]+ ': +' +chEff1Net+', ';
-      }
-      for (k in m.championInfo.effects[2])
-	msg += '|' +chEffect2[k]+ ': ' +m.championInfo.effects[2][k]+', ';
-    }
-    //msg += '  || ';
-    if(m.marchStatus != 9) {
-      if ( city.tileId == m.toTileId ){
-        var emb = getCityBuilding(m.toCityId, 8);
-        if (emb.count == 0)
-        msg += '||'+translate("My embassy has not been constructed in this kingdom.  Do not attempt to reinforce.");
-        else {
-         var availSlots = 0;
-         for (k in Seed.queue_atkinc){
-           if (Seed.queue_atkinc[k].marchType==2 && Seed.queue_atkinc[k].toCityId==m.toCityId && Cities.byID[Seed.queue_atkinc[k].fromCityId]==null){
-            availSlots++;
-           }
-         }
-         msg += ' || '+encampall+' '+ availSlots +'/'+ emb.maxLevel +' ';
-         if (t.defMode[m.toCityId] == 0 && Options.alertConfig.defend==true)
-         {
-            msg+= '||'+status+': '+hidesanct;
-         }
-         if (t.defMode[m.toCityId] == 1 && Options.alertConfig.defend==true)
-         {
-            msg+= '||'+status+': '+orderdefend;
-         }
-            msg+= '||'+technology+ ' ' + parseInt(Seed.tech.tch13)
-             + ', HP Lv'+ parseInt(Seed.tech.tch15)
-             + ', PE Lv'+ parseInt(Seed.tech.tch8)
-             + ', MA Lv'+ parseInt(Seed.tech.tch9)
-             + ', MM Lv'+ parseInt(Seed.tech.tch11)
-             + ', AH Lv'+ parseInt(Seed.tech.tch12);
-        }
-		var baseProtection =0;
-		var totalSthPrt = 0;
-		var SthPrtResearch = parseInt(Seed.tech.tch14);
-		var TRStHsBoost = Math.min(equippedthronestats(89), 1250);
-		if (TRStHsBoost == 0) TRStHsBoost = 1				
-		var researchToApply = ((SthPrtResearch / 10) + 1);
-		var TRBoostToApply = ((TRStHsBoost / 100) + 1);
-		var baseValsByLevel = {1:100000,2:200000,3:300000,4:400000,5:500000,6:600000,7:700000,8:800000,9:900000,10:1000000,11:5000000,12:50000000}
-		for (k in Seed.buildings['city' +city.id]) {
-			if (Seed.buildings['city' +city.id][k][0] == 9) {
-				baseProtection = baseValsByLevel[Seed.buildings['city' +city.id][k][1]];
+	newIncoming : function (m){
+		var t = Tabs.tower;
+		var totTroops = 0;
+		for (k in m.unts){
+			totTroops += Number(m.unts[k]);
+		}
+		if (totTroops < Options.alertConfig.minTroops){
+			return;
+		}
+		t.postToChat (m);
+		if(m.marchStatus == 9)return;
+		if (Options.alertConfig.alertTR){
+			if(Options.alertConfig.alertTR2) {
+				if(Options.alertConfig.RecentActivity == false) {
+					if(Options.alertConfig.alertTRtoff) {
+						Options.SaveState.transport = Tabs.transport.traderState.running;
+						if(Options.SaveState.transport)Tabs.transport.toggleTraderState();
+						Options.SaveState.farm = FarmOptions.Running;
+						if(Options.SaveState.farm)Tabs.farm.toggleBarbState();
+						Options.SaveState.darkforest = AttackOptions.Running;
+						if(Options.SaveState.darkforest)Tabs.Barb.toggleBarbState();
+						Options.SaveState.crest = Options.crestRunning;
+						if(Options.SaveState.crest)Tabs.Attack.toggleCrestState();
+					};
+					Options.SaveState.trset = Seed.throne.activeSlot;
+					if(Options.alertConfig.guardian && Seed.buildings["city"+ m.toCityId].pos500 && Seed.buildings["city"+ m.toCityId].pos500[0] !=50) Options.SaveState.guardian[m.toCityId]=Seed.buildings["city"+ m.toCityId].pos500[0];
+				};
+				Options.alertConfig.RecentActivity = true;
+				saveOptions();
+			};
+			var currentset = Seed.throne.activeSlot;
+			if (Options.alertConfig.alertTRset != currentset){
+				var preset = Options.alertConfig.alertTRset
+				if(Options.alertConfig.AFK) {
+					if(isAFK)Tabs.Throne.doPreset(preset);
+				}else Tabs.Throne.doPreset(preset);
 			}
 		}
-		totalSthPrt = addCommas(parseInt((baseProtection * researchToApply) * TRBoostToApply))
-		//alert(totalSthPrt);
- 		msg += '|| StoreHouse Protected Res = ' + totalSthPrt + ' with ' + TRStHsBoost + '% TR Boost';
-	    msg+= ' || March id: ' + m.mid;
-      }
-    new t.sendalert(m); 
-    }
-    if (Options.alertConfig.aChat)
-      sendChat ("/a "+  msg);                          // Alliance chat
-    if(Options.alertConfig.email) {
-	  var x = window.open();
-	  var y = http+"baos.kocscripters.com/kocalert/index.php?PING=1";
-	  x.location=y;
-	  setTimeout(function(){
-     var data = {};
-      data.Subject ='kocalert '+getServerId()+' ';
-      if(m.marchStatus == 9) data.Subject += attackrecalled;
-      data.Subject += scoutingat+' '+target;
-      data.Message = msg.replace(eval('/'+fchar+'/g'),'');
-      GM_xmlhttpRequest({
-         method: 'POST',
-         url: http+'baos.kocscripters.com/kocalert/index.php',
-         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-         },
-      data: implodeUrlArgs(data),
-      });x.close();
-   },10000);
-   };
-  },
+		if (Options.alertConfig.guardian){
+			if(Options.alertConfig.AFK) {
+				if(isAFK) if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
+			} else if(Seed.buildings["city"+ m.toCityId].pos500 ) t.changeGuardian(m.toCityId,50);
+		}
+	},
+  
+	oldIncoming : function () {
+		var t = Tabs.tower;
+		var attacker = unsafeWindow.g_js_strings.commonstr.attacker;
+		var troops = unsafeWindow.g_js_strings.commonstr.troops;
+		var estimatedarrival = unsafeWindow.g_js_strings.attack_generateincoming.estimatedarrival;
+		var attack = unsafeWindow.g_js_strings.commonstr.attacker;
+		var attacking = unsafeWindow.g_js_strings.commonstr.attacking;
+		var scouting = unsafeWindow.g_js_strings.commonstr.scouting;
+		var mtype = unsafeWindow.g_js_strings.modal_openRallypoint_movement.marchtype;
+		var troops = unsafeWindow.g_js_strings.commonstr.troops;
+		var sentfrom = unsafeWindow.g_js_strings.openEmbassy.sentfrom;
+		var wilderness = unsafeWindow.g_js_strings.commonstr.wilderness;
+		var barbarians = unsafeWindow.g_js_strings.commonstr.barbarians;
+		var target = unsafeWindow.g_js_strings.commonstr.target;
+		var fchar = Filter[Options.fchar];
+		var inc = Seed.queue_atkinc;
+		var msg = ':::.|';
+		for(n in inc) {
+			var name;
+			var a = inc[n];
+			if(!(a.marchType == 4||a.marchType == 3))continue;
+			if(a.marchType == 3)var atype = scouting;
+			else var atype = attacking;
+			var to = Cities.byID[a.toCityId];
+			if ( to.tileId == a.toTileId )
+				name = to.name;
+			else name = wilderness;
+			var who;
+			if (Seed.players['u'+a.pid])who = Seed.players['u'+a.pid].n;
+			else if (m.players && m.players['u'+a.pid])who = m.players['u'+a.pid].n;
+			else who = barbarians;
+			msg+= target+': '+name+' ('+to.x+','+to.y+')| '+mtype+': '+atype+'| '+sentfrom+': '+who+'('+a.fromXCoord+','+a.fromYCoord+') ||'+troops+':|';
+			for (k in a.unts){
+				var uid = parseInt(k.substr (1));
+				var UNTCOUNT = String(String(a.unts[k]).split("")).replace(/,/g,fchar)// forced on, sucks that some people will get the funny A, but it's better than missing values of 80085 incoming troops
+				msg += UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
+			}
+			msg+= '||'+estimatedarrival+': ('+ unsafeWindow.timestr(parseInt(a.arrivalTime - unixTime())) +')|| ||';
+		};
+		msg = msg.substring(0, Number(msg.length-5));
+		sendChat ("/a "+  msg);
+	},
 
-      handleTowerData: function(m){
-        var t = Tabs.tower;
-        var now = unixTime();
-        var target, atkType, who, attackermight, allianceId, allianceName, diplomacy;
-        var city = Cities.byID[m.toCityId];
-        
-        if (DEBUG_TRACE)
-            logit("checkTower(): INCOMING at " + unixTime() + ": \n" + inspect(m, 8, 1));
-        
-        //ATKTYPE
-        if (m.marchType == 3) {
-            atkType = 'scouted';
-            t['scoutCount_' + m.toCityId]++;
-        }
-        else
-            if (m.marchType == 4) {
-                atkType = 'attacked';
-                t['attackCount_' + m.toCityId]++;
-            }
-            else {
+	changeGuardian : function (cityId,guardiantype){
+		var t = Tabs.tower;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.ctrl = "Guardian";
+		params.action = "summon";
+		params.cityId = cityId;
+		switch(guardiantype) {
+			case 50:
+				params.type = "wood";
+				break;
+			case 51:
+				params.type = "ore";
+				break;
+			case 52:
+				params.type = "food";
+				break;
+			case 53:
+				params.type = "stone";
+				break;
+		}
+		new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (rslt.ok) {
+					unsafeWindow.seed.buildings["city"+ cityId].pos500[0]=guardiantype;
+				} 
+			},
+			onFailure: function () {
                 return;
-            }
-        //TARGET
-        if (city.tileId == m.toTileId)
-            target = 'City at ' + city.x + ',' + city.y;
-        else {
-            target = 'Wilderness';
-            for (k in Seed.wilderness['city' + m.toCityId]) {
-                if (Seed.wilderness['city' + m.toCityId][k].tileId == m.toTileId) {
-                    target += ' at ' + Seed.wilderness['city' + m.toCityId][k].xCoord + ',' + Seed.wilderness['city' + m.toCityId][k].yCoord;
-                    break;
-                }
-            }
-        }
-        //CITYNAME
-        var cityName = Cities.byID[m.toCityId].name;
-        
-        //TROOPS
-        var units = [];
-        for (i = 0; i < 13; i++)
-            units[i] = 0;
-        for (k in m.unts) {
-            var uid = parseInt(k.substr(1));
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Supply Troop')
-                units[1] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Militiaman')
-                units[2] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Scout')
-                units[3] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Pikeman')
-                units[4] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Swordsman')
-                units[5] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Archer')
-                units[6] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Cavalry')
-                units[7] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Heavy Cavalry')
-                units[8] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Supply Wagon')
-                units[9] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Ballista')
-                units[10] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Battering Ram')
-                units[11] = m.unts[k];
-            if (unsafeWindow.unitcost['unt' + uid][0] == 'Catapult')
-                units[12] = m.unts[k];
-        }
-        //ATTACKERS INFORMATION
-        if (Seed.players['u' + m.pid]) {
-            who = Seed.players['u' + m.pid].n;
-            attackermight = Seed.players['u' + m.pid].m;
-            allianceId = Seed.players['u' + m.pid].a;
-            allianceName = Seed.allianceNames[allianceId];
-            diplomacy = getDiplomacy(allianceId);
-        }
-        else
-            if (m.players && m.players['u' + m.pid]) {
-                who = m.players['u' + m.pid].n;
-                attackermight = parseInt(m.players['u' + m.pid].m);
-                allianceId = 'a' + m.players['u' + m.pid].a;
-                allianceName = Seed.allianceNames[allianceId];
-                diplomacy = getDiplomacy(allianceId);
-            }
-            else {
-                who = 'n.A.';
-                attackermight = 'n.A.';
-                allianceId = 'n.A.';
-                allianceName = 'n.A.';
-                diplomacy = 'n.A.';
-            }
-        //SOURCE
-        if (m.fromXCoord)
-            var source = m.fromXCoord + ',' + m.fromYCoord;
-        else
-            var source = 'n.A.';
-        
-        var arrivingDatetime = new Date();
-        arrivingDatetime.setTime(m.arrivalTime * 1000);
-        var count = t.towerMarches.length + 1;
-        t.towerMarches[count] = {
-            added: now,
-            cityId: m.toCityId,
-            target: target,
-            arrival: parseIntNan(m.arrivalTime),
-            atkType: atkType,
-            who: who,
-            attackermight: attackermight,
-            allianceName: allianceName,
-            diplomacy: diplomacy,
-            rtime: unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())),
-            arrivingDatetime: arrivingDatetime,
-            source:source,
-            units: units,
-        };
-    },
-    showTowerIncoming: function(cityId){
-        var t = Tabs.tower;
-        var popTowerIncoming = null;
-        var cityName = Tabs.build.getCityNameById(cityId);
-        
-        if (t.popTowerIncoming == null) {
-            t.popTowerIncoming = new pbPopup('pbtower_' + cityId, 0, 0, 820, 500, true, function() {clearTimeout (t.timer);});
-        }
-        t.popTowerIncoming.show(false);
-        var m = '<DIV style="max-height:460px; height:460px; overflow-y:auto"><TABLE align=center cellpadding=0 cellspacing=0 width=100% class="pbTabPad" id="pbCityTowerContent">';
-        t.popTowerIncoming.getMainDiv().innerHTML = '</table></div>' + m;
-        t.popTowerIncoming.getTopDiv().innerHTML = '<TD width="200px"><B>'+translate("Tower Report of")+' ' + cityName + '</b></td></td>';
-        t.addCityData2Pop(cityId);
-        t.popTowerIncoming.show(true);
-        clearTimeout (t.timer);
-        t.timer = setTimeout (function() {t.showTowerIncoming(cityId)}, 5000);        
-    },
-    addCityData2Pop: function(cityId){
-        var t = Tabs.tower;
-        var rownum = 0;
-        var names = ['Supply', 'Mil', 'Scout', 'Pike', 'Sword', 'Archer', 'Cav', 'Heavy', 'Wagon', 'Balli', 'Ram', 'Cat'];
-        enc = {};
-        numSlots = 0;
-        var row = document.getElementById('pbCityTowerContent').innerHTML = "";
-        if (matTypeof(Seed.queue_atkinc) != 'array') {
-            for (k in Seed.queue_atkinc) {
-                march = Seed.queue_atkinc[k];
-                if (march.marchType == 2) {
-                    ++numSlots;
-                    city = march.toCityId;
-                    from = march.fromPlayerId;
-                    if (!enc[city])
-                        enc[city] = {};
-                    if (!enc[city][from])
-                        enc[city][from] = [];
-                    k = [];
-                    k[0] = parseInt(march.knightCombat);
-                    for (i = 1; i < 13; i++) {
-                        if (Options.encRemaining)
-                            k[i] = parseInt(march['unit' + i + 'Return']);
-                        else
-                            k[i] = parseInt(march['unit' + i + 'Count']);
-                    }
-                    k[14] = parseInt(march.marchStatus);
-                    var now = unixTime();
-                    k[15] = parseInt(march.destinationUnixTime) - now;
-                    enc[city][from].push(k);
-                }
-            }
-        }
-        var s1 = '';
-        var s2 = '';
-        var s3 = '';
-        var tot = [];
-        var atk = [];
-        for (i = 0; i < 13; i++) {
-            tot[i] = 0;
-            atk[i] = 0;
-        }
+			}
+		})
+	},
+  
+	sendalert : function (m){
+		var t = Tabs.tower;
+		var now = unixTime();
+		if (Options.celltext.atext)
+			t.postToCell (m);
+		if (Options.alertSound.enabled){
+			t.soundTheAlert(m);
+			if (m.arrivalTime > Options.alertSound.expireTime)
+				Options.alertSound.expireTime = m.arrivalTime;
+		}
+		if (Options.alertConfig.raid){
+			Tabs.Raid.StopCityRaids(m.toCityId);
+			Options.alertConfig.raidautoswitch[m.toCityId] = true;
+		}  
+	},
 
-            s1 += '<STYLE> .tot{background:#f0e0f8;} .city{background:#ffffaa;} .attack{background:#FF9999;} .own{background:#66FF66;}</style>';
-            s1 += '<TABLE cellspacing=0 width=100%><TR align=right><TD align=center width=16%></td>';
+	ajaxSetDefMode : function (cityId, state, notify){
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.cid = cityId;
+		params.state = state;
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/gate.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (rslt.ok) {
+					Seed.citystats["city" + cityId].gate = state;
+					notify (state);
+				}
+			},
+			onFailure: function () {
+			}
+		})
+	},
+  
+	onUnload : function (){
+	},
+
+	postToCell : function (m){
+		var t = Tabs.tower;
+		var data = {};
+		if (m.marchType == null)      // bogus march (returning scouts)
+			return;
+		if (m.marchType == 3){
+			if (!Options.alertConfig.scouting)
+				return;
+			data.atkType = 'scout';
+		} else if (m.marchType == 4){
+			data.atkType = 'atk';
+		} else {
+			return;
+		}
+		var city = Cities.byID[m.toCityId];
+		if ( city.tileId == m.toTileId )
+			data.target = 'city ('+ city.x +','+ city.y+')';
+		else {
+			if (!Options.alertConfig.wilds)
+				return;
+			data.target = 'wild';
+			for (k in Seed.wilderness['city'+m.toCityId]){
+				if (Seed.wilderness['city'+m.toCityId][k].tileId == m.toTileId){
+					data.target += Seed.wilderness['city'+m.toCityId][k].xCoord +','+ Seed.wilderness['city'+m.toCityId][k].yCoord;
+					break;
+				}
+			}
+		}
+		if (Seed.players['u'+m.pid])
+			data.who = Seed.players['u'+m.pid].n;
+		else if (m.players && m.players['u'+m.pid])
+			data.who = m.players['u'+m.pid].n;
+		else
+			data.who = 'Unknown';
+  
+		if (m.fromXCoord)
+			data.who += m.fromXCoord +','+ m.fromYCoord;
+			data.arrival = unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime()));
+
+		if ( city.tileId == m.toTileId ){
+			var emb = getCityBuilding(m.toCityId, 8);
+			if (emb.count > 0){
+				var availSlots = emb.maxLevel;
+				for (k in Seed.queue_atkinc){
+					if (Seed.queue_atkinc[k].marchType==2 && Seed.queue_atkinc[k].toCityId==m.toCityId && Cities.byID[Seed.queue_atkinc[k].fromCityId]==null){
+						--availSlots;
+					}
+				}
+				data.embassy = 'EMB '+ availSlots +'of'+ emb.maxLevel;
+				if (t.defMode[m.toCityId] == 0 && Options.alertConfig.defend==true) {
+					data.stat = 'HIDING';
+				}
+				if (t.defMode[m.toCityId] == 1 && Options.alertConfig.defend==true) {
+					data.stat = 'DEFENDING';
+				}
+			}
+		}
+    
+		var inctroops = '';
+		if (Options.celltext.extended) {
+			for (k in m.unts){
+				var uid = parseInt(k.substr (1));
+				inctroops += String(m.unts[k]) +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
+			}
+		}
+		inctroops = inctroops.slice (0, -2);
+		data.provider = Options.celltext.provider;
+		data.num1 = Options.celltext.num1;
+		data.num2 = Options.celltext.num2;
+		data.num3 = Options.celltext.num3;
+		data.serverId = getServerId();
+		data.player = Seed.player['name'];
+		data.city = city.name;
+		data.troops = inctroops;
+		data.extended = Options.celltext.extended;
+		data.pin = GlobalOptions.cellpin;
+
+		GM_xmlhttpRequest({
+			method: 'POST',
+			url: http+'baos.kocscripters.com/index.php',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', },
+			data: implodeUrlArgs(data),
+		});
+	},
+  
+	postToChat : function (m){
+		var t = Tabs.tower;
+		if (DEBUG_TRACE) logit ("checkTower(): INCOMING at "+ unixTime()  +": \n"+ inspect (m, 8, 1));
+		if (m.marchType == null)      // bogus march (returning scouts)
+			return;
+		if (ENABLE_TEST_TAB) Tabs.Test.addDiv (translate("Incoming")+"!<BR><PRE style='margin:0px;'>" + inspect (m, 8, 1) +'</pre>');
+		var target, atkType, who;
+		var attacker = unsafeWindow.g_js_strings.commonstr.attacker;
+		var scoutingat = '';
+		var attack = unsafeWindow.g_js_strings.commonstr.attacker;
+		var attackrecalled = unsafeWindow.g_js_strings.incomingattack.attackrecalled;
+		var troops = unsafeWindow.g_js_strings.commonstr.troops;
+		var wilderness = unsafeWindow.g_js_strings.commonstr.wilderness;
+		var estimatedarrival = unsafeWindow.g_js_strings.attack_generateincoming.estimatedarrival;
+		var encampall = unsafeWindow.g_js_strings.openEmbassy.encampall;
+		var defending = unsafeWindow.g_js_strings.commonstr.defending;
+		var status = unsafeWindow.g_js_strings.commonstr.status;
+		var hidesanct = unsafeWindow.g_js_strings.openCastle.hidesanct;
+		var orderdefend = unsafeWindow.g_js_strings.openCastle.orderdefend;
+		var technology = unsafeWindow.g_js_strings.commonstr.technology;
+		var chEffect1 = {201:"Damage",202:"Bonus Damage",203:"Armor",204:"Strength",205:"Dexterity",206:"Health",207:"Hit Chance",208:"Crit Chance",209:"Block"};
+		var chEff1Base = {"Damage":30,"Bonus Damage":0,"Armor":7,"Strength":27,"Dexterity":27,"Health":60,"Hit Chance":4,"Crit Chance":3,"Block":3};
+		var chEffect2 = {1:"Attack",2:"Defense",3:"Life",4:"Combat Speed",5:"Range",6:"Load",7:"Accuracy",17:"Attack Debuff",18:"Defense Debufff",19:"Life Debuff",20:"Combat Speed Debuff",21:"Range Debuff",22:"Load Debuff",23:"Accuracy Debuff"};
+		var chEff1Net;
+		var atkType;
+		if (m.marchType == 3){
+			if (!Options.alertConfig.scouting)
+				return;
+			var scoutingat = unsafeWindow.g_js_strings.modal_messages_viewreports_view.scoutingat;
+			atkType = translate('SCOUT');
+		} else if (m.marchType == 4){
+			atkType = translate("ATTACK");
+		} else {
+			return;
+		}
+		var city = Cities.byID[m.toCityId];
+		if ( city.tileId == m.toTileId ) {
+			target = unsafeWindow.g_js_strings.commonstr.city+ ' '+city.name+' ('+ city.x +','+ city.y + ')';
+			if(Options.alertConfig.towercitytext[m.toCityId]) {
+				target += '|'+Options.alertConfig.towercitytext[m.toCityId];
+			};
+		} else {
+			if (!Options.alertConfig.wilds)
+				return;
+			target = wilderness;
+			for (k in Seed.wilderness['city'+m.toCityId]){
+				if (Seed.wilderness['city'+m.toCityId][k].tileId == m.toTileId){
+					target += '('+ Seed.wilderness['city'+m.toCityId][k].xCoord +','+ Seed.wilderness['city'+m.toCityId][k].yCoord + ')';
+					break;
+				}
+			}
+		}
+		if (Seed.players['u'+m.pid])
+			who = Seed.players['u'+m.pid].n;
+		else if (m.players && m.players['u'+m.pid])
+			who = m.players['u'+m.pid].n;
+		else
+			who = translate('Unknown');
+				if (m.fromXCoord)
+			who += '('+ m.fromXCoord +','+ m.fromYCoord + ')';
+		who += ' ('+getDiplomacy(m.aid)+')';
+	
+		var email = "";
+		if(m.marchStatus == 9)
+			msg = '.::.|'+scoutingat+' '+target+' || '+attacker+' '+ who +' || '+attackrecalled;
+		else {
+			msg = '..:.|'+Options.alertConfig.aPrefix +' || '+scoutingat+' '+target+' || '+attacker+' '+ who +' || '+estimatedarrival+' ('+ unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())) +')';        
+			email += '<FONT color="red"><B>'+ atkType +'</font></b><BR>';
+			email += '<BR>Target: ' + city.name + ' ('+ city.x +','+ city.y + ')';
+			email += '<BR>Attacker: ' + who;
+			email += '<BR>ETA: ' + FullDateTime(m.arrivalTime);
+			email += '<BR><BR><U>Troops:</u>';		
+		}	
+		msg+= ' || UID: ' + m.pid;
+		msg+= ' || '+troops+': ';
+		var fchar = Filter[Options.fchar];
+		for (k in m.unts){
+			var uid = parseInt(k.substr (1));
+			var UNTCOUNT = String(String(m.unts[k]).split("")).replace(/,/g,fchar)// forced on, sucks that some people will get the funny A, but it's better than missing values of 80085 incoming troops
+			msg += '|'+UNTCOUNT +' '+ unsafeWindow.unitcost['unt'+uid][0] +', ';
+			email += '<BR><img src="https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_'+k.slice(1)+'_30.jpg?6545"> '+m.unts[k]+ ' '+ unsafeWindow.unitcost['unt'+uid][0];
+		}
+		if(m.reportId) {
+			setTimeout(function(){delete Seed.queue_atkinc['m'+m.reportId]},15000);//cleanup for fake tower attack
+			msg += '||Report No: '+m.reportId;//added spaces for strange bug removing 2 characters
+		};
+		if (m.championInfo) {
+			msg += ' || Champion Item Stats:';
+			for (k in m.championInfo.effects[1]) {
+				chEff1Net = m.championInfo.effects[1][k]-chEff1Base[chEffect1[k]];
+				chEff1Net = chEff1Net.toFixed(1);
+				if (chEff1Net > 0.0) msg += '|' +chEffect1[k]+ ': +' +chEff1Net+', ';
+			}
+			for (k in m.championInfo.effects[2])
+				msg += '|' +chEffect2[k]+ ': ' +m.championInfo.effects[2][k]+', ';
+		}
+		//msg += '  || ';
+		if(m.marchStatus != 9) {
+			if ( city.tileId == m.toTileId ){
+				var emb = getCityBuilding(m.toCityId, 8);
+				if (emb.count == 0)
+					msg += '||'+translate("My embassy has not been constructed in this kingdom.  Do not attempt to reinforce.");
+				else {
+					var availSlots = 0;
+					for (k in Seed.queue_atkinc){
+						if (Seed.queue_atkinc[k].marchType==2 && Seed.queue_atkinc[k].toCityId==m.toCityId && Cities.byID[Seed.queue_atkinc[k].fromCityId]==null) {
+							availSlots++;
+						}
+					}
+					msg += ' || '+encampall+' '+ availSlots +'/'+ emb.maxLevel +' ';
+					if (t.defMode[m.toCityId] == 0 && Options.alertConfig.defend==true) {
+						msg+= '||'+status+': '+hidesanct;
+					}
+					if (t.defMode[m.toCityId] == 1 && Options.alertConfig.defend==true) {
+						msg+= '||'+status+': '+orderdefend;
+					}
+					msg+= '||'+technology+ ' ' + parseInt(Seed.tech.tch13)
+						+ ', HP Lv'+ parseInt(Seed.tech.tch15)
+						+ ', PE Lv'+ parseInt(Seed.tech.tch8)
+						+ ', MA Lv'+ parseInt(Seed.tech.tch9)
+						+ ', MM Lv'+ parseInt(Seed.tech.tch11)
+						+ ', AH Lv'+ parseInt(Seed.tech.tch12);
+				}
+				var baseProtection =0;
+				var totalSthPrt = 0;
+				var SthPrtResearch = parseInt(Seed.tech.tch14);
+				var TRStHsBoost = Math.min(equippedthronestats(89), 1250);
+				if (TRStHsBoost == 0) TRStHsBoost = 1				
+				var researchToApply = ((SthPrtResearch / 10) + 1);
+				var TRBoostToApply = ((TRStHsBoost / 100) + 1);
+				var baseValsByLevel = {1:100000,2:200000,3:300000,4:400000,5:500000,6:600000,7:700000,8:800000,9:900000,10:1000000,11:5000000,12:50000000}
+				for (k in Seed.buildings['city' +city.id]) {
+					if (Seed.buildings['city' +city.id][k][0] == 9) {
+						baseProtection = baseValsByLevel[Seed.buildings['city' +city.id][k][1]];
+					}
+				}
+				totalSthPrt = addCommas(parseInt((baseProtection * researchToApply) * TRBoostToApply))
+				//alert(totalSthPrt);
+				msg += '|| StoreHouse Protected Res = ' + totalSthPrt + ' with ' + TRStHsBoost + '% TR Boost';
+				msg+= ' || March id: ' + m.mid;
+			}
+			new t.sendalert(m); 
+		}
+		if (Options.alertConfig.aChat)
+			sendChat ("/a "+  msg);                          // Alliance chat
+		if(Options.alertConfig.email) {
+			if (Options.alertConfig.emailapp == 1) {
+				koc2Mail.towerToMail(email);
+			}
+			else {
+//				var x = window.open();
+//				var y = http+"baos.kocscripters.com/kocalert/index.php?PING=1";
+//				x.location=y;
+				setTimeout(function(){
+					var data = {};
+					data.Subject ='kocalert '+getServerId()+' ';
+					if(m.marchStatus == 9) data.Subject += attackrecalled;
+					data.Subject += scoutingat+' '+target;
+					data.Message = msg.replace(eval('/'+fchar+'/g'),'');
+					GM_xmlhttpRequest({
+						method: 'POST',
+						url: http+'baos.kocscripters.com/kocalert/index.php',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', },
+						data: implodeUrlArgs(data),
+					});//x.close();
+				},10000);
+			}	
+		};
+	},
+
+	handleTowerData: function(m){
+		var t = Tabs.tower;
+		var now = unixTime();
+		var target, atkType, who, attackermight, allianceId, allianceName, diplomacy;
+		var city = Cities.byID[m.toCityId];
+        
+		if (DEBUG_TRACE)
+			logit("checkTower(): INCOMING at " + unixTime() + ": \n" + inspect(m, 8, 1));
+        
+		//ATKTYPE
+		if (m.marchType == 3) {
+			atkType = 'scouted';
+			t['scoutCount_' + m.toCityId]++;
+		}	
+		else
+			if (m.marchType == 4) {
+				atkType = 'attacked';
+				t['attackCount_' + m.toCityId]++;
+			}
+			else {
+				return;
+			}
+		//TARGET
+		if (city.tileId == m.toTileId)
+			target = 'City at ' + city.x + ',' + city.y;
+		else {
+			target = 'Wilderness';
+			for (k in Seed.wilderness['city' + m.toCityId]) {
+				if (Seed.wilderness['city' + m.toCityId][k].tileId == m.toTileId) {
+					target += ' at ' + Seed.wilderness['city' + m.toCityId][k].xCoord + ',' + Seed.wilderness['city' + m.toCityId][k].yCoord;
+					break;
+				}
+			}
+		}
+		//CITYNAME
+		var cityName = Cities.byID[m.toCityId].name;
+        
+		//TROOPS
+		var units = [];
+		for (i = 0; i < 13; i++)
+			units[i] = 0;
+		for (k in m.unts) {
+			var uid = parseInt(k.substr(1));
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Supply Troop')
+				units[1] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Militiaman')
+				units[2] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Scout')
+				units[3] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Pikeman')
+				units[4] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Swordsman')
+				units[5] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Archer')
+				units[6] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Cavalry')
+				units[7] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Heavy Cavalry')
+				units[8] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Supply Wagon')
+				units[9] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Ballista')
+				units[10] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Battering Ram')
+				units[11] = m.unts[k];
+			if (unsafeWindow.unitcost['unt' + uid][0] == 'Catapult')
+				units[12] = m.unts[k];
+		}
+		//ATTACKERS INFORMATION
+		if (Seed.players['u' + m.pid]) {
+			who = Seed.players['u' + m.pid].n;
+			attackermight = Seed.players['u' + m.pid].m;
+			allianceId = Seed.players['u' + m.pid].a;
+			allianceName = Seed.allianceNames[allianceId];
+			diplomacy = getDiplomacy(allianceId);
+		}
+		else
+			if (m.players && m.players['u' + m.pid]) {
+				who = m.players['u' + m.pid].n;
+				attackermight = parseInt(m.players['u' + m.pid].m);
+				allianceId = 'a' + m.players['u' + m.pid].a;
+				allianceName = Seed.allianceNames[allianceId];
+				diplomacy = getDiplomacy(allianceId);
+			}
+			else {
+				who = 'n.A.';
+				attackermight = 'n.A.';
+				allianceId = 'n.A.';
+				allianceName = 'n.A.';
+				diplomacy = 'n.A.';
+			}
+		//SOURCE
+		if (m.fromXCoord)
+			var source = m.fromXCoord + ',' + m.fromYCoord;
+		else
+			var source = 'n.A.';
+        
+		var arrivingDatetime = new Date();
+		arrivingDatetime.setTime(m.arrivalTime * 1000);
+		var count = t.towerMarches.length + 1;
+		t.towerMarches[count] = {
+			added: now,
+			cityId: m.toCityId,
+			target: target,
+			arrival: parseIntNan(m.arrivalTime),
+			atkType: atkType,
+			who: who,
+			attackermight: attackermight,
+			allianceName: allianceName,
+			diplomacy: diplomacy,
+			rtime: unsafeWindow.timestr(parseInt(m.arrivalTime - unixTime())),
+			arrivingDatetime: arrivingDatetime,
+			source:source,
+			units: units,
+		};
+	},
+	
+	showTowerIncoming: function(cityId){
+		var t = Tabs.tower;
+		var popTowerIncoming = null;
+		var cityName = Tabs.build.getCityNameById(cityId);
+        
+		if (t.popTowerIncoming == null) {
+			t.popTowerIncoming = new pbPopup('pbtower_' + cityId, 0, 0, 820, 500, true, function() {clearTimeout (t.timer);});
+        }
+		t.popTowerIncoming.show(false);
+		var m = '<DIV style="max-height:460px; height:460px; overflow-y:auto"><TABLE align=center cellpadding=0 cellspacing=0 width=100% class="pbTabPad" id="pbCityTowerContent">';
+		t.popTowerIncoming.getMainDiv().innerHTML = '</table></div>' + m;
+		t.popTowerIncoming.getTopDiv().innerHTML = '<TD width="200px"><B>'+translate("Tower Report of")+' ' + cityName + '</b></td></td>';
+		t.addCityData2Pop(cityId);
+		t.popTowerIncoming.show(true);
+		clearTimeout (t.timer);
+		t.timer = setTimeout (function() {t.showTowerIncoming(cityId)}, 5000);        
+	},
+    
+	addCityData2Pop: function(cityId){
+		var t = Tabs.tower;
+		var rownum = 0;
+		var names = ['Supply', 'Mil', 'Scout', 'Pike', 'Sword', 'Archer', 'Cav', 'Heavy', 'Wagon', 'Balli', 'Ram', 'Cat'];
+		enc = {};
+		numSlots = 0;
+		var row = document.getElementById('pbCityTowerContent').innerHTML = "";
+		if (matTypeof(Seed.queue_atkinc) != 'array') {
+			for (k in Seed.queue_atkinc) {
+				march = Seed.queue_atkinc[k];
+				if (march.marchType == 2) {
+					++numSlots;
+					city = march.toCityId;
+					from = march.fromPlayerId;
+					if (!enc[city])
+						enc[city] = {};
+					if (!enc[city][from])
+						enc[city][from] = [];
+					k = [];
+					k[0] = parseInt(march.knightCombat);
+					for (i = 1; i < 13; i++) {
+						if (Options.encRemaining)
+							k[i] = parseInt(march['unit' + i + 'Return']);
+						else
+							k[i] = parseInt(march['unit' + i + 'Count']);
+					}
+					k[14] = parseInt(march.marchStatus);
+					var now = unixTime();
+					k[15] = parseInt(march.destinationUnixTime) - now;
+					enc[city][from].push(k);
+				}
+			}
+		}
+		var s1 = '';
+		var s2 = '';
+		var s3 = '';
+		var tot = [];
+		var atk = [];
+		for (i = 0; i < 13; i++) {
+			tot[i] = 0;
+			atk[i] = 0;
+		}
+
+		s1 += '<STYLE> .tot{background:#f0e0f8;} .city{background:#ffffaa;} .attack{background:#FF9999;} .own{background:#66FF66;}</style>';
+		s1 += '<TABLE cellspacing=0 width=100%><TR align=right><TD align=center width=16%></td>';
             
-            for (k = 0; k < names.length; k++)
-                s1 += '<TD width=7%><B>' + names[k] + '</b></td>';
-            s1 += '</tr>';
-            dest = cityId;
-            if (enc[dest]) {
-                for (p in enc[dest]) {
-                    try {
-                        player = Seed.players['u' + p].n;
-                    }
-                    catch (err) {
-                        player = '???';
-                    }
-                    for (m = 0; m < enc[dest][p].length; m++) {
-                        /*knight = '';
-                        if (enc[dest][p][m][0] > 0)
-                            knight = ' (' + enc[dest][p][m][0] + ')';
-                        */
-                        status = '';
-                        if (enc[dest][p][m][14] == 1) {
-                            status = ' (' + timestr(enc[dest][p][m][15]) + ')';    
-                            if (enc[dest][p][m][15] < 0)
-                                status = ' (enc)';    
-                            else
-                                 status = ' (' + timestr(enc[dest][p][m][15]) + ')';    
-                        }
-                        if (enc[dest][p][m][14] == 2) {
-                            status = ' (enc)';    
-                        }
+		for (k = 0; k < names.length; k++)
+			s1 += '<TD width=7%><B>' + names[k] + '</b></td>';
+		s1 += '</tr>';
+		dest = cityId;
+		if (enc[dest]) {
+			for (p in enc[dest]) {
+				try {
+					player = Seed.players['u' + p].n;
+				}
+				catch (err) {
+					player = '???';
+				}
+				for (m = 0; m < enc[dest][p].length; m++) {
+					/*knight = '';
+					if (enc[dest][p][m][0] > 0)
+						knight = ' (' + enc[dest][p][m][0] + ')';
+					*/
+					status = '';
+					if (enc[dest][p][m][14] == 1) {
+						status = ' (' + timestr(enc[dest][p][m][15]) + ')';    
+						if (enc[dest][p][m][15] < 0)
+							status = ' (enc)';    
+						else
+							status = ' (' + timestr(enc[dest][p][m][15]) + ')';    
+					}
+					if (enc[dest][p][m][14] == 2) {
+						status = ' (enc)';    
+					}
 
-                        s1 += '<TR align=right><TD align=left class="city">' + player + status +'</td>'
-                        for (i = 1; i < 13; i++) {
-                            num = enc[dest][p][m][i];
-                            s1 += '<TD class="city">' + num + '</td>';
-                            tot[i] += num;
-                        }
-                        //s1 += '<TD><INPUT id=sendhome_' + numSlots + ' type=submit value="Home" style="border:1px solid black; background-color:red;"></td></tr>';
-                    }
-                }
-            } else {
-                s1 += '<TR align=right><TD align=left class="city"><B>'+translate("Reinforcment")+':</b></td>'
-                for (i = 1; i < 13; i++) {
-                    s1 += '<TD class="city">0</td>';
-                }
-                
-            }
-            s1 += '<TR align=right><TD colspan=14><BR></tr>';
-            s1 += '<TR align=right><TD class="own" align=left><B>'+translate("Own Troops")+':</b></td>';
-            //OWNTROOPS
-            var ownTroops = "";
-            for (r = 1; r < 13; r++) {
-                cityString = 'city' + cityId;
-                num = parseInt(Seed.units[cityString]['unt' + r]);
-                s1 += '<TD class="own">' + num + '</td>';
-                tot[r] += num;
-            }
-            s1 += '<TD class="city"></td><TR><TD colspan=14><BR></td></tr><TR align=right><TD class="tot" align=left><B>'+translate("Defenders")+':</b></td>';
-            for (i = 1; i < 13; i++)
-                s1 += '<TD class="tot">' + tot[i] + '</td>';      
-            s3 += '</tr></table>';
+					s1 += '<TR align=right><TD align=left class="city">' + player + status +'</td>'
+					for (i = 1; i < 13; i++) {
+						num = enc[dest][p][m][i];
+						s1 += '<TD class="city">' + num + '</td>';
+						tot[i] += num;
+					}
+					//s1 += '<TD><INPUT id=sendhome_' + numSlots + ' type=submit value="Home" style="border:1px solid black; background-color:red;"></td></tr>';
+				}
+			}
+		} else {
+			s1 += '<TR align=right><TD align=left class="city"><B>'+translate("Reinforcment")+':</b></td>'
+			for (i = 1; i < 13; i++) {
+				s1 += '<TD class="city">0</td>';
+			}
+		}
+		s1 += '<TR align=right><TD colspan=14><BR></tr>';
+		s1 += '<TR align=right><TD class="own" align=left><B>'+translate("Own Troops")+':</b></td>';
+		//OWNTROOPS
+		var ownTroops = "";
+		for (r = 1; r < 13; r++) {
+			cityString = 'city' + cityId;
+			num = parseInt(Seed.units[cityString]['unt' + r]);
+			s1 += '<TD class="own">' + num + '</td>';
+			tot[r] += num;
+		}
+		s1 += '<TD class="city"></td><TR><TD colspan=14><BR></td></tr><TR align=right><TD class="tot" align=left><B>'+translate("Defenders")+':</b></td>';
+		for (i = 1; i < 13; i++)
+			s1 += '<TD class="tot">' + tot[i] + '</td>';      
+		s3 += '</tr></table>';
         
-        s3 += '<TD class="city"></td><TR><TD colspan=14><BR></td></tr><TR align=right><TD class="tot" align=left><B>'+translate("Incoming Attacks")+':</b></td>';
+		s3 += '<TD class="city"></td><TR><TD colspan=14><BR></td></tr><TR align=right><TD class="tot" align=left><B>'+translate("Incoming Attacks")+':</b></td>';
         
-        var names = ['Supply', 'Mil', 'Scout', 'Pike', 'Sword', 'Archer', 'Cav', 'Heavy', 'Wagon', 'Balli', 'Ram', 'Cat'];
-        if (t.towerMarches.length > 0) {
-            for (k in t.towerMarches) {
-                if (typeof t.towerMarches[k].atkType != 'undefined') {
-                    if (t.towerMarches[k].cityId == cityId) {
-                        s3 += '<TABLE cellspacing=0 width=100%><TR>';
+		var names = ['Supply', 'Mil', 'Scout', 'Pike', 'Sword', 'Archer', 'Cav', 'Heavy', 'Wagon', 'Balli', 'Ram', 'Cat'];
+		if (t.towerMarches.length > 0) {
+			for (k in t.towerMarches) {
+				if (typeof t.towerMarches[k].atkType != 'undefined') {
+					if (t.towerMarches[k].cityId == cityId) {
+						s3 += '<TABLE cellspacing=0 width=100%><TR>';
                         
-                        if (t.towerMarches[k].atkType == 'attacked') {
-                            s3 += '<TD rowspan=2 width=5%><B><img src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_4_30.jpg?6545"></b></td>';
-                        }
-                        else
-                            if (t.towerMarches[k].atkType == 'scouted') {
-                                s3 += '<TD rowspan=2 width=5%><B><img src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_3_30.jpg?6545"></b></td>';
-                            }
-                        s3 += '<TD width=15%><B>'+translate("Location")+'</b></td>';
-                        s3 += '<TD width=15%><B>'+translate("Name")+'</b></td>';
-                        s3 += '<TD width=10%><B>'+translate("Source")+': </b></td><TD width=10%>' + t.towerMarches[k].source + '</td>';
-                        s3 += '<TD width=10%><B>'+translate("Might")+': </b></td><TD width=10%>' + t.towerMarches[k].attackermight + '</td>';
-                        s3 += '<TD width=10%><B>'+translate("Alliance")+': </b></td><TD width=10%>' + t.towerMarches[k].allianceName + '</td>';
-                        s3 += '<TD width=10%><B>'+translate("State")+': </b></td><TD width=10%>' + t.towerMarches[k].diplomacy + '</td></tr>';
-                        s3 += '<TR><TD width=10%  >' + t.towerMarches[k].target + '</td>';
-                        s3 += '<TD  >' + t.towerMarches[k].who + '</td>';
-                        s3 += '<TD><B>'+translate("Remaining")+': </b></td><TD width=10%>' + t.towerMarches[k].rtime + '</td>';
-                        s3 += '<TD><B>'+translate("Arrival")+': </b></td><TD  colspan=5 width=10%>' + t.towerMarches[k].arrivingDatetime + '</td></tr>';
-                        s3 += '</tr></table>';
-                        s3 += '<TABLE cellspacing=0 width=100%><TR align=right><TD align=left width=16%></td>';
-                        for (n = 0; n < names.length; n++)
-                            s3 += '<TD width=7%><B>' + names[n] + '</b></td>';
-                        s3 += '</tr><TR align=right><TD class="attack" align=left><B>Units:</td>';
-                        for (u = 1; u < 13; u++) {
-                            num = t.towerMarches[k].units[u];
-                            s3 += '<TD class="attack">' + num + '</td>';
-                            atk[u] += parseInt(num);
-                        }
-                        s3 += '</tr></table>';
-                    }
-                }
-                
-            }
-        }
-        s2 += '<TR><TD colspan=14><BR></td></tr><TR align=right><TD class="attack" align=left><B>'+translate("Attackers")+':</b></td>';
-        for (a = 1; a < 13; a++)
-            s2 += '<TD class="attack" width=7%>' + atk[a] + '</td>';
-        var html = s1 + s2 + s3;
-        document.getElementById('pbCityTowerContent').innerHTML = html;
-
-    },
-    sendReinforcmentHome: function(){ //FUNCTION NOT IN USE YET BUT SOON :-)
-        //mid, cid, fromUid, fromCid, upkeep
-        var params = Object.clone(g_ajaxparams);
-        params.mid = mid;
-        params.cid = cid;
-        params.fromUid = fromUid;
-        params.fromCid = fromCid;
-        new Ajax.Request(g_ajaxpath + "ajax/kickoutReinforcements.php" + g_ajaxsuffix, {
-            method: "post",
-            parameters: params,
-            onSuccess: function(transport){
-                var rslt = eval("(" + transport.responseText + ")");
-                if (rslt.ok) {
-                    Modal.showAlert(g_js_strings.kickout_allies.troopshome);
-                    seed.resources["city" + currentcityid].rec1[3] = parseInt(seed.resources["city" + currentcityid].rec1[3]) - upkeep;
-                    if (parseInt(fromUid) == parseInt(tvuid)) {
-                        var curmarch = seed.queue_atkp["city" + fromCid]["m" + mid];
-                        var marchtime = Math.abs(parseInt(curmarch.destinationUnixTime) - parseInt(curmarch.eventUnixTime));
-                        curmarch.returnUnixTime = unixTime() + marchtime;
-                        curmarch.marchStatus = 8
-                    }
-                    delete seed.queue_atkinc["m" + mid]
-                }
-                else {
-                    Modal.showAlert(printLocalError((rslt.error_code || null), (rslt.msg || null), (rslt.feedback || null)))
-                }
-            },
-            onFailure: function(){
-            }
-        })
-    },
+						if (t.towerMarches[k].atkType == 'attacked') {
+							s3 += '<TD rowspan=2 width=5%><B><img src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_4_30.jpg?6545"></b></td>';
+						}
+						else
+							if (t.towerMarches[k].atkType == 'scouted') {
+								s3 += '<TD rowspan=2 width=5%><B><img src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_3_30.jpg?6545"></b></td>';
+							}
+						s3 += '<TD width=15%><B>'+translate("Location")+'</b></td>';
+						s3 += '<TD width=15%><B>'+translate("Name")+'</b></td>';
+						s3 += '<TD width=10%><B>'+translate("Source")+': </b></td><TD width=10%>' + t.towerMarches[k].source + '</td>';
+						s3 += '<TD width=10%><B>'+translate("Might")+': </b></td><TD width=10%>' + t.towerMarches[k].attackermight + '</td>';
+						s3 += '<TD width=10%><B>'+translate("Alliance")+': </b></td><TD width=10%>' + t.towerMarches[k].allianceName + '</td>';
+						s3 += '<TD width=10%><B>'+translate("State")+': </b></td><TD width=10%>' + t.towerMarches[k].diplomacy + '</td></tr>';
+						s3 += '<TR><TD width=10%  >' + t.towerMarches[k].target + '</td>';
+						s3 += '<TD  >' + t.towerMarches[k].who + '</td>';
+						s3 += '<TD><B>'+translate("Remaining")+': </b></td><TD width=10%>' + t.towerMarches[k].rtime + '</td>';
+						s3 += '<TD><B>'+translate("Arrival")+': </b></td><TD  colspan=5 width=10%>' + t.towerMarches[k].arrivingDatetime + '</td></tr>';
+						s3 += '</tr></table>';
+						s3 += '<TABLE cellspacing=0 width=100%><TR align=right><TD align=left width=16%></td>';
+						for (n = 0; n < names.length; n++)
+							s3 += '<TD width=7%><B>' + names[n] + '</b></td>';
+						s3 += '</tr><TR align=right><TD class="attack" align=left><B>Units:</td>';
+						for (u = 1; u < 13; u++) {
+							num = t.towerMarches[k].units[u];
+							s3 += '<TD class="attack">' + num + '</td>';
+							atk[u] += parseInt(num);
+						}
+						s3 += '</tr></table>';
+					}
+				}
+			}
+		}
+		s2 += '<TR><TD colspan=14><BR></td></tr><TR align=right><TD class="attack" align=left><B>'+translate("Attackers")+':</b></td>';
+		for (a = 1; a < 13; a++)
+			s2 += '<TD class="attack" width=7%>' + atk[a] + '</td>';
+		var html = s1 + s2 + s3;
+		document.getElementById('pbCityTowerContent').innerHTML = html;
+	},
+    
+	sendReinforcmentHome: function(){ //FUNCTION NOT IN USE YET BUT SOON :-)
+		//mid, cid, fromUid, fromCid, upkeep
+		var params = Object.clone(g_ajaxparams);
+		params.mid = mid;
+		params.cid = cid;
+		params.fromUid = fromUid;
+		params.fromCid = fromCid;
+		new Ajax.Request(g_ajaxpath + "ajax/kickoutReinforcements.php" + g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function(transport){
+				var rslt = eval("(" + transport.responseText + ")");
+				if (rslt.ok) {
+					Modal.showAlert(g_js_strings.kickout_allies.troopshome);
+					seed.resources["city" + currentcityid].rec1[3] = parseInt(seed.resources["city" + currentcityid].rec1[3]) - upkeep;
+					if (parseInt(fromUid) == parseInt(tvuid)) {
+						var curmarch = seed.queue_atkp["city" + fromCid]["m" + mid];
+						var marchtime = Math.abs(parseInt(curmarch.destinationUnixTime) - parseInt(curmarch.eventUnixTime));
+						curmarch.returnUnixTime = unixTime() + marchtime;
+						curmarch.marchStatus = 8
+					}
+					delete seed.queue_atkinc["m" + mid]
+				}
+				else {
+					Modal.showAlert(printLocalError((rslt.error_code || null), (rslt.msg || null), (rslt.feedback || null)))
+				}
+			},
+			onFailure: function(){
+			}
+		})
+	},
 }
-
 
 /****************************  Build Implementation  ******************************
  TODO:
@@ -6332,7 +6392,7 @@ var buildTabTypes = {
     type17: "Stable",
     type18: "Relief Station",
     type19: "Wall",
-    type20: "Fey Spire",
+    type20: "FeySpire",
     type21: "Apothecary",
     type22: "Druid Barracks",
     type23: "Druid Apothecary",
@@ -6598,7 +6658,7 @@ Tabs.build = {
                         }
 						if (parseInt(position) < 300 || parseInt(position) > 309) { // no dummy ascension buildings
 							t.doExtraTools(cityId, position, buildingId, buildingType, currentLevel,toLevel);
-						}	
+						}
                     }
                 }
             }
@@ -6659,9 +6719,9 @@ Tabs.build = {
 				var position = b;
 				var buildingId = 0;
 				t.doExtraTools(cityId, position, buildingId, buildingType, currentLevel,toLevel);
-			}
-		}
-		t.paintBuildQueue(cityId, true);
+            }
+        }
+			t.paintBuildQueue(cityId, true);
     },
     setBuildMode: function (type) {
         var t = Tabs.build;
@@ -6671,7 +6731,7 @@ Tabs.build = {
         var t = Tabs.build;
         t.newBuildMode = type;
     },
-    doExtraTools: function (cityId, pos, buildingId, buildingType, currentLevel,toLevel) { //
+   doExtraTools: function (cityId, pos, buildingId, buildingType, currentLevel,toLevel) { //
         //logit(cityId+ ' ' +pos + ' ' + buildingId); //, buildingType, buildingId, buildingTime, buildingLevel, buildingAttempts, buildingMult, buildingMode
         var startLevel = parseInt(currentLevel)
         var t = Tabs.build;
@@ -6695,20 +6755,20 @@ Tabs.build = {
 
     e_autoBuild: function () {
         var t = Tabs.build;
-      var buildInterval = 5000+t.UASlowDown; // 2 seconds between checks by default
+        var buildInterval = 5000+t.UASlowDown; // 2 seconds between checks by default
         document.getElementById('pbbuildError').innerHTML = '';
       
         if (t.buildStates.running == true) {
             var now = unixTime()-5;//lets give some error room
             //logit ('Seed.queue_con: (now='+ now +')\n'+ inspect (Seed.queue_con, 3));
-			var itime = 1000;
+	    var itime = 1000;
             for (var i = 0; i < Cities.cities.length; i++) {
                 var cityId = Cities.cities[i].id;
 	      	if(t["bQ_" + cityId][0])
 		  itime += 2000;
                 var isBusy = false;
                 var qcon = Seed.queue_con["city" + cityId];
-             if(t['build'+Cities.byID[cityId].idx] == true)continue;//so we don't get overloaded with slowed down requests
+             	if(t['build'+Cities.byID[cityId].idx] == true) continue;//so we don't get overloaded with slowed down requests
                 if (qcon.length > 0) {
 				/***
 				string) 0 = buildingtype
@@ -6720,18 +6780,18 @@ Tabs.build = {
 				(number) 6 = 76
 				(number) 7 = position
 				* ***/
-                 if (parseInt(qcon[0][4]) > now) isBusy = true;
+                  if (parseInt(qcon[0][4]) > now) isBusy = true;
                   else {
                   	if(qcon[0][1] == 0) {//if it is destruct
                   		delete Seed.buildings["city" + cityId]['pos'+qcon[0][7]];
-               	   } else {
-								Seed.buildings["city" + cityId]['pos'+qcon[0][7]] = [qcon[0][0],qcon[0][1],qcon[0][7],qcon[0][2]];// first make sure the building is correct
-								logit('construct '+Cities.byID[cityId].name+' removing '+qcon[0][4]+' > '+now);
-							};
-							qcon.shift(); // remove expired build from queue
-							unsafeWindow.modal_build_show_state();
-							if (cityId == unsafeWindow.currentcityid) unsafeWindow.update_bdg();
-						};
+               	   	} else {
+				Seed.buildings["city" + cityId]['pos'+qcon[0][7]] = [qcon[0][0],qcon[0][1],qcon[0][7],qcon[0][2]];// first make sure the building is correct
+				logit('construct '+Cities.byID[cityId].name+' removing '+qcon[0][4]+' > '+now);
+			};
+			qcon.shift(); // remove expired build from queue
+			unsafeWindow.modal_build_show_state();
+			if (cityId == unsafeWindow.currentcityid) unsafeWindow.update_bdg();
+		  };
                 }
                 //logit ('City #'+ (i+1) + ' : busy='+ isBusy);               
                 if (isBusy) {
@@ -6752,10 +6812,10 @@ Tabs.build = {
 					}		
 					t.lastcsok = t.csok;
                     if(t.buildStates.tr && t.buildStates.trset > cs) continue;//check just before we start building.  lets the other enhancements keep working.                	
-                    if (t["bQ_" + cityId].length > 0) { // something to do?
-							t['build'+Cities.byID[cityId].idx] = true;
-                        t.doOneSlowdown(cityId,itime);
-                    }
+                    	if (t["bQ_" + cityId].length > 0) { // something to do?
+                       	  t['build'+Cities.byID[cityId].idx] = true;
+                       	  t.doOneSlowdown(cityId,itime);
+                    	}
                 }
             }
         }
@@ -6798,8 +6858,8 @@ Tabs.build = {
     doOne: function (cityId) {
         var t = Tabs.build;
 	if(!t["bQ_" + cityId][0])return;
-			var bQi = t["bQ_" + cityId][0]; //take first queue item to build
-			if(!bQi)return;
+	var bQi = t["bQ_" + cityId][0]; //take first queue item to build
+	if(!bQi)return;
         var currentcityid = parseInt(bQi.cityId);
         t['build'+Cities.byID[currentcityid].idx] = false;
         var cityName = t.getCityNameById(currentcityid);
@@ -7807,12 +7867,12 @@ Tabs.Search = {
         saveOptions();
         t.dispMapTable ();
         }, false);
-        document.getElementById('pamaxmight').addEventListener ('change', function (){
+            document.getElementById('pamaxmight').addEventListener ('change', function (){
         Options.maxmight = parseIntNan(this.value);
         saveOptions();
         t.dispMapTable ();
         }, false);
-        document.getElementById('pabotra').addEventListener ('change', function (){
+            document.getElementById('pabotra').addEventListener ('change', function (){
         Options.botrank = this.value;
         saveOptions();
         FetchTopAlliances(Options.toprank,Options.botrank,function (e) {
@@ -7820,7 +7880,7 @@ Tabs.Search = {
          t.dispMapTable();
          });
         }, false);
-        document.getElementById('patopra').addEventListener ('change', function (){
+            document.getElementById('patopra').addEventListener ('change', function (){
         Options.toprank = this.value;
         saveOptions();
         FetchTopAlliances(Options.toprank,Options.botrank,function (e) {
@@ -8092,7 +8152,7 @@ Tabs.Search = {
     
   },
   doScoutCount : function(list, city, total, count){
-	logit('city is '+city.idx);
+  	logit('city is '+city.idx);
     var t = Tabs.Search;
     if(!t.scouting){
         document.getElementById('pbSrcScoutResult').innerHTML += '<SPAN class=boldRed>'+translate("Scouting stopped by user")+'</span><BR>';
@@ -8110,9 +8170,9 @@ Tabs.Search = {
      	if(document.getElementById('pbsallcities').checked) { 
 			var oldcityidx = Number(city.idx);
 			do {
-				var newcity = Number(city.idx)+1;
-				if(newcity > Number(Cities.numCities)-1) newcity = 0;
-				city = Cities.cities[newcity];
+     		var newcity = Number(city.idx)+1;
+     		if(newcity > Number(Cities.numCities)-1) newcity = 0;
+     		city = Cities.cities[newcity];
 			}	
 			while (unsafeWindow.cm.PrestigeCityPlayerProtectionController.isActive(city.id) && (city.idx != oldcityidx))
      	};
@@ -8404,7 +8464,7 @@ Tabs.Search = {
     
       var m = '<TABLE id=pbRaidAdd width=100% height=0% class=pbTab><TR align="center">';
 
-		var rowcounter = 0;
+	  var rowcounter = 0;
      	for (var ui in unsafeWindow.cm.UNIT_TYPES){
 			i = unsafeWindow.cm.UNIT_TYPES[ui];
 			
@@ -8413,7 +8473,7 @@ Tabs.Search = {
 				m += '</tr><tr align="center">';
 				rowcounter = 1;
 			}
-
+			
 			m += '<td><table class=pbTab><tr><td rowspan=2><img src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_'+i+'_50.jpg?6545"></td><td>'+ addCommas(Seed.units['city'+cityId]['unt'+i]) +'</td></tr><tr><td><INPUT id=Unit'+i+' type=text size=6 maxlength=6 value="0"></td></tr></table></td>';
 		}
       m += '</tr></table>';
@@ -8439,7 +8499,7 @@ Tabs.Search = {
         params.queue[0].cityMarches.toXCoord = X;
         params.queue[0].cityMarches.toYCoord = Y;
         params.queue[0].cityMarches.unit0Count = 0;
-    	for (var ui in unsafeWindow.cm.UNIT_TYPES){
+     	for (var ui in unsafeWindow.cm.UNIT_TYPES){
 			i = unsafeWindow.cm.UNIT_TYPES[ui];
 			params.queue[0]['cityMarches']['unit'+i+'Count'] = parseIntNan(document.getElementById ('Unit'+i).value);
 		}	
@@ -9606,7 +9666,7 @@ Tabs.transport = {
         loadBoostBase += 1;
 
         var LoadUnit = Math.floor(loadBoostBase*Load);
-        var GlobalMaxLoad = t.Troops * LoadUnit;
+        var GlobalMaxLoad = t.Troops * LoadUnit ;
         t.MaxLoad = parseInt(document.getElementById('TroopsToSend').value) * LoadUnit;
 	t.MaxLoad = Math.floor(t.MaxLoad) -1;  // Lessen issues with roundoff errors
 	if(t.MaxLoad < 0)t.MaxLoad=0;
@@ -10068,7 +10128,7 @@ Tabs.transport = {
 		var min_Ore = t.tradeRoutes[count]["target_Ore"] * revpc /100;
 		var min_Astone = t.tradeRoutes[count]["target_Astone"] * revpc /100;
 		var min_Gold = t.tradeRoutes[count]["target_Gold"] * revpc /100;
-		var	ship_Food = t.tradeRoutes[count]["ship_Food"];
+        var ship_Food = t.tradeRoutes[count]["ship_Food"];
         var ship_Wood = t.tradeRoutes[count]["ship_Wood"];
         var ship_Stone = t.tradeRoutes[count]["ship_Stone"];
         var ship_Ore = t.tradeRoutes[count]["ship_Ore"];
@@ -10080,7 +10140,7 @@ Tabs.transport = {
         var citymax_Ore = parseIntNan(Seed.resources[cityID]['rec4'][0] / 3600);
         var citymax_Astone = parseIntNan(Seed.resources[cityID]['rec5'][0]);
         var citymax_Gold = parseIntNan(Seed.citystats[cityID]['gold']);
-		
+
 		if (!rev) {
 			var carry_Food = parseIntNan(citymax_Food - target_Food);
 			var carry_Wood = parseIntNan(citymax_Wood - target_Wood);
@@ -10111,7 +10171,7 @@ Tabs.transport = {
         if (carry_Stone < 0 || ship_Stone == false) carry_Stone = 0;
         if (carry_Ore < 0 || ship_Ore == false) carry_Ore = 0;
         if (carry_Astone < 0 || ship_Astone == false) carry_Astone = 0;
-		
+
 		if (!rev) {
 			if (trade_Food > 0 && (carry_Food > trade_Food)) carry_Food = parseIntNan(trade_Food);
 			if (trade_Wood > 0 && (carry_Wood > trade_Wood)) carry_Wood = parseIntNan(trade_Wood);
@@ -10291,22 +10351,22 @@ Tabs.transport = {
         params.r4 = carry_Ore;
         params.r5 = parseInt(carry_Astone/5);
         params.gold = carry_Gold;
-
+        
 		params["u"+unit.slice(3)] = wagons_needed;
         
-		if ((carry_Food + carry_Wood + carry_Stone + carry_Ore + carry_Astone + carry_Gold) > 0) {
+           if ((carry_Food + carry_Wood + carry_Stone + carry_Ore + carry_Astone + carry_Gold) > 0) {
 			if(tt) params.tt = tt;    
 		
 			March.addMarch(params, function(rslt){
 				if (rslt.ok) {
 					if (!rev) {
-						actionLog('Trade From: ' + cityname + " To: " + xcoord + ',' + ycoord + " -> "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
-					}	
+						actionLog('Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
+					}
 					else {
-						actionLog('Reverse Trade From: ' + cityname + " To: " + xcoord + ',' + ycoord + " -> "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
+						actionLog('Reverse Trade   From: ' + cityname + "   To: " + xcoord + ',' + ycoord + "    ->   "+ unsafeWindow.unitcost[unit][0] +": " + wagons_needed);
 						var t = Tabs.transport;
 						t.tradeRoutes[count]["rev_eta"] = parseInt(rslt.eta);
-					}		
+					}
 				}
 				else {
 					if (!rslt.msg) {rslt.msg = 'Error Code ('+rslt.error_code+')';}
@@ -10316,8 +10376,8 @@ Tabs.transport = {
 						actionLog(''+translate("REVERSE TRANSPORT FAIL:")+' ' + cityname + ' -> ' + rslt.msg);
 				}
 			});
-		}	
-    },
+		}
+	},
     
     ManualTransport: function(tt){
 		var t = Tabs.transport;
@@ -10348,11 +10408,11 @@ Tabs.transport = {
 		params.gold = parseInt(document.getElementById ('pbtradeamountGold').value);
 
 		params["u"+unitType.slice(3)] = parseInt(document.getElementById ('TroopsToSend').value);
-	
+
 		if (tt) params.tt = tt;
 	
 		if ((params.r1 + params.r2 + params.r3 + params.r4 + params.r5 + params.gold) > 0) {
-    
+                 
 			March.addMarch(params, function(rslt){
 				if (rslt.ok) {
 					document.getElementById ('errorSpace').innerHTML = 'Send: ' + addCommas(params.r1+params.r2+params.r3+params.r4+params.r5+params.gold) + ' Resources with ' + addCommas(parseInt(document.getElementById ('TroopsToSend').value)) + ' ' + unsafeWindow.unitcost[unitType][0];
@@ -10369,9 +10429,9 @@ Tabs.transport = {
 					if (rslt.msg == undefined)document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + unsafeWindow.g_js_strings.errorcode[errorcode] +'</font>';
 					else document.getElementById ('errorSpace').innerHTML = '<HR><FONT COLOR=red>'+translate("Error:")+' ' + rslt.msg +'</font>';
 				}
-			});	
+			});
 		}
-    },
+	},
     show: function (x) {
         var t = Tabs.transport;
         clearTimeout(t.timer);
@@ -11442,6 +11502,7 @@ Tabs.AutoCraft = {
 	timerStat: null,
 	crafting: [],
 	citydelay: {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
+	autodelay: 0,
 	craftLoop : 0,
 	craftInterval  : 5, // seconds
 	craftMinAether : 50000,
@@ -11450,6 +11511,11 @@ Tabs.AutoCraft = {
 	spires: [],
 	csok: true,
 	lastcsok: true,
+	AutoCity: 0,
+	Squire:0,
+	Knight:0,
+	Guinevere:0,
+	Morgana:0,
 
 	init: function(div){
 		var t = Tabs.AutoCraft;
@@ -11469,7 +11535,14 @@ Tabs.AutoCraft = {
 		m += '<table width="100%" height="0%" class="pbTab">';
 		m += '<tr><td><INPUT id=pbacTR type=checkbox '+(TrainOptions.actr?'CHECKED':'')+'> Only craft when crafting speed is at least <INPUT id=pbacTRset type=text size=3 maxlength=4 value="'+ TrainOptions.actrset +'">%</td><td align=right>Minimum Aetherstone: <input type=text value="'+TrainOptions.CraftMinAether+'" size=4  maxlength=6 id=pbCraftMinAether>&nbsp;&nbsp;</td></tr>';
 		m += '<tr><td><INPUT id=pbacTRbase type=checkbox '+(TrainOptions.actrbase?'CHECKED':'')+'> Ignore above setting for basic crafts (e.g. Bloodstones)</td><td align=right>Current Crafting Speed:&nbsp;<span id=currcs></span>&nbsp;&nbsp;</td></tr>';
-		m += '</table>';
+		m += '<tr><td colspan=2>&nbsp;<b>Use Auto-Speedups:</b></td></tr>';
+		m += '<tr><td colspan=2><div align=right><table width=95%><tr>';
+        m += "<td style='vertical-align:text-top;' title='" + HourGlassTDLabel[1] + "'><input type=checkbox id=pbcraftSH " + (TrainOptions.CraftUseSH ? "CHECKED" : "") + "><div style='white-space:nowrap;display:inline-block;'>" + HourGlassName[1] + " (<div style='white-space:nowrap;display:inline-block;' id=pbUseSHLabel>" + unsafeWindow.ksoItems[1].count + "</div>)</div></td>";
+        m += "<td style='vertical-align:text-top;' title='" + HourGlassTDLabel[2] + "'><input type=checkbox id=pbcraftKH " + (TrainOptions.CraftUseKH ? "CHECKED" : "") + "><div style='white-space:nowrap;display:inline-block;'>" + HourGlassName[2] + " (<div style='white-space:nowrap;display:inline-block;' id=pbUseKHLabel>" + unsafeWindow.ksoItems[2].count + "</div>)</div></td>";
+        m += "<td style='vertical-align:text-top;' title='" + HourGlassTDLabel[3] + "'><input type=checkbox id=pbcraftGH " + (TrainOptions.CraftUseGH ? "CHECKED" : "") + "><div style='white-space:nowrap;display:inline-block;'>" + HourGlassName[3] + " (<div style='white-space:nowrap;display:inline-block;' id=pbUseGHLabel>" + unsafeWindow.ksoItems[3].count + "</div>)</div></td>";
+        m += "<td style='vertical-align:text-top;' title='" + HourGlassTDLabel[4] + "'><input type=checkbox id=pbcraftMH " + (TrainOptions.CraftUseMH ? "CHECKED" : "") + "><div style='white-space:nowrap;display:inline-block;'>" + HourGlassName[4] + " (<div style='white-space:nowrap;display:inline-block;' id=pbUseMHLabel>" + unsafeWindow.ksoItems[4].count + "</div>)</div></td>";
+		m += '<td align=right><INPUT id=pbCraftHelp type=submit value="HELP!"></td></tr></table></td></tr>';
+		m += '</table></div>';
 		m += '<DIV id=pbCraftingStats class=pbStat>CITIES</div><span id="CraftStat"></span>';
 		m += '<DIV id=pbCraftingList class=pbStat>RECIPE LIST</div><TABLE id=pbcraftingqueues width=100% height=0% class=pbTabLined><TR>';
 
@@ -11539,7 +11612,7 @@ Tabs.AutoCraft = {
 			str +="<td align=center id=cityaether"+i+">"+t.getCityAether(i)+"</td>";  
 		}
 		str +="<td align=center id=totaether>"+ addCommas(t.totaether) + "</td>";  
-		str +='<tr style="background: #e8e8e8" align=right><td><img height=18 src='+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/3.jpg title="Crafting"></td>';
+		str +='<tr style="background: #e8e8e8" align=right><td><img height=18 src='+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/2000.jpg title="Crafting"></td>';
 		for(i=0; i<Cities.numCities; i++) {
 			t.spires.push(getUniqueCityBuilding(Cities.cities[i].id,20));
 			str +="<td align=center id=citycraft"+i+">"+ t.getCityCrafting(i) + "</td>";  
@@ -11557,12 +11630,20 @@ Tabs.AutoCraft = {
 
 		window.addEventListener('unload', t.onUnload, false);
 
+		unsafeWindow.speedupCraft = function (cityId,item,cid) {t.speedupCraft(cityId,item,cid);}
+
 		document.getElementById("Crafting_Save").addEventListener ('click', function (){t.saveCraftState()}, false);
 		document.getElementById("pbCraftRunning").addEventListener ('click', function (){t.toggleStateRunning(this)}, false);     
 		t.changeCraft ('pbCraftMinAether', 'CraftMinAether')
 		document.getElementById('pbacTR').addEventListener ('change', function() {TrainOptions.actr = this.checked;t.saveCraftState();}, false);
 		document.getElementById('pbacTRbase').addEventListener ('change', function() {TrainOptions.actrbase = this.checked;t.saveCraftState();}, false);
 		document.getElementById('pbacTRset').addEventListener ('change', function() {TrainOptions.actrset = this.value;t.saveCraftState();}, false);
+		document.getElementById('pbcraftSH').addEventListener ('change', function() {TrainOptions.CraftUseSH = this.checked;t.saveCraftState();}, false);
+		document.getElementById('pbcraftKH').addEventListener ('change', function() {TrainOptions.CraftUseKH = this.checked;t.saveCraftState();}, false);
+		document.getElementById('pbcraftGH').addEventListener ('change', function() {TrainOptions.CraftUseGH = this.checked;t.saveCraftState();}, false);
+		document.getElementById('pbcraftMH').addEventListener ('change', function() {TrainOptions.CraftUseMH = this.checked;t.saveCraftState();}, false);
+		document.getElementById ('pbCraftHelp').addEventListener ('click', t.helpPop, false);
+
 		var cItems = document.getElementById('pbcraftingqueues').getElementsByTagName('input');
 		for (var i = 0; i < cItems.length; i++) {
 			cItems[i].addEventListener('change', function(){t.saveCraftState()}, false);
@@ -11573,6 +11654,24 @@ Tabs.AutoCraft = {
 		t.updateStat(); // start timer on init..
 	},
 
+	helpPop : function (){
+		var helpText = '<br>'+translate("Using Speedups for Crafting");
+		helpText += '<p>Speedups will be used in the following order if they are selected, and the required criteria is met :-</p>';
+		helpText += '<TABLE><TR><TD><b>Item</b></td><TD><b>Time</b></td><TD><b>Criteria</b></td></tr>';
+		helpText += '<TR><TD>Morganas Hourglass</td><TD>2.5 hrs</td><TD>More than 2 hours remaining</td></tr>';
+		helpText += '<TR><TD>Guineveres Hourglass</td><TD>1 hr</td><TD>More than 45 minutes remaining</td></tr>';
+		helpText += '<TR><TD>Knights Hourglass</td><TD>15 mins</td><TD>More than 5 minutes remaining</td></tr>';
+		helpText += '<TR><TD>Squires Hourglass</td><TD>1 min</td><TD>More than 30 seconds remaining</td></tr>';
+		helpText += '</table><br>';
+    
+		var pop = new pbPopup ('giftHelp', 0, 0, 450, 220, true);
+		pop.centerMe (mainPop.getMainDiv());  
+		pop.getMainDiv().innerHTML = helpText;
+		pop.getTopDiv().innerHTML = '<CENTER><B>Power Bot '+translate("Help")+': '+translate("Speedups")+'</b></center>';
+		pop.show (true);
+	},
+	
+	
 	createToolTip : function (elem) {
 		var t = Tabs.AutoCraft;
 		var h = elem.id.substring(8);
@@ -11612,6 +11711,7 @@ Tabs.AutoCraft = {
 	getCityCrafting : function (i) {
 		var t = Tabs.AutoCraft;
 		var now = unixTime();
+		var q;
 		t.spires[i] = getUniqueCityBuilding(Cities.cities[i].id,20);
 		var gotSpire = (t.spires[i].count != 0);
 		if (gotSpire) {
@@ -11620,11 +11720,30 @@ Tabs.AutoCraft = {
 			// the last item in the queue should be the item in progress
 			var len = Seed.queue_craft["city" + Cities.cities[i].id].length;
 			if ( len > 0) {
-				var q=Seed.queue_craft["city" + Cities.cities[i].id][len-1];
+				q = Seed.queue_craft["city" + Cities.cities[i].id][len-1];
 				totTime = q.craftingEtaUnixTime - now;
 				if (totTime < 0) totTime = 0;
+			}	
+			if (totTime > 0) {
+				var Speedups = '';
+				var SpeedupType = '"craft"';
+				
+				if (t.Squire) {
+					Speedups += '<td class=xtab><a onClick="speedupCraft('+Cities.cities[i].id+', 1, '+q.craftingId+')"><img height=18 style="opacity:0.8;vertical-align:text-top;" src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/1.jpg" title="Squires Hourglass (1 min) ('+t.Squire+')"></a></td>';
+				}	
+				if (t.Knight) {
+					Speedups += '<td class=xtab><a onClick="speedupCraft('+Cities.cities[i].id+', 2, '+q.craftingId+')"><img height=18 style="opacity:0.8;vertical-align:text-top;" src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/2.jpg" title="Knights Hourglass (15 mins) ('+t.Knight+')"></a></td>';
+				}	
+				if (t.Guinevere) {
+					Speedups += '<td class=xtab><a onClick="speedupCraft('+Cities.cities[i].id+', 3, '+q.craftingId+')"><img height=18 style="opacity:0.8;vertical-align:text-top;" src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/3.jpg" title="Guineveres Hourglass (60 mins) ('+t.Guinevere+')"></a></td>';
+				}	
+				if (t.Morgana) {
+					Speedups += '<td class=xtab><a onClick="speedupCraft('+Cities.cities[i].id+', 4, '+q.craftingId+')"><img height=18 style="opacity:0.8;vertical-align:text-top;" src="'+http+'kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/70/4.jpg" title="Morganas Hourglass (150 mins) ('+t.Morgana+')"></a></td>';
+				}	
+				if (Speedups != "") Speedups = "<table align=center cellspacing=0 cellpadding=0><tr>" + Speedups + "</tr></table>";
+			
+				str += '<span>'+t.getRecipeName(q.recipeId)+'</span><BR><span>'+timestr(totTime)+'</span>'+Speedups;
 			}
-			if (totTime > 0) {	str += '<span>'+t.getRecipeName(q.recipeId)+'</span><BR><span>'+timestr(totTime)+'</span>'; }
 			else {  	
 				if (t.citydelay[i+1] > 0) { str += '<span>&nbsp;</span><BR><SPAN class=boldRed><B>Busy!</b></span>'; }
 				else { str += '<span>&nbsp;</span><BR><SPAN class=boldRed><B>Idle</b></span>'; }
@@ -11634,9 +11753,83 @@ Tabs.AutoCraft = {
 		else {
 			var str = '<SPAN class=boldRed><B>No Spire</b></span><br>';
 		}
+
+		if  (t.autodelay <= 0) { 
+			if (i == t.AutoCity) {
+				if (q) {
+					t.autoSpeedup (Cities.cities[i].id,q);
+				}
+				t.AutoCity++;
+				if (t.AutoCity > Number(Cities.numCities)-1) t.AutoCity = 0;
+			}	
+		}
+
 		return str;
 	},
 
+	speedupCraft : function (cityId,item,cid,noretry) {
+		var t = Tabs.AutoCraft;
+		t.autodelay = 5; // don't try again for 5 seconds
+		unsafeWindow.jQuery('#craftcity'+Cities.byID[cityId].idx).css('color', 'green');
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+  		params.ctrl = 'Crafting';
+  		params.action = 'speedup';
+  		params.cityId = cityId;
+  		params.itemId = item;
+  		params.craftingId = cid;
+
+  		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/_dispatch.php" + unsafeWindow.g_ajaxsuffix, {
+  			method: "post",
+  			parameters: params,
+  			onSuccess: function (rslt) {
+				if (rslt.error_code || rslt.error_code == 0) { // no OK status on this call, but if there's an error_code assume speedup failed...
+					actionLog('Crafting Speedup Failed');
+				}
+				else {
+					Seed.items["i" + item] = parseInt(Seed.items["i" + item]) - 1;
+					unsafeWindow.ksoItems[item].subtract();
+					var qloc = 0;
+					for (var i = 0; i < Seed.queue_craft["city" + cityId].length; i++) {
+						if (parseInt(Seed.queue_craft["city" + cityId][i].craftingId) == parseInt(cid)) {
+							qloc = i;
+							break;
+						}
+					}
+					var timered = 0;
+					var timeredarr = [60, 900, 3600, 9000, 28800, 54000, 86400, 216000, 0, 345600];
+					var utstart = parseInt(Seed.queue_craft["city" + cityId][qloc].craftingUnixTime);
+					var uteta = parseInt(Seed.queue_craft["city" + cityId][qloc].craftingEtaUnixTime);
+					timered = timeredarr[parseInt(item) - 1];
+					Seed.queue_craft["city" + cityId][qloc].craftingUnixTime = utstart - timered;
+					Seed.queue_craft["city" + cityId][qloc].craftingEtaUnixTime = uteta - timered;
+					if (cityId == unsafeWindow.currentcityid) unsafeWindow.update_queue();
+				}
+				unsafeWindow.jQuery('#craftcity'+Cities.byID[cityId].idx).css('color', 'rgb(66, 39, 20)')
+  			},
+			onFailure: function () { 
+				unsafeWindow.jQuery('#craftcity'+Cities.byID[cityId].idx).css('color', 'rgb(66, 39, 20)')
+			}
+  		},noretry);
+	},
+	
+    autoSpeedup: function (cityId,q) {
+		var t = Tabs.AutoCraft;
+		var now = unixTime();
+		var item = 0;
+		totTime = q.craftingEtaUnixTime - now;
+		
+		if (totTime > 0) {
+            if (item==0 && totTime >= HOURGLASSES_TIME_MIN_THRESHOLD.hour25 && TrainOptions.CraftUseMH && unsafeWindow.ksoItems[4].count > 0) { item = 4; }
+            if (item==0 && totTime >= HOURGLASSES_TIME_MIN_THRESHOLD.hour1 && TrainOptions.CraftUseGH && unsafeWindow.ksoItems[3].count > 0) { item = 3; }
+            if (item==0 && totTime >= HOURGLASSES_TIME_MIN_THRESHOLD.minute15 && TrainOptions.CraftUseKH && unsafeWindow.ksoItems[2].count > 0) { item = 2; }
+            if (item==0 && totTime >= HOURGLASSES_TIME_MIN_THRESHOLD.minute1 && TrainOptions.CraftUseSH && unsafeWindow.ksoItems[1].count > 0) { item = 1; }
+        }
+
+		if (item != 0) {
+			t.speedupCraft(cityId,item,q.craftingId,true);
+		}
+    },
+	
 	getCraftPercent : function (item) {
 		if (item) {
 			var succ = item[0];
@@ -11667,6 +11860,20 @@ Tabs.AutoCraft = {
 		clearTimeout(t.timerStat);
 		t.craftLoop ++;
 		t.totaether = 0;
+		if  (t.autodelay > 0) { 
+			t.autodelay = t.autodelay - 1;
+		}
+		
+		t.Squire = Seed.items.i1;
+		t.Knight = Seed.items.i2;
+		t.Guinevere = Seed.items.i3;
+		t.Morgana = Seed.items.i4;
+		
+		document.getElementById('pbUseSHLabel').innerHTML = t.Squire;
+		document.getElementById('pbUseKHLabel').innerHTML = t.Knight;
+		document.getElementById('pbUseGHLabel').innerHTML = t.Guinevere;
+		document.getElementById('pbUseMHLabel').innerHTML = t.Morgana;
+		
 		for(i=0; i<Cities.numCities; i++) {
 			document.getElementById("cityaether"+i).innerHTML = t.getCityAether(i);  
 			document.getElementById("citycraft"+i).innerHTML = t.getCityCrafting(i);  
@@ -11792,7 +11999,7 @@ Tabs.AutoCraft = {
 		}
 		if (tableau.length == 0) return ; // nothing to craft
 
-		t.craftLoop ++;
+		t.craftLoop++;
 		
 		var itemId = tableau[Math.floor(Math.random()*tableau.length)];
 		var recipeId = t.craftinfo[itemId].recipe_id;
@@ -11942,7 +12149,7 @@ Tabs.Barb = {
     var t = Tabs.Barb;
     if(Options.dfbtns)AddSubTabLink(unsafeWindow.g_js_strings.commonstr.darkForest,t.toggleBarbState, 'DFToggleTab');
     t.myDiv = div;
-
+ 
     var m = '<DIV id=pbTowrtDivF class=pbStat>AUTOMATED FOREST FUNCTION</div><TABLE id=pbbarbingfunctions width=100% height=0% class=pbTab><TR align="center">';
      if (AttackOptions.Running == false) {
            m += '<TD><INPUT id=AttSearch type=submit value="Attack = OFF"></td>';
@@ -12354,7 +12561,7 @@ Tabs.Barb = {
       };
        var element1 = 'pddatacity'+(city-1);
        if (t.barbArray[city].length == 0) document.getElementById(element1).innerHTML = 'In search mode'; else
-       document.getElementById(element1).innerHTML = 'Sent: ' + AttackOptions.BarbsDone[city];
+         document.getElementById(element1).innerHTML = 'Sent: ' + AttackOptions.BarbsDone[city];
        var element2 = 'pddataarray'+(city-1);
        document.getElementById(element2).innerHTML =  'RP: (' + slots + '/' + March.getTotalSlots(citynumber) +')';
        if (Number(Number(March.getTotalSlots(citynumber))-Number(slots)) <= Number(AttackOptions.RallyClip)) return;
@@ -12526,18 +12733,18 @@ Tabs.Barb = {
   },
   
   sendreport: function(){
-	var t = Tabs.Barb;
-	if(!AttackOptions.MsgEnabled) return;
-	if(!AttackOptions.Running) return;
+    var t = Tabs.Barb;
+    if(!AttackOptions.MsgEnabled) return;
+    if(!AttackOptions.Running) return;
     
-	var now = new Date().getTime()/1000.0;
-	now = now.toFixed(0);
-	if (now < (parseInt(AttackOptions.LastReport)+(AttackOptions.MsgInterval*60*60))) return;
+    var now = new Date().getTime()/1000.0;
+    now = now.toFixed(0);
+    if (now < (parseInt(AttackOptions.LastReport)+(AttackOptions.MsgInterval*60*60))) return;
     
-	var total = 0;
-	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-	params.emailTo = Seed.player['name'];
-	params.subject = "AutoDF Overview";
+    var total = 0;
+    var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+    params.emailTo = Seed.player['name'];
+    params.subject = "AutoDF Overview";
 	var message = 'AutoDF Report for '+ AttackOptions.MsgInterval +' hour(s) of DF hunting (or since last report) %0A';
     
 	message += '%0A Aetherstone Status: %0A';
@@ -12590,12 +12797,12 @@ Tabs.Barb = {
 	message +='Total Champion Equipment Found: '+itemcount+'%0A';
 
 	message += '%0A Excess traffic errors: ' + AttackOptions.BarbsFailedTraffic +'%0A';
-	message += 'Rallypoint errors: ' + AttackOptions.BarbsFailedRP +'%0A';
-	message += 'Knight errors: ' + AttackOptions.BarbsFailedKnight +'%0A';
-	message += 'Bog errors: ' + AttackOptions.BarbsFailedBog +'%0A';
-	message += 'Other errors: ' + AttackOptions.BarbsFailedVaria +'%0A';
-	message += 'Actual sent attacks: ' + (AttackOptions.BarbsTried - AttackOptions.BarbsFailedTraffic - AttackOptions.BarbsFailedRP - AttackOptions.BarbsFailedKnight -  AttackOptions.BarbsFailedVaria) +'%0A';
-	params.message = message;  
+    message += 'Rallypoint errors: ' + AttackOptions.BarbsFailedRP +'%0A';
+    message += 'Knight errors: ' + AttackOptions.BarbsFailedKnight +'%0A';
+    message += 'Bog errors: ' + AttackOptions.BarbsFailedBog +'%0A';
+    message += 'Other errors: ' + AttackOptions.BarbsFailedVaria +'%0A';
+    message += 'Actual sent attacks: ' + (AttackOptions.BarbsTried - AttackOptions.BarbsFailedTraffic - AttackOptions.BarbsFailedRP - AttackOptions.BarbsFailedKnight -  AttackOptions.BarbsFailedVaria) +'%0A';
+    params.message = message;  
     
     params.requestType = "COMPOSED_MAIL";
     new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getEmail.php" + unsafeWindow.g_ajaxsuffix, {
@@ -14127,8 +14334,8 @@ Tabs.AutoTrain = {
     }
 	m+='</td></tr></table>';
       
-    t.myDiv.innerHTML = m;
-
+        t.myDiv.innerHTML = m;
+      
 	var ts = Math.floor(equippedthronestats(77));
 	document.getElementById("currts").innerHTML = ts+'%';
 	t.tsok = (!TrainOptions.tr || (ts >= Number(TrainOptions.trset)));
@@ -14142,8 +14349,8 @@ Tabs.AutoTrain = {
 	}		
 	t.lasttsok = t.tsok;
       
-    for (i=0;i<Seed.cities.length;i++) {
-		city = i+1;
+    for (i=0;i<Seed.cities.length;i++){
+        city = i+1;
         document.getElementById('TroopsCity'+city).value = TrainOptions.Troops[city];
         document.getElementById('SelectCity'+city).checked = TrainOptions.Enabled[city];
         document.getElementById('Resource'+city).value = TrainOptions.Resource[city];
@@ -14153,15 +14360,15 @@ Tabs.AutoTrain = {
         document.getElementById('TrainSpeedItem_'+city).value = TrainOptions.Item[city];
         if (!TrainOptions.SelectMax[city]) document.getElementById('max'+city).disabled=true;
         if(document.getElementById('AsEnabled'+city)) {
-			document.getElementById('AsEnabled'+city).checked = TrainOptions.AsEnabled[city];
-			document.getElementById('AsTroops'+city).value = TrainOptions.AsTroops[city];
-			document.getElementById('AsSelectMax'+city).checked = TrainOptions.AsSelectMax[city];
-			if (!TrainOptions.AsSelectMax[city]) document.getElementById('Asmax'+city).disabled=true;
-		};
+         document.getElementById('AsEnabled'+city).checked = TrainOptions.AsEnabled[city];
+         document.getElementById('AsTroops'+city).value = TrainOptions.AsTroops[city];
+         document.getElementById('AsSelectMax'+city).checked = TrainOptions.AsSelectMax[city];
+         if (!TrainOptions.AsSelectMax[city]) document.getElementById('Asmax'+city).disabled=true;
+      };
     }
        
     document.getElementById('pbShowTrainHelp').addEventListener('click', function(){ t.helpPop(this); }, false);
-
+       
     document.getElementById('pbAutoTrainState').addEventListener('click', function(){
         t.toggleAutoTrainState(this);
     }, false);
@@ -14169,12 +14376,12 @@ Tabs.AutoTrain = {
     document.getElementById('pbatTR').addEventListener ('change', function() {
         TrainOptions.tr = this.checked;
         saveTrainOptions();
-	}, false);
+        }, false);
 
-	document.getElementById('pbatTRset').addEventListener ('change', function() {
+    document.getElementById('pbatTRset').addEventListener ('change', function() {
         TrainOptions.trset = this.value;
         saveTrainOptions();
-	}, false);
+        }, false);
 
     for(var k=1; k<=Seed.cities.length; k++){
 		document.getElementById('threshold'+k).addEventListener('change', function(e){
@@ -14448,15 +14655,15 @@ Tabs.AutoTrain = {
         if (ts < TrainOptions.trset) {
 			setTimeout(t.nextcity, 20000);
             return;
-		};
-	};
-		
+            };
+        };
+
     // get more population in previous city ready for next time
     if (t.city !=0) {
 		if (TrainOptions.Enabled[t.city] && Options.TourneyModeActive) {
 			t.GetMorePopulation(t.city-1); }
 	}
-		
+
     t.city++;
     if(t.city > Seed.cities.length) t.city = 1;
     var cityId = Seed.cities[t.city-1][0];
@@ -14559,7 +14766,7 @@ Tabs.AutoTrain = {
 		t.cur_idle_pop = (parseInt(Seed.citystats['city'+cityId].pop[0])).toFixed(0);
 		num = parseInt(t.max_idle_pop) - parseInt(t.cur_idle_pop);
 		if (num == 0) return; // max pop
-
+   
 		var trooptype = 0; 
 		if (Options.UseTourneyST) {
 			trooptype = 1; // ST
@@ -14744,7 +14951,7 @@ var RefreshEvery  = {
         t.timer = null;
         t.NextRefresh = 0;
         t.box.innerHTML = '<BR><FONT color=white><B>&nbsp;&nbsp;&nbsp;&nbsp;'+ getMyAlliance()[1] + ' (' + getServerId() +')</b></font>';
-	}
+    }
   },
   
   doit : function (){
@@ -14793,7 +15000,7 @@ var FairieKiller  = {
   saveFunc : null,
   init : function (tf){
 
-   
+
 
 
 
@@ -18923,14 +19130,14 @@ function DrawLevelIcons() {
         if (dip == 'hostile' && tileinfo.type=="city") spancol='#FF0000';
         if (tileinfo.type!="city" &&  tileinfo.tileuserid!="null") spancol='#FF9900';
         if (tileinfo.type!="city" &&  tileinfo.tileuserid=="null") spancol='#CC0033';
-		
+
         if (Options.MapShowExtra) {
             if (tileinfo.username!="null")
 				sp[0].outerHTML = sp[0].outerHTML +'<div style="color:'+spancol+';font-size:11px;text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;'+owner+'</div><div style="color:'+spancol+';font-size:10px;text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;Might:'+addCommas(might)+'</div>';
         }
         if (Options.MapShowLevel && (parseIntNan(tileinfo.level) != 0)) {
 			sp[0].outerHTML = sp[0].outerHTML+'<div style="color:'+spancol+';text-shadow: 2px 2px 2px #000;" align="left">&nbsp;&nbsp;'+tileinfo.level+'&nbsp;&nbsp;</div>';
-		}	
+		}
     }
 
 }
@@ -19138,32 +19345,32 @@ var DeleteReports = {
         	var reportUnixTime = Number(reports[k].reportUnixTime);
         	if(Options.expinc) {
 	        	if((reports[k].marchType==4 || reports[k].marchType==3) && (lasttenmin < reportUnixTime) && t.isMyself(reports[k].side0PlayerId) && (Options.alertConfig.lastarrtime.indexOf(reportUnixTime) == -1)) {
-        		var x = {};
+   	     		var x = {};
    	     		var euid = reports[k].side1PlayerId;
-        		x.knt = {};
-        		x.kLv = 1;
-        		x.fromCityId = reports[k].side1CityId;
-        		x.fromXCoord = reports[k].side1XCoord;
-        		x.fromYCoord = reports[k].side1YCoord;
-        		x.unts = {};
-        		x.cnt = "unknown";
-        		x.pid = reports[k].side1PlayerId;
-        		x.aid = reports[k].side1AllianceId
+      	  		x.knt = {};
+        			x.kLv = 1;
+        			x.fromCityId = reports[k].side1CityId;
+        			x.fromXCoord = reports[k].side1XCoord;
+        			x.fromYCoord = reports[k].side1YCoord;
+        			x.unts = {};
+        			x.cnt = "unknown";
+        			x.pid = reports[k].side1PlayerId;
+        			x.aid = reports[k].side1AllianceId
         			x.arrivalTime = Number(reports[k].reportUnixTime);
         			x.departureTime = Number(reports[k].reportUnixTime);
-        		x.marchType = reports[k].marchType;
-        		x.toCityId = reports[k].side0CityId;
-        		if(reports[k].side0TileType > 50){
-        			x.toTileId = Cities.byID[x.toCityId].tileId;
-        		} else {
-					for (i in Seed.wilderness['city'+x.toCityId]){
-						if(Seed.wilderness['city'+x.toCityId][i].xCoord == reports[k].side0XCoord && Seed.wilderness['city'+x.toCityId][i].yCoord == reports[k].side0YCoord) {
-							x.toTileId = Seed.wilderness['city'+x.toCityId][i].tileId;
-							break;
-						}
-      			}
-				};
-        		x.score = 9;
+        			x.marchType = reports[k].marchType;
+        			x.toCityId = reports[k].side0CityId;
+        			if(reports[k].side0TileType > 50){
+        				x.toTileId = Cities.byID[x.toCityId].tileId;
+        			} else {
+						for (i in Seed.wilderness['city'+x.toCityId]){
+							if(Seed.wilderness['city'+x.toCityId][i].xCoord == reports[k].side0XCoord && Seed.wilderness['city'+x.toCityId][i].yCoord == reports[k].side0YCoord) {
+								x.toTileId = Seed.wilderness['city'+x.toCityId][i].tileId;
+								break;
+							}
+      				}
+					};
+        			x.score = 9;
         			x.mid = Number(reports[k].reportId);
         			x.reportId = x.mid;
         		if(!Seed.players['u'+euid]) {
@@ -19191,7 +19398,7 @@ var DeleteReports = {
             } 
             if (Options.DeleteMsgsdf){
                 if(reports[k].side0TileType==54 && reports[k].side0PlayerId==0) {
-					t.checkreportforitems(k.substr(2));
+               t.checkreportforitems(k.substr(2));
                     deletes1.push(k.substr(2));
             }
             }
@@ -19210,16 +19417,16 @@ var DeleteReports = {
             }
             if (Options.DeleteMsgs3){
                 for(i in CrestData) {
-					for (l in unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
-						if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendlyToThem[l].allianceId)
-							deletes1.push(k.substr(2));
-					}
-					for (l in unsafeWindow.seed.allianceDiplomacies.friendly) {
-						if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendly[l].allianceId)
-							deletes1.push(k.substr(2));
-					}
-				}
-			}            
+               for (l in unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
+                  if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendlyToThem[l].allianceId)
+                        deletes1.push(k.substr(2));
+               }
+               for (l in unsafeWindow.seed.allianceDiplomacies.friendly) {
+                  if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendly[l].allianceId)
+                        deletes1.push(k.substr(2));
+               }
+                }
+         }            
             if (Options.DeleteMsgs4){
                 for(i in CrestData) {
 					if (Options.DeleteMsgsUID != "") {
@@ -19274,13 +19481,13 @@ var DeleteReports = {
     
     
     checkreportforitems: function(rpId) {
-		var t = DeleteReports;
-		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
-		params.rid=rpId;
-		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchReport.php" + unsafeWindow.g_ajaxsuffix, {
-			method: "post",
-			parameters: params,
-			onSuccess: function (rslt) {
+        var t = DeleteReports;
+        var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+      params.rid=rpId;
+         new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchReport.php" + unsafeWindow.g_ajaxsuffix, {
+            method: "post",
+            parameters: params,
+            onSuccess: function (rslt) {
 				if (rslt.detail.winner) {
 					var darkforest = false;
 					if (rslt.detail.fght && rslt.detail.fght.s0 && (rslt.detail.fght.s0.m101 || rslt.detail.fght.s0.m102 || rslt.detail.fght.s0.m103 || rslt.detail.fght.s0.m104 || rslt.detail.fght.s0.m105 || rslt.detail.fght.s0.m106 || rslt.detail.fght.s0.m107 || rslt.detail.fght.s0.m108 || rslt.detail.fght.s0.m109 || rslt.detail.fght.s0.m10))
@@ -19358,9 +19565,9 @@ var DeleteReports = {
 							}	
 						}
 					}	
-					saveAttackOptions();
-				};
-			},
+                  saveAttackOptions();
+               };
+            },
 			onFailure: function (rslt) {},
 		}, false);
    },
@@ -19420,7 +19627,7 @@ Tabs.Apothecary = {
         m += '<td id="tdApoBuilding_' + cid + '" style="text-align: center; white-space: nowrap;">&nbsp;</td>';
     }
     m += '<td>&nbsp;</td></tr>\
-		<tr><td class="pbStat" colspan="' + (cities.length + 2) + '">' + unsafeWindow.g_js_strings.revive.curintrain + '</td></tr>\
+        <tr><td class="pbStat" colspan="' + (cities.length + 2) + '">' + unsafeWindow.g_js_strings.revive.curintrain + '</td></tr>\
         <tr><td>Revive Queue 1</td>';
     for (i = 0; i < cities.length; i ++) {
         var cid = 'city' + cities[i][0];
@@ -21809,7 +22016,7 @@ Tabs.Attack = {
 
 		for (crest in Options.CrestList) {Options.CrestList[crest] = 0; }
 		for (z in AttackOptions.ItemsFoundCr) {
-			
+
 			if (!isNaN(Options.CrestList["i"+z])) // if item is a crest or seal...
 				Options.CrestList["i"+z] = AttackOptions.ItemsFoundCr[z];
 			else {
@@ -21917,8 +22124,8 @@ var March = {
         }
     },
     loop : function (){
-		var t = this;
-		if (t.currentrequests < 5){
+        var t = this;
+        if(t.currentrequests < 5){
             var opts = t.queue.shift();
 			if(opts) {
 				t.sendMarch(opts.params, opts.callback);
@@ -21992,7 +22199,7 @@ var March = {
       return slots;
    },
    getMarchSlots : function (cityId){
-      var t = this;
+        var t = this;
       cityId = "city"+cityId;
       var slots=0;
 	  var now = unixTime();
@@ -22106,19 +22313,19 @@ var March = {
         t.currentrequests++;
         //alert(inspect(params));
         new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {   
-			method: "post",
-			parameters: params,
-			loading: true,
-			onSuccess: function (transport) {
-				t.profiler.stop();
-				--t.currentrequests;
-				var rslt = eval("(" + transport.responseText + ")");
-				if (rslt.updateSeed) {
-					unsafeWindow.update_seed(rslt.updateSeed)
-				}
-				if (rslt.ok) {
-					var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
-					var ut = unsafeWindow.unixtime();
+            method: "post",
+            parameters: params,
+            loading: true,
+            onSuccess: function (transport) {
+                t.profiler.stop();
+                --t.currentrequests;
+                var rslt = eval("(" + transport.responseText + ")");
+                 if (rslt.updateSeed) {
+                        unsafeWindow.update_seed(rslt.updateSeed)
+                    }
+                if (rslt.ok) {
+                    var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
+                    var ut = unsafeWindow.unixtime();
 					var unitsarr = {};
 					for (var ui in unsafeWindow.cm.UNIT_TYPES){
 						i = unsafeWindow.cm.UNIT_TYPES[ui];
@@ -22132,9 +22339,9 @@ var March = {
 					for (i = 1; i <= 5; i++) {
 						resources[i] = params["r" + i];
 					}
-					var currentcityid = params.cid;
+                    var currentcityid = params.cid;
  					var rtimediff=parseInt(rslt.returnTS)-parseInt(rslt.initTS); 
-					unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true, ut + rtimediff);
+                    unsafeWindow.attach_addoutgoingmarch(rslt.marchId, rslt.marchUnixTime, ut + timediff, params.xcoord, params.ycoord, unitsarr, params.type, params.kid, resources, rslt.tileId, rslt.tileType, rslt.tileLevel, currentcityid, true,ut+rtimediff);
                   
                     if (rslt.updateSeed) {
                         unsafeWindow.update_seed(rslt.updateSeed);
@@ -22195,44 +22402,44 @@ var March = {
                     
                     //lets start telling kabam their server sucks! 
                     
-					var a = null;
-					var g = Number(rslt.error_code);
-					var g_server = unsafeWindow.g_server;
-					switch (g) {
-						case 0:
-							a = "Unexpected Error.";
-							break;
-						case 8:
-							a = "Excess traffic.";
-							unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server);
-							break;
-						case 3:
-							//game out of sync
-							break;
-						case 4:
-							//not enough units
-							break;
-						case 104:
-							//unable to attack target
-							break;
-						case 208:
-							// beginner protection
-							break;
-						case 210:
-							// Max marches
-						case 213:
-							//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
+						var a = null;
+						var g = Number(rslt.error_code);
+						var g_server = unsafeWindow.g_server;
+						switch (g) {
+							case 0:
+								a = "Unexpected Error.";
+								break;
+							case 8:
+								a = "Excess traffic.";
+								unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server);
+								break;
+							case 3:
+								//game out of sync
+								break;
+							case 4:
+								//not enough units
+								break;
+							case 104:
+								//unable to attack target
+								break;
+							case 208:
+								// beginner protection
+								break;
+							case 210:
+								// Max marches
+							case 213:
+								//logit('march params.cid is '+params.cid+' and params.kid is '+params.kid+' and knight status is '+Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus);
 							  if (Seed.knights['city'+params.cid]['knt'+params.kid])
 								Seed.knights['city'+params.cid]['knt'+params.kid].knightStatus = 10;//remove knight from list, set to 1 to make available again.
-							//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
-							break;
-						default:
-							a = "Something has gone wrong.";
-							unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server); 
-							rslt.max = cids;
-							//scripterdebuglog(rslt,'march');//For those getting unknown errors, uncomment this line and Baos will also receive your errors live.
-							break;
-					};
+								//{"ok":false,"error_code":213,"msg":"Unable to dispatch march. Knight must be idle in the city and not assigned to any role, must have enough units."}
+								break;
+							default:
+								a = "Something has gone wrong.";
+								unsafeWindow.cm.GATracker("Error", a + " (" + g + ")", g_server); 
+         	           rslt.max = cids;
+								//scripterdebuglog(rslt,'march');//For those getting unknown errors, uncomment this line and Baos will also receive your errors live.
+								break;
+							};
                     setTimeout (function(){callback(rslt)}, 5*1000); //return all sever excess traffic error to original function to handle
                     return;
                 }
@@ -22245,7 +22452,7 @@ var March = {
                     callback({ok:false}); //return all onFailure as {ok:false} so as to trigger remarch
                 t.loop(); //Always check for the next queued march after a request
             }
-        });
+          });
     }
 };
 
@@ -22329,7 +22536,7 @@ Tabs.popcontrol = {
       //m += '<td><input type="submit" id="poptab_test" value="Test"></td>';
       m += '</tr>';     
       m += '</table>';
-
+   
       m += '<DIV class=pbStat>Tournament Mode</div>';
 	  m += '<DIV align="center"><b>Converts Surplus Troops into Idle Population</b><br>Turn this on during a tournament to automatically convert supply troops or MM to maximum idle population in each city.<br>The idea is that they will be retrained as scouts, pikes or swordsmen - i.e. more might!<br>Between tournaments, use this to convert surplus swords, pikes or archers back to idle population to be retrained as supply troops.<br>This only works if auto-training is active for the city, and there are training slots available. (or less than 1 minute to go)</div>';      
 	  m += '<table border="0" width="100%"><tr><td align="center"><INPUT id=pbtourney type=submit value="Tournament Mode : OFF" \></td><td align="center"><INPUT id=pbtourneyst type=checkbox '+(Options.UseTourneyST?'CHECKED':'')+'\>Supply Troops&nbsp;<INPUT id=pbtourneymm type=checkbox '+(Options.UseTourneyMM?'CHECKED':'')+'\>Militiamen&nbsp;<INPUT id=pbtourneysc type=checkbox '+(Options.UseTourneySC?'CHECKED':'')+'\>Scouts&nbsp;<INPUT id=pbtourneypk type=checkbox '+(Options.UseTourneyPK?'CHECKED':'')+'\>Pikes&nbsp;<INPUT id=pbtourneysw type=checkbox '+(Options.UseTourneySW?'CHECKED':'')+'\>Swords&nbsp;<INPUT id=pbtourneyar type=checkbox '+(Options.UseTourneyAR?'CHECKED':'')+'\>Archers&nbsp;</td><td></tr></table>';      
@@ -22362,7 +22569,7 @@ Tabs.popcontrol = {
       document.getElementById('poptab_run_cycle').addEventListener   ('click', function(){   t.run_cycle (t.tcp.city.id);  } , false);
       //document.getElementById('poptab_test').addEventListener   ('click', function(){   t.btest  ();   } , false);
          document.getElementById('poptab_troop_dismiss').addEventListener('change', function(){t.poptab_troop_dismiss = document.getElementById('poptab_troop_dismiss').value;} , false);
-
+  
       document.getElementById('pbtourney').addEventListener ('click', function() {t.toggleTourneyMode()}, false);
 	  t.togOpt('pbtourneymm','UseTourneyMM');
 	  t.togOpt('pbtourneyst','UseTourneyST');
@@ -23563,70 +23770,70 @@ Tabs.Champion = {
      initChampData : function(){
 	var t = Tabs.Champion;
 
-    var enhanceMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_ENHANCE_AETHERSTONE_MAP"),enhObjSize=0;
-    for (var k in enhanceMap)
-       enhObjSize++;
-    for (i=1; i<enhObjSize+1; i++) 
-       t.EnhanceCost[i]=enhanceMap[i]["Aetherstones"];
-    var upgradeMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_UPGRADE_AETHERSTONE_MAP"),upgObjSize=0;
-    for (var k in upgradeMap)
-       upgObjSize++;
-    for (i=1; i<upgObjSize+1; i++)
-       t.UpgradeCost[i]=upgradeMap[i]["Aetherstones"];
+	var enhanceMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_ENHANCE_AETHERSTONE_MAP"),enhObjSize=0;
+	for (var k in enhanceMap)
+	  enhObjSize++;
+	for (i=1; i<enhObjSize+1; i++) 
+	  t.EnhanceCost[i]=enhanceMap[i]["Aetherstones"];
+	var upgradeMap = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_UPGRADE_AETHERSTONE_MAP"),upgObjSize=0;
+	for (var k in upgradeMap)
+	  upgObjSize++;
+	for (i=1; i<upgObjSize+1; i++)
+	  t.UpgradeCost[i]=upgradeMap[i]["Aetherstones"];
 
-    unsafeWindow.chsetFAV = t.setSalvageFAV;
-    unsafeWindow.chSavlage = t.setSalvageItem;
-    unsafeWindow.chActionPopup = t.ActionPopup;
+	unsafeWindow.chsetFAV = t.setSalvageFAV;
+	unsafeWindow.chSavlage = t.setSalvageItem;
+	unsafeWindow.chActionPopup = t.ActionPopup;
 	unsafeWindow.chpostInfo = t.postInfo;
-//    unsafeWindow.chdoEquip = t.doEquip;
-    unsafeWindow.chfupgenh = t.fupgenh;
+//	unsafeWindow.chdoEquip = t.doEquip;
+	unsafeWindow.chfupgenh = t.fupgenh;
 
-    var a = JSON2.parse(GM_getValue ('ChampionHistory_'+getServerId(), '[]'));
-    if (matTypeof(a) == 'array') t.log = a;
-    var a = JSON2.parse(GM_getValue ('ChampionSalvageHistory_'+getServerId(), '[]'));
-    if (matTypeof(a) == 'array') t.SalvageLog = a;
+	var a = JSON2.parse(GM_getValue ('ChampionHistory_'+getServerId(), '[]'));
+	if (matTypeof(a) == 'array') t.log = a;
+	var a = JSON2.parse(GM_getValue ('ChampionSalvageHistory_'+getServerId(), '[]'));
+	if (matTypeof(a) == 'array') t.SalvageLog = a;
 
-    var effectTiers = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS");
-    var effObjSize=0,effsplit={},championStatTiers={},basegrowth={};
-    for (var k in effectTiers) {
-       effsplit=effectTiers[k]["Id_Tier"].split(",");
-       championStatTiers[''+effsplit[0]]={};
-    }  
-    for (var k in effectTiers) {
-       effsplit=effectTiers[k]["Id_Tier"].split(",");
-       basegrowth={};
-       basegrowth['base']=effectTiers[k]["Base"];
-       basegrowth['growth']=effectTiers[k]["Growth"];
-       championStatTiers[''+effsplit[0]][''+effsplit[1]]=basegrowth;
-    }  
-   t.championStatTiers=championStatTiers;
+	var effectTiers = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS");
+	var effObjSize=0,effsplit={},championStatTiers={},basegrowth={};
+	for (var k in effectTiers) {
+	  effsplit=effectTiers[k]["Id_Tier"].split(",");
+	  championStatTiers[''+effsplit[0]]={};
+	}  
+	for (var k in effectTiers) {
+	  effsplit=effectTiers[k]["Id_Tier"].split(",");
+	  basegrowth={};
+	  basegrowth['base']=effectTiers[k]["Base"];
+	  basegrowth['growth']=effectTiers[k]["Growth"];
+	  championStatTiers[''+effsplit[0]][''+effsplit[1]]=basegrowth;
+	}  
+	t.championStatTiers=championStatTiers;
 
-   var championStatEffects={};
-   for (i=1; i<8; i++)
-      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
-   for (i=17; i<24; i++)
-      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
-//   for (i=201; i<210; i++)
-//      championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects['1'];
-   championStatEffects['201']={1:"Damage",2:["Damage"],3:"Combat"};
-   championStatEffects['202']={1:"Bonus Damage",2:["Bonus Damage"],3:"Combat"};
-   championStatEffects['203']={1:"Armor",2:["Armor"],3:"Combat"};
-   championStatEffects['204']={1:"Strength",2:["Strength"],3:"Combat"};
-   championStatEffects['205']={1:"Dexterity",2:["Dexterity"],3:"Combat"};
-   championStatEffects['206']={1:"Health",2:["Health"],3:"Combat"};
-   championStatEffects['207']={1:"Hit",2:["Hit"],3:"Combat"};
-   championStatEffects['208']={1:"Crit",2:["Crit"],3:"Combat"};
-   championStatEffects['209']={1:"Block",2:["Block"],3:"Combat"};
-   t.championStatEffects=championStatEffects;
+	var championStatEffects={};
+	for (i=1; i<8; i++)
+	  championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
+	for (i=17; i<24; i++)
+	  championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects[''+i];
+//	for (i=201; i<210; i++)
+//	  championStatEffects[''+i]=unsafeWindow.cm.thronestats.effects['1'];
+	championStatEffects['201']={1:"Damage",2:["Damage"],3:"Combat"};
+	championStatEffects['202']={1:"Bonus Damage",2:["Bonus Damage"],3:"Combat"};
+	championStatEffects['203']={1:"Armor",2:["Armor"],3:"Combat"};
+	championStatEffects['204']={1:"Strength",2:["Strength"],3:"Combat"};
+	championStatEffects['205']={1:"Dexterity",2:["Dexterity"],3:"Combat"};
+	championStatEffects['206']={1:"Health",2:["Health"],3:"Combat"};
+	championStatEffects['207']={1:"Hit",2:["Hit"],3:"Combat"};
+	championStatEffects['208']={1:"Crit",2:["Crit"],3:"Combat"};
+	championStatEffects['209']={1:"Block",2:["Block"],3:"Combat"};
+	t.championStatEffects=championStatEffects;
 
 	for (var i in unsafeWindow.kocChampionItems){
 	  if (unsafeWindow.seed.champion.equipment[i]) if (unsafeWindow.seed.champion.equipment[i]["repairing"]) {
 	    if (unsafeWindow.seed.champion.equipment[i]["eta"]>t.repairEnd) t.repairEnd=unsafeWindow.seed.champion.equipment[i]["eta"];
 	    if (unsafeWindow.seed.champion.equipment[i]["start"]>t.repairStart) t.repairStart=unsafeWindow.seed.champion.equipment[i]["start"];
 	  }
-    }     
+	}
    },
-   
+
     Uniques : function () {
         var t = Tabs.Champion;
         var UniqueItems = {
@@ -24404,8 +24611,8 @@ postInfo : function (z){
 		if (id == undefined)continue;
 		tier = parseInt(y["effects"][""+i]["tier"]);
 		level = y["level"];
-		p = t.championStatTiers[id][tier];
-		Current = p.base + ((level * level + level) * p.growth * 0.5);
+        	p = t.championStatTiers[id][tier];
+ 		Current = p.base + ((level * level + level) * p.growth * 0.5);
 		m+='||'+Current + "% " + t.championStatEffects[id]["1"];
 	};
 	sendChat ("/a "+  m);
@@ -24606,20 +24813,20 @@ PaintSalvageHistory : function() {
                   setTimeout(t.doRepair,5000);
                   clearTimeout(t.setActionTimer);
                   t.setActionTimer = setInterval(t.doAction,10000);
-                  return;
+		return;
 		}
         	if (ChampionOptions.Items.length ==0) {
         		if(document.getElementById('chShowStatus'))document.getElementById('chShowStatus').innerHTML = "No items in queue!!";
                 	clearTimeout(t.setActionTimer);
                 	t.setActionTimer = setInterval(t.doAction,60*1000);
-                	return;
+		return;
         	}
 //        	if (unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].isBroken == true){
         	if (unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].status < 0){
                 	setTimeout(t.doRepair,5000);
                 	clearTimeout(t.setActionTimer);
                 	t.setActionTimer = setInterval(t.doAction,10000);
-                	return;
+		return;
         	}
         	ChampionOptions.Items["0"]["active"] = true;
         	t.PaintQueue();
@@ -24836,8 +25043,8 @@ PaintSalvageHistory : function() {
                        saveChampionOptions();
                        if(document.getElementById('chShowStatus'))
                      document.getElementById('chShowStatus').innerHTML = 'Upgrade failed :( <br />Item: ' + unsafeWindow.kocChampionItems[ChampionOptions.Items["0"]["id"]].name +"<br />Waiting for repair...";
-                  if(document.getElementById('chShowTries'))
-                     document.getElementById('chShowTries').innerHTML = "Tries: " + ChampionOptions.Tries + "<br />Good requests: " + ChampionOptions.Good + "   Bad requests: " + ChampionOptions.Bad;
+                     if(document.getElementById('chShowTries'))
+                       document.getElementById('chShowTries').innerHTML = "Tries: " + ChampionOptions.Tries + "<br />Good requests: " + ChampionOptions.Good + "   Bad requests: " + ChampionOptions.Bad;
 		     setTimeout(t.doRepair,5000);
                     }
 //                    unsafeWindow.cm.ChampionView.renderInventory(unsafeWindow.kocChampionItems);
@@ -25303,11 +25510,11 @@ salvageCheck : function (){
                     if(ChampionOptions.SingleStat) {
                         for (h in ChampionOptions.Salvage) {
                         if(ChampionOptions.Salvage[h] && ChampionOptions.SalvageA[h].Min > 0 && ChampionOptions.SalvageA[h].cur >= ChampionOptions.SalvageA[h].Min) {
-                           //logit(''+ChampionOptions.Salvage[h]+' && '+ChampionOptions.SalvageA[h].Min+' > 0 && '+ChampionOptions.SalvageA[h].cur+' >= '+ChampionOptions.SalvageA[h].Min);
+                          // logit(''+ChampionOptions.Salvage[h]+' && '+ChampionOptions.SalvageA[h].Min+' > 0 && '+ChampionOptions.SalvageA[h].cur+' >= '+ChampionOptions.SalvageA[h].Min);
                               MinReq = true;
                            }; 
                         if(ChampionOptions.Salvage[h] && ChampionOptions.SalvageA[h][y.type] && ChampionOptions.SalvageA[h][y.type] > 0 && ChampionOptions.SalvageA[h].cur >= ChampionOptions.SalvageA[h][y.type]) {
-                           //logit(''+ChampionOptions.Salvage[h]+' && '+ChampionOptions.SalvageA[h].Min+' > 0 && '+ChampionOptions.SalvageA[h].cur+' >= '+ChampionOptions.SalvageA[h].Min);
+                         //  logit(''+ChampionOptions.Salvage[h]+' && '+ChampionOptions.SalvageA[h].Min+' > 0 && '+ChampionOptions.SalvageA[h].cur+' >= '+ChampionOptions.SalvageA[h].Min);
                              // MinReq = true;
                               logit('saving '+y.name+' due to '+y.type+' and '+h);
                            }; 
@@ -25323,7 +25530,7 @@ salvageCheck : function (){
 //                    if (!level && number < ChampionOptions.Championkeep && NotUpgrading && !y.isEquipped && !y.isBroken && t.LastDeleted != y.equipmentId && NotFavorite && !MinReq && !IsUnique && !IsHero) {
 	                  //  logit ((!level) +'&&'+ (number < ChampionOptions.Championkeep) +'&&'+ (NotUpgrading) +'&&'+ (y.equippedTo == 0) +'&&'+ (y.status == 1) +'&&'+ (t.LastDeleted != y.equipmentId) +'&&'+ NotFavorite +'&&'+ (!MinReq) +'&&'+ (!IsUnique) +'&&'+ (!IsHero));
                     if (!level && number < ChampionOptions.Championkeep && NotUpgrading && y.equippedTo == 0 && y.status == 1 && t.LastDeleted != y.equipmentId && NotFavorite && !MinReq && !IsUnique && !IsHero) {
-                  //logit(y.name);
+               //   logit(y.name);
                         t.SalvageArray.push(y.equipmentId);
                     }                     
             }
@@ -26096,7 +26303,7 @@ function addWatchFunctions() {
 		},
 		setter = function (val) {
 
-			oldval = newval;
+		    oldval = newval;
 
 		    for (var f=0; f < obj.watchers[prop].length; f++) {
 			obj.watchers[prop][f](prop, oldval, val);
@@ -26248,7 +26455,7 @@ Tabs.farmreports = {
             t.FROptions.friendly = this.checked;
             t.saveSROpts();
         }, false);
-        document.getElementById('FSrpts').addEventListener('click', function() {
+         document.getElementById('FSrpts').addEventListener('click', function() {
             t.e_toggleswitch(this)
         }, false);
         setTimeout(t.startdeletereports, 10);
@@ -26440,7 +26647,7 @@ Tabs.farmreports = {
                         if (topush == true) {
                             t.deleteCheckedReport(rpId);
                             logit('deleting scout ' + rpId);
-                        }
+                        } 
                     };
                 },
                 onFailure: function(rslt) {
@@ -26475,6 +26682,51 @@ Tabs.farmreports = {
     hide: function() {
         var t = Tabs.farmreports;
     },
+};
+
+
+var koc2Mail = {
+    init: function(){
+        var html = '<IFRAME style="border:0;width:760px;max-width:760px;height:250px;max-height:250px;overflow:auto" src="//nicodebelder.eu/koc2mail/fb.html"></iframe>';
+        var frame = document.createElement('div');
+        frame.id='koc2mail_div';
+        frame.style.position = 'relative';  
+        frame.style.width= "760px";
+        frame.style.height = "250px";
+        frame.style.background = '#FFFFE6';
+        var kocFooter = document.getElementById('kocfoot');
+        kocFooter.parentNode.insertBefore(frame, kocFooter);
+        document.getElementById('koc2mail_div').innerHTML = html;
+    },
+    towerToMail: function(msg){
+        var content = '<BODY><HTML>' + msg + '</html></body>';
+        var data = {};
+        data.Subject ='Tower Alert ('+getServerId()+')';
+        data.Message = content; 
+        koc2Mail.send(data);
+    },
+    msgToMail: function(send,messageBody){
+        messageBody = messageBody.replace(/custom-line-break/g,"<BR>");
+        var msg = '<BR>Date: ' + send.date;
+        msg += '<BR>From: ' + send.sender,
+        msg += '<BR>Subject: ' + send.subject;
+        msg += '<BR><BR>' + messageBody; 
+        var content = '<BODY><HTML>' + msg + '</html></body>';
+        var data = {};
+        data.Subject ='Forwarded Message ('+getServerId()+')';
+        data.Message = content; 
+        koc2Mail.send(data);
+        document.getElementById('inbox_chk_'+send.id).checked = false;
+    },
+    send: function(data){
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: '//nicodebelder.eu/koc/mail.php',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',},
+            data: implodeUrlArgs(data),
+            onload: function (response) {logit(response.toSource());},
+        });
+    }
 };
 
 /************************************* QUICK SCOUT ********************************/
