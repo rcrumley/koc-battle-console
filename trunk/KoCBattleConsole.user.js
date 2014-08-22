@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140729a
+// @version			20140822a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Include health boost banners on Dashboard</p>
+// @releasenotes 	<p>Support for spellcasters as new troop type on dashboard</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -23,10 +23,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	July 2014 Barbarossa69 (www.facebook.com/barbarossa69)												¦
+//	¦	August 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140729a'; 
+var Version = '20140822a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -199,51 +199,53 @@ var AlternateSortOrder = [5,37,58,21,42,63,1,24,34,44,56,102,17,29,39,50,61,2,25
 
 var guardTypes = ["wood", "ore", "food", "stone"];
 var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
+
+var IMGURL = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/";
  
-var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
-var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
-var AlertBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/tower/timer_bg.png";
-var DivBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/resource_bar_ascension.png";
-var GuardBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/guardian_change_spritemap102.png";
+var TitleBG = IMGURL+"modal/700_bars_4.png";
+var PanelBG = IMGURL+"dialog_740_r2_c1.jpg";
+var AlertBG = IMGURL+"tower/timer_bg.png";
+var DivBG = IMGURL+"nav/resource_bar_ascension.png";
+var GuardBG = IMGURL+"guardian_change_spritemap102.png";
 
-var AttackImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/attacking.jpg";
-var ScoutImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/scouting.jpg";
-var ReinforceImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/reinforce.jpg";
-var ReassignImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/raid_resting.png";
-var TransportImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/transporting.jpg";
-var ReturnImage = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/returning.jpg";
-var GauntletImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/221.jpg";
-var BloodLustImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/261.jpg";
-var BloodFrenzyImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/262.jpg";
-var BloodFuryImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/280.jpg";
-var BarkSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/271.jpg";
-var StoneSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/272.jpg";
-var IronSkinImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/281.jpg";
-var StaunchBannerImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/282.jpg";
-var VigourBannerImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/30/283.jpg";
-var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
-var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
-var ThroneImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/bonus_throne.png";
-var PresetImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_active.png";
-var PresetImage_SEL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_selected.png";
-var MistImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/10021.jpg";
-var DoveImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/901.jpg";
-var RefugeImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/911.jpg";
-var OrderImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/912.jpg";
-var	GoldImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/gold_30.png';
-var FoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/food_30.png';
-var WoodImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/wood_30.png';
-var StoneImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/stone_30.png';
-var OreImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/iron_30.png';
-var AetherImage = 'https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/aetherstone_30.png';
+var AttackImage = IMGURL+"attacking.jpg";
+var ScoutImage = IMGURL+"scouting.jpg";
+var ReinforceImage = IMGURL+"reinforce.jpg";
+var ReassignImage = IMGURL+"autoAttack/raid_resting.png";
+var TransportImage = IMGURL+"transporting.jpg";
+var ReturnImage = IMGURL+"returning.jpg";
+var GauntletImage = IMGURL+"items/30/221.jpg";
+var BloodLustImage = IMGURL+"items/30/261.jpg";
+var BloodFrenzyImage = IMGURL+"items/30/262.jpg";
+var BloodFuryImage = IMGURL+"items/30/280.jpg";
+var BarkSkinImage = IMGURL+"items/30/271.jpg";
+var StoneSkinImage = IMGURL+"items/30/272.jpg";
+var IronSkinImage = IMGURL+"items/30/281.jpg";
+var StaunchBannerImage = IMGURL+"items/30/282.jpg";
+var VigourBannerImage = IMGURL+"items/30/283.jpg";
+var RightArrow = IMGURL+"autoAttack/across_arrow.png";
+var DownArrow = IMGURL+"autoAttack/down_arrow.png";
+var ThroneImage = IMGURL+"bonus_throne.png";
+var PresetImage = IMGURL+"throne/modal/set_active.png";
+var PresetImage_SEL = IMGURL+"throne/modal/set_selected.png";
+var MistImage = IMGURL+"items/70/10021.jpg";
+var DoveImage = IMGURL+"items/70/901.jpg";
+var RefugeImage = IMGURL+"items/70/911.jpg";
+var OrderImage = IMGURL+"items/70/912.jpg";
+var	GoldImage = IMGURL+"gold_30.png";
+var FoodImage = IMGURL+"food_30.png";
+var WoodImage = IMGURL+"wood_30.png";
+var StoneImage = IMGURL+"stone_30.png";
+var OreImage = IMGURL+"iron_30.png";
+var AetherImage = IMGURL+"aetherstone_30.png";
 
-var TroopImagePrefix = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_";
+var TroopImagePrefix = IMGURL+"units/unit_";
 var TroopImageSuffix = "_30.jpg";
 
-var ChampImagePrefix = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/championPort_0";
+var ChampImagePrefix = IMGURL+"champion_hall/championPort_0";
 var ChampImageSuffix = "_50x50.jpg";
 
-var ShieldImage = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/items/70/362.jpg";
+var ShieldImage = IMGURL+"items/70/362.jpg";
 
 var URL_CASTLE_BUT = "data:image/png;base64,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";
 var URL_CASTLE_BUT_SEL = "data:image/png;base64,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";
@@ -268,10 +270,11 @@ var Reins	      = [];
 var WallDefences  = [];
 var FieldDefences = [];
 
-var Infantry = [];
-var Ranged   = [];
-var Horsed   = [];
-var Siege    = [];
+var Infantry    = [];
+var Ranged      = [];
+var Horsed      = [];
+var Siege       = [];
+var SpellCaster = [];
 
 DefaultDashboard = {"Overview":{Display:true, Sequence:0},"Sacrifices":{Display:true, Sequence:10},"Troops":{Display:true, Sequence:20},"Reinforcements":{Display:true, Sequence:30},"Fortifications":{Display:true, Sequence:40},"Outgoing Attacks":{Display:true, Sequence:50},"Incoming Attacks":{Display:true, Sequence:60}};
 
@@ -288,6 +291,9 @@ for (var ui in uW.cm.UNIT_TYPES){
 	i = uW.cm.UNIT_TYPES[ui];
 	var tt = uW.cm.unitFrontendType[i];
 	switch(tt) {
+		case "spellcaster":
+			SpellCaster.push(i);
+			break;
 		case "specialist": // specialist is the same as siege...
 			Siege.push(i);
 			break;
@@ -4242,7 +4248,7 @@ function PaintCityInfo(cityId) {
 		items += '<td class=xtab><a onClick="cm.ItemController.usePotionOfMist(\'10021\')"><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+MistImage+'" title="Potion of Mist ('+Mists+')"></a></td>';
 	}	
 	else {
-		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+MistImage+'" title="Potion of Mist ('+Mists+')"></td>';
+		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+MistImage+'" title="Potion of Mist (0)"></td>';
 	}
 	if (Seed.playerEffects.fogExpire > now) {
 		items += '<td style="width:80px;" class=xtab><span style="color:#080;"><b>'+uW.timestr(Seed.playerEffects.fogExpire-now)+'</b></span></td>';
@@ -4251,6 +4257,7 @@ function PaintCityInfo(cityId) {
 		items += '<td class=xtab><a onClick="btDoveOfPeace(\'901\')"><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+DoveImage+'" title="Dove of Peace ('+Doves+')"></a></td>';
 	}	
 	else {
+		if (!Doves) Doves=0;
 		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+DoveImage+'" title="Dove of Peace ('+Doves+')"></td>';
 	}
 	if (TruceDuration > 0) {
@@ -4267,13 +4274,13 @@ function PaintCityInfo(cityId) {
 		items += '<td class=xtab><a onClick="cm.InventoryView.openPortalOfRefugeModal(\'911\')"><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+RefugeImage+'" title="Portal of Refuge ('+Refuges+')"></a></td>';
 	}	
 	else {
-		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+RefugeImage+'" title="Potion of Mist ('+Refuges+')"></td>';
+		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+RefugeImage+'" title="Portal of Refuge (0)"></td>';
 	}
 	if (Orders) {
 		items += '<td class=xtab><a onClick="cm.InventoryView.openPortalOfOrderModal(\'912\')"><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+OrderImage+'" title="Portal of Order ('+Orders+')"></a></td>';
 	}	
 	else {
-		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+OrderImage+'" title="Potion of Mist ('+Orders+')"></td>';
+		items += '<td class=xtab><img height=24 style="opacity:0.8;vertical-align:text-top;" src="'+OrderImage+'" title="Portal of Refuge (0)"></td>';
 	}
 	
 	items += '</tr></table>'
@@ -4602,10 +4609,10 @@ function PaintCityInfo(cityId) {
 	if (DefState) DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton red20"><span style="width:75px"><center>Defending!</center></span></a>';
 	else DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton green20"><span style="width:75px"><center>Hiding!</center></span></a>';	
 	
-	TroopCell = '<div align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=2 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
+	TroopCell = '<div style="font-size:10px;" align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=3 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
 
 	if (SelectiveDefending) {
-		Troops = '<tr><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=25% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td></tr>';
+		Troops = '<tr><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'P\',false);">Spellcaster</a></b></td></tr>';
 		Troops += '<tr><td class="xtabBRTop">';
 		for(c=0; c<Infantry.length; c++){
 			var i = parseInt(Infantry[c]);
@@ -4626,6 +4633,11 @@ function PaintCityInfo(cityId) {
 			var i = parseInt(Siege[c]);
 			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 		}	
+		Troops += '</td><td class="xtabBRTop">';
+		for(c=0; c<SpellCaster.length; c++){
+			var i = parseInt(SpellCaster[c]);
+			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+		}	
 		Troops += '</td></tr>';
 		if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
 
@@ -4636,10 +4648,10 @@ function PaintCityInfo(cityId) {
 		TitleColour = '#888888';
 		TitleStyle = 'xtabHD';
 
-		TroopCell += '<tr><td colspan=4 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Defend" style="color:#888888;font-size:14px;" onclick="btSelectDefenders(\'A\',true);">Sanctuary</a></b><br></td></tr>';
+		TroopCell += '<tr><td colspan=5 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Defend" style="color:#888888;font-size:14px;" onclick="btSelectDefenders(\'A\',true);">Sanctuary</a></b><br></td></tr>';
 	}
 	
-	Troops = '<tr><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',true);">Infantry</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',true);">Ranged</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',true);">Horsed</a></b></td><td width=25% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',true);">Siege</a></b></td></tr>';
+	Troops = '<tr><td width=20% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',true);">Infantry</a></b></td><td width=20% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',true);">Ranged</a></b></td><td width=20% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',true);">Horsed</a></b></td><td width=20% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',true);">Siege</a></b></td><td width=20% class="xtabHD"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'P\',true);">Spellcaster</a></b></td></tr>';
 	Troops += '<tr><td class="xtabBRTop">';
 	for(c=0; c<Infantry.length; c++){
 		var i = parseInt(Infantry[c]);
@@ -4658,6 +4670,11 @@ function PaintCityInfo(cityId) {
 	Troops += '</td><td class="xtabBRTop">';
 	for(c=0; c<Siege.length; c++){
 		var i = parseInt(Siege[c]);
+       	if (Seed.units['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',true);">'+TroopImage(i)+ addCommas(Seed.units['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
+	}	
+	Troops += '</td><td class="xtabBRTop">';
+	for(c=0; c<SpellCaster.length; c++){
+		var i = parseInt(SpellCaster[c]);
        	if (Seed.units['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',true);">'+TroopImage(i)+ addCommas(Seed.units['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 	}	
 	Troops += '</td></tr>';
@@ -5277,6 +5294,12 @@ function SelectDefenders (sel,def) {
 				MoveArray[i] = 0 - parseIntNan(Seed.defunits['city' + CurrentCityId]['unt'+i]);
 			}
 		}
+		if (sel == "P") { // SpellCaster
+			for(c=0; c<SpellCaster.length; c++){
+				var i = parseInt(SpellCaster[c]);
+				MoveArray[i] = 0 - parseIntNan(Seed.defunits['city' + CurrentCityId]['unt'+i]);
+			}
+		}
 		if (parseIntNan(sel) != 0) { // Troop Identifier
 			MoveArray[sel] = 0 - parseIntNan(Seed.defunits['city' + CurrentCityId]['unt'+sel]);
 		}
@@ -5309,6 +5332,12 @@ function SelectDefenders (sel,def) {
 		if (sel == "S") { // Siege
 			for(c=0; c<Siege.length; c++){
 				var i = parseInt(Siege[c]);
+				MoveArray[i] = parseIntNan(Seed.units['city' + CurrentCityId]['unt'+i]);
+			}
+		}
+		if (sel == "P") { // SpellCaster
+			for(c=0; c<SpellCaster.length; c++){
+				var i = parseInt(SpellCaster[c]);
 				MoveArray[i] = parseIntNan(Seed.units['city' + CurrentCityId]['unt'+i]);
 			}
 		}
