@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140819a
+// @version        20140826a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140819a';
+var Version = '20140826a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -377,7 +377,7 @@ var ptStartupTimer = null;
 var uW = unsafeWindow;
 var seed_player_g = uW.seed.player.g;
 var ResetColors = false;
-var nTroopType = 20;
+var nTroopType = 22;
 var reportpos = {
 	x: -999,
 	y: -999
@@ -2109,7 +2109,9 @@ var Rpt = {
 							if (rslt['bonus']['mod']['s1']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['def'][1]) + '</font></td></tr><tr>';
 							if (rslt['bonus']['mod']['s1']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['spd'][1]) + '</font></td>';
 							if (rslt['bonus']['mod']['s1']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['rng'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['ld']) m += '<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['ld'][1]) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['ld']) m += '<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['ld'][1]) + '</font></td></tr>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['sp'][1]) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['spellEffect'][1]) + '</font></td>';
 							m += '</tr></table></div>';
 						}
 					}
@@ -2127,7 +2129,9 @@ var Rpt = {
 								if (rslt['bonus']['mod']['s0']['u' + i]['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['atk'][1]) + '</font></td>';
 								if (rslt['bonus']['mod']['s0']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['def'][1]) + '</font></td></tr><tr>';
 								if (rslt['bonus']['mod']['s0']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['spd'][1]) + '</font></td>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['rng'][1]) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['rng'][1]) + '</font></td></tr>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['sp'][1]) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['spellEffect'][1]) + '</font></td>';
 								m += '</tr></table></div>';
 							}
 						}
@@ -2504,7 +2508,9 @@ var Rpt = {
 						for (var item in rslt['loot'][5]) {
 							var amt="";
 							if (rslt['loot'][5][item] != 1) { amt = ' ('+rslt['loot'][5][item]+')';}
-							itemdetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/items/70/' + item + '.jpg>&nbsp;' + uW.itemlist['i' + item].name + amt +'&nbsp;&nbsp;&nbsp;';
+							var itemurl = parseInt(item);
+							if (itemurl > 30669 && itemurl < 32111) itemurl = 30303;
+							itemdetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/items/70/' + itemurl + '.jpg>&nbsp;' + uW.itemlist['i' + item].name + amt +'&nbsp;&nbsp;&nbsp;';
 						}
 					}	
 					if (rslt['throneRoomDrop']) {
@@ -6486,6 +6492,8 @@ Tabs.Test = {
 		  <TR><TD align=right># of Halberdiers: </td><TD><INPUT type=text size=9 value=0 id=faketroop17></td></tr>\
 		  <TR><TD align=right># of Onagers: </td><TD><INPUT type=text size=9 value=0 id=faketroop18></td></tr>\
 		  <TR><TD align=right># of Saboteurs: </td><TD><INPUT type=text size=9 value=0 id=faketroop19></td></tr>\
+		  <TR><TD align=right># of Sorcerors: </td><TD><INPUT type=text size=9 value=0 id=faketroop20></td></tr>\
+		  <TR><TD align=right># of Stealers: </td><TD><INPUT type=text size=9 value=0 id=faketroop21></td></tr>\
 		  <TR><TD align=right>Fake name to use: </td><TD><INPUT type=text size=15 value=oftheNOOBS id=fakeName></td></tr>\
 		  <TR><TD align=right>Target city: </td><TD>' + citySelect + '</td></tr>\
         <TR><TD colspan=2 align=center><INPUT id=testSendMarch type=submit value="Fake Attack" \></td></tr></table>\
@@ -7295,7 +7303,7 @@ Tabs.Train = {
    	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoXbows" + (AutoTrainOptions.doXbows[1] ? ' CHECKED ' : '') + ">Crossbows</TD></TR>\
    	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoTrebs" + (AutoTrainOptions.doTrebs[1] ? ' CHECKED ' : '') + ">Defensive Trebuchets</TD></TR>\
       </table></td></tr></table></div></div>\
-      <TABLE align=center width=425 class=ptTab><TR><TD><div id=ptTrainStatus style='overflow-y:auto; max-height:78px; height: 78px;'></div></td></tr></table>\
+      <TABLE align=center width=425 class=ptTab><TR><TD><div id=ptTrainStatus style='overflow-y:auto; max-height:26px; height: 78px;'></div></td></tr></table>\
       <div style='height: 330px; background: #e8ffe8'>\
       <TABLE width=100% class=ptTab><TR><TD colspan=3><DIV id=divSTtop></div></td></tr>\
       <TR><TD width=50% style='padding-left:15px; padding-right:15px'><DIV style='text-align:center'>\
@@ -7692,6 +7700,7 @@ Tabs.Train = {
 				}
 			}
 		}
+
 		if (t.lastTroopSelect == 13) {
 			var numdruidbarrack = getCityBuilding(cityId, 22).count;
 			if (numdruidbarrack == 0) {
@@ -7710,10 +7719,11 @@ Tabs.Train = {
 				t.stats.MaxTrain = 0;
 				t.limitingFactor = null;
 			}
-		} else if (t.lastTroopSelect > 16) {
+		} else if (t.lastTroopSelect > 16 && t.lastTroopSelect != 23) {
 			t.stats.MaxTrain = 0;
 			t.limitingFactor = null;
 		}
+
 		if (t.limitingFactor) {
 			document.getElementById('ptttr_' + t.limitingFactor).className = 'boldRed';
 			document.getElementById('ptttr2_' + t.limitingFactor).className = 'boldRed';
@@ -7960,8 +7970,8 @@ Tabs.Train = {
 		t.stats.barracks = (isSpecial) ? (getCityBuilding(cityId, 22).count + getCityBuilding(cityId, 24).count + getCityBuilding(cityId, 26).count) : getCityBuilding(cityId, 13).count;
 		var m = '<CENTER><B>' + Cities.byID[cityId].name + ' &nbsp; (' + Cities.byID[cityId].x + ',' + Cities.byID[cityId].y + ')</b></center><HR>';
 		m += '<TABLE class=ptTab width=100%><TR align=center>';
-		for (i = 1; i <= 10; i++) {
-			j=i+10;
+		for (i = 1; i <= 11; i++) {
+			j=i+11;
 			if (j > 18) j=j+2;
 			m += '<TR><TD width=75px>' + uW.unitcost['unt' + i][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + i])) + '</td>';
 			m += '<TD width=75px>' + uW.unitcost['unt' + j][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + j])) + '</td>';
@@ -9640,6 +9650,8 @@ Tabs.OverView = {
 		_displayrow("Halberdier", infoRows[24]);
 		_displayrow("Onager", infoRows[25]);
 		_displayrow("Saboteur", infoRows[26]);
+		_displayrow("Sorcerors", infoRows[27]);
+		_displayrow("Stealers", infoRows[28]);
 		u += "<TR><TD></TD><TD nowrap align=center colspan=" + (Cities.numCities) + "><B>Wall Defense Hourly Production</B></TD></TR>";
 		_displayrow("XBow", infoRows[nTroopType + 7]);
 		_displayrow("Trebuchet", infoRows[nTroopType + 8]);
@@ -9689,8 +9701,12 @@ Tabs.OverView = {
 				m.push('<TD style="background: #ffc">');
 				if (name == 'Gold' || name == 'Food' || name == 'Wood' || name == 'Stone' || name == 'Ore' || name == 'Aetherstone')
 					t.resTotal[name] = tot;
-				else
+				else {
+					if (Options.includeTrainingExt && Options.includeTraining) {
+						tot -= row[row.length-1];
+					}
 					t.troopTotal[name] = tot;
+				}	
 				if (TEST_WIDE)
 					m.push('X,');
 				m.push(addCommas(tot));
@@ -9790,8 +9806,11 @@ Tabs.OverView = {
 				for (i = 0; i < Cities.numCities; i++) {
 					q = Seed.queue_unt['city' + Cities.cities[i].id];
 					if (q && q.length > 0) {
-						for (qi = 0; qi < q.length; qi++)
-							rows[q[qi][0]][i] += parseIntNan(q[qi][1]);
+						for (qi = 0; qi < q.length; qi++) {
+							qr = q[qi][0];
+							if (qr >= 19) qr=qr-2; 
+							rows[qr][i] += parseIntNan(q[qi][1]);
+						}	
 					}
 				}
 			}
@@ -9816,6 +9835,8 @@ Tabs.OverView = {
 			str += _row('Halberdier', rows[18]);
 			str += _row('Onager', rows[19]);
 			str += _row('Saboteur', rows[20]);
+			str += _row('Sorcerors', rows[21]);
+			str += _row('Stealers', rows[22]);
 			str += '<TR><TD colspan=11><BR></td></tr>';
 			row = [];
 			for (i = 0; i < Cities.numCities; i++) {
