@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140822a
+// @version			20140903a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Support for spellcasters as new troop type on dashboard</p>
+// @releasenotes 	<p>Auto-replenish defending troop losses option - USE WITH CARE!</p><p>Champion popup bug fix</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -26,7 +26,7 @@
 //	¦	August 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140822a'; 
+var Version = '20140903a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -114,6 +114,7 @@ var Options = {
 	AlternateSortOrder  : false,
 	MonitorRefreshRate  : 3,
 	GeneralRefreshRate  : 1,
+	FixDefendingTroops  : false,
 };
 
 var JSON2 = JSON; 
@@ -179,6 +180,8 @@ var	DarkRitual;
 var	ChannelledSuffering;
 var TotalTroops;
 var TotalSanctuaryTroops;
+var AttackedCity;
+var SaveArray = [];
 
 var FFVersion = getFirefoxVersion();
 
@@ -449,7 +452,7 @@ uW.btSendAllHome = function (cityId) {
 	setTimeout (function () { uW.jQuery('#btSendAllHome').removeClass("disabled"); serverwait = false; },(500*delayer)); // let screen updates run again
 }
 
-uW.btCreateChampionPopUp = function (elem,chkcityId,localchamp) {
+uW.btCreateChampionPopUp = function (elem,chkcityId,localchamp,champid) {
 	effects = document.getElementById(elem.id+'effects');
 	// do a compare, or get local champ details...
 	if (Options.ChampionCompare || localchamp) {
@@ -460,7 +463,7 @@ uW.btCreateChampionPopUp = function (elem,chkcityId,localchamp) {
 			for (y in Champs.champions) {
 				chkchamp = Champs.champions[y];
 				if (chkchamp.id) {
-					if (chkchamp.city == chkcityId) {
+					if ((!champid && chkchamp.city == chkcityId) || (chkchamp.id == champid)) {
 						oureffects = '<table cellspacing=0><tr><td colspan=2><b>'+chkchamp.name+'</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>';
 						var gotchamp = false;
 						for (cy in chkchamp.stats.champion) {
@@ -1178,7 +1181,7 @@ function ForceUpdateSeed() {
 		setTimeout(function() {ForceUpdateSeed();}, 1000);
 	}
 	logit('force update seed - request sent to server');
-	setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('force update seed - response received from server');PaintCityInfo(Seed.cities[Options.CurrentCity][0])},true);}, 250);
+	setTimeout(function() {unsafeWindow.update_seed_ajax(true, function () {logit('force update seed - response received from server');PaintCityInfo(Seed.cities[Options.CurrentCity][0]);if (Options.FixDefendingTroops) ResetDefendingTroops(AttackedCity);},true);}, 250);
 }
 
 function EverySecond () {
@@ -1378,7 +1381,14 @@ function CheckForIncoming () {
 			soonest = a;
 			if (!soonest.arrivalTime) soonest.arrivalTime = -1;
 			if (soonest.arrivalTime >= 0) {
-				if (a.arrivalTime - unixTime() < 2) { setTimeout(function() {ForceTries = 0;ForceUpdateSeed();},2000); } // force update defending troops immediately after attacks land
+				if (a.arrivalTime - unixTime() < 2) {
+					// save defending unit configuration
+					if (Options.FixDefendingTroops) {
+						AttackedCity = a.toCityId;
+						StoreDefendingTroops(AttackedCity);
+					}
+					setTimeout(function() {ForceTries = 0;ForceUpdateSeed();},3000); // force update defending troops immediately after attacks land
+				}	
 				break;
 			}
 		}  
@@ -4437,7 +4447,7 @@ function PaintCityInfo(cityId) {
 						}
 						chkbtn = '<a id="btSetChampion'+chkchamp.championId+'" class="inlineButton btButton brown8" onclick="btSetChampion(this)"><span>Assign</span></a>'; 
 					} 
-					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.championId+'td"><img height=14 style="vertical-align:text-top;" id="ChampStats'+chkchamp.championId+'" onMouseover="btCreateChampionPopUp(this,'+chkchamp.assignedCity+',true);" src="'+ChampImagePrefix+chkchamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
+					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.championId+'td"><img height=14 style="vertical-align:text-top;" id="ChampStats'+chkchamp.championId+'" onMouseover="btCreateChampionPopUp(this,'+chkchamp.assignedCity+',true,'+chkchamp.championId+');" src="'+ChampImagePrefix+chkchamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
 				}
 			}	
 		}
@@ -4609,7 +4619,7 @@ function PaintCityInfo(cityId) {
 	if (DefState) DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton red20"><span style="width:75px"><center>Defending!</center></span></a>';
 	else DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton green20"><span style="width:75px"><center>Hiding!</center></span></a>';	
 	
-	TroopCell = '<div style="font-size:10px;" align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab">&nbsp;</td><td colspan=3 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
+	TroopCell = '<div style="font-size:10px;" align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab" style="vertical-align:text-top;"><INPUT id=btFixTroopsChk type=checkbox /><span style="color:'+TroopColour+';font-size:11px;"><b>Auto-Replenish</b></span></td><td colspan=3 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
 
 	if (SelectiveDefending) {
 		Troops = '<tr><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'P\',false);">Spellcaster</a></b></td></tr>';
@@ -4639,9 +4649,9 @@ function PaintCityInfo(cityId) {
 			if (Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',false);">'+TroopImage(i)+ addCommas(Seed.defunits['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 		}	
 		Troops += '</td></tr>';
-		if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
+		if (!GotTroops) {Troops = '<tr><td colspan=5 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
 
-		TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr>';
+		TroopCell += Troops + '<tr><td colspan=5 class="xtab" align=center>&nbsp;</td></tr>';
 	
 		GotTroops = false;
 		TroopColour = '#000';
@@ -4678,10 +4688,11 @@ function PaintCityInfo(cityId) {
        	if (Seed.units['city' + Seed.cities[Curr][0]]['unt'+i] > 0) { GotTroops = true; Troops += '<span class=xtab style="color:'+TroopColour+'"><a class="TextLink" style="color:'+TroopColour+';" onclick="btSelectDefenders('+i+',true);">'+TroopImage(i)+ addCommas(Seed.units['city' + Seed.cities[Curr][0]]['unt'+i])+'</a></span> ';}
 	}	
 	Troops += '</td></tr>';
-	if (!GotTroops) {Troops = '<tr><td colspan=4 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
-	TroopCell += Troops + '<tr><td colspan=4 class="xtab" align=center>&nbsp;</td></tr></table></div>';
+	if (!GotTroops) {Troops = '<tr><td colspan=5 class="xtab" align=center><div style="opacity:0.3;color:'+TroopColour+'">No Troops</div></td></tr>';}
+	TroopCell += Troops + '<tr><td colspan=5 class="xtab" align=center>&nbsp;</td></tr></table></div>';
 	
 	if (CheckForHTMLChange('btTroopCell',CityTag+TroopCell)) {
+		ToggleOption ('btFixTroopsChk', 'FixDefendingTroops');
 		document.getElementById('btCityStatus2').addEventListener ('click', function(){ToggleDefenceMode (cityId);} , false);
 		// check if troop types dropdowns need refreshing - Defence AND Sacrifice!
 		CheckOptionsString = "";
@@ -5579,6 +5590,20 @@ function SetPresetDefenders(Replace) {
 		}
 	}	
 	ChangeDefendingTroops (CurrentCityId, MoveArray, Replace);
+}
+
+function StoreDefendingTroops(CityId) {
+	StoreArray = [];
+
+	for (var ui in uW.cm.UNIT_TYPES) {
+		i = uW.cm.UNIT_TYPES[ui];
+		StoreArray[i] = parseIntNan(Seed.defunits['city' + CityId]['unt'+i]);
+	}	
+
+}
+
+function ResetDefendingTroops(CityId) {
+	ChangeDefendingTroops (CityId, StoreArray, true);
 }
 
 function SendHome (marchId) {
