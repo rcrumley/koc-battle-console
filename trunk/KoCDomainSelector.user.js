@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.3a
+// @version			0.4a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -770,7 +770,7 @@ function TokenPopup (){
 		n += '<tr><td class=xtab align=right colspan=2><a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
 		n += '</table>';
 		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0>';
-		n += '<tr><td class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!"></td></tr>';
+		n += '<tr><td width=33% class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><a id=tkprior><<</a>&nbsp;<input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!">&nbsp;<a id=tknext>>></a></td></tr>';
 		n += '</table>';
 		n += '<div align="center" style="font-size:10px;opacity:0.3;">KoC Domain Selector v0.3a<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
 		n += '<div id=tkmessage align="center" style="font-size:10px;opacity:0.6">&nbsp;</div>';
@@ -800,6 +800,42 @@ function TokenPopup (){
 		document.getElementById('tkchestdomainlist').addEventListener('keyup', function () {
 			KOCAutoAcceptGifts.options.ChestDomainList = document.getElementById('tkchestdomainlist').value;
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+		}, false);
+		document.getElementById('tknext').addEventListener('click', function () {
+			var DomArray = document.getElementById('tkchestdomainlist').value.split(","); 
+			for (var d=0; d < DomArray.length; d++) {
+				var found = false;
+				if (DomArray[d] == KOCAutoAcceptGifts.options.ChestDomain) {
+					if (d < DomArray.length-1) KOCAutoAcceptGifts.options.ChestDomain = DomArray[d+1]
+					else KOCAutoAcceptGifts.options.ChestDomain = DomArray[0];
+					KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				KOCAutoAcceptGifts.options.ChestDomain = DomArray[0];
+				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+			}
+			document.getElementById('tkchestdomain').value = KOCAutoAcceptGifts.options.ChestDomain;
+		}, false);
+		document.getElementById('tkprior').addEventListener('click', function () {
+			var DomArray = document.getElementById('tkchestdomainlist').value.split(","); 
+			for (var d=0; d < DomArray.length; d++) {
+				var found = false;
+				if (DomArray[d] == KOCAutoAcceptGifts.options.ChestDomain) {
+					if (d > 0) KOCAutoAcceptGifts.options.ChestDomain = DomArray[d-1]
+					else KOCAutoAcceptGifts.options.ChestDomain = DomArray[DomArray.length-1];
+					KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				KOCAutoAcceptGifts.options.ChestDomain = DomArray[DomArray.length-1];
+				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+			}
+			document.getElementById('tkchestdomain').value = KOCAutoAcceptGifts.options.ChestDomain;
 		}, false);
 		document.getElementById('tkbuildbmk').addEventListener('click', function () {
 			if (document.getElementById('tklink').value != "") { 
