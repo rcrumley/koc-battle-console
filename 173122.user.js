@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140917a
+// @version        20140917b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140917a';
+var Version = '20140917b';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -2104,14 +2104,14 @@ var Rpt = {
 						i = uW.cm.UNIT_TYPES[ui];
 						if (rslt['fght']["s1"]['u' + i]) {
 							m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
-							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['hp'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['atk'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['def'][1]) + '</font></td></tr><tr>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['spd'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['rng'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['ld']) m += '<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['ld'][1]) + '</font></td></tr>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['sp'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s1']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(rslt['bonus']['mod']['s1']['u' + i]['spellEffect'][1]) + '</font></td>';
+							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['hp'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['atk'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['spd'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['rng'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['ld']) m += '<TD style="width:33%;" align=left><font size="1"><b>Ld: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['ld'][1] * 100) / 100) + '</font></td></tr>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['sp'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s1']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s1']['u' + i]['spellEffect'][1] * 100) / 100) + '</font></td>';
 							m += '</tr></table></div>';
 						}
 					}
@@ -2125,13 +2125,13 @@ var Rpt = {
 						if (rslt['fght']["s0"]['u' + i]) {
 							if (rslt['fght']["s0"]['u' + i] && rslt['bonus']['mod']["s0"]['u' + i]) {
 								m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
-								m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['hp'][1]) + '</font></td>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['atk'][1]) + '</font></td>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['def'][1]) + '</font></td></tr><tr>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['spd'][1]) + '</font></td>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['rng'][1]) + '</font></td></tr>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['sp'][1]) + '</font></td>';
-								if (rslt['bonus']['mod']['s0']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(rslt['bonus']['mod']['s0']['u' + i]['spellEffect'][1]) + '</font></td>';
+								m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['hp'][1] * 100) / 100) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['atk'][1] * 100) / 100) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['spd'][1] * 100) / 100) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['rng'][1] * 100) / 100) + '</font></td></tr>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['sp'][1] * 100) / 100) + '</font></td>';
+								if (rslt['bonus']['mod']['s0']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['spellEffect'][1] * 100) / 100) + '</font></td>';
 								m += '</tr></table></div>';
 							}
 						}
@@ -2139,31 +2139,31 @@ var Rpt = {
 					for (var i = 53; i <= 55; i++) {
 						if (rslt['fght']["s0"]['f' + i]) {
 							m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
-							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['hp'][1]) + '</font></td>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['atk'][1]) + '</font></td>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['def'][1]) + '</font></td></tr><tr>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['spd'][1]) + '</font></td>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['rng'][1]) + '</font></td></tr></table></div>';
+							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['hp'][1] * 100) / 100) + '</font></td>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['atk'][1] * 100) / 100) + '</font></td>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['spd'][1] * 100) / 100) + '</font></td>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['rng'][1] * 100) / 100) + '</font></td></tr></table></div>';
 						}
 					}
 					for (var i = 60; i <= 63; i++) {
 						if (rslt['fght']["s0"]['f' + i]) {
 							m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
-							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['hp'][1]) + '</font></td>';
-							m += '<td style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['atk'][1]) + '</font></td>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['def'][1]) + '</font></td></tr><tr>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['spd'][1]) + '</font></td>';
-							m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['f' + i]['rng'][1]) + '</font></td></tr></table></div>';
+							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['hp'][1] * 100) / 100) + '</font></td>';
+							m += '<td style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['atk'][1] * 100) / 100) + '</font></td>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['spd'][1] * 100) / 100) + '</font></td>';
+							m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['f' + i]['rng'][1] * 100) / 100) + '</font></td></tr></table></div>';
 						}
 					}
 					for (var i = 101; i <= 110; i++) {
 						if (rslt['fght']["s0"]['m' + i]) {
 							m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[i] + '</div>';
-							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(rslt['bonus']['mod']['s0']['m' + i]['hp'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s0']['m' + i]['atk']) m += '<td style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(rslt['bonus']['mod']['s0']['m' + i]['atk'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s0']['m' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(rslt['bonus']['mod']['s0']['m' + i]['def'][1]) + '</font></td></tr><tr>';
-							if (rslt['bonus']['mod']['s0']['m' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(rslt['bonus']['mod']['s0']['m' + i]['spd'][1]) + '</font></td>';
-							if (rslt['bonus']['mod']['s0']['m' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(rslt['bonus']['mod']['s0']['m' + i]['rng'][1]) + '</font></td>';
+							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['m' + i]['hp'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['m' + i]['atk']) m += '<td style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['m' + i]['atk'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['m' + i]['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['m' + i]['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+							if (rslt['bonus']['mod']['s0']['m' + i]['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['m' + i]['spd'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['m' + i]['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['m' + i]['rng'][1] * 100) / 100) + '</font></td>';
 							m += '</tr></table></div>';
 						}
 					}
