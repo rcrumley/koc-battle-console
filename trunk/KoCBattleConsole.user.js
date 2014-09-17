@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140903a
+// @version			20140917a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Auto-replenish defending troop losses option - USE WITH CARE!</p><p>Champion popup bug fix</p>
+// @releasenotes 	<p>Monitor player link to Kocmon</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -23,10 +23,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	August 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
+//	¦	September 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140903a'; 
+var Version = '20140917a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -4619,7 +4619,7 @@ function PaintCityInfo(cityId) {
 	if (DefState) DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton red20"><span style="width:75px"><center>Defending!</center></span></a>';
 	else DefButton2 = '<a id=btCityStatus2 class="inlineButton btButton green20"><span style="width:75px"><center>Hiding!</center></span></a>';	
 	
-	TroopCell = '<div style="font-size:10px;" align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td class="xtab" style="vertical-align:text-top;"><INPUT id=btFixTroopsChk type=checkbox /><span style="color:'+TroopColour+';font-size:11px;"><b>Auto-Replenish</b></span></td><td colspan=3 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
+	TroopCell = '<div style="font-size:10px;" align="center"><TABLE cellSpacing=0 width=100% height=0%><tr><td colspan=2 class="xtab" style="vertical-align:text-top;"><INPUT id=btFixTroopsChk type=checkbox /><span style="color:'+TroopColour+';font-size:11px;"><b>Auto-Replace</b></span></td><td colspan=1 class="xtab" align=center><b><a class="TextLink" title="Click to toggle troops to Hide" style="color:'+TitleColour+';font-size:14px;" onclick="btSelectDefenders(\'A\',false);">Defending</a></b><br></td><td colspan=2 class="xtab" align=right><span class='+((Options.LowerDefendButton==false)?'divHide':'')+'>'+DefButton2+'</span></td></tr>';
 
 	if (SelectiveDefending) {
 		Troops = '<tr><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'I\',false);">Infantry</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'R\',false);">Ranged</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'H\',false);">Horsed</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'S\',false);">Siege</a></b></td><td width=20% class="'+TitleStyle+'"><b><a class="TextLink" style="color:'+TitleColour+';" onclick="btSelectDefenders(\'P\',false);">Spellcaster</a></b></td></tr>';
@@ -6197,6 +6197,10 @@ function eventPaintPlayerInfo (){
 
 	if (!userInfo.userLoaded) {return;} // user being changed
 
+	var fontratio = Options.MonitorFontSize / 11;
+	var imgwidth = 16;
+	imgwidth = Math.floor(imgwidth * fontratio);
+	
 	o = "";
 	if (userInfo.online) o = ' <span style="color:#f00;">(ONLINE)</span>';
 
@@ -6207,7 +6211,7 @@ function eventPaintPlayerInfo (){
 	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin) +'</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
-  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile>(View Profile)</a></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile>(Profile)</a>&nbsp;<a id=btKocmon><img title="View player on Kocmon" width="'+imgwidth+'" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
@@ -6218,6 +6222,7 @@ function eventPaintPlayerInfo (){
 
 	if (CheckForHTMLChange('btUserDiv',m)) {
 		document.getElementById('btProfile').addEventListener ('click', function(){showProfile()}, false);
+		document.getElementById('btKocmon').addEventListener ('click', function(){showKocmon()}, false);
 		PaintTRPresets(); 
 		ResetFrameSize('btMonitor',MonHeight,MonWidth);
 	}	
@@ -6324,14 +6329,14 @@ function eventPaintTRStats () {
 		}
 	
 		if ((LogUser != userInfo.userId) || (JSON2.stringify(LogTR) != JSON2.stringify(HisStatEffects))) {
-			AddToLog(userInfo.userId,userInfo.name,userInfo.allianceName);
+			AddToLog(userInfo.userId,userInfo.name,userInfo.allianceName,HisStatEffects.slice());
 		}	
 	}
 	   
 // if changed while monitoring add log entry and play a sound...
 
     if ((LastUser == userInfo.name) && (JSON2.stringify(LastTR) != JSON2.stringify(HisStatEffects)) && !MonitoringPaused) {
-		AddToLog(userInfo.userId,userInfo.name,userInfo.allianceName);
+		AddToLog(userInfo.userId,userInfo.name,userInfo.allianceName,HisStatEffects.slice());
 		if (Options.MonitorSound) {
 			AudioManager.setSource(SOUND_FILES.monitor);
 			AudioManager.setVolume(Options.Volume);
@@ -6533,6 +6538,10 @@ function showProfile () {
 	unsafeWindow.getInfoForAnUser(userInfo.userId);
 }
 
+function showKocmon () {
+	window.open('http://kocmon.com/' + GetServerId() + '/players/' + userInfo.userId);
+}
+
 function showTR () {
 	var T = {};
 	T.id = userInfo.userId;
@@ -6573,7 +6582,7 @@ function ClearLog() {
 	if (popLog) PaintLog();
 }
 
-function AddToLog(ID,Name,Alliance) {
+function AddToLog(ID,Name,Alliance,TRStats) {
 	var ts = unixTime();
 	var okeep = false;
 	var olabel = "";
@@ -6609,7 +6618,7 @@ function AddToLog(ID,Name,Alliance) {
 			return;
 		}
 	}  
-    CurrLog.push ({ts:ts, id:ID, name:Name, alliance:Alliance, tr:HisStatEffects.slice(), keep:okeep, label:olabel});
+    CurrLog.push ({ts:ts, id:ID, name:Name, alliance:Alliance, tr:TRStats, keep:okeep, label:olabel});
 	setTimeout(function () {saveLog ();},0); // get around GM_SetValue unsafeWindow error
 	if (popLog) PaintLog();
 }

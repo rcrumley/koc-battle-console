@@ -13,9 +13,8 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140611a
-// @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Fixed broken upgrade link</p>
+// @version         20140917a
+// @releasenotes 	<p>Monitor player link to Kocmon</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,10 +22,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	June 2014 Barbarossa69 (www.facebook.com/barbarossa69)												│
+//	│	September 2014 Barbarossa69 (www.facebook.com/barbarossa69)											│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140611a';
+var Version = '20140917a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -1832,7 +1831,11 @@ function ResetHTMLRegister(div) {
 function eventPaintPlayerInfo (){
 
 	if (!userInfo.userLoaded) {return;} // user being changed
-
+	
+	var fontratio = Options.MonitorFontSize / 11;
+	var imgwidth = 16;
+	imgwidth = Math.floor(imgwidth * fontratio);
+	
 	o = "";
 	if (userInfo.online) o = ' <span style="color:#f00;">(ONLINE)</span>';
 	
@@ -1842,7 +1845,7 @@ function eventPaintPlayerInfo (){
 	  m+= ' <tr><TD class=xtabBR align="center" colspan="3">'+ getLastLogDuration(userInfo.lastLogin) +'</td></tr>';
 	if (userInfo.misted) 
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
-	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile_'+NameSpace+'>(View Profile)</a></td></tr>';
+	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile_'+NameSpace+'>(View Profile)</a>&nbsp;<a id=btKocmon_'+NameSpace+'><img title="View player on Kocmon" width="'+imgwidth+'" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
@@ -1853,6 +1856,7 @@ function eventPaintPlayerInfo (){
 
 	if (CheckForHTMLChange('btUserDiv_'+NameSpace,m)) {
 		document.getElementById('btProfile_'+NameSpace).addEventListener ('click', function(){showProfile()}, false);
+		document.getElementById('btKocmon_'+NameSpace).addEventListener ('click', function(){showKocmon()}, false);
 		ResetFrameSize('btMonitor_'+NameSpace,MonHeight,MonWidth);
 	}	
 }
@@ -1941,7 +1945,7 @@ function eventPaintTRStats () {
 	if (CheckForHTMLChange('btMonitorDiv_'+NameSpace,m)) {
 		ResetFrameSize('btMonitor_'+NameSpace,MonHeight,MonWidth);
 	}	
-	   
+
 // if changed while monitoring play a sound...
 
     if ((LastUser == userInfo.name) && (JSON2.stringify(LastTR) != JSON2.stringify(HisStatEffects)) && !MonitoringPaused) {
@@ -2165,6 +2169,10 @@ function MonitorTRLoop () {
 
 function showProfile () {
 	unsafeWindow.getInfoForAnUser(userInfo.userId);
+}
+
+function showKocmon () {
+	window.open('http://kocmon.com/' + GetServerId() + '/players/' + userInfo.userId);
 }
 
 function showTR () {
