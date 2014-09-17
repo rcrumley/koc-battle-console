@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140910a
+// @version        20140917a
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140910a';
+var Version = '20140917a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -130,7 +130,7 @@ var Options = {
   pbChatOnRight: false,
   pbWideMap    : false,
   pbFoodAlert  : false,
-  pbFoodAlertInt  : 6,
+  pbFoodAlertInt  : 1,
   alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,emailapp:0,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{}},
   alertSound   : {enabled:false, soundUrl:DEFAULT_ALERT_SOUND_URL, repeat:true, playLength:20, repeatDelay:0.5, volume:100, alarmActive:false, expireTime:0},
   spamconfig   : {aspam:false, spamvert:'Join my Alliance!!', spammins:'30', atime:2 , spamstate:'a'},
@@ -147,6 +147,7 @@ var Options = {
   HelpRequest  : true,
   DeleteRequest: false,
   DeletegAl    : false,
+  DeleteFood   : false,
   MapShowExtra : false,
   MapShowLevel : false,
   RaidRunning  : false,
@@ -224,6 +225,7 @@ var Options = {
   UseTourneyPK:false,
   UseTourneySW:false,
   UseTourneyAR:false,
+  CustomPublish : {},
 };
 //unsafeWindow.pt_Options=Options;
 
@@ -12990,11 +12992,17 @@ Tabs.Options = {
        }
       m+='</select>'+'</td></tr>';
 
+		var PublishLists = {0:'----', 80:'Everyone', 50:'Friends of Friends', 40:'Friends Only', 10:'Only Me'};
+		for (var l in Options.CustomPublish) {
+			PublishLists[l] = Options.CustomPublish[l];
+		}
+	  
         m += '<TR><TD colspan=2><BR><B>'+translate("Extra Features")+':</b></td></tr>\
         <TR><TD><INPUT id=HelReq type=checkbox /></td><TD>'+translate("Help alliance build/research posts")+'</td></tr>\
         <TR><TD><INPUT id=DelReq type=checkbox /></td><TD>'+translate("Hide alliance requests in chat")+'</td></tr>\
+        <TR><TD><INPUT id=DelFood type=checkbox /></td><TD>'+translate("Hide alliance food alerts in chat")+'</td></tr>\
         <TR><TD><INPUT id=DelAC type=checkbox /></td><TD>'+translate("Hide alliance chat from global chat")+'</td></tr>\
-        <TR><TD><INPUT id=PubReq type=checkbox '+ (GlobalOptions.autoPublishGamePopups?'CHECKED ':'') +'/></td><TD>'+translate("Auto publish Facebook posts for")+' '+ htmlSelector({0:'----', 80:'Everyone', 50:'Friends of Friends', 40:'Friends Only', 10:'Only Me'},GlobalOptions.autoPublishPrivacySetting,'id=selectprivacymode') +' '+translate("(For all domains)")+'<span style="color:#800; font-weight:bold"><sup>'+translate("*Only select ONE of these")+'</sup></span></td>\
+        <TR><TD><INPUT id=PubReq type=checkbox '+ (GlobalOptions.autoPublishGamePopups?'CHECKED ':'') +'/></td><TD>'+translate("Auto publish Facebook posts for")+' '+ htmlSelector(PublishLists,GlobalOptions.autoPublishPrivacySetting,'id=selectprivacymode') +' '+translate("(For all domains)")+'&nbsp;&nbsp;<a id=RefreshPublishList>Refresh User Lists</a>&nbsp;&nbsp;<span style="color:#800; font-weight:bold"><sup>'+translate("*Only select ONE of these")+'</sup></span></td>\
         <TR><TD><INPUT id=cancelReq type=checkbox '+ (GlobalOptions.autoCancelGamePopups?'CHECKED ':'') + '/></td><TD>'+translate("Auto cancel Facebook posts")+'<span style="color:#800; font-weight:bold"><sup>'+translate("*Only select ONE of these")+'</sup></span></td>\
         <TR><TD><INPUT id=MapExtra type=checkbox /></td><TD>'+translate("Show Player & Might in map")+'.</td></tr>\
 		<tr><TD><INPUT id=MapLevel type=checkbox /></td><TD>'+translate("Show Tile Level in map")+'.</td></tr>\
@@ -13021,6 +13029,8 @@ Tabs.Options = {
         </table><BR><BR><HR>'+translate("Note that if a checkbox is greyed out there has probably been a change of KofC\'s code, rendering the option inoperable")+'.</div>';
         m += strButton20(translate('Reset ALL Options'), 'id=ResetALL');
       div.innerHTML = m;
+
+      document.getElementById('RefreshPublishList').addEventListener ('click',function(){t.AddUserLists()},false);    
 
       document.getElementById('selectScreenMode').addEventListener ('change', function(){
               GlobalOptions.pbWideScreenStyle = document.getElementById('selectScreenMode').value;
@@ -13083,6 +13093,7 @@ Tabs.Options = {
       t.togOpt ('HelReq', 'HelpRequest');
       t.togOpt ('DelReq', 'DeleteRequest');
       t.togOpt ('DelAC', 'DeletegAl');
+      t.togOpt ('DelFood', 'DeleteFood');
       t.togOpt ('pbRaidBut', 'raidbtns');
       t.togOpt ('MapExtra', 'MapShowExtra');
       t.togOpt ('MapLevel', 'MapShowLevel');
@@ -13117,6 +13128,39 @@ Tabs.Options = {
     } catch (e) {
       div.innerHTML = '<PRE>'+ e.name +' : '+ e.message +'</pre>';  
     }      
+  },
+
+  AddUserLists : function () {
+  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
+
+	unsafeWindow.FB.login(function (o) {
+		if (o.authResponse) {
+			var p = {
+				access_token : o.authResponse.accessToken
+			};
+			unsafeWindow.FB.api('/me/friendlists', p, function(result) {
+				Options.CustomPublish = {};
+				var markup = '';
+				var PublishLists = {0:'----', 80:'Everyone', 50:'Friends of Friends', 40:'Friends Only', 10:'Only Me'};
+				for (var l in PublishLists) {
+					var selected = "";
+					if (GlobalOptions.autoPublishPrivacySetting == l) selected = "selected";
+					markup += '<option value="'+l +'" '+selected+'>'+PublishLists[l] +'</option>';
+				}
+				var lists = result.data;		
+				for(var i in lists){
+					if (lists[i].list_type == 'user_created') {
+						Options.CustomPublish[lists[i].id] = lists[i].name;
+						var selected = "";
+						if (GlobalOptions.autoPublishPrivacySetting == lists[i].id) selected = "selected";
+						markup += '<option value="'+lists[i].id +'" '+selected+'>'+lists[i].name +'</option>';
+					}	
+				} 
+				saveOptions ();
+				document.getElementById('selectprivacymode').innerHTML = markup;
+			});
+		}
+	},{ scope : "read_friendlists" });
   },
 
   hide : function (){
@@ -15555,13 +15599,14 @@ Tabs.Language = {
   tabLabel : 'Language',            // label to show in main window tabs
   myDiv : null,
   language : {needTranslation:{}},
-  link : {"https://koc-power-bot.googlecode.com/svn/trunk/translation/translation_en.js":"en"},
+  lang : {en:"en",fr:"fr"},
+  link : {"https://koc-power-bot.googlecode.com/svn/trunk/translation/translation_en.js":"en","https://koc-power-bot.googlecode.com/svn/trunk/translation/translation_fr.js":"fr"},
   
   init : function (div){    // called once, upon script startup
     var t = Tabs.Language;
     t.myDiv = div;
     var m = "<DIV class=pbStat>"+translate("Language Settings")+"</div><TABLE><TR>\
-            <TD>"+translate("Set Language")+" : "+ htmlSelector({en:"en"},Options.language,"id=pblang_type") +"</td>\
+            <TD>"+translate("Set Language")+" : "+ htmlSelector(t.lang,Options.language,"id=pblang_type") +"</td>\
             <TD><input id=pblang_update value='"+translate("Save Settings")+"' type=submit DISABLED /><span id=pblang_msg ></span></td></tr>\
             <TR><TD>"+translate("Language files download")+" : "+ htmlSelector(t.link,null,"id=pblang_link") +"</td>\
             <td><input id=pblang_download value='"+translate("Download")+"' type=submit /></td></tr>\
@@ -15611,7 +15656,7 @@ Tabs.Language = {
   
   showlanguage : function(){
       var t = Tabs.Language;
-      t.poplangshow = new pbPopup('pbShowLanguage', 10, 10, 600, 500, true, function() {t.poplangshow.destroy();});
+      t.poplangshow = new pbPopup('pbShowLanguage', 10, 10, 600, 500, true, function() { saveLanguage(); t.poplangshow.destroy();});
       t.poplangshow.getTopDiv().innerHTML = '<TD><B>'+translate("Language Array:")+'</td>';
       t.poplangshow.getMainDiv().innerHTML = '<DIV style="max-height:440px;overflow-y:auto"><TABLE style="overflow-y:auto" align=center cellpadding=0 cellspacing=0 width=100% class="pbTab" id="pblang_showarray"></table></div><div id=pblang_status ></div>';
       t.paintlanguagearray();
@@ -15924,7 +15969,6 @@ function ToggleDivDisplay(h,w,div) {
 function onUnload (){
   Options.pbWinPos = mainPop.getLocation();
   if (!ResetAll) saveOptions();
-  saveLanguage();
 }
 
 function mouseMainTab (me){   // right-click on main button resets window location
@@ -17013,6 +17057,13 @@ var ChatPane = {
     var AllianceChatBox=document.getElementById('mod_comm_list2');
     var GlobalChatBox=document.getElementById('mod_comm_list1');
     
+		var myregexp1 = /You are # [0-9]+ of [0-9]+ to help/i;
+		var myregexp2 = /\'s Kingdom does not need help\./i;
+		var myregexp3 = /\'s project has already been completed\./i;
+		var myregexp4 = /\'s project has received the maximum amount of help\./i;
+		var myregexp5 = /You already helped with (.*?)\'s project\./i;
+		var myregexp6 = /is low on food. Remaining:/i;
+    
     if(AllianceChatBox){
         var chatPosts = document.evaluate(".//div[contains(@class,'chatwrap')]", AllianceChatBox, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
         if(chatPosts){
@@ -17055,39 +17106,52 @@ var ChatPane = {
                         }
                     }
                 // Hide alliance reports in chat
-                    var myregexp1 = /You are # [0-9]+ of [0-9]+ to help/i;
-                    var myregexp2 = /\'s Kingdom does not need help\./i;
-                    var myregexp3 = /\'s project has already been completed\./i;
-                    var myregexp4 = /\'s project has received the maximum amount of help\./i;
-                    var myregexp5 = /You already helped with (.*?)\'s project\./i;
                     if (thisPost.innerHTML.match(myregexp1) || thisPost.innerHTML.match(myregexp2) || thisPost.innerHTML.match(myregexp3) || thisPost.innerHTML.match(myregexp4) || thisPost.innerHTML.match(myregexp5)) {
                         thisPost.parentNode.removeChild(thisPost);
                     }
                 }
-            }    
-        }    
-    }
-   if(Options.DeleteRequest || Options.DeletegAl) {
-      var gchatPosts = document.evaluate(".//div[contains(@class,'chatwrap')]", GlobalChatBox, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
-         if(gchatPosts)
-            for (var i = 0; i < gchatPosts.snapshotLength; i++) {
-               var gthisPost = gchatPosts.snapshotItem(i);
-               if(Options.DeletegAl) {
-                  var myregexp1 = /\> says to the alliance\:\<\/b\>/i;
-                  if (gthisPost.innerHTML.match(myregexp1))
-                     gthisPost.parentNode.removeChild(gthisPost);
-               } else {
-                  var helpAllianceLinks=document.evaluate(".//a[contains(@onclick,'claimAllianceChatHelp')]", gthisPost, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
-                  if(helpAllianceLinks){
-                     for (var j = 0; j < helpAllianceLinks.snapshotLength; j++) {
-                        thisLink = helpAllianceLinks.snapshotItem(j);
-                        thisLink.parentNode.parentNode.parentNode.parentNode.parentNode.removeChild(thisLink.parentNode.parentNode.parentNode.parentNode);
-                     }
-                  }
-               }
-            }
-   }
-  },
+					if(Options.DeleteFood){
+						if (thisPost.innerHTML.match(myregexp6)) {
+							thisPost.parentNode.removeChild(thisPost);
+						}
+					}
+				}    
+			}    
+		}
+		
+		if(Options.DeleteRequest || Options.DeleteFood || Options.DeletegAl) {
+			var gchatPosts = document.evaluate(".//div[contains(@class,'chatwrap')]", GlobalChatBox, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
+			if(gchatPosts) {
+				for (var i = 0; i < gchatPosts.snapshotLength; i++) {
+					var gthisPost = gchatPosts.snapshotItem(i);
+					if(Options.DeletegAl) {
+						var myregexp1 = /\> says to the alliance\:\<\/b\>/i;
+						if (gthisPost.innerHTML.match(myregexp1))
+							gthisPost.parentNode.removeChild(gthisPost);
+					} else {
+						if (Options.DeleteRequest) {
+							var helpAllianceLinks=document.evaluate(".//a[contains(@onclick,'claimAllianceChatHelp')]", gthisPost, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
+							if(helpAllianceLinks){
+								for (var j = 0; j < helpAllianceLinks.snapshotLength; j++) {
+									thisLink = helpAllianceLinks.snapshotItem(j);
+									thisLink.parentNode.parentNode.parentNode.parentNode.parentNode.removeChild(thisLink.parentNode.parentNode.parentNode.parentNode);
+								}
+							}
+							// Hide alliance reports in chat
+							if (thisPost.innerHTML.match(myregexp1) || thisPost.innerHTML.match(myregexp2) || thisPost.innerHTML.match(myregexp3) || thisPost.innerHTML.match(myregexp4) || thisPost.innerHTML.match(myregexp5)) {
+								thisPost.parentNode.removeChild(thisPost);
+							}
+						}
+						if(Options.DeleteFood){
+							if (thisPost.innerHTML.match(myregexp6)) {
+								thisPost.parentNode.removeChild(thisPost);
+							}
+						}	
+					}
+				}
+			}
+		}
+	},
 
 }
 
@@ -26521,6 +26585,23 @@ function QuickScout() {
 	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City["5"].push("qqmod");
 	var cityType = unsafeWindow.cm.CITY_STATUS.ANOTHER_PLAYER_CITY_AND_NOT_IN_YOUR_ALLIANCE;
 	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City[cityType].push("qqmod");
+	var wildContext;
+	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.EnemyWilderness;
+	for (wild in wildContext) {
+		wildContext[wild].push("qqmod");
+	}
+	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.Wilderness;
+	for (wild in wildContext) {
+		wildContext[wild].push("qqmod");
+	}
+	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.FriendlyWilderness;
+	for (wild in wildContext) {
+		wildContext[wild].push("qqmod");
+	}
+	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.AllianceWilderness;
+	for (wild in wildContext) {
+		wildContext[wild].push("qqmod");
+	}
 
 	// add actions to the menu item
 	var mod = new CalterUwFunc('cm.ContextMenuMapController.prototype.calcButtonInfo',

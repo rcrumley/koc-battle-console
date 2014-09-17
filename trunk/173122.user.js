@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140903a
+// @version        20140917a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140903a';
+var Version = '20140917a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -611,8 +611,8 @@ var knightRoles = [
 	['Steward', 'resourcefulness', 'Res'],
 ];
 
-var rats = [];
-var scripters = ["7552815", "10681588", "1747877", "14909786", "2865067", "10153485", "15182839", "1550996", "1617431819", "9688786", "8184813", "9863346", "11107993", "9751486", "5614388", "424090", "14845619", "8480468", "7042380", "731589","1112699"];
+var rats = ["8800075","17491931"];
+var scripters = ["6046539","11903915","10681588","10153485","1550996","9688786","14845619","8480468","731589","1112699"];
 
 Tabs.Notes = {
 	tabOrder: 999,
@@ -4303,20 +4303,30 @@ var DispReport = {
 		var t = DispReport;
 		if (boxType == 'inbox') {
 			msgBody = document.getElementById('modal_msg_list');
+			var div = document.createElement('span');
+
 			var a = document.createElement('a');
 			a.className = 'buttonDown20';
 			a.innerHTML = '<span>Delete Gift Report</span>';
 			a.style.float = 'left';
-			a.addEventListener('click', t.checkinbox, false);
-			var div = document.createElement('span');
+			a.addEventListener('click', t.checkinbox(1), false);
 			div.appendChild(a);
+			
+			if (unsafeWindow.koc2Mail) {
+				var b = document.createElement('a');
+				b.className='buttonDown20';
+				b.innerHTML="<span>Send to Email&nbsp;<img style='vertical-align:text-top;' width=16 src='http://nicodebelder.eu/favicon.ico'></span>";
+				b.addEventListener('click', function(){t.checkinbox(2);}, false);
+				div.appendChild(b);
+			}	
+
 			msgBody.appendChild(div);
 			var mml = document.getElementById('modal_msg_list');
 			if (mml != null)
 				mml.style.minHeight = '400px';
 		}
 	},
-	checkinbox: function () {
+	checkinbox: function (what) {
 		var t = DispReport;
 		var body = document.getElementById('tbl_messages');
 		var trs = body.getElementsByTagName('tr');
@@ -4324,23 +4334,15 @@ var DispReport = {
 		for (var i = 0; i < trs.length; i++) {
 			var tds = trs[i].getElementsByTagName('td');
 			for (var j = 0; j < tds.length; j++) {
-				if (tds[j].className == 'chkcol') {
-					var checkbox = tds[j];
-				}
-				if (tds[j].className == 'nmcol') {
-					var sender = tds[j];
-				}
-				if (tds[j].className == 'subjcol') {
-					var subject = tds[j];
-				}
-			}
-			reports.push({
-				checkbox: checkbox,
-				sender: sender,
-				subject: subject
-			});
+				if(tds[j].className == 'chkcol') var checkbox = tds[j];
+				if(tds[j].className == 'dtcol') var date = tds[j];  
+				if(tds[j].className == 'nmcol') var sender = tds[j];  
+				if(tds[j].className == 'subjcol') var subject = tds[j]; 			
+			}	
+			reports.push({ checkbox: checkbox, date:date, sender: sender, subject: subject });
 		}
-		t.parseGiftReport(reports);
+		if (what==1) t.parseGiftReport(reports);
+		if (what==2) t.parseMailReport(reports);
 	},
 	parseGiftReport: function (rpts) {
 		var t = DispReport;
@@ -4352,6 +4354,37 @@ var DispReport = {
 			}
 		}
 		uW.messages_action("delete", "tbl_messages");
+	},
+	parseMailReport : function(rpts){
+		var t = DispReport;
+		var send = [];
+		var help = unsafeWindow.getSelectedMessages("tbl_messages");
+		var array = help.split(',');
+		for (var a=0;a<array.length;a++) 
+			for(var i=0;i<rpts.length; i++) {
+				var sender = rpts[i].sender.textContent || rpts[i].sender.innerText;
+				var subject = rpts[i].subject.textContent || rpts[i].subject.innerText;
+				var date = rpts[i].date.textContent || rpts[i].date.innerText;
+				if (rpts[i].checkbox.innerHTML.indexOf(array[a]) >=0) send.push({id:array[a],date:date,sender:sender,subject:subject}); 
+			}
+            for (var i=0;i<send.length;i++) setTimeout(t.messageBody,(i*5000),send[i]);
+	},
+	messageBody: function(send){
+		var t= DispReport;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.pf=0;
+		params.requestType="GET_MESSAGE_FOR_ID";
+		params.messageId = send.id;
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getEmail.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (rslt) {
+					unsafeWindow.koc2Mail.msgToMail(send,rslt.messageBody);
+				}
+			},
+			onFailure: function () { },
+		}, false);
 	},
 	ModalReportListHook: function (rslt, msghtml) {
 		var t = DispReport;
@@ -8964,7 +8997,7 @@ Tabs.OverView = {
 			}
 			if (tottraining > 0) var rowsp = 3;
 			else var rowsp = 2;
-			n += '<TR><TD rowspan="' + rowsp + '" style="background: #FFFFFF; vertical-align:top;"><img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + a + '_30.jpg></td>';
+			n += '<TR><TD rowspan="' + rowsp + '" style="background: #FFFFFF; vertical-align:top;"><img title="'+unsafeWindow.unitcost['unt' + a][0]+'" src="https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + a + '_30.jpg"></td>';
 			for (b = 0; b < Cities.numCities; b++) total += parseInt(Seed.units['city' + Seed.cities[b][0]]['unt' + a]);
 			if (total > 0) n += '<TD align=right >' + addCommas(total) + '</td>';
 			else n += '<TD align=right >&nbsp;</td>';
@@ -10087,6 +10120,7 @@ Tabs.Attaque = {
 	sourceCity: {},
 	destinationCity: {},
 	rows: [],
+	MaxLoad: 0,
 	iused: new Array(),
 	init: function (div) {
 		var t = Tabs.Attaque;
@@ -10108,27 +10142,58 @@ Tabs.Attaque = {
 		setTimeout(t.Refreshtroops, 10000);
 		var rownum = 0;
 		var ModelCity = {};
+		
+		t.Food = 0;
+		t.Wood = 0;
+		t.Stone = 0;
+		t.Ore = 0;
+		t.Gold = 0;
+		t.Astone = 0;
+		
 		if (t.state == null) {
 			m = "<DIV class=ptstat><b>QUICK MARCH TOOL</b></div>";
 			m += "<div id='statpourRAA'></div>";
 			m += "<TABLE width=600 class=ptTab border=0 align=center>\
-           <tr><td><INPUT type=checkbox id=ptmarch_autoknight " + (Options.marchautoknight ? 'CHECKED' : '') + " /> Auto select knight</td></tr>\
-           <tr><td colspan=4 align=center><input type=button id=REEaction value='Scout'>&nbsp;<input type=button id=RAAaction value='Attack'>&nbsp<input type=button id=RARaction value='Reassign'>&nbsp;<input type=button id=RENaction value='Reinforce'>&nbsp;<input type=button id=RENBaction value='Reinforce + Max Food'></td></tr><tr align=center valign=top><td width=130><b><u>Source</b></u><br><span id=RAAsrcRptspeedcity></span></td>\
-           <td><b><u>Destination</b></u><br>X:<input type=text id=RAAtypetrpx size=3>&nbsp;Y:<input type=text id=RAAtypetrpy size=3><br><a href='javascript:void(0);' id='BOchargelistelieux'>Fetch Members</a> : <select id='listeFavori'></select></td>\
+           <tr><td colspan=4 align=center><INPUT type=checkbox id=ptmarch_autoknight " + (Options.marchautoknight ? 'CHECKED' : '') + " /> Auto select knight&nbsp;&nbsp;<INPUT type=checkbox id=ptmarch_autochamp " + (Options.marchautochamp ? 'CHECKED' : '') + " /> Auto select champ&nbsp;&nbsp;<INPUT type=checkbox id=ptmarch_autospell " + (Options.marchautospell ? 'CHECKED' : '') + " /> Auto select spell</td></tr>\
+           <tr><td colspan=4 align=center><input type=button id=REEaction value='Scout'>&nbsp;<input type=button id=RAAaction value='Attack'>&nbsp<input type=button id=RARaction value='Reassign'>&nbsp;<input type=button id=RENaction value='Reinforce'>&nbsp;<input type=button id=RENBaction value='Reinforce + Max Food'><input type=button id=TRANaction value='Transport'></td></tr><tr align=center valign=top><td width=130><b><u>Source</b></u><br><span id=RAAsrcRptspeedcity></span></td>\
+           <td><b><u>Destination</b></u><br>X:<input type=text id=RAAtypetrpx size=3>&nbsp;Y:<input type=text id=RAAtypetrpy size=3></td>\
            <td><b><u>Distance</u></b><br><span id='BOEstimationD'>&nbsp;</span><td><b><u>Closest City</u></b><br><span id=BOVilleProche></span>\
-           </tr><tr align=center valign=top>\
-           <td colspan=4 align=left><table border=0 bordercolor=black cellspacing=0 cellpadding=0 width=100% style='text-align:center'><tr><td rowspan=999><div id=RAAstatsource></div></td><td colspan=2><a href='javascript:void(0)' id=BO_RAZ_Units title='Clear' >Units Selected</a></td><td>Attack Time</td><td>Reinforce Time</td></tr>";
+           </tr></tr><tr><td colspan=2 align=right><a href='javascript:void(0);' id='BOchargelistelieux'>Fetch Members</a> : <select id='listeFavori'></select></td><td colspan=2 align=left><a href='javascript:void(0);' id='fetchbookmarks'>Fetch Bookmarks</a> : <select id='listbookmarks'></select></td></tr>\
+		   <tr><td colspan=4>Knight: <SELECT id='RAApiKnight' type=list></select>&nbsp;&nbsp;Champion: <SELECT id='RAApiChampion' type=list></select> (Attack Only!!)&nbsp;&nbsp;Spell: <SELECT id='RAApiSpell' type=list></select></tr>\
+           <tr align=center valign=top><td colspan=4 align=left><table border=0 bordercolor=black cellspacing=0 cellpadding=0 width=100% style='text-align:center'><tr><td rowspan=999><div id=RAAstatsource></div></td><td colspan=2><a href='javascript:void(0)' id=BO_RAZ_Units title='Clear' >Units Selected</a></td><td>Attack Time</td><td>Reinforce Time</td></tr>";
 			for (var ui in uW.cm.UNIT_TYPES) {
 				r = uW.cm.UNIT_TYPES[ui];
 				m += '<tr><td align=right><img height=20 title="' + unsafeWindow.unitcost['unt' + r][0] + '" alt="' + unsafeWindow.unitcost['unt' + r][0] + '" src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + r + '_30.jpg></td><td align=left><input style="border:1px solid black;height:16px;font-size:11px;" id="RAAnbunit' + r + '" type=text size=7 value="0" ></td><td><span id="BOEstimationTT' + r + '">&nbsp;</span></td><td><span id="BOEstimationTZ' + r + '">&nbsp;</span></td></tr>';
 			}
 			var itemlist = [55, 57, 931, 932];
-			var BOitems = "";
+			var BOitems = "&nbsp;&nbsp;<table class=ptTab><tr>";
+			BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/aetherstone_30.png' /></td><td><span id='BOitemSpan_Aether'>&nbsp;</span></td>";
+			BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/gold_30.png' /></td><td><span id='BOitemSpan_Gold'>&nbsp;</span></td>";
 			for (var i = 0; i < itemlist.length; i++) {
-				BOitems += "<img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/30/" + itemlist[i] + ".jpg' /><input type=checkbox id='BOitem_" + itemlist[i] + "'><span id='BOitemSpan_" + itemlist[i] + "'>" + unsafeWindow.ksoItems[itemlist[i]].count + "</span>&nbsp;";
+				BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/30/" + itemlist[i] + ".jpg' /></td><td><span id='BOitemSpan_" + itemlist[i] + "'>(" + unsafeWindow.ksoItems[itemlist[i]].count + ")&nbsp;&nbsp;&nbsp;</span></td>";
 			}
+			BOitems += "</tr><tr>";
+			BOitems += "<td><INPUT id=BOmarchAether type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxAether type=submit value='Max'></td>";
+			BOitems += "<td><INPUT id=BOmarchGold type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxGold type=submit value='Max'></td>";
+			for (var i = 0; i < itemlist.length; i++) {
+				BOitems += "<td><input type=checkbox id='BOitem_" + itemlist[i] + "'></td>";
+			}
+			BOitems += "</tr></table>";
+			
+			var BOresources = "&nbsp;&nbsp;<table class=ptTab><tr>";
+			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/food_30.png' /></td><td><span id='BOitemSpan_Food'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/wood_30.png' /></td><td><span id='BOitemSpan_Wood'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/stone_30.png' /></td><td><span id='BOitemSpan_Stone'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/ore_30.png' /></td><td><span id='BOitemSpan_Ore'>&nbsp;</span></td>";
+			BOresources += "</tr><tr>";
+			BOresources += "<td><INPUT id=BOmarchFood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxFood type=submit value='Max'></td>";
+			BOresources += "<td><INPUT id=BOmarchWood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxWood type=submit value='Max'></td>";
+			BOresources += "<td><INPUT id=BOmarchStone type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxStone type=submit value='Max'></td>";
+			BOresources += "<td><INPUT id=BOmarchOre type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxOre type=submit value='Max'></td>";
+			BOresources += "</tr></table>";
+			
 			m += "</table></td></tr>\
-              <tr><td colspan=4>Knight : <SELECT id='RAApiKnight' type=list></select>  Champion : <SELECT id='RAApiChampion' type=list></select> (use only for Attack) <br>" + BOitems + "</td></tr></table>\
+              <tr><td colspan=4>" + BOresources + "</td></tr><tr><td colspan=4>" + BOitems + "</td></tr></table>\
               <DIV class=ptstat>Saved Unit Configuration :</div><TABLE><tr><td colspan=2><select id=BO_AT_Fav></select><input type=button value='Reset' id=BO_AT_Fav_Sup><input type=button value='Reset All' id=BO_AT_Fav_RESET></td><td colspan=2>New : <input type=type id=BO_AT_Fav_Nom size=10 maxlength=12>&nbsp;<input type=button value='Save Troops' id=BO_AT_Fav_ajou>\
               <tr><td colspan=4><div id=ptRAAStatus style='overflow-y:auto; max-height:50px; height: 50px;'></div></td></tr></table>\
               <DIV class=ptstat>Auto Attack - Work in Progress</div><table></tr><tr><td><input type=button id='BOActiveAttack' value='ACTIVER : OFF' ></td><td colspan=3><span id='BOCompAttack'></span></tr>\
@@ -10149,6 +10214,16 @@ Tabs.Attaque = {
 			}
 			ById("ptmarch_autoknight").addEventListener('click', function () {
 				Options.marchautoknight = this.checked;
+				saveOptions();
+				t.show();
+			}, false);
+			ById("ptmarch_autochamp").addEventListener('click', function () {
+				Options.marchautochamp = this.checked;
+				saveOptions();
+				t.show();
+			}, false);
+			ById("ptmarch_autospell").addEventListener('click', function () {
+				Options.marchautospell = this.checked;
 				saveOptions();
 				t.show();
 			}, false);
@@ -10216,13 +10291,71 @@ Tabs.Attaque = {
 			}
 			t.listeFavoris = ById('listeFavori');
 			t.listeFavoris.addEventListener('change', t.SelectFavoris, false);
+			
+			ById('listbookmarks').addEventListener('change',t.SelectBookmark,false);
+			ById('fetchbookmarks').addEventListener('click',t.FetchBookmarks,false);
+			
+			ById('BOmaxFood').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Food = Math.min(t.MaxLoad - (t.Wood + t.Stone + t.Ore + t.Gold + t.Astone),t.MaxFood);
+				ById('BOmarchFood').value = t.Food;
+			}, false);
+			ById('BOmaxWood').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Wood = Math.min(t.MaxLoad - (t.Food + t.Stone + t.Ore + t.Gold + t.Astone),t.MaxWood);
+				ById('BOmarchWood').value = t.Wood;
+			}, false);
+			ById('BOmaxStone').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Stone = Math.min(t.MaxLoad - (t.Food + t.Wood + t.Ore + t.Gold + t.Astone),t.MaxStone);
+				ById('BOmarchStone').value = t.Stone;
+			}, false);
+			ById('BOmaxOre').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Ore = Math.min(t.MaxLoad - (t.Food + t.Wood + t.Stone + t.Gold + t.Astone),t.MaxOre);
+				ById('BOmarchOre').value = t.Ore;
+			}, false);
+			ById('BOmaxAether').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Astone = Math.min(t.MaxLoad - (t.Food + t.Wood + t.Stone + t.Ore + t.Gold),t.MaxAstone*5);
+				ById('BOmarchAether').value = Math.floor(t.Astone/5);
+			}, false);
+			ById('BOmaxGold').addEventListener('click', function () {
+				t.calcmaxload();
+				t.Gold = Math.min(t.MaxLoad - (t.Food + t.Wood + t.Stone + t.Ore + t.Astone),t.MaxGold);
+				ById('BOmarchGold').value = t.Gold;
+			}, false);
+
+			ById('BOmarchFood').addEventListener('change', function () {
+				t.Food = parseIntNan(ById('BOmarchFood').value);
+			}, false);
+			ById('BOmarchWood').addEventListener('change', function () {
+				t.Wood = parseIntNan(ById('BOmarchWood').value);
+			}, false);
+			ById('BOmarchStone').addEventListener('change', function () {
+				t.Stone = parseIntNan(ById('BOmarchStone').value);
+			}, false);
+			ById('BOmarchOre').addEventListener('change', function () {
+				t.Ore = parseIntNan(ById('BOmarchOre').value);
+			}, false);
+			ById('BOmarchGold').addEventListener('change', function () {
+				t.Gold = parseIntNan(ById('BOmarchGold').value);
+			}, false);
+			ById('BOmarchAether').addEventListener('change', function () {
+				t.Astone = parseIntNan(ById('BOmarchAether').value)*5;
+			}, false);
+			
 			t.chargelistelieux = ById('BOchargelistelieux');
 			t.chargelistelieux.addEventListener('click', t.chercherFavoris, false);
+			t.actionTRAN = ById('TRANaction');
 			t.actionREN = ById('RENaction');
 			t.actionRENB = ById('RENBaction');
 			t.actionREE = ById('REEaction');
 			t.actionRAA = ById('RAAaction');
 			t.actionRAR = ById('RARaction');
+			t.actionTRAN.addEventListener('click', function () {
+				t.clickATTAQUEDo(1, 0);
+			}, false);
 			t.actionREN.addEventListener('click', function () {
 				t.clickATTAQUEDo(2, 0);
 			}, false);
@@ -10268,6 +10401,7 @@ Tabs.Attaque = {
 				t.destinationCityy.value = Options.AttackCibleY;
 				ById("RAApiKnight").value = Options.AttackKnight;
 				ById("RAApiChampion").value = Options.AttackChampion;
+				ById("RAApiSpell").value = Options.AttackSpell;
 				nHtml.Click(ById("ptRAA0_" + Cities.byID[Options.AttackFromCity].idx));
 				for (var ui in uW.cm.UNIT_TYPES) ById("RAAnbunit" + uW.cm.UNIT_TYPES[ui]).value = Options.AttackUnits[parseInt(uW.cm.UNIT_TYPES[ui]) - 1];
 			}, false);
@@ -10280,6 +10414,15 @@ Tabs.Attaque = {
 			var closestNum = t.getclosestcity();
 			t.dcp1 = new CdispCityPicker('ptmarch_citydest', ById('BOVilleProche'), false, t.estimerRes, null).bindToXYboxes(ById("RAAtypetrpx"), ById("RAAtypetrpy"));
 		}
+	},
+	calcmaxload:function () {
+		var t = Tabs.Attaque;
+		t.MaxLoad = 0;
+		for (var ui in uW.cm.UNIT_TYPES) {
+			i = uW.cm.UNIT_TYPES[ui];
+			t.MaxLoad += parseInt(unsafeWindow.unitstats['unt' + i][5] * ById("RAAnbunit" + i).value * (1 + (0.10 * Seed.tech.tch10) + Math.min(equippedthronestats(6) / 100, 6.25)));
+		}
+		if (t.MaxLoad > 0) t.MaxLoad = t.MaxLoad - 1; // reduce max by 1 to avoid load capacity errors due to roundoff
 	},
 	getclosestcity: function () {
 		var t = Tabs.Attaque;
@@ -10331,6 +10474,7 @@ Tabs.Attaque = {
 				t.destinationCityy.value = Options.AttackCibleY;
 				ById("RAApiKnight").value = Options.AttackKnight;
 				ById("RAApiChampion").value = Options.AttackChampion;
+				ById("RAApiSpell").value = Options.AttackSpell;
 				nHtml.Click(ById("ptRAA0_" + Cities.byID[Options.AttackFromCity].idx));
 				for (var ui in uW.cm.UNIT_TYPES) ById("RAAnbunit" + uW.cm.UNIT_TYPES[ui]).value = Options.AttackUnits[parseInt(uW.cm.UNIT_TYPES[ui]) - 1];
 				t.clickATTAQUEDo(4, 0);
@@ -10370,6 +10514,7 @@ Tabs.Attaque = {
 			Options.AttackFromCity = t.sourceCity.id;
 			Options.AttackKnight = ById("RAApiKnight").value;
 			Options.AttackChampion = ById("RAApiChampion").value;
+			Options.AttackSpell = ById("RAApiSpell").value;
 			Options.AttackCibleX = t.destinationCityx.value;
 			Options.AttackCibleY = t.destinationCityy.value;
 			var x1 = parseInt(t.sourceCity.x);
@@ -10425,6 +10570,17 @@ Tabs.Attaque = {
 		if (ById("RAApiKnight").value == 0 && typemarche == 4) {
 			errMsg += "No knight selected!<BR>";
 		}
+		
+		if (typemarche == 1) {
+			t.calcmaxload();
+			if ((t.Food + t.Wood + t.Stone + t.Ore + t.Gold + t.Astone) > t.MaxLoad) {
+				errMsg += "Too much to carry!<BR>";
+			}
+			if ((t.Food + t.Wood + t.Stone + t.Ore + t.Gold + t.Astone) == 0) {
+				errMsg += "You must transport something!<BR>";
+			}
+		}
+		
 		if (errMsg != "") {
 			t.statutRAA.innerHTML = "<FONT COLOR=#550000>" + errMsg + "</font>";
 			return;
@@ -10489,24 +10645,36 @@ Tabs.Attaque = {
 				iused.push(itemlist[i]);
 			}
 		}
+
+		params.r1 = 0;
+		params.r2 = 0;
+		params.r3 = 0;
+		params.r4 = 0;
+		params.r5 = 0;
+		params.gold = 0;
 		var res = 0;
 		if (bouffe == 1) {
 			for (var ui in uW.cm.UNIT_TYPES) {
 				i = uW.cm.UNIT_TYPES[ui];
 				res += parseInt(unsafeWindow.unitstats['unt' + i][5] * ById("RAAnbunit" + i).value * (1 + (0.10 * Seed.tech.tch10) + Math.min(equippedthronestats(6) / 100, 6.25)));
 			}
+			res = res - 1;
+			params.r1 = res;
 		}
 		params.items = iused.join(",");
 		params.cid = t.sourceCity.id;
-		params.type = typemarche; // 5 = REASSIGNER - 4 = ATTAQUE - 2 = RENFORCER
+		params.type = typemarche; // 5 Reassign, 4 Attack, 3 Scout, 2 Reinforce, 1 Transport
 		params.xcoord = x;
 		params.ycoord = y;
 		params.kid = ById("RAApiKnight").value;
-		params.r1 = res - 1; // reduce max by 1 to avoid load capacity errors due to roundoff
-		params.r2 = 0;
-		params.r3 = 0;
-		params.r4 = 0;
-		params.gold = 0;
+		if (typemarche != 3 && typemarche != 4 && bouffe != 1) {
+			params.r1 = Math.min(t.Food,t.MaxFood);
+			params.r2 = Math.min(t.Wood,t.MaxWood);
+			params.r3 = Math.min(t.Stone,t.MaxStone);
+			params.r4 = Math.min(t.Ore,t.MaxOre);
+			params.r5 = Math.floor(Math.min(t.Astone/5,t.MaxAstone/5));
+			params.gold = Math.min(t.Gold,t.MaxGold);
+		}
 		params.champid = 0;
 		for (var ui in uW.cm.UNIT_TYPES) {
 			i = uW.cm.UNIT_TYPES[ui];
@@ -10529,8 +10697,17 @@ Tabs.Attaque = {
 				}
 				params.champid = ById('RAApiChampion').value;
 			}
+		if (ById('RAApiSpell').value != "") {
+			if (typemarche == 4 || ById('RAApiSpell').value != "21") {
+				params.bs = ById('RAApiSpell').value;
+			}	
+		}	
+			
 		t.actionRAA.disabled = true;
+		t.actionRAR.disabled = true;
 		t.actionREN.disabled = true;
+		t.actionRENB.disabled = true;
+		t.actionTRAN.disabled = true;
 		t.actionREE.disabled = true;
 		t.statutRAA.innerHTML = "<i><b>Sending march....</b></i>";
 		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/march.php" + unsafeWindow.g_ajaxsuffix, {
@@ -10541,17 +10718,26 @@ Tabs.Attaque = {
 				var t = Tabs.Attaque;
 				var rslt = transport;
 				if (rslt.ok) {
+					if (rslt.bsEndDate) {
+						Seed.cityData.city[params.cid].spells = {};
+						Seed.cityData.city[params.cid].spells[params.bs] = {endDate : rslt.bsEndDate};
+					}
+					if (params.champid) {
+						uW.cm.ChampionManager.setIsMarching(championidx, true);
+						// update seed immediately
+						Seed.champion.champions[championidx].status = "10";
+					}
 					var timediff = parseInt(rslt.eta) - parseInt(rslt.initTS);
 					var rtimediff = parseInt(rslt.returnTS) - parseInt(rslt.initTS);
 					var ut = unsafeWindow.unixtime();
 					var unitsarr = {};
-					for (var ui in unsafeWindow.cm.UNIT_TYPES) {
+					for (var ui in unsafeWindow.cm.UNIT_TYPES){
 						i = unsafeWindow.cm.UNIT_TYPES[ui];
 						if (params["u" + i])
 							unitsarr[i] = params["u" + i];
 						else
 							unitsarr[i] = 0;
-					}
+					}		
 					var resources = new Array();
 					resources[0] = params.gold;
 					for (i = 1; i <= 5; i++) {
@@ -10584,7 +10770,6 @@ Tabs.Attaque = {
 						typeattaque = "March successful";
 					}
 					t.statutRAA.innerHTML = "<center><font size='3px'><b>" + typeattaque + "</b></font></center>";
-					if (params.champid) uW.cm.ChampionManager.setIsMarching(championidx, true);
 					t.clickRAACitySourceSelect(t.sourceCity);
 				} else {
 					t.statutRAA.innerHTML = "<font color=red size='3px'><b>Error sending march!<b></font>";
@@ -10598,16 +10783,22 @@ Tabs.Attaque = {
 						//setTimeout(function() { t.clickATTAQUEDo(); }, 2000);
 					}
 				}
+				t.actionRAR.disabled = false;
 				t.actionRAA.disabled = false;
 				t.actionREN.disabled = false;
 				t.actionREE.disabled = false;
+				t.actionRENB.disabled = false;
+				t.actionTRAN.disabled = false;
 			},
 			onFailure: function () {
 				var t = Tabs.Attaque;
 				t.statutRAA.innerHTML = "<font color=red size='3px'><b>Error communicating with server!<b></font>";
+				t.actionRAR.disabled = false;
 				t.actionRAA.disabled = false;
 				t.actionREN.disabled = false;
 				t.actionREE.disabled = false;
+				t.actionRENB.disabled = false;
+				t.actionTRAN.disabled = false;
 			}
 		}, true);
 	},
@@ -10627,6 +10818,39 @@ Tabs.Attaque = {
 			ById("BOEstimationTZ" + r).innerHTML = "<b>" + m.friendEtaStr + "</b>";
 		}
 	},
+	SelectBookmark: function () {
+		var t = Tabs.Attaque;
+		var valeur = ById('listbookmarks').value;
+		if (valeur != '') {
+			var x = valeur.substr(0, valeur.lastIndexOf(','));
+			var y = valeur.substr(valeur.lastIndexOf(',') + 1, valeur.length);
+			t.destinationCityx.value = x;
+			t.destinationCityy.value = y;
+		}
+		t.estimerRes();
+	},
+	FetchBookmarks: function () {
+		var t = Tabs.Defend;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.requestType = "GET_BOOKMARK_INFO";
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/tileBookmark.php" + unsafeWindow.g_ajaxsuffix, {
+			method : "post",
+			parameters : params,
+			onSuccess : function (rslt) {
+				if (rslt.ok) {
+					var z = 0;
+					var m = "";
+					var bookmarkInfo = rslt.bookmarkInfo;
+					for (id in bookmarkInfo) {
+						m += "<option value='" + bookmarkInfo[id].xCoord + "," + bookmarkInfo[id].yCoord + "'>" + bookmarkInfo[id].name + " (" + bookmarkInfo[id].xCoord + ", " + bookmarkInfo[id].yCoord + ") </option>";
+					}
+					ById('listbookmarks').innerHTML = "<option value=''>Select Bookmark...</option>" + m;
+				}
+			},
+			onFailure : function () {}
+		})
+	},
+	
 	SelectFavoris: function () {
 		var t = Tabs.Attaque;
 		if (t.listeFavoris.value != '') {
@@ -10733,7 +10957,7 @@ Tabs.Attaque = {
 				ById("RAApiKnight").options.add(o);
 			}
 		}
-		if (ById('RAApiKnight').options.length > 0) {
+		if (ById('RAApiKnight').options.length > 1) {
 			if (Options.marchautoknight)
 				ById('RAApiKnight').selectedIndex = 1;
 		}
@@ -10742,22 +10966,66 @@ Tabs.Attaque = {
 		o.text = "--Select a Champion--";
 		o.value = 0;
 		ById("RAApiChampion").options.add(o);
-		var c = uW.cm.ChampionModalController.getCastleViewData();
-		var d = uW.cm.ChampionManager.getCityChampion(t.sourceCity.id);
-		if ((c != null) && (d != null)) {
-			var champname = c.champions[d].name;
-			var champstatus = c.champions[d].status;
-			if (champstatus == "Defending") {
-				var o = document.createElement("option");
-				o.text = champname;
-				o.value = c.champions[d].id;
-				ById("RAApiChampion").options.add(o);
+//		var c = uW.cm.ChampionModalController.getCastleViewData();
+		var citychamp;
+		for (y in Seed.champion.champions) {
+			citychamp = Seed.champion.champions[y];
+			if (citychamp.assignedCity == t.sourceCity.id) {
+				var champname = citychamp.name;
+				var champstatus = citychamp.status;
+				if (champstatus != "10") {
+					var o = document.createElement("option");
+					o.text = champname;
+					o.value = citychamp.championId;
+					ById("RAApiChampion").options.add(o);
+				}
+				break;	
 			}
 		}
+		if (ById('RAApiChampion').options.length > 1) {
+			if (Options.marchautochamp)
+				ById('RAApiChampion').selectedIndex = 1;
+		}
+		var spells = {1:11, 2:21, 3:31};
+		var blessings = {1:12, 2:22, 3:32};
+		var faction = parseInt(Seed.cityData.city[t.sourceCity.id].prestigeInfo.prestigeType);
+		var spellavailable = (Seed.cityData.city[t.sourceCity.id].prestigeInfo.blessings.indexOf(blessings[faction]) != -1)
+		var cooldownactive = (Seed.cityData.city[t.sourceCity.id].spells && Seed.cityData.city[t.sourceCity.id].spells[spells[faction]] && parseInt(Seed.cityData.city[t.sourceCity.id].spells[spells[faction]].endDate) > uW.unixtime());
+		ById('RAApiSpell').options.length = 0;
+		var o = document.createElement("option");
+		o.text = "--Select a Spell--";
+		o.value = 0;
+		ById("RAApiSpell").options.add(o);
+		if (spellavailable && !cooldownactive) {
+			var o = document.createElement("option");
+			o.text = eval("unsafeWindow.g_js_strings.spells.name_"+spells[faction]);
+			o.value = spells[faction];
+			ById("RAApiSpell").options.add(o);
+		}
+		if (ById('RAApiSpell').options.length > 1) {
+			if (Options.marchautospell)
+				ById('RAApiSpell').selectedIndex = 1;
+		}
+		
 		var itemlist = [55, 57, 931, 932];
 		for (var i = 0; i < itemlist.length; i++) {
-			ById('BOitemSpan_' + itemlist[i]).innerHTML = unsafeWindow.ksoItems[itemlist[i]].count;
+			ById('BOitemSpan_' + itemlist[i]).innerHTML = "(" + unsafeWindow.ksoItems[itemlist[i]].count + ")&nbsp;&nbsp;&nbsp;";
 		}
+		
+		t.MaxFood = parseInt(Seed.resources["city"+t.sourceCity.id]['rec1'][0] / 3600);
+		t.MaxWood = parseInt(Seed.resources["city"+t.sourceCity.id]['rec2'][0] / 3600);
+		t.MaxStone = parseInt(Seed.resources["city"+t.sourceCity.id]['rec3'][0] / 3600);
+		t.MaxOre = parseInt(Seed.resources["city"+t.sourceCity.id]['rec4'][0] / 3600);
+		t.MaxAstone = parseInt(Seed.resources["city"+t.sourceCity.id]['rec5'][0]);
+		t.MaxGold = parseInt(Seed.citystats["city"+t.sourceCity.id]['gold'][0]);
+		
+		ById('BOitemSpan_Food').innerHTML = addCommas(t.MaxFood);
+		ById('BOitemSpan_Wood').innerHTML = addCommas(t.MaxWood);
+		ById('BOitemSpan_Stone').innerHTML = addCommas(t.MaxStone);
+		ById('BOitemSpan_Ore').innerHTML = addCommas(t.MaxOre);
+		ById('BOitemSpan_Aether').innerHTML = addCommas(t.MaxAstone);
+		ById('BOitemSpan_Gold').innerHTML = addCommas(t.MaxGold);
+		
 		for (var ui in uW.cm.UNIT_TYPES) {
 			r = uW.cm.UNIT_TYPES[ui];
 			ById("RAApdestunit" + r).addEventListener('click', function () {
@@ -10868,74 +11136,74 @@ var equippedthroneItems = function (throneSet) {
 	var thronePreset = Seed.throne.activeSlot;
 	var equippedItems = {};
 	for (itm = 0; itm < Seed.throne.slotEquip[thronePreset].length; itm++) {
-		//		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = Seed.throne.inventory[Seed.throne.slotEquip[thronePreset][itm]];
+//		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = Seed.throne.inventory[Seed.throne.slotEquip[thronePreset][itm]];
 		equippedItems[Seed.throne.slotEquip[thronePreset][itm]] = unsafeWindow.kocThroneItems[Seed.throne.slotEquip[thronePreset][itm]];
 	}
 	return equippedItems;
 }
 
-function estETA(dist, unit, cityID) {
-	var ret = {
-		ETA: 0,
-		etaStr: 'N/D',
-		friendETA: 0,
-		friendEtaStr: 'N/D'
-	};
-	if (dist <= 0) return ret;
-	var troop_type = unit;
-	var horse = 0;
-	//	if(troop_type>6) horse=1;
-	if (troop_type > 6 && troop_type < 13) horse = 1;
-	var troop_speed = parseInt(unsafeWindow.unitstats["unt" + troop_type][3]) * (1 + 0.1 * parseInt(Seed.tech.tch11));
-	if (horse) {
-		troop_speed = troop_speed * (1 + 0.05 * parseInt(Seed.tech.tch12))
-	}
-	var Speed = troop_speed;
-	var gi = unsafeWindow.cm.guardianModalModel.getMarchBonus();
-	var multiplier = 1 + (gi * 0.01);
-	Speed = Speed * multiplier;
-	var gSpeed = 0;
-	var estSec;
-	if (Speed > 0) {
-		gSpeed = Speed / 6000;
-		estSec = Math.ceil(parseFloat(dist) / gSpeed);
-	}
-	var e = 1;
-	if (ById("BOitem_55")) {
-		var l_elem = ById("BOitem_55");
-		if (l_elem && l_elem.checked > 0) {
-			e = 0.75;
+	function estETA(dist, unit, cityID) {
+		var ret = {
+			ETA: 0,
+			etaStr: 'N/D',
+			friendETA: 0,
+			friendEtaStr: 'N/D'
+		};
+		if (dist <= 0) return ret;
+		var troop_type = unit;
+		var horse = 0;
+		//	if(troop_type>6) horse=1;
+		if (troop_type > 6 && troop_type < 13) horse = 1;
+		var troop_speed = parseInt(unsafeWindow.unitstats["unt" + troop_type][3]) * (1 + 0.1 * parseInt(Seed.tech.tch11));
+		if (horse) {
+			troop_speed = troop_speed * (1 + 0.05 * parseInt(Seed.tech.tch12))
 		}
-	}
-	if (ById("BOitem_57")) {
-		var l_elem = ById("BOitem_57");
-		if (l_elem && l_elem.checked) {
-			e = 0.5;
+		var Speed = troop_speed;
+		var gi = unsafeWindow.cm.guardianModalModel.getMarchBonus();
+		var multiplier = 1 + (gi * 0.01);
+		Speed = Speed * multiplier;
+		var gSpeed = 0;
+		var estSec;
+		if (Speed > 0) {
+			gSpeed = Speed / 6000;
+			estSec = Math.ceil(parseFloat(dist) / gSpeed);
 		}
+		var e = 1;
+		if (ById("BOitem_55")) {
+			var l_elem = ById("BOitem_55");
+			if (l_elem && l_elem.checked > 0) {
+				e = 0.75;
+			}
+		}
+		if (ById("BOitem_57")) {
+			var l_elem = ById("BOitem_57");
+			if (l_elem && l_elem.checked) {
+				e = 0.5;
+			}
+		}
+		ret.ETA = (parseInt((estSec * e + '')) + 30);
+		if (Seed.playerEffects.returnExpire > unsafeWindow.unixtime()) {
+			ret.ETA = parseInt(ret.ETA * 0.5);
+		}
+		ret.etaStr = timestr(ret.ETA, 1);
+		var building = getCityBuilding(cityID, 18);
+		if (building) {
+			fSpeed = Speed * (1 + parseInt(building.maxLevel) / 2);
+			gSpeed = fSpeed / 6000;
+			estSec = (dist / gSpeed).toFixed(0);
+			ret.friendETA = parseInt((estSec * e + '')) + 30;
+			ret.friendEtaStr = timestr((ret.friendETA + ''), 1);
+		}
+		var isPrestige = Seed.cityData.city[cityID].isPrestigeCity;
+		if (isPrestige) {
+			fSpeed = Speed * (1 + 5.5);
+			gSpeed = fSpeed / 6000;
+			estSec = (dist / gSpeed).toFixed(0);
+			ret.friendETA = parseInt((estSec * e + '')) + 30;
+			ret.friendEtaStr = timestr((ret.friendETA + ''), 1);
+		}
+		return ret;
 	}
-	ret.ETA = (parseInt((estSec * e + '')) + 30);
-	if (Seed.playerEffects.returnExpire > unsafeWindow.unixtime()) {
-		ret.ETA = parseInt(ret.ETA * 0.5);
-	}
-	ret.etaStr = timestr(ret.ETA, 1);
-	var building = getCityBuilding(cityID, 18);
-	if (building) {
-		fSpeed = Speed * (1 + parseInt(building.maxLevel) / 2);
-		gSpeed = fSpeed / 6000;
-		estSec = (dist / gSpeed).toFixed(0);
-		ret.friendETA = parseInt((estSec * e + '')) + 30;
-		ret.friendEtaStr = timestr((ret.friendETA + ''), 1);
-	}
-	var isPrestige = Seed.cityData.city[cityID].isPrestigeCity;
-	if (isPrestige) {
-		fSpeed = Speed * (1 + 5.5);
-		gSpeed = fSpeed / 6000;
-		estSec = (dist / gSpeed).toFixed(0);
-		ret.friendETA = parseInt((estSec * e + '')) + 30;
-		ret.friendEtaStr = timestr((ret.friendETA + ''), 1);
-	}
-	return ret;
-}
 /********************************* Messages Tab *************************************/
 Tabs.Rpt = {
 	tabOrder: 90,
