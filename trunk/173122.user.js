@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140917b
+// @version        20140918a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140917b';
+var Version = '20140918a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -10722,7 +10722,7 @@ Tabs.Attaque = {
 						Seed.cityData.city[params.cid].spells = {};
 						Seed.cityData.city[params.cid].spells[params.bs] = {endDate : rslt.bsEndDate};
 					}
-					if (params.champid) {
+					if (params.champid != 0) {
 						uW.cm.ChampionManager.setIsMarching(championidx, true);
 						// update seed immediately
 						Seed.champion.champions[championidx].status = "10";
