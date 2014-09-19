@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140918a
+// @version        20140919a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140918a';
+var Version = '20140919a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -611,7 +611,7 @@ var knightRoles = [
 	['Steward', 'resourcefulness', 'Res'],
 ];
 
-var rats = ["8800075","17491931"];
+var rats = [];
 var scripters = ["6046539","11903915","10681588","10153485","1550996","9688786","14845619","8480468","731589","1112699"];
 
 Tabs.Notes = {
