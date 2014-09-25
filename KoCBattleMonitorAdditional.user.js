@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140917a
+// @version         20140925a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Monitor player link to Kocmon</p>
+// @releasenotes 	<p>Support for new Spellcaster Throne Effects</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -26,7 +26,7 @@
 //	│	September 2014 Barbarossa69 (www.facebook.com/barbarossa69)											│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140917a';
+var Version = '20140925a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -89,18 +89,18 @@ var FFVersion = getFirefoxVersion();
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
-var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102];
-var DefenceEffects = [2,18,25,30,35,40,45,51];
-var LifeEffects = [3,19,26,31,36,41,46,52,104];
-var RangeEffects = [5,21,37,42,58,63];
-var SpeedEffects = [4,20,27,32,47,53,57,62];
+var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119];
+var DefenceEffects = [2,18,25,30,35,40,45,51,114,120];
+var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121];
+var RangeEffects = [5,21,37,42,58,63,117,123];
+var SpeedEffects = [4,20,27,32,47,53,57,62,116,122];
 var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
-var OtherCombatEffects = [8,9,13,14,15,16,73];
+var OtherCombatEffects = [8,9,118,124,13,14,15,16,73];
 var OtherPVPEffects = [6,22,48,54,59,64];
 
-var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62];
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124];
 
-var AlternateSortOrder = [5,37,58,21,42,63,1,24,34,44,56,102,17,29,39,50,61,2,25,35,45,18,30,40,51,3,26,36,46,104,19,31,41,52,4,27,47,57,20,32,53,62,7,28,38,49,60,23,33,43,55,65,6,48,59,22,54,64];
+var AlternateSortOrder = [5,37,58,117,21,42,63,123,1,24,34,44,56,102,113,17,29,39,50,61,119,2,25,35,45,114,18,30,40,51,120,3,26,36,46,104,115,19,31,41,52,121,4,27,47,57,116,20,32,53,62,122,7,28,38,49,60,23,33,43,55,65,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
  
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
