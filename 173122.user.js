@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140919a
+// @version        20140925a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140919a';
+var Version = '20140925a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -7258,6 +7258,7 @@ Tabs.Train = {
 	cont: null,
 	timer: null,
 	stats: {},
+	nTroopType: 0,
 	selectedCity: {},
 	cityNum: 0,
 	trainTimer: null,
@@ -7290,6 +7291,7 @@ Tabs.Train = {
       <TABLE align=center><TR><TD align=right>" + uW.g_js_strings.modal_messages_viewdesertionreports.trooptypes + ": </td><TD colspan=2>\
       <SELECT id=ptttType>";
 		for (var ui in uW.cm.UNIT_TYPES) {
+			t.nTroopType++;
 			i = uW.cm.UNIT_TYPES[ui];
 			s += '<option value=' + i + '>' + uW.unitcost['unt' + i][0] + '</option>';
 		}
@@ -7763,7 +7765,7 @@ Tabs.Train = {
 				t.stats.MaxTrain = 0;
 				t.limitingFactor = null;
 			}
-		} else if (t.lastTroopSelect > 16 && t.lastTroopSelect != 23) {
+		} else if (t.lastTroopSelect == 17 || t.lastTroopSelect == 18 || t.lastTroopSelect == 21 || t.lastTroopSelect == 22  || t.lastTroopSelect == 24 || t.lastTroopSelect == 25) {
 			t.stats.MaxTrain = 0;
 			t.limitingFactor = null;
 		}
@@ -8014,11 +8016,17 @@ Tabs.Train = {
 		t.stats.barracks = (isSpecial) ? (getCityBuilding(cityId, 22).count + getCityBuilding(cityId, 24).count + getCityBuilding(cityId, 26).count) : getCityBuilding(cityId, 13).count;
 		var m = '<CENTER><B>' + Cities.byID[cityId].name + ' &nbsp; (' + Cities.byID[cityId].x + ',' + Cities.byID[cityId].y + ')</b></center><HR>';
 		m += '<TABLE class=ptTab width=100%><TR align=center>';
-		for (i = 1; i <= 11; i++) {
-			j=i+11;
-			if (j > 18) j=j+2;
+		var numrows = Math.ceil(t.nTroopType/2);
+		for (i = 1; i <= numrows; i++) {
+			j=i+numrows;
 			m += '<TR><TD width=75px>' + uW.unitcost['unt' + i][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + i])) + '</td>';
-			m += '<TD width=75px>' + uW.unitcost['unt' + j][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + j])) + '</td>';
+			if (j <= t.nTroopType) {
+				if (j > 18) j=j+2;
+				m += '<TD width=75px>' + uW.unitcost['unt' + j][0] + '</td><TD width=60px>' + addCommas(parseInt(Seed.units['city' + cityId]['unt' + j])) + '</td>';
+			}
+			else {
+				m += '<TD width=75px>&nbsp;</td>';
+			}
 			if (i <= 4) m += '<TD width=75px><SPAN id=ptttr_' + uW.resourceinfo['rec' + i] + '>' + uW.resourceinfo['rec' + i] + '</span></td><TD width=60px><SPAN id=ptttr2_' + uW.resourceinfo['rec' + i] + '>' + addCommas(parseInt(Seed.resources['city' + cityId]['rec' + i][0] / 3600)) + '</span></td>';
 			if (i == 5) m += '<TD width=75px><SPAN id=ptttr_gold>' + uW.resourceinfo['rec0'] + '</span></td><TD width=60px><SPAN id=ptttr2_gold>' + addCommas(Seed.citystats['city' + cityId].gold[0]) + '</span></td>';
 			if (i == 6) m += '<TD width=75px><SPAN id=ptttr_pop>Available Population</td><TD width=60px><SPAN id=ptttr2_pop>' + addCommas(t.stats.idlePop) + '</td>';
