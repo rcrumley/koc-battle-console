@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140925a
+// @version        20140926a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140925a';
+var Version = '20140926a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -4309,7 +4309,7 @@ var DispReport = {
 			a.className = 'buttonDown20';
 			a.innerHTML = '<span>Delete Gift Report</span>';
 			a.style.float = 'left';
-			a.addEventListener('click', t.checkinbox(1), false);
+			a.addEventListener('click', function(){t.checkinbox(1);}, false);
 			div.appendChild(a);
 			
 			if (unsafeWindow.koc2Mail) {
@@ -6802,6 +6802,7 @@ Tabs.Options = {
 			m += '<INPUT id=optMiniRefreshIntvl type=text size=3 value="' + Options.miniRefreshIntvl + '"> minutes</td></tr>';
 			m += '<TR><TD colspan=2><br><B>KofC Features:</b></td></tr>';
 			m += '<TR><TD><INPUT id=togAllRpts type=checkbox /></td><TD>Enable enhanced Alliance Reports.</td></tr>';
+			m += '<TR><TD><INPUT id=togRptGift type=checkbox /></td><TD>Enable enhanced Inbox/Report functions.</td></tr>';
 			m += '<TR><TD><INPUT id=togAllowAlter type=checkbox /></td><TD>Allow other scripts to change format of Alliance Reports.</td></tr>';
 			m += '<TR><TD><INPUT id=togAllMembers type=checkbox /></td><TD>Enable enhanced alliance members view.</td></tr>';
 			m += '<TR><TD><INPUT id=togPageNav type=checkbox /></td><TD>Enhanced page navigation for messages and reports.</td></tr>';
@@ -6809,7 +6810,6 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togAttackPicker type=checkbox /></td><TD>Enable target city picker in attack dialog (reinforce, reassign and transport)</td></tr>';
 			m += '<TR><TD><INPUT id=togBatRounds type=checkbox /></td><TD>Display # of rounds in battle reports</td></tr>';
 			m += '<TR><TD><INPUT id=togAtkDelete type=checkbox /></td><TD>Enable delete button when displaying battle report</td></tr>';
-			m += '<TR><TD><INPUT id=togRptGift type=checkbox /></td><TD>Enable delete gifts report button in inbox</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo4 type=checkbox /></td><TD>Display Province and Truce Status in map tooltips</td></tr>';
 			m += '<TR><TD><INPUT id=togCV type=checkbox /></td><TD>Enable enhanced city buttons</td></tr>';
 			m += '<TR><TD></td><TD><INPUT id=togDbClkDef type=checkbox /> Enable hide/defend by double clicking city icon</td></tr>';
