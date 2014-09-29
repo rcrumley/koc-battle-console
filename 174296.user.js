@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20140929a
+// @version        20140929b
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20140929a';
+var Version = '20140929b';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -17256,6 +17256,7 @@ function addScript(scriptText) {
 	//    setTimeout ( function (){document.body.removeChild(scr);}, 500);
 }
 addScript('uwuwFunc = function (text){ eval (text);  }');
+
 var CalterUwFunc = function (funcName, findReplace) {
 
    this.isAvailable = isAvailable;
@@ -22929,7 +22930,7 @@ Tabs.popcontrol = {
             var rslt=eval("("+message.responseText+")");
             if (rslt.ok)
                {
-               t.log("Deleted queue of "+ addCommas(numtrptrn) +" "+ unsafeWindow.unitcost[typetrn][0]);
+               t.log("Deleted queue of "+ addCommas(numtrptrn) +" "+ unsafeWindow.unitcost['unt'+typetrn][0]);
                if(rslt.updateSeed){unsafeWindow.update_seed(rslt.updateSeed)};
                var k=0;
                for(var j=0;j<Seed.queue_unt["city"+cityId].length;j++)
