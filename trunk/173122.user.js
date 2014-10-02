@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20140926a
+// @version        20141002a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20140926a';
+var Version = '20141002a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -6504,7 +6504,8 @@ ajax/getOnline.php:
 		}
 		cityNum++;
 		var obj = document.getElementById('citysel_' + cityNum);
-		return t.ClickWin(window, obj, 'click');
+		if (obj)
+			return t.ClickWin(window, obj, 'click');
 	},
 	ClickWin: function (win, obj, evtName) {
 		var evt = win.document.createEvent("MouseEvents");
@@ -7306,9 +7307,9 @@ Tabs.Train = {
         <SPAN style='white-space:normal;'>" + uW.g_js_strings.commonstr.use + " " + uW.g_js_strings.commonstr.workers + "</span>\
 		<br><SELECT id=tutelage>\
 		<option value='0'><CENTER>--- " + uW.g_js_strings.commonstr.items + " " + uW.g_js_strings.commonstr.speedup + " ---</center></option>\
-		<option value='36'>" + uW.itemlist.i36.name + "</option>\
-        <option value='37'>" + uW.itemlist.i37.name + "</option>\
-        <option value='38'>" + uW.itemlist.i38.name + "</option>\
+		<option value='36'>" + uW.itemlist.i36.name + " (" + (Seed.items.i36?Seed.items.i36:0) + ")</option>\
+        <option value='37'>" + uW.itemlist.i37.name + " (" + (Seed.items.i37?Seed.items.i37:0) + ")</option>\
+        <option value='38'>" + uW.itemlist.i38.name + " (" + (Seed.items.i38?Seed.items.i38:0) + ")</option>\
 		</select>\
 		<br><br><SELECT id=pttrgamble>\
 		<option value='0'><CENTER>--- " + uW.g_js_strings.commonstr.resources + " " + uW.g_js_strings.commonstr.speedup + " ---</center></option>\
@@ -7339,7 +7340,7 @@ Tabs.Train = {
       <TR><TD colspan=3 align=center><DIV style='height:10px'>\
       <SELECT id=siege>\
       <option value='0'><CENTER>--- " + uW.g_js_strings.commonstr.speedup + " ---</center></option>\
-      <option value='26'>" + uW.itemlist.i26.name + "</option>\
+      <option value='26'>" + uW.itemlist.i26.name + " (" + (Seed.items.i26?Seed.items.i26:0) + ")</option>\
       </select></div>\
       <BR><INPUT id='pttdButDo' type=submit value='" + uW.g_js_strings.modal_openWalls.builddefenses + "'\></td></tr>\
 	 <TR><TD align=center colspan=3><b>AUTOBUILD</b><br>Will queue small amounts<br>until all available wall space used</TD></TR>\
@@ -7611,7 +7612,8 @@ Tabs.Train = {
 		}
 		cityNum++;
 		var obj = document.getElementById('citysel_' + cityNum);
-		return t.ClickWin(window, obj, 'click');
+		if (obj)
+			return t.ClickWin(window, obj, 'click');
 	},
 	ClickWin: function (win, obj, evtName) {
 		var evt = win.document.createEvent("MouseEvents");
@@ -8826,11 +8828,11 @@ Tabs.OverView = {
 					var rp = getResourceProduction(Seed.cities[b][0]);
 					var bp = uW.cm.Resources.getProductionBase(a, Seed.cities[b][0]);
 					var upkbase = uW.cm.Resources.getUpkeep(a, Seed.cities[b][0]) / (1 - trupkeepreduce / 100);
-					var usage = parseInt(Seed.resources["city" + Seed.cities[b][0]]['rec' + a][3]);
+					var usage = parseIntNan(Seed.resources["city" + Seed.cities[b][0]]['rec' + a][3]);
 					// adjust for throne room upkeep reduction
 					if (a == 1)
-						usage = parseInt(usage - upkbase * trupkeepreduce / 100);
-					z += '<TD align=right style="background: #FFFFFF"><FONT COLOR="686868">' + addCommas(parseInt(rp[a] - usage + bp * (trprod[a]) / 100)) + '</font></td>';
+						usage = parseIntNan(usage - upkbase * trupkeepreduce / 100);
+					z += '<TD align=right style="background: #FFFFFF"><FONT COLOR="686868">' + addCommas(parseIntNan(rp[a] - usage + bp * trprod[a] / 100)) + '</font></td>';
 				}
 			}
 			z += '</tr>';
@@ -8842,8 +8844,8 @@ Tabs.OverView = {
 					var usage = parseInt(Seed.resources["city" + Seed.cities[b][0]]['rec' + a][3]);
 					var upkbase = uW.cm.Resources.getUpkeep(a, Seed.cities[b][0]) / (1 - trupkeepreduce / 100);
 					// adjust for throne room bonuses
-					usage = parseInt(usage - upkbase * trupkeepreduce / 100);
-					var prod = rp[a] - usage + bp * (trprod[a]) / 100;
+					usage = parseIntNan(usage - upkbase * trupkeepreduce / 100);
+					var prod = parseIntNan(rp[a] - usage + bp * trprod[a] / 100);
 					var timeLeft = parseInt(Seed.resources["city" + Seed.cities[b][0]]['rec' + a][0]) / 3600 / (0 - prod) * 3600;
 					if (prod > 0) z += '<TD align=right style="background: #FFFFFF"><FONT COLOR="686868">----</font></td>';
 					else {
@@ -9874,8 +9876,8 @@ Tabs.OverView = {
 				var trprod = [0, 0, 0, 0, 0];
 				trprod[1] = Math.min(equippedthronestats(83) + trprodres, 2000);
 				var upkbase = uW.cm.Resources.getUpkeep(1, Cities.cities[i].id) / (1 - trupkeepreduce / 100);
-				usage = parseInt(usage - upkbase * trupkeepreduce / 100);
-				row[i] = parseInt(rp[1] - usage + bp * trprod[1] / 100);
+				usage = parseIntNan(usage - upkbase * trupkeepreduce / 100);
+				row[i] = parseIntNan(rp[1] - usage + bp * trprod[1] / 100);
 			}
 			str += _row('Food +/-', row, true);
 			for (i = 0; i < Cities.numCities; i++) {
@@ -14066,18 +14068,26 @@ if (typeof (GM_xmlhttpRequest) !== 'undefined' && typeof (GM_updatingEnabled) ==
 //to the same function in different scripts is possible.
 //****************************
 var CalterUwFunc = function (funcName, findReplace) {
+
 	this.isAvailable = isAvailable;
 	this.setEnable = setEnable;
+
 	this.funcName = funcName;
 	this.funcModifier = null;
 	this.modIndex = 0;
 	this.numberMods = 0;
+
 	// find an existing CalterUwFunc if it already exists
 	if (!unsafeWindow.calterRegistry) unsafeWindow.calterRegistry = {};
 	var calterF = null;
+
 	if (unsafeWindow.calterRegistry[funcName]) {
 		// use the existing function modifier
-		calterF = unsafeWindow.calterRegistry[funcName];
+		
+		calterF = new CalterFuncModifier(funcName, findReplace);
+		for (var o in unsafeWindow.calterRegistry[funcName]) {
+			calterF[o] = unsafeWindow.calterRegistry[funcName][o];
+		}	
 		for (i = 0; i < findReplace.length; i++) {
 			calterF.addModifier(findReplace[i]);
 		}
@@ -14087,7 +14097,9 @@ var CalterUwFunc = function (funcName, findReplace) {
 		unsafeWindow.calterRegistry[funcName] = calterF;
 	}
 	this.funcModifier = calterF;
-	if (findReplace != null) {
+
+	if (findReplace != null)
+	{
 		this.numberMods = findReplace.length;
 		this.modIndex = this.funcModifier.numModifiers() - this.numberMods;
 	}
@@ -14095,7 +14107,8 @@ var CalterUwFunc = function (funcName, findReplace) {
 	function isAvailable() {
 		// check if any of the replace strings matched the original function
 		var avail = false;
-		for (i = this.modIndex; i < this.modIndex + this.numberMods; i++) {
+		for (i = this.modIndex; i < this.modIndex + this.numberMods; i++)
+		{
 			if (this.funcModifier.testModifier(i)) avail = true;
 		}
 		return avail;
@@ -14105,20 +14118,24 @@ var CalterUwFunc = function (funcName, findReplace) {
 		this.funcModifier.enableModifier(this.modIndex, tf, this.numberMods);
 	}
 }
+
 var CalterFuncModifier = function (funcName, findReplace) {
 	// (second argument is now optional )
+
 	this.applyModifiers = applyModifiers;
 	this.addModifier = addModifier;
 	this.enableModifier = enableModifier;
 	this.testModifier = testModifier;
 	this.modEnabled = modEnabled;
 	this.numModifiers = numModifiers;
+
 	this.funcName = funcName;
 	this.funcOld = null;
 	this.funcOldString = null;
 	this.funcNew = null;
 	this.modifiers = [];
 	this.modsActive = [];
+
 	try {
 		var x = this.funcName.split('.');
 		var f = unsafeWindow;
@@ -14127,6 +14144,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
 		ft = f.toString();
 		this.funcOld = f;
 		this.funcOldString = ft.replace('function ' + this.funcName, 'function');
+
 		if (findReplace) {
 			this.modifiers = findReplace;
 			this.modsActive = new Array(findReplace.length);
@@ -14137,23 +14155,28 @@ var CalterFuncModifier = function (funcName, findReplace) {
 	} catch (err) {
 		logit("CalterFuncModifier " + this.funcName + " " + err);
 	}
+
 	// test if this modifier works on the original function.
 	//    true = match found / replace possible
 	//    false = does not match
 	function testModifier(modNumber) {
 		x = this.funcOldString.replace(this.modifiers[modNumber][0], this.modifiers[modNumber][1]);
-		if (x != this.funcOldString) {
+		if (x != this.funcOldString)
+		{
 			return true;
 		}
 		return false;
 	}
+	
 	// use the active modifiers to create/apply a new function
 	function applyModifiers() {
 		try {
 			var rt = this.funcOldString;
 			var active = false;
+
 			for (var i = 0; i < this.modifiers.length; i++) {
 				if (!this.modsActive[i]) continue;
+
 				x = rt.replace(this.modifiers[i][0], this.modifiers[i][1]);
 				if (x == rt) // if not found
 				{
@@ -14167,10 +14190,15 @@ var CalterFuncModifier = function (funcName, findReplace) {
 							return;
 						}
 					}(this.funcName, this.modifiers[i][0], ft), 3000);
-				} else {}
+				} 
+				else {
+				
+				}
+
 				rt = x;
 				active = true;
 			}
+			
 			this.funcNew = rt;
 			if (active) {
 				// apply the new function
@@ -14187,6 +14215,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
 			logit("CalterFuncModifier " + this.funcName + " " + err);
 		}
 	}
+	
 	// add additional modifiers.  The index of the modifier is returned so the caller can enable/disable it specificially
 	function addModifier(fr) {
 		this.modifiers.push(fr);
@@ -14194,10 +14223,12 @@ var CalterFuncModifier = function (funcName, findReplace) {
 		// return the index of the newly added modifier
 		return this.modifiers.length - 1;
 	}
+	
 	// turn on/off some of the modifiers.
 	// 'len' allows setting consectutive modifiers to the same value.
 	//   If len is null, 1 is used
 	function enableModifier(modNumber, value, len) {
+	
 		if (len == null) len = 1;
 		for (i = modNumber; i < modNumber + len; i++) {
 			if (i < this.modsActive.length) {
@@ -14215,6 +14246,7 @@ var CalterFuncModifier = function (funcName, findReplace) {
 	function numModifiers() {
 		return this.modifiers.length;
 	}
+	
 };
 
 function ShowExtraInfo() {
