@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141002a
+// @version        20141006a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141002a';
+var Version = '20141006a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -556,12 +556,8 @@ function ptStartup() {
 		TowerAlerts.enableFixFalseReports(true);
 	AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
 
-	if (uW.tvuid == "6046539") AddMainTabLink('DEBUG', debugWin.doit);
-	//  var ss_onload = unsafeWindow.seed.ss;
-	//  multiBrowserOverride();
-	//TestSomething.init ();  
-	//setInterval (function(){logit (inspect (getClientCoords (mainPop.getMainDiv()), 3, 1))}, 2000);  
-	
+	if (uW.tvuid == "6046539") {AddMainTabLink('DEBUG', debugWin.doit);
+
 	uW.ptLoaded = true;
 }
 
@@ -1437,6 +1433,8 @@ var ChatStuff = {
 		if (m[0].indexOf('UID:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bUID:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 		if (m[0].indexOf('TRC:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bTRC:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 
+		if (m[0].indexOf('March id:')){ msg = msg.replace (/(\bMarch\sid:\s([0-9]+))/g, '<a onclick=\'ptfetchmarch($2)\'>Additional March details ---></a>'); }
+		
 		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
 		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-bot/")>$2</a>$3');
 		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-tools/")>$2</a>$3');
@@ -8677,6 +8675,7 @@ function getWallInfo(cityId, objOut) {
 	var spots = 0;
 	for (var i = 1; i < (objOut.wallLevel + 1); i++)
 		spots += (i * 1500);
+	if (unsafeWindow.seed.cityData.city[cityId].prestigeInfo.blessings.indexOf(307) != -1) spots *= 1.15;		
 	objOut.wallSpace = spots;
 	objOut.fieldSpace = spots;
 	var fort = Seed.fortifications["city" + cityId];
@@ -17002,5 +17001,254 @@ function MonitorLinkUID(n) {
 	}
 	return m.join('');
 }
+
+/***************************** Additional March Info ***********************************/
+
+var marchtimer;
+var marchETA;
+var	marchDIR = '';
+
+unsafeWindow.ptfetchmarch = function (mid) {fetchmarch(mid,MarchPopup);}
+
+function fetchmarch(mid,notify,qc) {
+	if (document.getElementById('ptfetchmarch')) document.getElementById('ptfetchmarch').innerHTML = "Fetching March...";
+ 	var uW = unsafeWindow;
+
+	var params = uW.Object.clone(uW.g_ajaxparams);
+	params.rid = mid;
+	var atimer = setTimeout(function() {notify ({errorMsg:'Fetch march timed out (March ID '+mid+')'});}, 6000);
+	new AjaxRequest(unsafeWindow.g_ajaxpath + "ajax/fetchMarch.php" + unsafeWindow.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (message) {
+			clearTimeout(atimer);
+			var rslt = eval("(" + message.responseText + ")");
+			if (rslt.ok){
+				if (qc) {
+					var ui = [];
+					var n = {name:'???'}
+					ui.push(n);
+					notify ({userInfo:ui},{userInfo:ui},rslt.march);
+				}
+				else {
+					fetchmarchPlayerInfo(rslt.march.fromPlayerId, rslt.march.toPlayerId, notify, rslt.march);
+				}	
+			}
+			else {
+				notify ({errorMsg:'Fetch march error (March ID '+mid+')'});
+			}
+		},
+	    onFailure: function () {
+			clearTimeout(atimer);
+			notify ({errorMsg:'AJAX error'});
+		},
+	});		
+};
+
+function fetchmarchPlayerInfo(uid, uid2, notify, march, uidrslt){
+	
+   var uW = unsafeWindow;
+   var CM = uW.cm;
+   var Seed = uW.seed;
+   var params = uW.Object.clone(uW.g_ajaxparams);
+   params.uid = uid;
+   new uW.Ajax.Request(uW.g_ajaxpath + "ajax/getUserGeneralInfo.php" + uW.g_ajaxsuffix, {
+     method: "post",
+     parameters: params,
+     onSuccess: function (rslt) {
+		if (uid2 && uid2 != 0) {
+			fetchmarchPlayerInfo(uid2,0,notify,march,eval("(" + rslt.responseText + ")"));
+		}
+		else {
+			if (!uidrslt) {
+				notify (eval("(" + rslt.responseText + ")"),uidrslt,march);
+			}
+			else {
+				notify (uidrslt,eval("(" + rslt.responseText + ")"),march);
+			}
+		}	
+     },
+     onFailure: function (rslt) {
+       notify ({errorMsg:'AJAX error'});
+     },
+   });
+};
+
+function UpdateMarchTime() {
+	clearTimeout(marchtimer);
+	var now = unixTime();
+	var arrivalTime = marchETA - now;
+	if (arrivalTime >= 0) {
+		marchtime = uW.timestr(arrivalTime);	
+		marchtimer = setTimeout(UpdateMarchTime, 1000);
+	}	
+	else {
+		if (marchDIR == "") {
+			marchtime = 'Landed! (Please Refresh)';	
+		}
+		else {
+			marchtime = "Completed.";
+		}
+	}
+	if (document.getElementById('ptmarchtime')) {
+		document.getElementById('ptmarchtime').innerHTML = marchtime+marchDIR;
+	}	
+}
+
+function MarchPopup (rslt,rslt2,march) {
+	clearTimeout(marchtimer);
+	
+	var n = '<table align=center width=95% cellspacing=0 cellpadding=0>';
+	n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+
+	n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+  
+	if (rslt.userInfo) {
+
+		var u = rslt.userInfo[0];
+		var alli = 'None';
+		if (u.allianceName)
+			alli = u.allianceName +' ('+ getDiplomacy(u.allianceId) + ')';
+
+		var u2;
+		if (rslt2 && rslt2.userInfo) {
+			u2 = rslt2.userInfo[0];
+			var alli2 = 'None';
+			if (u2.allianceName)
+				alli2 = u2.allianceName +' ('+ getDiplomacy(u2.allianceId) + ')';
+		}	
+		
+		var a = march;
+		n += '<tr><td class=xtabBR width=150>March ID</td><td class=xtab><b><input type=text id=ptmid value="'+a.marchId+'" disabled>&nbsp;&nbsp;<a id=ptfetchmarch>Refresh</a></b></td></tr>';
+		n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+
+		var marchStatus = parseInt(a.marchStatus);
+		var now = unixTime();
+		var destinationUnixTime = Tabs.AllianceList.convertTime(new Date(a["destinationEta"].replace(" ", "T"))) - now;
+		var returnUnixTime = Tabs.AllianceList.convertTime(new Date(a["returnEta"].replace(" ", "T"))) - now;
+			
+		if ((destinationUnixTime < 0) || (marchStatus == 8) || (marchStatus == 2))
+			marchdir = "Return";
+		else
+			marchdir = "Count";	
+	
+		if (destinationUnixTime >= 0) {
+			marchtime = uW.timestr(destinationUnixTime);	
+			marchETA = Tabs.AllianceList.convertTime(new Date(a["destinationEta"].replace(" ", "T")));
+			marchDIR = '';
+			marchtimer = setTimeout(UpdateMarchTime, 1000);
+		}	
+		else {
+			if (marchStatus == 2) {
+				marchtime = 'Encamped';
+			}
+			else {
+				if (returnUnixTime < 0) {
+					marchtime = "Completed ("+uW.timestr(returnUnixTime*(-1)) +" ago)";
+				}
+				else {
+					if (marchStatus == 8) {
+						marchtime = uW.timestr(returnUnixTime)+' (Returning)';
+						marchETA = Tabs.AllianceList.convertTime(new Date(a["returnEta"].replace(" ", "T")));
+						marchDIR = ' (Returning)';
+						marchtimer = setTimeout(UpdateMarchTime, 1000);
+					}
+					else {
+						marchtime = "Waiting";
+					}	
+				}	
+			}
+		}
+		n += '<tr><td class=xtab>Time/Status</td><td class=xtabBR id=ptmarchtime><b>'+marchtime+'</b></td></tr>';
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		n += '<tr><td class=xtab>Name</td><td class=xtabBR><b>' + u.genderAndName + '</b><td></tr>';
+		n += '<tr><td class=xtab>UID</td><td class=xtabBR><b>' + MonitorLinkUID(a.fromPlayerId)+'</b></td></tr>';
+		n += '<tr><td class=xtab>Might</td><td class=xtabBR>' + addCommas(parseInt(u.might))+'</td></tr>';
+		n += '<tr><td class=xtab>Alliance</td><td class=xtabBR>'+ alli +'</td></tr>';
+
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		var marchType = parseInt(a.marchType);
+		if (marchType == 10) marchType=4; // Change Dark Forest type to Attack!
+		var	hint = "";
+		switch (marchType) {
+			case 1: hint=uW.g_js_strings.commonstr.transport;break;
+			case 2: hint=uW.g_js_strings.commonstr.reinforce;break;
+			case 3: hint=uW.g_js_strings.commonstr.scout;break;
+			case 4: hint=uW.g_js_strings.commonstr.attack;break;
+			case 5: hint=uW.g_js_strings.commonstr.reassign;break;
+		} 
+		n += '<tr><td class=xtab>March Type</td><td class=xtabBR><b>'+hint+'</b></td></tr>';
+		n += '<tr><td class=xtab>From</td><td class=xtabBR><b>'+coordLink(a.fromXCoord,a.fromYCoord)+'</b></td></tr>';
+		n += '<tr><td class=xtab>CityID</td><td class=xtabBR>'+a.fromCityId+'</td></tr>';
+		n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+	
+		var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
+		var totile = tileTypes[parseInt(a["toTileType"])];
+		if (a["toTileType"] == 51) {
+			if (!a["toPlayerId"]) { totile = "???"; }
+			else { if (a["toPlayerId"] == 0) totile = 'Barb Camp'; }
+		}	
+		totile = 'Lvl '+a["toTileLevel"]+' '+totile;
+		n += '<tr><td class=xtab>To</td><td class=xtabBR><b>'+coordLink(a.toXCoord,a.toYCoord)+'&nbsp;'+totile+'</b></td></tr>';
+		if (a["toCityId"] != 0) n += '<tr><td class=xtab>CityID</td><td class=xtabBR>'+a.toCityId+'</td></tr>';
+
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Name</td><td class=xtabBR><b>'+u2.genderAndName+'</b></td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>UID</td><td class=xtabBR><b>'+MonitorLinkUID(a.toPlayerId)+'</b></td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Might</td><td class=xtabBR>' + addCommas(parseInt(u2.might))+'</td></tr>';
+		if (a["toPlayerId"] != 0 && a["toPlayerId"] != a["fromPlayerId"]) n += '<tr><td class=xtab>Alliance</td><td class=xtabBR>'+ alli2 +'</td></tr>';
+		n += '<tr><td class=xtabBR colspan=2>&nbsp;</td></tr>';
+		
+		if (a["championId"] && a["championId"] != 0) { 
+			n +='<tr><td class=xtab>Champion</td><td class=xtabBR>Champion ID:'+a["championId"]+'</td></tr>'; // this is all we can get from march :/
+		}	
+
+		if (a["knightId"] > 0) n +='<tr><td class=xtab>Knight</td><td class=xtabBR>'+a.knightName+' (Atk:'+ a["knightCombat"]+')</td></tr>';
+
+		n += '<tr><td class=xtab>Troops</td><td class=xtabBR>';
+		for (var ui in uW.cm.UNIT_TYPES){
+			i = uW.cm.UNIT_TYPES[ui];
+			if((a["unit"+i+"Count"] > 0) || (a["unit"+i+"Return"] > 0)) {
+				trpcol = '#000';
+				if ((marchdir == "Return") && (a["unit"+i+"Return"] < a["unit"+i+"Count"])) { trpcol = '#f00'; }
+				n += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
+			}	
+		}	
+		n += '</td></tr>';
+
+		if (a["fromSpellType"]) {
+			var spell = eval('uW.g_js_strings.spells.name_'+a["fromSpellType"]);
+			if (spell) {
+				n +='<tr><td class=xtab>Battle Spell</td><td class=xtab><b>'+spell+'</b></td></tr>';
+			}
+		}
+		
+		if (a["gold"] > 0) n += '<tr><td class=xtab>Gold</td><td class=xtabBR>'+ addCommas(a["gold"]) +'</td></tr>';
+		if (a["resource1"] > 0) n += '<tr><td class=xtab>Food</td><td class=xtabBR>'+ addCommas(a["resource1"]) +'</td></tr>';
+		if (a["resource2"] > 0) n += '<tr><td class=xtab>Wood</td><td class=xtabBR>'+ addCommas(a["resource2"]) +'</td></tr>';
+		if (a["resource3"] > 0) n += '<tr><td class=xtab>Stone</td><td class=xtabBR>'+ addCommas(a["resource3"]) +'</td></tr>';
+		if (a["resource4"] > 0) n += '<tr><td class=xtab>Ore</td><td class=xtabBR>'+ addCommas(a["resource4"]) +'</td></tr>';
+		if (a["resource5"] > 0) n += '<tr><td class=xtab>Aether</td><td class=xtabBR>'+ addCommas(a["resource5"]) +'</td></tr>';
+	}
+	else {
+		n += '<tr><td class=xtab width=150>March ID</td><td class=xtabBR><b><input type=text id=ptmid value="" disabled>&nbsp;&nbsp;<a id=ptfetchmarch>Fetch</a></b></td></tr>';
+		if (rslt.errorMsg) {
+			n += '<tr><td  class=xtabBR colspan=2>&nbsp;</td></tr>';
+			n += '<tr><td  class=xtabBR colspan=2>'+rslt.errorMsg+'</td></tr>';
+		}
+	}
+	n += '</table>';
+
+	var MarchPop = null;
+	MarchPop = new CPopup('ptShowMarch', 0, 0, 500, 500, true, function () {
+				clearTimeout(marchtimer);
+	});
+	MarchPop.getTopDiv().innerHTML = '<DIV align=center><B>MARCH DETAILS</B></DIV>';
+	MarchPop.getMainDiv().innerHTML = n;
+	document.getElementById('ptfetchmarch').addEventListener('click', function () { unsafeWindow.ptfetchmarch(document.getElementById('ptmid').value) }, false);
+
+	MarchPop.show(true);
+};
 
 ptStartup();
