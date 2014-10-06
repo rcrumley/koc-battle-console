@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141006a
+// @version        20141006b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141006a';
+var Version = '20141006b';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -8675,7 +8675,9 @@ function getWallInfo(cityId, objOut) {
 	var spots = 0;
 	for (var i = 1; i < (objOut.wallLevel + 1); i++)
 		spots += (i * 1500);
-	if (unsafeWindow.seed.cityData.city[cityId].prestigeInfo.blessings.indexOf(307) != -1) spots *= 1.15;		
+	if (unsafeWindow.seed.cityData.city[cityId].isPrestigeCity) {
+		if (unsafeWindow.seed.cityData.city[cityId].prestigeInfo.blessings.indexOf(307) != -1) spots *= 1.15;		
+	}	
 	objOut.wallSpace = spots;
 	objOut.fieldSpace = spots;
 	var fort = Seed.fortifications["city" + cityId];
