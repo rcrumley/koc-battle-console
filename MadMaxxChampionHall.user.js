@@ -1,16 +1,19 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20140731b
+// @version        20140415b
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
+// @homepage       http://userscripts.org/scripts/show/464044
 // @delay 2000
 // @priority -11
 // @run-at         document-end
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
+// @updateURL      https://userscripts.org/scripts/source/464044.meta.js
+// @downloadURL    https://userscripts.org/scripts/source/464044.user.js
 // @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/uncommon_chestArmor_briton_70x70.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
@@ -23,20 +26,21 @@
 // @grant       GM_registerMenuCommand
 // @grant       GM_getResourceText
 // @grant       GM_getResourceURL
+// @contributionURL https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=FDW4NZ6PRMDMJ&lc=US&item_name=TR%20Organizer%20Donations&item_number=1001&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
+// @contributionAmount $3.00
 // @screenshot http://s3.amazonaws.com/uso_ss/24187/large.png?1385254902
-// @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20140731b';
+var Version = '20140415b_mm';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
 
-var maxChLevel = 10;
+var maxChLevel = 14;
 
 /*
  * Modifiedd from object.watch polyfill
@@ -291,12 +295,6 @@ function chStartup (){
 
     uW.chLoaded = Version;
 
-	var iTypes = unsafeWindow.cm.CHAMPION.getEquipmentNames();
-	for (ii in iTypes) {
-		var i_type = iTypes[ii];
-		itemTypes[i_type] = parseInt(ii);
-	}
-	
     readUpgradeData();
 
     if (upgradeData.uCityNum && upgradeData.uCityNum > Seed.cities.length -1 ) upgradeData.uCityNum = 0; 
@@ -1987,7 +1985,7 @@ function addCondition(c)
     this.conditions.push(c);
 }
 
-var itemTypes = {};
+var itemTypes = {"weapon": 1, "chest": 2, "helm":3, "shield": 5};
 
 function applyRule(id)
 {
@@ -3093,7 +3091,7 @@ Tabs.options = {
             // header stuff
             var m = '<Div id=ch_optionScroll style=" position: static; width: 700px; height: 500px; overflow-x: hidden; overflow-y: auto;">';
             m += '<DIV id=CHOptions class=chStat>OPTIONS</div><TABLE id=chOptionTbl width=100% height=0% class=chTab>';
-            m += '<TR><TD width=100%><INPUT id=chupdate type=checkbox '+ (CHGlobalOptions.chUpdate?'CHECKED ':'') +'/>Check for script updates (all domains) &nbsp; &nbsp; <INPUT id=chupdatenow type=button value="Update Now" /></TD></TR>';
+            m += '<TR><TD width=100%><INPUT id=chupdate type=checkbox '+ (CHGlobalOptions.chUpdate?'CHECKED ':'') +'/>Check for script updates on userscripts.org (all domains) &nbsp; &nbsp; <INPUT id=chupdatenow type=button value="Update Now" /></TD></TR>';
             //m += '<TR><TD width=100%><INPUT id=chDisableAnim type=checkbox '+ (upgradeData.disableAnim?'CHECKED ':'') +'/> Disable failure animation (Big red X) </TD></TR>';
             //m += '<TR><TD width=100%><INPUT id=chPresetOption type=checkbox '+ (upgradeData.presetWidget?'CHECKED ':'') +'/> Enable preset selector widget (requires refresh)</TD></TR>';
 
@@ -3426,7 +3424,7 @@ Tabs.upgrader = {
                m += '<tr><td colspan=4><hr/</td></tr>';
                m += '<tr><td colspan=4><div id=chQScroll style=" position: static; width: 700px; height: 300px; overflow-x: visible; overflow-y: auto;"><div id=chQDiv /></div></td></tr>';
 
-               m += '<tr align=center><div><td><input style="float: left;" id=chClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2></td></tr>';
+               m += '<tr align=center><div><td><input style="float: left;" id=chClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2><a id=chpplink><img id=chpp /></a></td></tr>';
                m += '</table>';
 
                m+='</div>';
@@ -3451,6 +3449,14 @@ Tabs.upgrader = {
                });
 
                $("#chQScroll").css('height', upgradeData.upgradeH).css('width', upgradeData.upgradeW);
+
+               $("#chpplink")
+               .attr('href', 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=FDW4NZ6PRMDMJ&lc=US&item_name=TR%20Organizer%20Donations&item_number=1001&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted')
+               .attr('target', '_blank');
+               $("#chpp")
+               .attr( 'src', 'https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif')
+               .attr( 'alt', 'dontae')
+               .css( 'cursor', 'pointer');
 
                document.getElementById('chUpgraderPower').addEventListener('click', function(){t.togglePower(this);} , false);
 
@@ -4908,7 +4914,7 @@ var AutoUpdater_183854 = {
             logit("checking version");
             GM_xmlhttpRequest({
                 method: 'GET',
-                url: 'http'+(secure ? 's' : '')+'://koc-battle-console.googlecode.com/svn/trunk/MadMaxxChampionHall.user.js',
+                url: 'http'+(secure ? 's' : '')+'://userscripts.org/scripts/source/'+this.id+'.meta.js',
                 onload: function(xpr) {AutoUpdater_183854.compare(xpr, response);},
                 onerror: function(xpr) {if (secure) AutoUpdater_183854.call(response, false);}
             });
@@ -4952,7 +4958,7 @@ var AutoUpdater_183854 = {
                         // Ok
                         function(){
                     try {
-                        location.href = 'https://koc-battle-console.googlecode.com/svn/trunk/MadMaxxChampionHall.user.js';
+                        location.href = 'https://userscripts.org/scripts/source/183854.user.js';
                     } catch(e) {}
                 },
                 // Cancel
