@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141006b
+// @version        20141013a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141006b';
+var Version = '20141013a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -389,9 +389,10 @@ function getFirefoxVersion() {
 	var ver = '',
 		i;
 	var ua = navigator.userAgent;
-	if (ua == null || (i = ua.indexOf('Firefox/')) < 0)
-		return;
-	return ua.substr(i + 8);
+	if (ua== null) return 'FF00.0';
+	if (i = ua.indexOf('Firefox/') >= 0) return 'FF'+ua.substr(i + 8);
+	if (i = ua.indexOf('PaleMoon/') >= 0) return 'PM'+ua.substr(i + 9);
+	return 'FF00.0';
 }
 
 function ptStartup() {
@@ -444,6 +445,9 @@ function ptStartup() {
     table.ptTabPad tr td.ptentry {background-color:#FFEECC ; padding-left: 8px;}\
     table.ptNoPad tr td {border:none; background:none; white-space:nowrap; padding:0px}\
     table.ptPlayers tr td {background-color:none; padding-left:5px; padding-right:5px;}\
+	.trimg:hover span.trtip { display:block; opacity: 1.0; z-index:999999; font-size:11px; text-align:left; position:absolute; background: #FFFFAA; color: #000; border: 1px solid #FFAD33; padding: 0.5em 0.5em;}\
+	.trimg span.trtip { display:none;}\
+	.trimg span.trtip:hover { display:none;}\
     .ptOddrow {background-color:' + Colors.DarkRow + '}\
     .ptstat {border:1px solid; border-color:#000000; font-weight:bold; padding-top:2px; padding-bottom:2px; text-align:center; color:#ffffff; background-color:#6FA2FF;  -moz-border-radius:5px;}\
     .ptStatLight {color:#ddd}\
@@ -963,17 +967,9 @@ var mapinfoFix = {
 		uW.ptGetProvince = function (N) {
 			return '<div class="thead" align="center"><b>' + uW.provincenames['p' + N.tileProvinceId] + '</b></div>';
 		}
-		if (FFVersion.substring(0, 4) > 16) {
-			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
-				[/var\s*Q\s*=\s*"";/, ' var Q = ""; if (G) g += "<div>Status: " + G + "</div>";'],
-				[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);']
-			]);
-		} else {
-			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
-				[/var\s*Q\s*=\s*"";/, ' var Q = ""; if (G) g += "<div>Status: " + G + "</div>";'],
-				['var g = "";', 'var g = "";g+=ptGetProvince(N);']
-			]);
-		}
+		t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
+			[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
+		]);
 		t.dispStatusMod.setEnable(Options.dispStatus);
 	},
 	setEnable: function (tf) {
@@ -1173,7 +1169,7 @@ var BarbRaidMarchPatch = {
 	marchFix: null,
 	init: function () {
 		t = BarbRaidMarchPatch;
-		if (FFVersion.substring(0, 4) > 16)
+		if (FFVersion.substring(2, 4) > 16)
 			t.marchFix = new CalterUwFunc('update_march', [
 				[/D\.toTileLevel,\s*n,\s*M\)/im, 'D.toTileLevel, n, M, Math.floor(unixtime()+D.returnEta-D.marchUnixTime))']
 			]);
@@ -5334,7 +5330,7 @@ ajax/viewCourt.php:
 				prestigeexp = t.getDuration(p.cities[c].prestigeBuffExpire);
 			}
 			t.dat.push([p.displayName, parseInt(p.might), p.officerType, parseInt(p.numCities), parseInt(p.cities[c].tileLevel),
-				parseInt(p.cities[c].xCoord), parseInt(p.cities[c].yCoord), p.cities[c].cityName, 0, status, 0, p.userId, prestige, p.userId, prestigelvl, prestigeexp, p.cities[c].prestigeBuffExpire, prestige + prestigelvl
+				parseInt(p.cities[c].xCoord), parseInt(p.cities[c].yCoord), p.cities[c].cityName, 0, status, 0, p.userId, prestige, p.userId, prestigelvl, prestigeexp, p.cities[c].prestigeBuffExpire, prestige + prestigelvl, p.cities[c].blessing
 			]);
 		}
 		t.setDistances(Cities.cities[0].x, Cities.cities[0].y);
@@ -5575,7 +5571,7 @@ ajax/viewCourt.php:
 						prestigeexp = t.getDuration(p.cities[c].prestigeBuffExpire);
 					}
 					t.dat.push([p.displayName, parseInt(p.might), p.officerType, parseInt(p.numCities), parseInt(p.cities[c].tileLevel),
-						parseInt(p.cities[c].xCoord), parseInt(p.cities[c].yCoord), p.cities[c].cityName, 0, rslt.data[p.userId] ? 1 : 0, '--', p.userId, prestige, p.userId, prestigelvl, prestigeexp, p.cities[c].prestigeBuffExpire, prestige + prestigelvl
+						parseInt(p.cities[c].xCoord), parseInt(p.cities[c].yCoord), p.cities[c].cityName, 0, rslt.data[p.userId] ? 1 : 0, '--', p.userId, prestige, p.userId, prestigelvl, prestigeexp, p.cities[c].prestigeBuffExpire, prestige + prestigelvl, p.cities[c].blessing
 					]);
 				}
 			}
@@ -5584,6 +5580,19 @@ ajax/viewCourt.php:
 		t.ModelCity = Cities.cities[0];
 		t.setEta();
 		t.displayMembers(t.memberListRslt.allianceName, numPlayers);
+	},
+	showBlessings: function(i){
+		var t = Tabs.AllianceList;
+		var msg = '';
+		if (!t.dat[i][18]) return msg;
+		var blessings = t.dat[i][18].split(',');
+		for (var y in blessings) {
+			var bb = unsafeWindow.g_js_strings.blessingSystem['blessing_name_'+blessings[y]];
+			var bd = unsafeWindow.g_js_strings.blessingSystem['blessing_description_'+blessings[y]];
+			if (bb)
+				msg += '<TR><TD><b>' + bb + '</b><br>'+ bd +'</td></tr>';
+		}
+		return msg;	
 	},
 	convertTime: function (datestr) {
 		// KOC Timestamps are in Local Pacific Time, so need to convert to unixtime and add 8 hours for PST
@@ -5624,10 +5633,14 @@ ajax/viewCourt.php:
 		var cityName = "";
 		for (var i = 0; i < t.dat.length; i++) {
 			cityName = t.dat[i][5].toString() + t.dat[i][6].toString();
+			var bless = t.showBlessings(i);
+			if (bless != "") {
+				var bless = '<a class=trimg><img src="https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/bonus_prestige.png"><SPAN class=trtip><table class=ptTab>'+bless+'</table></span></a>';
+			}
 			var status = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAWJJREFUeNrUU79PwkAUvv5IG6iAg8HEMIlxNLBCNxkkYah/gP6NmAChiYQUupjA4uCicbKJBQ0E24OWtvjdgCHGdmHyJV/efffuvrx37x232WzIPsaTPW1vAXGXaJpGRFGUOY67AD0FMsAX8IpSH4Mg8JrNZrwATI6i6KrRaGjVarWWTqePXde1TdO873Q67GYX8GIFwjAs1ev160qlckMp5QG2XQC/Xa1WnK7r7+APsQLr9fq8XC7XbNvmWXd832d7BFnxxWKxhnUvUQAXcqg/7zgOcRyKjIKfmCRJeRZPfETP89zJ5HO6XIYngiAThq1R6k5ZPLGNOPBsGMYglcpEsqyQLSRJicbj8YDFEzOwLGvUat21KfVFVb1Us9nc0WIx/xgOe2a/323PZrPRbwFud5RRvyQIwpmiKCX4AvgB4g6684Z2PsG/MJ4kIMAdsnn4Y+jYi85x3o8V+J+f6VuAAQDR57f+eJX9fgAAAABJRU5ErkJggg=="/>';
 			if (t.dat[i][9] == 1) status = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAVNJREFUeNrUk09OwkAUh9+gUKpAFIuIfxJilLIlMd6gaw+Ax/AY7r2AnMFFb2DcC5gYYlBotYKttEwp83zjQtFIN6x8yZfJ9PfypZM3wxARFqkELFgLC5ZnN+yyQF9YjrR12hpEiegRJghoQIQunj7PF1DlQOB5dadi6Nt6cSWlKiPu8+ZTq9bu3tUoPyPc+UcQWK9sHRh6oVIOXF91XpzE2AtUXTss72tlQ+axR4AQjb313aJlWSCEAM75J3JS2dVMUebUdREjECWcojLwBiCZRJOvKB2mFZnH/wEXvb7b5zbaKmR+No6jMZd5/Bg5mt3HByupJQE24Js8gD/0LJnHC0zecNuO6d06HcGmAWRBTCEK/NZbh9+PTJn/FrDZq8wYS0GeVeE4cQIldkT6TZq/DT28gWtxBa/YpP73OMESLWuE8seli4gh9YdzBf/zMX0IMACs96WetcYlTQAAAABJRU5ErkJggg=="/>';
 			m += '<TR style="max-height:30px"><TD class=xxtab>' + status + '<SPAN onclick="PTPlayClick(this, \'' + t.dat[i][13] + '\',\'' + t.dat[i][9] + '\')"><A>' + t.dat[i][0] + '</a></span></td><TD align=right class=xxtab>' + addCommasInt(t.dat[i][1]);
-			m += '</td><TD align=left class=xxtab nowrap>' + t.dat[i][12] + t.dat[i][14] + '</td><TD align=center class=xxtab nowrap>' + t.dat[i][15] + '</td><TD class=xxtab>' + officerId2String(t.dat[i][2]);
+			m += '</td><TD align=left class=xxtab nowrap>' + bless + t.dat[i][12] + t.dat[i][14] + '</td><TD align=center class=xxtab nowrap>' + t.dat[i][15] + '</td><TD class=xxtab>' + officerId2String(t.dat[i][2]);
 			m += '</td><TD class=xxtab><INPUT id=ScoutCheckbox_' + cityName + ' type=checkbox unchecked=true></td><TD class=xxtab>' + t.dat[i][7] + '</td><TD align=right class=xxtab>' + t.dat[i][4];
 			m += '</td><TD align=center class=xxtab><DIV onclick="ptGotoMap(' + t.dat[i][5] + ',' + t.dat[i][6] + ')"><A>' + t.dat[i][5] + ',' + t.dat[i][6] + '</a></div></td>';
 			m += '<TD align=right class=xxtab style="padding-right:20px;">' + t.dat[i][8].toFixed(2) + '</td>'
@@ -5711,7 +5724,7 @@ ajax/viewCourt.php:
 		document.getElementById('clickCol' + t.sortColNum).className = 'clickable clickableSel';
 		document.getElementById('ToggleScoutCheckbox').addEventListener('change', t.doSelectall, false);
 		t.reDisp();
-		new CdispCityPicker('plyrdcp', document.getElementById('dmcoords'), true, t.eventCoords, 0).bindToXYboxes(document.getElementById('plyrX'), document.getElementById('plyrY'));
+		new CdispCityPicker('plyrdcp', document.getElementById('dmcoords'), true, t.eventCoords, Cities.byID[unsafeWindow.currentcityid].idx).bindToXYboxes(document.getElementById('plyrX'), document.getElementById('plyrY'));
 		document.getElementById('dmcoords').addEventListener('click', function () {
 			//alert(t.eventCoords);
 			//t.clickCity(CdispCityPicker);
@@ -5811,7 +5824,7 @@ ajax/viewCourt.php:
 		document.getElementById('clickCol' + t.sortColNum).className = 'clickable clickableSel';
 		t.PaintGlory(rslt.playerInfo.userId);
 		t.reDisp();
-		new CdispCityPicker('plyrdcp', document.getElementById('dmcoords'), true, t.eventCoords, 0).bindToXYboxes(document.getElementById('plyrX'), document.getElementById('plyrY'));
+		new CdispCityPicker('plyrdcp', document.getElementById('dmcoords'), true, t.eventCoords, Cities.byID[unsafeWindow.currentcityid].idx).bindToXYboxes(document.getElementById('plyrX'), document.getElementById('plyrY'));
 		document.getElementById('idFindETASelect').disabled = false;
 	},
 	PaintGlory: function (uid) {
@@ -6661,8 +6674,8 @@ Tabs.Info = {
 		t.cont.innerHTML = m + '</div>';
 		for (var c = 0; c < Cities.numCities; c++)
 			t.makeCityImg(c, document.getElementById('ptProvMap'));
-		new CdispCityPicker('ptloc1', document.getElementById('ptloc1'), true, t.eventLocChanged, 0).bindToXYboxes(document.getElementById('calcX'), document.getElementById('calcY'));
-		new CdispCityPicker('ptloc2', document.getElementById('ptloc2'), true, t.eventLocChanged, 0).bindToXYboxes(document.getElementById('calcX2'), document.getElementById('calcY2'));
+		new CdispCityPicker('ptloc1', document.getElementById('ptloc1'), true, t.eventLocChanged).bindToXYboxes(document.getElementById('calcX'), document.getElementById('calcY'));
+		new CdispCityPicker('ptloc2', document.getElementById('ptloc2'), true, t.eventLocChanged).bindToXYboxes(document.getElementById('calcX2'), document.getElementById('calcY2'));
 		t.eventLocChanged(Cities.cities[0], Cities.cities[0].x, Cities.cities[0].y);
 		document.getElementById('plot').addEventListener('change', function () {
 			t.plotCityImg(0, document.getElementById('ptProvMap'), document.getElementById('calcX').value, document.getElementById('calcY').value);
@@ -7405,7 +7418,7 @@ Tabs.Train = {
 		t.TDbutMaxPerSlot.addEventListener('click', t.clickDefMaxPS, false);
 		t.TDbutMaxSlots.addEventListener('click', t.clickDefMaxSlots, false);
 		t.TDbutDo.addEventListener('click', t.clickDefDo, false);
-		var dcp = new CdispCityPicker('ptspeed', document.getElementById('ptspeedcity'), true, t.clickCitySelect, 0);
+		var dcp = new CdispCityPicker('ptspeed', document.getElementById('ptspeedcity'), true, t.clickCitySelect, Cities.byID[unsafeWindow.currentcityid].idx);
 		document.getElementById('chkPop').addEventListener('change', t.clickCheckIdlePop, false);
 		document.getElementById('chkDoTraps').addEventListener('change', t.clickCheckDoTraps, false);
 		document.getElementById('chkDoCaltrops').addEventListener('change', t.clickCheckDoCaltrops, false);
@@ -8676,7 +8689,7 @@ function getWallInfo(cityId, objOut) {
 	for (var i = 1; i < (objOut.wallLevel + 1); i++)
 		spots += (i * 1500);
 	if (unsafeWindow.seed.cityData.city[cityId].isPrestigeCity) {
-		if (unsafeWindow.seed.cityData.city[cityId].prestigeInfo.blessings.indexOf(307) != -1) spots *= 1.15;		
+		if (unsafeWindow.seed.cityData.city[cityId].prestigeInfo.blessings.indexOf(307) != -1) spots = Math.round(spots * 1.15);		
 	}	
 	objOut.wallSpace = spots;
 	objOut.fieldSpace = spots;
@@ -14277,7 +14290,7 @@ var LoadCapFix = {
 	init: function () {
 		var t = LoadCapFix;
 		//    t.capLoadEffect = new CalterUwFunc ('cm.MarchModal.updateTroopResource', [[/\$\("#modal/ig, 'jQuery("#modal'] , [/1\s*\+\s*loadBoost\)/i, '1 + Math.min(loadBoost,6.25+loadEffectBoost+techLoadBoost)); for(var sacIndex = 0; sacIndex < seed.queue_sacr["city" + currentcityid].length; sacIndex ++ ) if(seed.queue_sacr["city" + currentcityid][sacIndex]["unitType"] == untid) load *= seed.queue_sacr["city" + currentcityid][sacIndex]["multiplier"][0]; load=Math.floor(load-1);'] ]);
-		if (FFVersion.substring(0, 4) > 16)
+		if (FFVersion.substring(2, 4) > 16)
 			t.capLoadEffect = new CalterUwFunc('cm.MarchModal.updateTroopResource', [
 				[/\$\("#modal/ig, 'jQuery("#modal'],
 				[/if\(jQuery/i, 'loadBoost = Math.min(loadBoost,6.25+techLoadBoost); for(var sacIndex = 0; sacIndex < seed.queue_sacr["city" + currentcityid].length; sacIndex ++ ) if(seed.queue_sacr["city" + currentcityid][sacIndex]["unitType"] == untid) unit_number *= seed.queue_sacr["city" + currentcityid][sacIndex]["multiplier"][0]; if(jQuery'],
