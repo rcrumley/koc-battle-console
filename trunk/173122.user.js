@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141013a
+// @version        20141014a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141013a';
+var Version = '20141014a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -390,8 +390,10 @@ function getFirefoxVersion() {
 		i;
 	var ua = navigator.userAgent;
 	if (ua== null) return 'FF00.0';
-	if (i = ua.indexOf('Firefox/') >= 0) return 'FF'+ua.substr(i + 8);
-	if (i = ua.indexOf('PaleMoon/') >= 0) return 'PM'+ua.substr(i + 9);
+	i = ua.indexOf('Firefox/');
+	if (i >= 0) return 'FF'+ua.substr(i + 8);
+	i = ua.indexOf('PaleMoon/');
+	if (i >= 0) return 'PM'+ua.substr(i + 9);
 	return 'FF00.0';
 }
 
