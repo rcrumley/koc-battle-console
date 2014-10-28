@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20140925a
+// @version			20141028a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Support for new Spellcaster Throne Effects</p>
+// @releasenotes 	<p>Minor display issue with quick sacrifice on dashboard</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -23,10 +23,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	September 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
+//	¦	October 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20140925a'; 
+var Version = '20141028a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -4557,7 +4557,7 @@ function PaintCityInfo(cityId) {
 		s += '<td class=xtab>Channelled Suffering?</td><td class=xtab><b>'+(ChannelledSuffering?'Yes':'No')+'</b></td></tr>';
 		s += '<tr><td class=xtab>Max. Troops</td><td class=xtab><b>'+addCommas(SacSettings.max_amount)+'</b></td>';
 		s += '<td class=xtab>Troops per Second</td><td class=xtab><b>'+(Math.round(SacSpeed * 100 / SacSpeedBuff)/100)+'</b></td></tr>';
-		s += '<tr id=btQuickSac class=divHide><td class=xtab colspan="4">'+QuickSacString+'</td></tr>';
+		s += '<tr id=btQuickSac class=divHide><td class=xtabBR colspan="4">'+QuickSacString+'</td></tr>';
 		s += '</table>';
 	
 		sac = Seed.queue_sacr["city" + cityId],
