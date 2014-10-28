@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141028b
+// @version        20141028c
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141028b';
+var Version = '20141028c';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -8330,7 +8330,7 @@ Tabs.Train = {
 		var cityId = Cities.cities[cityNo - 1].id
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
-		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
+		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed - wall.fieldSpaceQueued;
 		var MaxSlots = wall.wallLevel;
 		if (MaxSlots > 5) MaxSlots = 5;
 		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
@@ -8379,7 +8379,7 @@ Tabs.Train = {
 		var cityId = Cities.cities[cityNo - 1].id
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
-		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
+		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed - wall.fieldSpaceQueued;
 		var MaxSlots = wall.wallLevel;
 		if (MaxSlots > 5) MaxSlots = 5;
 		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
@@ -8424,7 +8424,7 @@ Tabs.Train = {
 		var cityId = Cities.cities[cityNo - 1].id
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
-		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed;
+		availableSpace = wall.fieldSpace - wall.fieldSpaceUsed - wall.fieldSpaceQueued;
 		var MaxSlots = wall.wallLevel;
 		if (MaxSlots > 5) MaxSlots = 5;
 		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
@@ -8471,7 +8471,7 @@ Tabs.Train = {
 		var cityId = Cities.cities[cityNo - 1].id
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
-		availableSpace = wall.wallSpace - wall.wallSpaceUsed;
+		availableSpace = wall.wallSpace - wall.wallSpaceUsed - wall.wallSpaceQueued;
 		var MaxSlots = wall.wallLevel;
 		if (MaxSlots > 5) MaxSlots = 5;
 		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
@@ -8520,7 +8520,7 @@ Tabs.Train = {
 		var cityId = Cities.cities[cityNo - 1].id
 		var cityID = 'city' + cityId;
 		getWallInfo(cityId, wall);
-		availableSpace = wall.wallSpace - wall.wallSpaceUsed;
+		availableSpace = wall.wallSpace - wall.wallSpaceUsed - wall.wallSpaceQueued;
 		var MaxSlots = wall.wallLevel;
 		if (MaxSlots > 5) MaxSlots = 5;
 		if (availableSpace > 0 && wall.slotsBusy < MaxSlots) {
@@ -8679,13 +8679,14 @@ function getResourceProduction(cityId) {
 function getWallInfo(cityId, objOut) {
 	objOut.wallSpaceUsed = 0;
 	objOut.fieldSpaceUsed = 0;
+	objOut.wallSpaceQueued = 0;
+	objOut.fieldSpaceQueued = 0;
 	objOut.wallLevel = 0;
 	objOut.wallSpace = 0;
 	objOut.fieldSpace = 0;
-		objOut.slotsBusy = 0;
+	objOut.slotsBusy = 0;
 	var b = Seed.buildings["city" + cityId];
-	if (b.pos1 == null)
-		return;
+	if (b.pos1 == null)	return;
 	objOut.wallLevel = parseInt(b.pos1[1]);
 	var spots = 0;
 	for (var i = 1; i < (objOut.wallLevel + 1); i++)
@@ -8703,9 +8704,17 @@ function getWallInfo(cityId, objOut) {
 		else
 			objOut.fieldSpaceUsed += parseInt(uW.fortstats["unt" + id][5]) * parseInt(fort[k]);
 	}
-		var queue = Seed.queue_fort["city" + cityId];
-		objOut.slotsBusy = queue.length;
-	}
+	var q = Seed.queue_fort["city" + cityId];
+	objOut.slotsBusy = q.length;
+	if (q!=null && q.length > 0 ){
+		for (i=0; i<q.length; i++){
+			if (q[i][0] < 60)
+				objOut.wallSpaceQueued += parseInt(uW.fortstats["unt"+ q[i][0]][5]) * parseInt(q[i][1]);
+			else
+				objOut.fieldSpaceQueued += parseInt(uW.fortstats["unt"+ q[i][0]][5]) * parseInt(q[i][1]);
+		}
+	}	
+}	
 	
 Tabs.OverView = {
 	tabOrder: 1,
