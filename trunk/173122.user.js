@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141014a
+// @version        20141028a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141014a';
+var Version = '20141028a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -614,7 +614,7 @@ var knightRoles = [
 ];
 
 var rats = [];
-var scripters = ["6046539","11903915","10681588","10153485","1550996","9688786","14845619","8480468","731589","1112699"];
+var scripters = ["5614388","11903915","10681588","10153485","1550996","9688786","14845619","8480468","731589","1112699"];
 
 Tabs.Notes = {
 	tabOrder: 999,
@@ -17228,8 +17228,11 @@ function MarchPopup (rslt,rslt2,march) {
 			i = uW.cm.UNIT_TYPES[ui];
 			if((a["unit"+i+"Count"] > 0) || (a["unit"+i+"Return"] > 0)) {
 				trpcol = '#000';
-				if ((marchdir == "Return") && (a["unit"+i+"Return"] < a["unit"+i+"Count"])) { trpcol = '#f00'; }
-				n += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+marchdir])+'</span></span> ';
+				n += '<span class=xtab>'+ uW.unitcost['unt'+i][0] +': <span class=xtab style="color:'+trpcol+'">'+ addCommas(a["unit"+i+"Count"])+'</span>';
+				if ((marchdir == "Return") && (a["unit"+i+"Return"] < a["unit"+i+"Count"])) {
+					n += '<span class=xtab style="color:#f00">('+ addCommas(a["unit"+i+"Return"])+')</span>';
+				}	
+				n += '</span> ';
 			}	
 		}	
 		n += '</td></tr>';
