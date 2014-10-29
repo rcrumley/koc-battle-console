@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.5a
+// @version			0.7a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -905,7 +905,7 @@ function TokenPopup (){
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		}, false);
 		document.getElementById('tkgrabchest').addEventListener('click', function () {
-			document.getElementById('tkmessage').innerHTML = '';
+			document.getElementById('tkmessage').innerHTML = '&nbsp;';
 			document.getElementById('tklink').value = '';
 			
 		  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
@@ -923,6 +923,7 @@ function TokenPopup (){
 					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum }, function (result) {
 						ClaimChest.p = p;
 						ClaimChest.posts = result.data;
+//						ClaimChest.posts = result.data.reverse();
 						ClaimChest.CheckNext();
 					});
 				}
@@ -960,7 +961,7 @@ function TokenPopup (){
 										unsafeWindow.seed.items.i599 = (NumTokens).toString();
 										unsafeWindow.ksoItems[599].subtract();
 									}
-									document.getElementById('tkmessage').innerHTML = '<span style="color:#080;font-size:14px;"><b>You won '+unsafeWindow.itemlist["i"+rslt.prize].name+'!</b>('+NumTokens+' tokens left)</span>';
+									document.getElementById('tkmessage').innerHTML = '<span style="color:#080;"><b>You won '+unsafeWindow.itemlist["i"+rslt.prize].name+'!</b>('+NumTokens+' tokens left)</span>';
 									document.getElementById('tknum').innerHTML = parseInt(unsafeWindow.seed.items.i599)
 //									if (NumTokens < 1) {
 //										unsafeWindow.jQuery('#tktokenusebutton').addClass('divHide');
@@ -998,23 +999,28 @@ var ClaimChest = {
 		}
 		var post = t.posts.splice(0,1)[0];
 		if (post.status_type == "app_created_story" && post.name.substring(9) == "Magical Treasure!") {
-			unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
-				var likes = result.data;
-				if (result && !result.error && likes.length == 0){
-					unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
-						if (result && !result.error) {
-							document.getElementById('tklink').value = post.link;
-							KOCAutoAcceptGifts.Log(JSON2.stringify(post));
-						}
-						else {
-							ClaimChest.CheckNext();
-						}
-					});
-				}
-				else {
-					ClaimChest.CheckNext();
-				}
-			});
+			if (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0)) {
+				unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
+					var likes = result.data;
+					if (result && !result.error && likes.length == 0){
+						unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
+							if (result && !result.error) {
+								document.getElementById('tklink').value = post.link;
+								KOCAutoAcceptGifts.Log(JSON2.stringify(post));
+							}
+							else {
+								ClaimChest.CheckNext();
+							}
+						});
+					}
+					else {
+						ClaimChest.CheckNext();
+					}
+				});
+			}
+			else {
+				ClaimChest.CheckNext();
+			}
 		}
 		else {
 			ClaimChest.CheckNext();
@@ -1067,7 +1073,7 @@ var KOCAutoAcceptGifts = {
 			json = '{}';
 		var options = JSON2.parse(json);
 		var defOptions = {
-			UserDomain : 427,
+			UserDomain : 454,
 			Enabled : true,
 			ChestDomain : '',
 			BuildLink : '',
@@ -1163,9 +1169,15 @@ var KOCAutoAcceptGifts = {
 								} else {
 									claim_gift.appendChild(a);
 								}	
-								
-								var goto1 = window.location.protocol+'//apps.facebook.com/kingdomsofcamelot/?s='+UserDomain +(document.URL.search(/page=friendFeed/i)>0?'&s_bad_mt='+getBadServerId():'');// '?s_bad_mt='+UserDomain // to communicate with BOT script that from this domain merlin token not taken;
-									setTimeout (function (){window.top.location = goto1;}, 10000);								
+							
+								var goto1 = window.location.protocol+'//apps.facebook.com/kingdomsofcamelot/?s='+UserDomain;
+								if (document.URL.search(/page=friendFeed/i)>0) {
+									if (claim_gift.textContent.indexOf("Someone else has claimed this bonus.")>-1||
+										claim_gift.textContent.indexOf("You have already claimed this")>-1)
+										goto1 += '&s_expired_mt='+getBadServerId(); // to communicate with BOT script that merlin token not taken expired and boot should try another link;
+									else goto1 += '&s_bad_mt='+getBadServerId(); // to communicate with BOT script that from this domain merlin token not taken;
+								}							
+								setTimeout (function (){window.top.location = goto1;}, 10000);								
 							}
 						}	
 					}
