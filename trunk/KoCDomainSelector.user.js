@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.7a
+// @version			0.8a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -24,6 +24,8 @@
 //	Script adapted from "Auto Accept Kingdoms of Camelot Gifts" by Thomas Chapin
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
+
+var Version = '0.8a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -727,7 +729,10 @@ function TokenStartup (){
 }  
 
 function CheckTokenDay() {
-	var today = new Date();
+	var date = new Date();
+	var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+	var offset = -8 + (getDST(date)/60);
+	var today = new Date(utc + (3600000 * offset));
 	var dd = today.getDate();
 	var mm = today.getMonth()+1; //January is 0!
 	var yyyy = today.getFullYear();
@@ -739,6 +744,21 @@ function CheckTokenDay() {
 		KOCAutoAcceptGifts.options.TokenCount = 0;
 		KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 	}
+}
+  
+function getDST(today) {
+	var yr = today.getFullYear();
+	var dst_start = new Date(yr+"-03-14T02:00:00"); // 2nd Sunday in March can't occur after the 14th 
+	var dst_end = new Date(yr+"-11-07T02:00:00"); // 1st Sunday in November can't occur after the 7th
+	var day = dst_start.getDay(); // day of week of 14th
+	dst_start.setDate(14-day); // Calculate 2nd Sunday in March of this year
+	day = dst_end.getDay(); // day of the week of 7th
+	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
+	var dstadj = 0;
+	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
+		dstadj = (3600); // 60 mins!
+	}
+	return dstadj;
 }
   
 function TokenPopup (){
@@ -775,15 +795,15 @@ function TokenPopup (){
 		n += '<tr><td width=50 class=xtab>Domain to Receive Tokens:&nbsp;</td><td class=xtab><input type=text id=tkdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.UserDomain+'"></td><td class=xtab align=right><b>Enabled&nbsp;<input type=checkbox id=tkenable '+(KOCAutoAcceptGifts.options.Enabled?'CHECKED':'')+'></b></td></tr>';
 		n += '<tr><td class=xtab>Domains for Chest Links:&nbsp;</td><td class=xtab colspan=2><input type=text id=tkchestdomainlist size=47 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomainList+'" title="List some domains you do NOT play in here, separated by commas."></td></tr>';
 		n += '</table>';
-		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr><tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input  title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input  title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'></td></tr>';
+		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr><tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input  title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'>&nbsp;Rev<input title="Tick to search posts in reverse order, i.e. oldest first." type=checkbox id=tkrev '+(KOCAutoAcceptGifts.options.Reversed?'CHECKED':'')+'></td></tr>';
 		n += '<tr><td class=xtab>Link:&nbsp;</td><td class=xtab align=right><input type=text id=tklink size=80 class=btInput title="Copy and paste your Build, Token or Treasure Chest links from Facebook into here!"></td></tr>';
 		n += '<tr><td class=xtab align=right colspan=2><a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
 		n += '</table>';
 		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0>';
 		n += '<tr><td width=33% class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><a id=tkprior><<</a>&nbsp;<input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!">&nbsp;<a id=tknext>>></a></td></tr>';
 		n += '</table>';
-		n += '<div align="center" style="font-size:10px;opacity:0.6;">KoC Domain Selector v0.5a<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
-		n += '<div id=tkmessage align="center" style="font-size:10px;opacity:0.6">&nbsp;</div>';
+		n += '<div align="center" style="font-size:10px;opacity:0.6;">KoC Domain Selector '+Version+'<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
+		n += '<div id=tkmessage align="center" style="font-size:12px;opacity:0.6">&nbsp;</div>';
 		n += '<div align=center style="font-size:10px;" id=tktokenusebutton><a id=tktokenuse class="inlineButton btButton brown8"><span>Use a Token</span></a></div></div>';
 		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 330, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
 		TokenPop.getTopDiv().innerHTML = '<DIV align=center><B>TOKEN OPTIONS</B></DIV>';
@@ -804,6 +824,10 @@ function TokenPopup (){
 		}, false);
 		document.getElementById('tkyourwall').addEventListener('change', function () {
 			KOCAutoAcceptGifts.options.YourWall = document.getElementById('tkyourwall').checked;
+			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+		}, false);
+		document.getElementById('tkrev').addEventListener('change', function () {
+			KOCAutoAcceptGifts.options.Reversed = document.getElementById('tkrev').checked;
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		}, false);
 		document.getElementById('tkchestdomain').addEventListener('keyup', function () {
@@ -922,8 +946,8 @@ function TokenPopup (){
 					GotLink = false;
 					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum }, function (result) {
 						ClaimChest.p = p;
-						ClaimChest.posts = result.data;
-//						ClaimChest.posts = result.data.reverse();
+						if (KOCAutoAcceptGifts.options.Reversed) { ClaimChest.posts = result.data.reverse(); }
+						else { ClaimChest.posts = result.data; }
 						ClaimChest.CheckNext();
 					});
 				}
@@ -961,7 +985,7 @@ function TokenPopup (){
 										unsafeWindow.seed.items.i599 = (NumTokens).toString();
 										unsafeWindow.ksoItems[599].subtract();
 									}
-									document.getElementById('tkmessage').innerHTML = '<span style="color:#080;"><b>You won '+unsafeWindow.itemlist["i"+rslt.prize].name+'!</b>('+NumTokens+' tokens left)</span>';
+									document.getElementById('tkmessage').innerHTML = '<span style="color:#080;"><b>You won '+unsafeWindow.itemlist["i"+rslt.prize].name+'!</b></span>';
 									document.getElementById('tknum').innerHTML = parseInt(unsafeWindow.seed.items.i599)
 //									if (NumTokens < 1) {
 //										unsafeWindow.jQuery('#tktokenusebutton').addClass('divHide');
@@ -998,29 +1022,24 @@ var ClaimChest = {
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.status_type == "app_created_story" && post.name.substring(9) == "Magical Treasure!") {
-			if (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0)) {
-				unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
-					var likes = result.data;
-					if (result && !result.error && likes.length == 0){
-						unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
-							if (result && !result.error) {
-								document.getElementById('tklink').value = post.link;
-								KOCAutoAcceptGifts.Log(JSON2.stringify(post));
-							}
-							else {
-								ClaimChest.CheckNext();
-							}
-						});
-					}
-					else {
-						ClaimChest.CheckNext();
-					}
-				});
-			}
-			else {
-				ClaimChest.CheckNext();
-			}
+		if (post.status_type == "app_created_story" && post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0 && (KOCAutoAcceptGifts.options.YourWall || post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0)) {
+			unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
+				var likes = result.data;
+				if (result && !result.error && likes.length == 0){
+					unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
+						if (result && !result.error) {
+							document.getElementById('tklink').value = post.link;
+							KOCAutoAcceptGifts.Log(JSON2.stringify(post));
+						}
+						else {
+							ClaimChest.CheckNext();
+						}
+					});
+				}
+				else {
+					ClaimChest.CheckNext();
+				}
+			});
 		}
 		else {
 			ClaimChest.CheckNext();
@@ -1082,8 +1101,9 @@ var KOCAutoAcceptGifts = {
 			TokenCount : 0,
 			ChestDomainList : '',
 			OpenState : false,
-			SearchNum : 20,
+			SearchNum : 30,
 			YourWall : false,
+			Reversed : true,
 		};
 		for (var n in defOptions) {
 			if (options[n] != undefined) {
@@ -1173,8 +1193,10 @@ var KOCAutoAcceptGifts = {
 								var goto1 = window.location.protocol+'//apps.facebook.com/kingdomsofcamelot/?s='+UserDomain;
 								if (document.URL.search(/page=friendFeed/i)>0) {
 									if (claim_gift.textContent.indexOf("Someone else has claimed this bonus.")>-1||
-										claim_gift.textContent.indexOf("You have already claimed this")>-1)
-										goto1 += '&s_expired_mt='+getBadServerId(); // to communicate with BOT script that merlin token not taken expired and boot should try another link;
+										claim_gift.textContent.indexOf("You have already claimed this")>-1 ||
+										claim_gift.textContent.indexOf("You can not click on your own feed")>-1 ||
+										claim_gift.textContent.indexOf("You cannot click on your own feed")>-1)
+										goto1 += '&s_expired_mt='+getBadServerId(); // to communicate with BOT script that merlin token not taken expired and BOT should try another link;
 									else goto1 += '&s_bad_mt='+getBadServerId(); // to communicate with BOT script that from this domain merlin token not taken;
 								}							
 								setTimeout (function (){window.top.location = goto1;}, 10000);								
