@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141028c
+// @version        20141103a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141028c';
+var Version = '20141103a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -364,6 +364,18 @@ var GameIcons = {
 	raidResting: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/autoAttack/raid_resting.png>',
 	returning: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/returning.jpg>',
 };
+
+var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
+var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119];
+var DefenceEffects = [2,18,25,30,35,40,45,51,114,120,125,126];
+var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121,127,128];
+var RangeEffects = [5,21,37,42,58,63,117,123,131,132,133,134];
+var SpeedEffects = [4,20,27,32,47,53,57,62,116,122,129,130];
+var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
+var OtherCombatEffects = [8,9,118,124,13,14,15,16,73];
+var OtherPVPEffects = [6,22,48,54,59,64];
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124,126,128,130,132,134];
+var AlternateSortOrder = [5,37,58,117,21,42,63,123,131,132,133,134,1,24,34,44,56,102,113,17,29,39,50,61,119,2,25,35,45,114,18,30,40,51,120,125,126,3,26,36,46,104,115,19,31,41,52,121,127,128,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,23,33,43,55,65,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
 
 var JSON2 = JSON;
 var Cities = {};
@@ -2172,6 +2184,8 @@ var Rpt = {
 		}
 
 		function buildChampDuel() {
+            var LineStyle = '';
+            var EndStyle = '';
 			var m = '';
 			if (rslt['champion_stats']) {
 				s1name = rslt.champion_stats['s1'].nam;
@@ -2215,35 +2229,75 @@ var Rpt = {
 					m += '</div>'; //ChampStatContainer
 					m += '<div style="clear:both">&nbsp;</div>';
 					if (rslt.bonus) {
-						if (rslt.bonus['cmp']) {
-							m += '<div id=ChampAdjContainer style="clear:both">';
-							m += '<div style="width:50%;float:left;">';
-							// rather than fix the index for life, kabam remapped efects
-							// 0:g_js_strings.effects.name_3,
-							// 1:g_js_strings.effects.name_1,
-							// 2:g_js_strings.effects.name_2,
-							// 3:g_js_strings.commonstr.speed,
-							// 4:g_js_strings.effects.name_5,
-							// 5:g_js_strings.effects.name_6,
-							// 6:g_js_strings.effects.name_7
-							m += '<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
-							for (var i = 0; i < 24; i++) {
-								if (rslt.bonus['cmp']['s1'][i]) {
-									if (i == 0) m += '<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-									else if (i < 3) m += '<TR><TD colspan=4>' + trEffect[i] + ': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-									else m += '<TR><TD colspan=4>' + trEffect[i + 1] + ': ' + rslt.bonus['cmp']['s1'][i] + '</TD></TR>';
-								}
-							}
-							m += '</table></br>'
-							m += '</div>'; //attacker
-							m += '<div style="width:50%;float:left;">';
-							m += '<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
-							for (var i = 0; i < 24; i++) {
-								if (rslt.bonus['cmp']['s0'][i]) {
-									if (i == 0) m += '<TR><TD colspan=4>Life: ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-									else if (i < 3) m += '<TR><TD colspan=4>' + trEffect[i] + ': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-									else m += '<TR><TD colspan=4>' + trEffect[i + 1] + ': ' + rslt.bonus['cmp']['s0'][i] + '</TD></TR>';
-								}
+						if (rslt.bonus['chp']) {
+							m+='<div id=ChampAdjContainer style="clear:both">';
+							m+='<div style="width:50%;float:left;">';
+							m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
+							if (rslt.bonus['chp']['s0'] || rslt.bonus['chp']['s1'])
+							   for (var i in uW.cm.thronestats.effects) {
+								trEffect[i] = uW.cm.thronestats.effects[i][1];
+                        					LineStyle = '<span style="color:#888;">';
+                        					if (AttackEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#800;">';
+                        					if (DefenceEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#008;">';
+                        					if (LifeEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#088;">';
+                        					if (RangeEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#080;">';
+                        					if (SpeedEffects.indexOf(parseInt(i)) > -1)
+                       						    LineStyle = '<span style="color:#000;">';
+                        					if (AccuracyEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#f80;">';
+                        					if (OtherCombatEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#808;">';
+                        					if (GlobalEffects.indexOf(parseInt(i)) > -1) {
+                        					    LineStyle = LineStyle + '<strong>';
+                        					    EndStyle = '</strong>' + EndStyle;
+                        					}
+                        					if (DebuffEffects.indexOf(parseInt(i)) > -1) {
+                        					    LineStyle = LineStyle + '<i>';
+                        					    EndStyle = '</i>' + EndStyle;
+                        					}
+								if (rslt.bonus['chp']['s1'] && rslt.bonus['chp']['s1'][0][i])
+									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s1'][0][i]*100)/100) + EndStyle + '</TD></TR>';
+								if (rslt.bonus['chp']['s0'] && rslt.bonus['chp']['s0'][1][i])
+									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s0'][1][i]*100)/100) + EndStyle + '</TD></TR>';
+							   }
+							m+='</table></br>'
+							m+='</div>';//attacker
+							m+='<div style="width:50%;float:left;">';
+							m+='<b>Champion Adjustments</b><br><TABLE class=ptTab width=100%>';
+							if (rslt.bonus['chp']['s0'] || rslt.bonus['chp']['s1'])
+							   for (var i in uW.cm.thronestats.effects) {
+								trEffect[i] = uW.cm.thronestats.effects[i][1];
+                        					LineStyle = '<span style="color:#888;">';
+                        					if (AttackEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#800;">';
+                        					if (DefenceEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#008;">';
+                        					if (LifeEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#088;">';
+                        					if (RangeEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#080;">';
+                        					if (SpeedEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#000;">';
+                        					if (AccuracyEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#f80;">';
+                        					if (OtherCombatEffects.indexOf(parseInt(i)) > -1)
+                        					    LineStyle = '<span style="color:#808;">';
+                        					if (GlobalEffects.indexOf(parseInt(i)) > -1) {
+                        					    LineStyle = LineStyle + '<strong>';
+                        					    EndStyle = '</strong>' + EndStyle;
+                        					}
+                        					if (DebuffEffects.indexOf(parseInt(i)) > -1) {
+                        					    LineStyle = LineStyle + '<i>';
+                        					    EndStyle = '</i>' + EndStyle;
+                        					}
+								if (rslt.bonus['chp']['s0'] && rslt.bonus['chp']['s0'][0][i])
+									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s0'][0][i]*100)/100) + EndStyle + '</TD></TR>';
+								if (rslt.bonus['chp']['s1'] && rslt.bonus['chp']['s1'][1][i])
+									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s1'][1][i]*100)/100) + EndStyle + '</TD></TR>';
 							}
 							m += '</table></br>'
 							m += '</div>'; //defender
@@ -2261,16 +2315,6 @@ var Rpt = {
 			var m = '';
 			var LineStyle = '';
 			var EndStyle = '';
-			var GlobalEffects = [1, 2, 3, 4, 5, 6, 7, 17, 18, 19, 20, 21, 22, 23, 102, 103, 8, 9, 73];
-			var AttackEffects = [1, 17, 24, 29, 34, 39, 44, 50, 56, 61, 102];
-			var DefenceEffects = [2, 18, 25, 30, 35, 40, 45, 51, 104];
-			var LifeEffects = [3, 19, 26, 31, 36, 41, 46, 52];
-			var RangeEffects = [5, 21, 37, 42, 58, 63];
-			var SpeedEffects = [4, 20, 27, 32, 47, 53, 57, 62];
-			var AccuracyEffects = [7, 23, 28, 33, 38, 43, 49, 55, 60, 65];
-			var OtherCombatEffects = [8, 9, 13, 14, 15, 16, 73];
-			var OtherPVPEffects = [6, 22, 48, 54, 59, 64];
-			var DebuffEffects = [17, 18, 19, 20, 22, 21, 23, 29, 39, 50, 54, 61, 30, 40, 51, 31, 41, 52, 42, 63, 64, 32, 53, 62];
 			//header
 			m += '<div class="ptdivHeader" style="background: #99CCFF;" align=left><a id=reportThroneHdr class=ptdivLink >Throne Stats:&nbsp;<img id=reportThroneArrow height="10" src="' + GameIcons.DownArrow + '"></a></div>';
 			//summary
@@ -17002,8 +17046,8 @@ function Sendcourtdata(courtdata) {return; // no send data to kocscripters.com
 
 function getDST(today) {
 	var yr = today.getFullYear();
-	var dst_start = new Date("March 14, " + yr + " 02:00:00"); // 2nd Sunday in March can't occur after the 14th 
-	var dst_end = new Date("November 07, " + yr + " 02:00:00"); // 1st Sunday in November can't occur after the 7th
+	var dst_start = new Date(yr+"-03-14T02:00:00"); // 2nd Sunday in March can't occur after the 14th 
+	var dst_end = new Date(yr+"-11-07T02:00:00"); // 1st Sunday in November can't occur after the 7th
 	var day = dst_start.getDay(); // day of week of 14th
 	dst_start.setDate(14 - day); // Calculate 2nd Sunday in March of this year
 	day = dst_end.getDay(); // day of the week of 7th
