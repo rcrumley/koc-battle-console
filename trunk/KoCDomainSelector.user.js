@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.8a
+// @version			0.9a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -25,7 +25,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.8a';
+var Version = '0.9a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -1022,7 +1022,7 @@ var ClaimChest = {
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.status_type == "app_created_story" && post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0 && (KOCAutoAcceptGifts.options.YourWall || post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0)) {
+		if (post.status_type == "app_created_story" && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
 			unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
 				var likes = result.data;
 				if (result && !result.error && likes.length == 0){
