@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20141008a
+// @version        20141111a
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
@@ -26,15 +26,13 @@
 // @grant       GM_registerMenuCommand
 // @grant       GM_getResourceText
 // @grant       GM_getResourceURL
-// @contributionURL https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=FDW4NZ6PRMDMJ&lc=US&item_name=TR%20Organizer%20Donations&item_number=1001&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
-// @contributionAmount $3.00
 // @screenshot http://s3.amazonaws.com/uso_ss/24187/large.png?1385254902
 // ==/UserScript==
 
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20141008a';
+var Version = '20141111a';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
@@ -1985,7 +1983,7 @@ function addCondition(c)
     this.conditions.push(c);
 }
 
-var itemTypes = {"weapon": 1, "chest": 2, "helm":3, "shield": 5};
+var itemTypes = {"weapon": 1, "chest": 2, "helm":3, "boots":4, "shield": 5, "ring1": 6, "ring2": 7, "pendant": 8, "cloak": 9};
 
 function applyRule(id)
 {
@@ -3424,7 +3422,7 @@ Tabs.upgrader = {
                m += '<tr><td colspan=4><hr/</td></tr>';
                m += '<tr><td colspan=4><div id=chQScroll style=" position: static; width: 700px; height: 300px; overflow-x: visible; overflow-y: auto;"><div id=chQDiv /></div></td></tr>';
 
-               m += '<tr align=center><div><td><input style="float: left;" id=chClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2><a id=chpplink><img id=chpp /></a></td></tr>';
+               m += '<tr align=center><div><td><input style="float: left;" id=chClearQ type=button value="Clear Queue"/></div></td><td colspan=1></td><td colspan=2></td></tr>';
                m += '</table>';
 
                m+='</div>';
@@ -3449,14 +3447,6 @@ Tabs.upgrader = {
                });
 
                $("#chQScroll").css('height', upgradeData.upgradeH).css('width', upgradeData.upgradeW);
-
-               $("#chpplink")
-               .attr('href', 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=FDW4NZ6PRMDMJ&lc=US&item_name=TR%20Organizer%20Donations&item_number=1001&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted')
-               .attr('target', '_blank');
-               $("#chpp")
-               .attr( 'src', 'https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif')
-               .attr( 'alt', 'dontae')
-               .css( 'cursor', 'pointer');
 
                document.getElementById('chUpgraderPower').addEventListener('click', function(){t.togglePower(this);} , false);
 
