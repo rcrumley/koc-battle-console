@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141111a
+// @version        20141112a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141111a';
+var Version = '20141112a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1074,12 +1074,12 @@ var TRAetherCostFix = {
 		t = TRAetherCostFix;
 		t.aethercostFix = new CalterUwFunc('cm.ThronePanelController.calcCost', [
 			[/if\(k\(/im, 'if(cm.ThronePanelController.isLastLevel('],
-			[/F\.stones\.use\s*=\s*F\.stones\.total/im, 'F.stones.use = C'],
-			[/if\(F\.stones\.use\s*==/im, 'if(F.stones.use >='],
-			[/F\.gems\.use\s*=\s*b\(F\.stones\.total\s*-\s*C\)/im, 'var x = + (cm.WorldSettings.getSetting("TR_AETHERSTONE_CONVERSION_COST")), y; F.gems.use = Math.ceil((F.stones.total - C)/x)'],
-			[/F\.gems\.use\s*=\s*b\(A\[E]\.Stones\)/im, 'var x = + (cm.WorldSettings.getSetting("TR_AETHERSTONE_CONVERSION_COST")), y; F.gems.use = Math.ceil((A[E].Stones)/x)'],
+			[/E\.stones\.use\s*=\s*E\.stones\.total/im, 'E.stones.use = B'],
+			[/if\(E\.stones\.use\s*==/im, 'if(E.stones.use >='],
+			[/E\.gems\.use\s*=\s*b\(E\.stones\.total\s*-\s*B\)/im, 'var xx = + (cm.WorldSettings.getSetting("TR_AETHERSTONE_CONVERSION_COST")), y; E.gems.use = Math.ceil((E.stones.total - B)/xx)'],
+			[/E\.gems\.use\s*=\s*b\(z\[D]\.Stones\)/im, 'var xx = + (cm.WorldSettings.getSetting("TR_AETHERSTONE_CONVERSION_COST")), y; E.gems.use = Math.ceil((z[D].Stones)/xx)'],
 			[/if\s*\(k\(/im, 'if(cm.ThronePanelController.isLastLevel('], //fix for cometbird
-			[/if\s*\(F\.stones\.use\s*==/im, 'if(F.stones.use >=']
+			[/if\s*\(E\.stones\.use\s*==/im, 'if(E.stones.use >=']
 		]); //fix for cometbird
 		t.aethercostFix.setEnable(Options.fixTRAetherCost);
 	},
