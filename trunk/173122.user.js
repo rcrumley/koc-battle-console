@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141112a
+// @version        20141120a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141112a';
+var Version = '20141120a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -303,6 +303,10 @@ var Options = {
 	fixMapDblClick: false,
 	WarnAscension: true,
 	WarnAscensionInterval: 1,
+	WhisperAR:false,
+	WhisperARList:"",
+	WhisperOutgoing:false,
+	PostIncoming:true,
 };
 var Colors = {
 	DarkRow: '#eee',
@@ -376,6 +380,8 @@ var OtherCombatEffects = [8,9,118,124,13,14,15,16,73];
 var OtherPVPEffects = [6,22,48,54,59,64];
 var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124,126,128,130,132,134];
 var AlternateSortOrder = [5,37,58,117,21,42,63,123,131,132,133,134,1,24,34,44,56,102,113,17,29,39,50,61,119,2,25,35,45,114,18,30,40,51,120,125,126,3,26,36,46,104,115,19,31,41,52,121,127,128,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,23,33,43,55,65,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
+
+var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
 
 var JSON2 = JSON;
 var Cities = {};
@@ -2564,10 +2570,7 @@ var Rpt = {
 							tier = parseInt(TR["effects"]["slot" + i]["tier"]);
 							level = TR["level"];
 							p = unsafeWindow.cm.thronestats.tiers[id][tier];
-							while (!p && (tier > 0)) {
-								tier--;
-								p = unsafeWindow.cm.thronestats.tiers[id][tier];
-							}
+							while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; }
 							if (!p) continue; // can't find stats for tier
 							if (TR["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[TR["effects"]["slot"+i].quality])) {
 								level = unsafeWindow.cm.thronestats.jewelGrowthLimit[TR["effects"]["slot"+i].quality]
@@ -2589,10 +2592,7 @@ var Rpt = {
 							tier = parseInt(EQ["effects"][i]["tier"]);
 							level = EQ["level"];
 							p = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS")[id+","+tier];
-							while (!p && (tier > 0)) {
-								tier--;
-								p = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS")[id+","+tier];
-							}
+							while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS")[id+","+tier]; }
 							if (!p) continue; // can't find stats for tier
 							Current = p.Base + ((level * level + level) * p.Growth * 0.5);
 							equiptitle += eval("unsafeWindow.g_js_strings.effects.name_"+id)+ " " + Current+"%&nbsp;&nbsp;";
@@ -5136,7 +5136,7 @@ ajax/viewCourt.php:
             <TD class="xtab ptErrText"><SPAN id=ptallErr></span></td></tr>\
            <TR><TD class=xtab><INPUT align=left id=allListSubmit type=submit value="' + uW.g_js_strings.commonstr.alliances + '" /></td>\
             <TD class=xtab><INPUT align=right id=idMyAllSubmit type=submit value="' + getMyAlliance()[1] + '"/>\
-            <TD><INPUT id=pbShowFriendlies type=CHECKBOX>Show Friendlys &nbsp;<INPUT id=pbShowHostiles type=CHECKBOX>Show Hostiles</td>\
+            <TD><INPUT id=pbShowFriendlies type=CHECKBOX>Show Friendlies &nbsp;<INPUT id=pbShowHostiles type=CHECKBOX>Show Hostiles</td>\
              <TD class=xtab></td><TD class=xtab><span align=right <b>' + uW.g_js_strings.attack_generateincoming.estimatedarrival + ': </b></span>\
             <div><select id="idFindETASelect">\
         <option value="0,0" > -- Select -- </option>\
@@ -5199,7 +5199,7 @@ ajax/viewCourt.php:
 	},
 	paintFriendlyDiv: function () {
 		var t = Tabs.AllianceList;
-		var mess = ' ----- Friendlys ----- <BR>';
+		var mess = ' ----- Friendlies ----- <BR>';
 		for (k in Seed.allianceDiplomacies.friendly) {
 			mess += '<INPUT id=pbFriendly_' + k + ' type=submit value="' + Seed.allianceDiplomacies.friendly[k].allianceName + '">&nbsp;'; //
 		}
@@ -5275,8 +5275,8 @@ ajax/viewCourt.php:
 				cl = '';
 			m += '<TR ' + cl + 'valign=top><TD>' + u.genderAndName + '</td><TD><A target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + u.userId + '">' + u.userId + '</a></td><TD align=right>' + addCommas(u.might) + '</td>\
           <TD>' + (rslt.data[u.userId] ? "&nbsp;<SPAN class=boldDarkRed>" + uW.g_js_strings.commonstr.online + "</span>" : "") + '</td>\
-          <TD align=center><A target="_tab" href="https://www.facebook.com/profile.php?id=' + u.fbuid + '">' + uW.g_js_strings.commonstr.profile + '</a></td>\
-          <TD><SPAN onclick="PTpd(this, ' + u.userId + ')"><A>' + uW.g_js_strings.modaltitles.memberdetails + '</a> &nbsp; <BR></span><SPAN onclick="PTpl2(this,' + u.userId + ',' + rslt.data[u.userId] + ')"><A>' + uW.g_js_strings.modaltitles.leaderboard + '</a><BR></span><SPAN onclick="PCplo(this, \'' + u.userId + '\')"><A>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</a></span></td></tr>';
+          <TD align=center><A target="_tab" href="https://www.facebook.com/profile.php?id=' + u.fbuid + '"><img width=40 src="https://graph.facebook.com/' + u.fbuid + '/picture"></a></td>\
+          <TD><SPAN onclick="PTpd(this, ' + u.userId + ')"><A>' + uW.g_js_strings.modaltitles.memberdetails + '</a></span><br><SPAN onclick="PTpl2(this,' + u.userId + ',' + rslt.data[u.userId] + ')"><A>' + uW.g_js_strings.modaltitles.leaderboard + '</a></span><br><SPAN onclick="PCplo(this, \'' + u.userId + '\')"><A>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</a></span></td></tr>';
 		}
 		m += '</table></div>';
 		document.getElementById('allListOut').innerHTML = m;
@@ -5747,7 +5747,7 @@ ajax/viewCourt.php:
             .clickableSel{background-color:#ffffcc;}\
             .xxtab{background-color:none; padding-left:5px; padding-right:5px;} </style>\
       <DIV class=ptstat ><TABLE id=tabAllMembers cellpadding=0  width=100%><TR font-weight:bold"><TD class=xtab> &nbsp; ' + allName + '</td>\
-        <TD class=xtab width=80% align=center>' + uW.g_js_strings.commonstr.distance + uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>' + numPlayers + uW.g_js_strings.commonstr.members + '&nbsp; </td></tr></table></div>\
+        <TD class=xtab width=80% align=center>'+uW.g_js_strings.commonstr.distance+'&nbsp;'+uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>'+numPlayers+'&nbsp;'+uW.g_js_strings.commonstr.members+'&nbsp;</td></tr></table></div>\
        <div style="max-height:500px; height:500px; overflow-y:auto;"><TABLE id=tabAllMembers align=center cellpadding=0 cellspacing=0><THEAD style="overflow-y:auto;">\
       <TR style="font-weight:bold"><TD id=clickCol0 onclick="PTalClickSort(this)" class=clickable><A><DIV>' + uW.g_js_strings.commonstr.player + '</div></a></td>\
          <TD id=clickCol1 onclick="PTalClickSort(this)" class=clickable align=center><A><DIV>Might</a></div></td>\
@@ -5921,10 +5921,7 @@ ajax/viewCourt.php:
 								tier = parseInt(y["effects"]["slot" + i]["tier"]);
 								level = y["level"];
 								p = unsafeWindow.cm.thronestats.tiers[id][tier];
-								while (!p && (tier > 0)) {
-									tier--;
-									p = unsafeWindow.cm.thronestats.tiers[id][tier];
-								}
+								while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; }
 								if (!p) continue; // can't find stats for tier
 								if (y["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
 									level = unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
@@ -5943,10 +5940,7 @@ ajax/viewCourt.php:
 							tier = parseInt(y["effects"]["slot" + i]["tier"]);
 							level = y["level"];
 							p = unsafeWindow.cm.thronestats.tiers[id][tier];
-							while (!p && (tier > 0)) {
-								tier--;
-								p = unsafeWindow.cm.thronestats.tiers[id][tier];
-							}
+							while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; }
 							if (!p) continue; // can't find stats for tier
 							if (y["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
 								level = unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
@@ -7586,10 +7580,7 @@ Tabs.Train = {
 					tier = parseInt(y["effects"]["slot" + i]["tier"]);
 					level = y["level"];
 					p = unsafeWindow.cm.thronestats.tiers[id][tier];
-					while (!p && (tier > 0)) {
-						tier--;
-						p = unsafeWindow.cm.thronestats.tiers[id][tier];
-					}
+					while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; }
 					if (!p) continue; // can't find stats for tier
 					if (y["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
 						level = unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
@@ -11196,10 +11187,7 @@ function equippedthronestats(stat_id) {
 				tier = parseInt(y["effects"]["slot" + i]["tier"]);
 				level = y["level"];
 				p = unsafeWindow.cm.thronestats.tiers[id][tier];
-				while (!p && (tier > 0)) {
-					tier--;
-					p = unsafeWindow.cm.thronestats.tiers[id][tier];
-				}
+				while (!p && (tier > 0)) { tier--; p = unsafeWindow.cm.thronestats.tiers[id][tier]; }
 				if (!p) continue; // can't find stats for tier
 				if (y["effects"]["slot"+i].fromJewel && (level > unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality])) {
 					level = unsafeWindow.cm.thronestats.jewelGrowthLimit[y["effects"]["slot"+i].quality]
@@ -11859,8 +11847,8 @@ Tabs.Alliance = {
 		var t = Tabs.Alliance;
 		var row = document.getElementById('alOverviewTab').insertRow(0);
 		row.vAlign = 'top';
-		row.insertCell(0).innerHTML = '<img width=25 src="' + avatar + '">';
-		row.insertCell(1).innerHTML = '<A target="_tab" href="https://www.facebook.com/profile.php?id=' + fbuid + '">profile</a>';
+		row.insertCell(0).innerHTML = '<img width=40 src="' + avatar + '">';
+		row.insertCell(1).innerHTML = '<A target="_tab" href="https://www.facebook.com/profile.php?id=' + fbuid + '"><img width=40 src="https://graph.facebook.com/' + fbuid + '/picture"></a>';
 		row.insertCell(2).innerHTML = Name;
 		var cell2 = row.insertCell(3);
 		cell2.width = "60";
@@ -16565,10 +16553,13 @@ Tabs.Tower = {
 			m = '<TABLE class=ptTab><TR><TD colspan=2><B>Alliance Report Scanner:</b></td></tr>';
 			m += '<TR><TD><INPUT id=togEnhanceAR type=checkbox /></td><TD>Enable post of Alliance Reports to Alliance Chat</td></tr>\
 		   <TR><TD></td><TD><TABLE>\
-		    <TR><TD>Min troops: <INPUT id=ptalertmtroops type=text size=6 value=' + Options.alertmtroops + ' /></TD></TR>\
-			<TR><TD>Scan interval: <INPUT id=ptalertinterval type=text size=3 value=' + Options.alertinterval + ' /> seconds\
-			<TR><TD><INPUT id=ptalerttext type=checkbox ' + (Options.celltext.enable ? 'CHECKED ' : '') + '/> Send text on alert</td></tr>\
-			<TR><TD colspan=2><table><tr><td align=left>Text message alert to: <INPUT id=ptnum1 type=text size=4 maxlength=4 value="' + Options.celltext.num1 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\> &nbsp;<INPUT id=ptnum2 type=text size=3 maxlength=3 value="' + Options.celltext.num2 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\> &nbsp;<INPUT id=ptnum3 type=text size=4 maxlength=4 value="' + Options.celltext.num3 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\></td></tr>\
+			<TR><TD colspan=3>Scan interval: <INPUT id=ptalertinterval type=text size=3 value=' + Options.alertinterval + ' /> seconds\
+			<TR><TD colspan=3><INPUT id=ptincomingar type=checkbox ' + (Options.PostIncoming ? 'CHECKED ' : '') + '/>Scan incoming attack reports</td></tr>\
+		    <TR><td width=50>&nbsp;</td><TD colspan=2>Min troops: <INPUT id=ptalertmtroops type=text size=6 value=' + Options.alertmtroops + ' /></TD></TR>\
+			<TR><td>&nbsp;</td><TD colspan=2><INPUT id=ptwhisperar type=checkbox ' + (Options.WhisperAR ? 'CHECKED ' : '') + '/>Whisper incoming attack reports to yourself and the following players (separated by commas)</td></tr>\
+			<tr><td>&nbsp;</td><td width=50>&nbsp;</td><td><INPUT id=ptwhisperarlist type=text size=70 value="' + Options.WhisperARList + '"></td></tr>\
+			<TR><td>&nbsp;</td><TD colspan=2><INPUT id=ptalerttext type=checkbox ' + (Options.celltext.enable ? 'CHECKED ' : '') + '/> Send text on alert</td></tr>\
+			<TR><td>&nbsp;</td><td>&nbsp;</td><TD><table><tr><td align=left>Text message alert to: <INPUT id=ptnum1 type=text size=4 maxlength=4 value="' + Options.celltext.num1 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\> &nbsp;<INPUT id=ptnum2 type=text size=3 maxlength=3 value="' + Options.celltext.num2 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\> &nbsp;<INPUT id=ptnum3 type=text size=4 maxlength=4 value="' + Options.celltext.num3 + '"  ' + (Options.celltext.provider == 0 ? 'DISABLED' : '') + '\></td></tr>\
 			<TR><TD align=left>Country: <select id="ptfrmcountry">';
 			for (var i in t.Providers) {
 				var ret = m.indexOf(t.Providers[i].country);
@@ -16589,10 +16580,24 @@ Tabs.Tower = {
 					else
 						m += '<option value="' + i + '">' + t.Providers[i].provider + '</option>';
 			}
-			m += '</select></td></tr></table></td></tr></table></td></tr></table>';
+			m += '</select></td></tr></table></td></tr>';
+			m += '<TR><TD colspan=3><INPUT id=ptwhisperoutgoing type=checkbox ' + (Options.WhisperOutgoing ? 'CHECKED ' : '') + '/> Whisper your own outgoing attack reports to yourself</td></tr>\
+			</table></td></tr></table>';
 			m += '<TABLE><TR><TD><BR><B>Extra Features:</b></td></tr>\
         		<TR><TD> Use Dove of Peace <INPUT id=verifyDove type=submit value="Press to Use Dove" \> (Opens a confirmation window)</td></tr></table>';
 			t.cont.innerHTML = m;
+			document.getElementById('ptincomingar').addEventListener('change', function (e) {
+				Options.PostIncoming = e.target.checked;
+			}, false);
+			document.getElementById('ptwhisperoutgoing').addEventListener('change', function (e) {
+				Options.WhisperOutgoing = e.target.checked;
+			}, false);
+			document.getElementById('ptwhisperar').addEventListener('change', function (e) {
+				Options.WhisperAR = e.target.checked;
+			}, false);
+			document.getElementById('ptwhisperarlist').addEventListener('change', function (e) {
+				Options.WhisperARList = e.target.value;
+			}, false);
 			document.getElementById('ptalerttext').addEventListener('change', function (e) {
 				Options.celltext.enable = e.target.checked;
 			}, false);
@@ -16726,7 +16731,7 @@ var AllianceReportsCheck = {
 		if (Options.EnhanceAR)
 			t.checkAllianceReport();
 		setTimeout(function () {
-			t.enable(Options.EnhaceAR);
+			t.enable(Options.EnhanceAR);
 		}, parseInt((Math.random() * 15 * 1000) + (Options.alertinterval * 1000)));
 	},
 	checkAllianceReport: function () {
@@ -16751,7 +16756,7 @@ var AllianceReportsCheck = {
 				var rpt = ar[rptkeys[i]];
 				rpt.side0AllianceId = parseInt(rpt.side0AllianceId);
 				var targetDiplomacy = getDiplomacy(rpt.side0AllianceId);
-				if (rpt.side1AllianceId != myAllianceId) {
+				if (rpt.side1AllianceId != myAllianceId && Options.PostIncoming) {
 					var ID = rpt.reportId;
 					if (t.aRpt["a" + ID] != null)
 						return;
@@ -16770,6 +16775,24 @@ var AllianceReportsCheck = {
 					var date = unsafeWindow.formatDateByUnixTime(rpt.reportUnixTime);
 					var msg = 'Report No: ' + rpt.reportId + ' ' + date + ' : ' + playerNames['p' + rpt.side0PlayerId] + '\'s ' + target + ' at ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' has been ' + atkType + ' by ' + playerNames["p" + rpt.side1PlayerId] + ' at ' + rpt.side1XCoord + ',' + rpt.side1YCoord + ' of ' + allianceName + '(' + getDiplomacy(rpt.side1AllianceId) + ')';
 					t.fetchreport(ID, rpt, msg, playerNames, cityNames);
+					t.addAllianceReport(rpt);
+				}
+				if (rpt.side1PlayerId == unsafeWindow.tvuid && Options.WhisperOutgoing) {
+					var ID = rpt.reportId;
+					if (t.aRpt["a" + ID] != null)
+						return;
+					if (rpt.marchType == 3)
+						atkType = 'scouted';
+					else if (rpt.marchType == 4)
+						atkType = 'attacked';
+					target = tileTypes[parseInt(rpt.side0TileType)];						
+					if (parseInt(rpt.side0PlayerId) == 0)
+						var playerName = '';
+					else
+						var playerName = playerNames['p' + rpt.side0PlayerId] + '\'s ';
+					var date = unsafeWindow.formatDateByUnixTime(rpt.reportUnixTime);
+					var msg = 'Report No: ' + rpt.reportId + ' ' + date + ' : ' + playerName + target + ' at ' + rpt.side0XCoord + ',' + rpt.side0YCoord + ' has been ' + atkType + ' by you';
+					var automsg = sendChat("/" + Seed.player.name + ' ' + msg);
 					t.addAllianceReport(rpt);
 				}
 			}
@@ -16828,7 +16851,17 @@ var AllianceReportsCheck = {
 	fetchreport: function (rpId, rpt, msg, playerNames, cityNames) {
 		var t = AllianceReportsCheck;
 		if (Options.alertmtroops == 0) {
-			var automsg = sendChat('/a ' + msg);
+			if (Options.WhisperAR) {
+				var automsg = sendChat("/" + Seed.player.name + ' ' + msg);
+				var WList = Options.WhisperARList.split(',');
+				for (var i = 0; i < WList.length; i++) {
+					var WName = trim(WList[i]);
+					if (WName) Chat.sendWhisper(msg,WName);
+				}
+			}
+			else {
+				var automsg = sendChat('/a ' + msg);
+			}	
 			if (Options.celltext.enable)
 				t.postToCell(rpt, playerNames, cityNames);
 			if (Options.alertConfig.sound)
@@ -16846,7 +16879,17 @@ var AllianceReportsCheck = {
 						trooptot += Number(troops[i][0]);
 					}
 					if (Options.alertmtroops > trooptot) return;
-					var automsg = sendChat('/a ' + msg + ' troops ' + trooptot);
+					if (Options.WhisperAR) {
+						var automsg = sendChat("/" + Seed.player.name + ' ' + msg + ' troops ' + trooptot);
+						var WList = Options.WhisperARList.split(',');
+						for (var i = 0; i < WList.length; i++) {
+							var WName = trim(WList[i]);
+							if (WName) Chat.sendWhisper(msg + ' troops ' + trooptot, WName);
+						}
+					}
+					else {
+						var automsg = sendChat('/a ' + msg + ' troops ' + trooptot);
+					}	
 					if (Options.celltext.enable)
 						t.postToCell(rpt, playerNames, cityNames);
 					if (Options.alertConfig.sound)
