@@ -16855,7 +16855,7 @@ var AllianceReportsCheck = {
 				var automsg = sendChat("/" + Seed.player.name + ' ' + msg);
 				var WList = Options.WhisperARList.split(',');
 				for (var i = 0; i < WList.length; i++) {
-					var WName = trim(WList[i]);
+					var WName = WList[i].trim();
 					if (WName) Chat.sendWhisper(msg,WName);
 				}
 			}
@@ -16883,7 +16883,7 @@ var AllianceReportsCheck = {
 						var automsg = sendChat("/" + Seed.player.name + ' ' + msg + ' troops ' + trooptot);
 						var WList = Options.WhisperARList.split(',');
 						for (var i = 0; i < WList.length; i++) {
-							var WName = trim(WList[i]);
+							var WName = WList[i].trim();
 							if (WName) Chat.sendWhisper(msg + ' troops ' + trooptot, WName);
 						}
 					}
