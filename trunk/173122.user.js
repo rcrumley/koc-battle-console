@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141120a
+// @version        20141129a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141120a';
+var Version = '20141129a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -11058,9 +11058,14 @@ Tabs.Attaque = {
 		}
 		var spells = {1:11, 2:21, 3:31};
 		var blessings = {1:12, 2:22, 3:32};
-		var faction = parseInt(Seed.cityData.city[t.sourceCity.id].prestigeInfo.prestigeType);
-		var spellavailable = (Seed.cityData.city[t.sourceCity.id].prestigeInfo.blessings.indexOf(blessings[faction]) != -1)
-		var cooldownactive = (Seed.cityData.city[t.sourceCity.id].spells && Seed.cityData.city[t.sourceCity.id].spells[spells[faction]] && parseInt(Seed.cityData.city[t.sourceCity.id].spells[spells[faction]].endDate) > uW.unixtime());
+		var faction = '';
+		var spellavailable = false;
+		var cooldownactive = false;
+		if (Seed.cityData.city[t.sourceCity.id].isPrestigeCity) {
+			faction = parseInt(Seed.cityData.city[t.sourceCity.id].prestigeInfo.prestigeType);
+			spellavailable = (Seed.cityData.city[t.sourceCity.id].prestigeInfo.blessings.indexOf(blessings[faction]) != -1)
+			cooldownactive = (Seed.cityData.city[t.sourceCity.id].spells && Seed.cityData.city[t.sourceCity.id].spells[spells[faction]] && parseInt(Seed.cityData.city[t.sourceCity.id].spells[spells[faction]].endDate) > uW.unixtime());
+		}	
 		ById('RAApiSpell').options.length = 0;
 		var o = document.createElement("option");
 		o.text = "--Select a Spell--";
