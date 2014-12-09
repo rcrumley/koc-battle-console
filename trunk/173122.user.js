@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141129a
+// @version        20141209a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141129a';
+var Version = '20141209a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1812,7 +1812,7 @@ var Rpt = {
 			m += '<div id=battleSummaryContainer>';
 			//summary - attacker
 			m += '<div style="width:50%;float:left;">';
-			m += '<B>Attackers:</B> ' + rpt.side1Name + ' (<A onclick="ptGotoMap(' + rpt.side1XCoord + ',' + rpt.side1YCoord + ')">' + rpt.side1XCoord + ',' + rpt.side1YCoord + '</a>) ';
+			m += '<B>Attackers:</B> ' + rpt.side1Name + ' (<A onclick="ptGotoMapRpt(' + rpt.side1XCoord + ',' + rpt.side1YCoord + ')">' + rpt.side1XCoord + ',' + rpt.side1YCoord + '</a>) ';
 			if (rslt['winner'] == 1)
 				m += '<FONT color="#CC0000"><B> Winner</B></FONT>';
 			m += '<br>';
@@ -1838,7 +1838,7 @@ var Rpt = {
 			m += 'Might Lost: ' + addCommas(atkmight) + '</div>';
 			//summary - defender
 			m += '<div style="width:50%;float:left;">';
-			m += '<B>Defenders</B> ' + rpt.side0Name + ' (<A onclick="ptGotoMap(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>) ';
+			m += '<B>Defenders</B> ' + rpt.side0Name + ' (<A onclick="ptGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>) ';
 			if (rslt['winner'] == 0)
 				m += '<FONT color="#CC0000"><B> Winner</B></FONT>';
 			m += '<br>';
@@ -2698,7 +2698,7 @@ var Rpt = {
 			//summary - troops
 			m += '<div style="width:50%;float:left;">';
 			if (rpt.marchName == 'Reinforce')
-				m += '<B>Ally:</B> ' + rpt.side1Name + ' (<A onclick="ptGotoMap(' + rpt.side1XCoord + ',' + rpt.side1YCoord + ')">' + rpt.side1XCoord + ',' + rpt.side1YCoord + '</a>)<br>';
+				m += '<B>Ally:</B> ' + rpt.side1Name + ' (<A onclick="ptGotoMapRpt(' + rpt.side1XCoord + ',' + rpt.side1YCoord + ')">' + rpt.side1XCoord + ',' + rpt.side1YCoord + '</a>)<br>';
 			if (rslt['unts'] != undefined) {
 				m += '<TABLE class=ptTab>';
 				for (var ui in uW.cm.UNIT_TYPES) {
@@ -2712,10 +2712,10 @@ var Rpt = {
 			//summary - city and defences
 			m += '<div style="width:50%;float:left;">';
 			if ((rpt.marchName == 'Reinforce') || (rpt.marchName == 'Transport'))
-				m += '<B>Destination</B> ' + rpt.side0Name + ' (<A onclick="ptGotoMap(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)<br>';
+				m += '<B>Destination</B> ' + rpt.side0Name + ' (<A onclick="ptGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)<br>';
 			else {
 				m += '<TABLE class=ptTab width=100%>';
-				m += '<TR><TD>' + rpt.side0Name + ' (<A onclick="ptGotoMap(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)</td></tr>';
+				m += '<TR><TD>' + rpt.side0Name + ' (<A onclick="ptGotoMapRpt(' + rpt.side0XCoord + ',' + rpt.side0YCoord + ')">' + rpt.side0XCoord + ',' + rpt.side0YCoord + '</a>)</td></tr>';
 				m += '<TR><TD>UID: ' + MonitorLinkUID(rpt.side0PlayerId)+'</td></tr>';
 				if (rslt['lstlgn']) {
 					if (!rslt['lstlgn'])
@@ -5479,7 +5479,7 @@ ajax/viewCourt.php:
 		}
 		var m = '<DIV class=ptstat>' + uW.g_js_strings.commonstr.alliances + '<B>"' + t.aName + '"</b></div>\
     <TABLE><TR style="font-weight:bold"><TD class=xtab>' + uW.g_js_strings.commonstr.alliance + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.rank + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.members + '</td>\
-        <TD align=right class=xtab>' + uW.g_js_strings.commonstr.might + '</td><TD class=xtab>' + uW.g_js_strings.getAllianceSearchResults.currdiplo + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.members + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.viewmap + '</td></tr>';
+        <TD align=right class=xtab>' + uW.g_js_strings.commonstr.might + '</td><TD class=xtab>' + uW.g_js_strings.getAllianceSearchResults.currdiplo + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.members + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.viewmap + '</td><TD class=xtab>Kocmon</td></tr>';
 		for (k in rslt.alliancesMatched) {
 			var all = rslt.alliancesMatched[k];
 			var dip = '';
@@ -5490,7 +5490,8 @@ ajax/viewCourt.php:
 			m += '<TR><TD class=xtab>' + all.allianceName + '</td><TD align=right class=xtab>' + all.ranking + '</td><TD align=right class=xtab>' + all.membersCount + '</td>\
        <TD align=right class=xtab>' + addCommasInt(all.might) + '</td><TD class=xtab>' + dip + '</td>\
        <TD class=xtab><a onclick="PTgetMembers(' + all.allianceId + ')">' + uW.g_js_strings.commonstr.members + '</a></td>\
-        <TD class=xtab><a onclick="PTPaintMembers(' + all.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td></tr>';
+        <TD class=xtab><a onclick="PTPaintMembers(' + all.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td>\
+		<TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + all.allianceId + '">Kocmon</a></td></tr>';
 		}
 		document.getElementById('allListOut').innerHTML = m;
 	},
@@ -5541,9 +5542,9 @@ ajax/viewCourt.php:
 		//	document.getElementById('idPageNum').value = t.curPage;
 		t.MaxPage = rslt.noOfPages;
 		//document.getElementById('idMaxPageNum').innerHTML = 'of ' + t.MaxPage;
-		var m = '<div style="overflow:auto; height:556px;width:650px;"><TABLE><thead><TR style="font-weight:bold"> \
+		var m = '<div style="overflow:auto; height:556px;width:690px;"><TABLE><thead><TR style="font-weight:bold"> \
         <th class=xtab>' + uW.g_js_strings.modaltitles.alliance + '</th><th class=xtab>' + uW.g_js_strings.commonstr.rank + '</th><th class=xtab>' + uW.g_js_strings.commonstr.members + '</th>\
-        <th align=right class=xtab>' + uW.g_js_strings.commonstr.might + '</th><th class=xtab>' + uW.g_js_strings.getAllianceSearchResults.currdiplo + '</th><th class=xtab>' + uW.g_js_strings.commonstr.members + '</th><th class=xtab>' + uW.g_js_strings.commonstr.viewmap + '</th></tr></thead><tbody>';
+        <th align=right class=xtab>' + uW.g_js_strings.commonstr.might + '</th><th class=xtab>' + uW.g_js_strings.getAllianceSearchResults.currdiplo + '</th><th class=xtab>' + uW.g_js_strings.commonstr.members + '</th><th class=xtab>' + uW.g_js_strings.commonstr.viewmap + '</th><th class=xtab>Kocmon</th></tr></thead><tbody>';
 		document.getElementById('allListOut').innerHTML = m;
 		for (var i = 0; i < rslt.otherAlliances.length; i++) {
 			var alliance = rslt.otherAlliances[i];
@@ -5552,7 +5553,8 @@ ajax/viewCourt.php:
 			m += '<TR class="' + dip + '"><TD class=xtab>' + alliance.name + '</td><TD align=right class=xtab>' + alliance.ranking + '</td><TD align=right class=xtab>' + alliance.membersCount + '</td>\
        <TD align=right class=xtab>' + addCommasInt(alliance.might) + '</td><TD class=xtab>' + dip + '</td>\
        <TD class=xtab><a onclick="PTgetMembers(' + alliance.allianceId + ')">' + uW.g_js_strings.commonstr.members + '</a></td>\
-	       <TD class=xtab><a onclick="PTPaintMembers(' + alliance.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td></tr>';
+	       <TD class=xtab><a onclick="PTPaintMembers(' + alliance.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td>\
+			<TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + alliance.allianceId + '">Kocmon</a></td></tr>';
 		}
 		m += '</tbody></TABLE><div style="font-weight:bold"; height:20px;width:560px; ><span> <a onclick="PTalClickPrev(-1)"> [|<] </a><a onclick="PTalClickPrev(10)"> [-10] </a><a onclick="PTalClickPrev(5)"> [-5] </a><a onclick="PTalClickPrev(1)"> [<] </a> \
           <a onclick="PTalClickNext(1)"> [>] </a><a onclick="PTalClickNext(5)"> [+5] </a><a onclick="PTalClickNext(10)"> [+10] </a><a onclick="PTalClickNext(9999)"> [>|] </a> </span></div>';
@@ -5747,7 +5749,7 @@ ajax/viewCourt.php:
             .clickableSel{background-color:#ffffcc;}\
             .xxtab{background-color:none; padding-left:5px; padding-right:5px;} </style>\
       <DIV class=ptstat ><TABLE id=tabAllMembers cellpadding=0  width=100%><TR font-weight:bold"><TD class=xtab> &nbsp; ' + allName + '</td>\
-        <TD class=xtab width=80% align=center>'+uW.g_js_strings.commonstr.distance+'&nbsp;'+uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>'+numPlayers+'&nbsp;'+uW.g_js_strings.commonstr.members+'&nbsp;</td></tr></table></div>\
+        <TD class=xtab width=80% align=center>'+uW.g_js_strings.commonstr.distance+'&nbsp;'+uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>'+numPlayers+'&nbsp;'+uW.g_js_strings.commonstr.members+'&nbsp;<a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + t.memberListRslt.allianceId + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr></table></div>\
        <div style="max-height:500px; height:500px; overflow-y:auto;"><TABLE id=tabAllMembers align=center cellpadding=0 cellspacing=0><THEAD style="overflow-y:auto;">\
       <TR style="font-weight:bold"><TD id=clickCol0 onclick="PTalClickSort(this)" class=clickable><A><DIV>' + uW.g_js_strings.commonstr.player + '</div></a></td>\
          <TD id=clickCol1 onclick="PTalClickSort(this)" class=clickable align=center><A><DIV>Might</a></div></td>\
@@ -11777,7 +11779,12 @@ Tabs.Alliance = {
 		t.alliancemembers = [];
 		uW.getdetails = t.getMemberDetails;
 		var m = '<DIV class=ptstat>ALLIANCE FUNCTIONS</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
-		m += '<TD width = "100px" ; border:none"><a href="https://code.google.com/p/koc-power-tools/wiki/HowToAlliance" target="_blank">HELP</a></td></tr>';
+		if (!Seed.allianceDiplomacies) {
+			m += '<table width=100%><tr><TD class=xtab align=center style="font-size:14px;";><b>You are not a member of an Alliance</b></td></tr></table>';
+			t.myDiv.innerHTML = m;
+			return;
+		}
+		m += '<table width=100%><tr><TD class=xtab align=center style="font-size:14px;";><b>'+Seed.allianceDiplomacies['allianceName']+'&nbsp('+Seed.allianceDiplomacies['allianceId']+')</b></td></tr></table>';
 		m += '<TABLE class=ptTab><TD width=200px>List Alliance Members</td><TD>Sort by: ' + htmlSelector({
 			Name: 'Name',
 			Might: 'Might',
@@ -11790,7 +11797,7 @@ Tabs.Alliance = {
 		}, null, 'id=searchAlli') + '</td>';
 		m += '<TD><INPUT id=alList type=submit value="List"></td>';
 		m += '<TD id=progress></td></tr>';
-		m += '<TR><TD width=200px>Show alliance diplomaties</td><TD><INPUT id=aldiplo type=submit value="List diplomaties"></td></tr></table>';
+		m += '<TR><TD width=200px>Show alliance diplomacies</td><TD><INPUT id=aldiplo type=submit value="List diplomacies"></td></tr></table>';
 		m += '<DIV class=ptstat>OVERVIEW</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
 		m += '<TABLE id=alOverviewTab class=alTab><TR align="center"></tr></table>';
 		t.myDiv.innerHTML = m;
@@ -11889,30 +11896,38 @@ Tabs.Alliance = {
 	paintDiplomacy: function () {
 		document.getElementById('alOverviewTab').innerHTML = "";
 		document.getElementById('progress').innerHTML = "";
-		var m = '<TR><TD colspan=4 style=\'background: #33CC66;\' align=center><B>Friendly: </b></td></tr>';
-		if (Seed.allianceDiplomacies['friendly'] == null) m += '<TR><TD>No Friendlies found...</td>';
-		else m += '<TABLE class=xtab><TR><TD>Alliance Name</td><TD>Members</td></tr>';
+		var m = '<tr><td valign=top><table class=xtab><TR><TD colspan=4 style=\'background: #33CC66;\' align=center><B>Friendly: </b></td></tr>';
+		if (Seed.allianceDiplomacies['friendly'] == null) m += '<TR><TD>No Friendlies found...</td></tr>';
+		else m += '<TR><TD><b>Alliance Name</b></td><TD><b>Members</b></td></tr>';
 		for (k in Seed.allianceDiplomacies['friendly']) {
 			m += '<TR><TD>' + Seed.allianceDiplomacies['friendly'][k]['allianceName'] + '</td>';
-			m += '<TD align=center>' + Seed.allianceDiplomacies['friendly'][k]['membersCount'] + '</td>';
+			m += '<TD align=center>' + Seed.allianceDiplomacies['friendly'][k]['membersCount'] + '</td><TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + Seed.allianceDiplomacies['friendly'][k]['allianceId'] + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
 		}
-		m += '<TR></tr></table>';
-		m += '<TR><TD colspan=4 style=\'background: #CC0033;\' align=center><B>Hostile: </b></td></tr>';
-		if (Seed.allianceDiplomacies['hostile'] == null) m += '<TR><TD>No Hostiles found...</td>';
-		else m += '<TABLE class=xtab><TR><TD>Alliance Name</td><TD>Members</td></tr>';
+		m += '</table></td><td valign=top>';
+		m += '<table class=xtab><TR><TD colspan=4 style=\'background: #CC0033;\' align=center><B>Hostile: </b></td></tr>';
+		if (Seed.allianceDiplomacies['hostile'] == null) m += '<TR><TD>No Hostiles found...</td></tr>';
+		else m += '<TR><TD><b>Alliance Name</b></td><TD><b>Members</b></td></tr>';
 		for (k in Seed.allianceDiplomacies["hostile"]) {
 			m += '<TR><TD>' + Seed.allianceDiplomacies["hostile"][k]['allianceName'] + '</td>';
-			m += '<TD align=center>' + Seed.allianceDiplomacies["hostile"][k]['membersCount'] + '</td>';
+			m += '<TD align=center>' + Seed.allianceDiplomacies["hostile"][k]['membersCount'] + '</td><TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + Seed.allianceDiplomacies['hostile'][k]['allianceId'] + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
 		}
-		m += '<TR></tr></table>';
-		m += '<TR><TD colspan=4 style=\'background: #FF6633;\' align=center><B>Friendly towards us: </b></td></tr>';
-		if (Seed.allianceDiplomacies['friendlyToYou'] == null) m += '<TR><TD>No Friendlies towards us found...</td>';
-		else m += '<TABLE class=xtab><TR><TD>Alliance Name</td><TD>Members</td></tr>';
+		m += '</table></td><td valign=top>';
+		m += '<table class=xtab><TR><TD colspan=4 style=\'background: #FF6633;\' align=center><B>Friendly towards us: </b></td></tr>';
+		if (Seed.allianceDiplomacies['friendlyToYou'] == null) m += '<TR><TD>No Friendlies towards us found...</td></tr>';
+		else m += '<TR><TD><b>Alliance Name</b></td><TD><b>Members</b></td></tr>';
 		for (k in Seed.allianceDiplomacies["friendlyToYou"]) {
 			m += '<TR><TD>' + Seed.allianceDiplomacies["friendlyToYou"][k]['allianceName'] + '</td>';
-			m += '<TD align=center>' + Seed.allianceDiplomacies["friendlyToYou"][k]['membersCount'] + '</td>';
+			m += '<TD align=center>' + Seed.allianceDiplomacies["friendlyToYou"][k]['membersCount'] + '</td><TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + Seed.allianceDiplomacies['friendlyToYou'][k]['allianceId'] + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
 		}
-		m += '<TR></tr></table>';
+		m += '<TR><TD colspan=4>&nbsp;</td></tr>';
+		m += '<TR><TD colspan=4 style=\'background: #FF6633;\' align=center><B>Friendly towards them: </b></td></tr>';
+		if (Seed.allianceDiplomacies['friendlyToThem'] == null) m += '<TR><TD>No Friendlies towards them found...</td></tr>';
+		else m += '<TR><TD><b>Alliance Name</b></td><TD><b>Members</b></td></tr>';
+		for (k in Seed.allianceDiplomacies["friendlyToThem"]) {
+			m += '<TR><TD>' + Seed.allianceDiplomacies["friendlyToThem"][k]['allianceName'] + '</td>';
+			m += '<TD align=center>' + Seed.allianceDiplomacies["friendlyToThem"][k]['membersCount'] + '</td><TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + Seed.allianceDiplomacies['friendlyToThem'][k]['allianceId'] + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
+		}
+		m += '</table></td></tr></table>';
 		document.getElementById('alOverviewTab').innerHTML = m;
 	},
 	fetchAllianceMemberPage: function () {
@@ -15508,6 +15523,18 @@ function coordLink(x, y) {
 	m.push(y);
 	m.push('</a>)');
 	return m.join('');
+}
+uW.ptGotoMapRpt = function (x, y) {
+	var t = Rpt;
+	if (Options.hideOnGoto) {
+		if (t.popReport) {
+			t.popReport.show(false);
+			if (t.popReport.onClose) t.popReport.onClose();
+			t.popReport.destroy();
+			t.popReport = null;
+		}
+	}
+	uW.ptGotoMapHide(x, y);
 }
 uW.ptGotoMapHide = function (x, y) {
 	try {
