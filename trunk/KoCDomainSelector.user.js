@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.10a
+// @version			0.11a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -25,7 +25,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.10a';
+var Version = '0.11a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -929,7 +929,7 @@ function TokenPopup (){
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		}, false);
 		document.getElementById('tkgrabchest').addEventListener('click', function () {
-			document.getElementById('tkmessage').innerHTML = '&nbsp;';
+			document.getElementById('tkmessage').innerHTML = 'Searching for Treasure Chests...';
 			document.getElementById('tklink').value = '';
 			
 		  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
@@ -943,7 +943,7 @@ function TokenPopup (){
 					var URL = '/me/home';
 					if (KOCAutoAcceptGifts.options.YourWall) URL = '/me/posts';
 					
-					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum }, function (result) {
+					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken, "limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
 						ClaimChest.p = p;
 						if (KOCAutoAcceptGifts.options.Reversed) { ClaimChest.posts = result.data.reverse(); }
 						else { ClaimChest.posts = result.data; }
@@ -953,7 +953,7 @@ function TokenPopup (){
 			},{ scope : "read_stream,user_likes" });
 		}, false);
 		document.getElementById('tkcleanwall').addEventListener('click', function () {
-			document.getElementById('tkmessage').innerHTML = '&nbsp;';
+			document.getElementById('tkmessage').innerHTML = 'Searching for claimed Chests on your wall...';
 			document.getElementById('tklink').value = '';
 			
 		  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
@@ -966,7 +966,7 @@ function TokenPopup (){
 						
 					var URL = '/me/posts';
 					
-					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum }, function (result) {
+					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
 						CleanWall.p = p;
 						CleanWall.posts = result.data; 
 						CleanWall.NumCleaned = 0;
@@ -1045,36 +1045,37 @@ var ClaimChest = {
 		}
 		var post = t.posts.splice(0,1)[0];
 		if (post.status_type == "app_created_story" && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
-			unsafeWindow.FB.api('/' + post.id + '/likes', ClaimChest.p, function (result) {
-				var likes = result.data;
-				if (result && !result.error && likes.length == 0){
-					if (KOCAutoAcceptGifts.options.YourWall) {
-						unsafeWindow.FB.api('/' + post.id, "DELETE", ClaimChest.p, function (result) {
-							if (result && !result.error) {
-								document.getElementById('tklink').value = post.link;
-								KOCAutoAcceptGifts.Log(JSON2.stringify(post));
-							}
-							else {
-								ClaimChest.CheckNext();
-							}
-						});
-					}
-					else {
-						unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
-							if (result && !result.error) {
-								document.getElementById('tklink').value = post.link;
-								KOCAutoAcceptGifts.Log(JSON2.stringify(post));
-							}
-							else {
-								ClaimChest.CheckNext();
-							}
-						});
-					}	
+			var likes_found = false;
+			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
+			if (!likes_found) {
+				if (KOCAutoAcceptGifts.options.YourWall) {
+					unsafeWindow.FB.api('/' + post.id, "DELETE", ClaimChest.p, function (result) {
+						if (result && !result.error) {
+							document.getElementById('tklink').value = post.link;
+							document.getElementById('tkmessage').innerHTML = '<span style="color:#080;"><b>Found Treasure Chest! :)</b></span>';
+							KOCAutoAcceptGifts.Log(JSON2.stringify(post));
+						}
+						else {
+							ClaimChest.CheckNext();
+						}
+					});
 				}
 				else {
-					ClaimChest.CheckNext();
-				}
-			});
+					unsafeWindow.FB.api('/' + post.id + '/likes', "POST", ClaimChest.p, function (result) {
+						if (result && !result.error) {
+							document.getElementById('tklink').value = post.link;
+							document.getElementById('tkmessage').innerHTML = '<span style="color:#080;"><b>Found Chest belonging to '+post.from.name+'! :)</b></span>';
+							KOCAutoAcceptGifts.Log(JSON2.stringify(post));
+						}
+						else {
+							ClaimChest.CheckNext();
+						}
+					});
+				}	
+			}
+			else {
+				ClaimChest.CheckNext();
+			}
 		}
 		else {
 			ClaimChest.CheckNext();
@@ -1094,23 +1095,22 @@ var CleanWall = {
 		}
 		var post = t.posts.splice(0,1)[0];
 		if (post.status_type == "app_created_story" && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0) {
-			unsafeWindow.FB.api('/' + post.id + '/likes', CleanWall.p, function (result) {
-				var likes = result.data;
-				if (result && !result.error && likes.length > 0){
-					unsafeWindow.FB.api('/' + post.id, "DELETE", CleanWall.p, function (result) {
-						if (result && !result.error) {
-							CleanWall.NumCleaned++;
-						}
-						else {
-							KOCAutoAcceptGifts.Log(JSON2.stringify(result.error));
-						}
-						CleanWall.CheckNext();
-					});
-				}
-				else {
+			var likes_found = false;
+			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
+			if (likes_found) {
+				unsafeWindow.FB.api('/' + post.id, "DELETE", CleanWall.p, function (result) {
+					if (result && !result.error) {
+						CleanWall.NumCleaned++;
+					}
+					else {
+						KOCAutoAcceptGifts.Log(JSON2.stringify(result.error));
+					}
 					CleanWall.CheckNext();
-				}
-			});
+				});
+			}
+			else {
+				CleanWall.CheckNext();
+			}
 		}
 		else {
 			CleanWall.CheckNext();
