@@ -520,6 +520,15 @@ function ptStartup() {
 			Seed.cities.push(Seed.cities[0]);
 		}
 	}
+	
+	/* add all effects to alternate sort order */
+	
+	for (k in uW.cm.thronestats.effects) {
+		if (AlternateSortOrder.indexOf(parseInt(k)) == -1) {
+			AlternateSortOrder.push(parseInt(k));
+		}
+	}
+	
 	setCities();
 	// TODO: Make sure WinPos is visible on-screen ?
 	if (Options.ptWinPos == null || Options.ptWinPos.x == null || Options.ptWinPos.x == '' || isNaN(Options.ptWinPos.x)) {
@@ -2326,8 +2335,13 @@ var Rpt = {
 			//summary
 			m += '<div id=reportThrone>';
 			m += '<div style="width:50%;float:left;">';
+			
+			var SortOrder = [];
+			for (z in AlternateSortOrder) SortOrder.push(AlternateSortOrder[z]);
+			
 			if (rslt['s1ThroneRoomBoosts']) {
-				for (var i = 1; i < trEffect.length + 1; i++) {
+				for (z in SortOrder) {
+					var i = SortOrder[z];
 					if (rslt['s1ThroneRoomBoosts'][i]) {
 						LineStyle = '<span style="color:#888;">';
 						if (AttackEffects.indexOf(parseInt(i)) > -1)
@@ -2359,7 +2373,8 @@ var Rpt = {
 			m += '</div>'; //attacker
 			m += '<div style="width:50%;float:left;">';
 			if (rslt['s0ThroneRoomBoosts']) {
-				for (var i = 1; i < trEffect.length + 1; i++) {
+				for (z in SortOrder) {
+					var i = SortOrder[z];
 					if (rslt['s0ThroneRoomBoosts'][i]) {
 						LineStyle = '<span style="color:#888;">';
 						if (AttackEffects.indexOf(parseInt(i)) > -1)
