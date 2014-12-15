@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20140925a
+// @version         20141215a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Support for new Spellcaster Throne Effects</p>
+// @releasenotes 	<p>Support for Defensive Tower Throne Effects</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,10 +23,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	September 2014 Barbarossa69 (www.facebook.com/barbarossa69)											│
+//	│	December 2014 Barbarossa69 (www.facebook.com/barbarossa69)											│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20140925a';
+var Version = '20141215a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -89,18 +89,18 @@ var FFVersion = getFirefoxVersion();
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
-var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119];
-var DefenceEffects = [2,18,25,30,35,40,45,51,114,120];
-var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121];
-var RangeEffects = [5,21,37,42,58,63,117,123];
-var SpeedEffects = [4,20,27,32,47,53,57,62,116,122];
-var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
+var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119,135,140];
+var DefenceEffects = [2,18,25,30,35,40,45,51,114,120,125,126,136,141];
+var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121,127,128,137,142];
+var RangeEffects = [5,21,37,42,58,63,117,123,131,132,133,134,138,143];
+var SpeedEffects = [4,20,27,32,47,53,57,62,116,122,129,130];
+var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65,139,144];
 var OtherCombatEffects = [8,9,118,124,13,14,15,16,73];
 var OtherPVPEffects = [6,22,48,54,59,64];
 
-var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124];
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124,126,128,130,132,134,140,141,142,143,144];
 
-var AlternateSortOrder = [5,37,58,117,21,42,63,123,1,24,34,44,56,102,113,17,29,39,50,61,119,2,25,35,45,114,18,30,40,51,120,3,26,36,46,104,115,19,31,41,52,121,4,27,47,57,116,20,32,53,62,122,7,28,38,49,60,23,33,43,55,65,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
+var AlternateSortOrder = [5,37,58,117,131,133,138,21,42,63,123,132,134,143,1,24,34,44,56,102,113,135,17,29,39,50,61,119,140,2,25,35,45,114,125,136,18,30,40,51,120,126,141,3,26,36,46,104,115,127,137,19,31,41,52,121,128,142,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,139,23,33,43,55,65,144,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
  
 var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
 var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
@@ -1848,6 +1848,7 @@ function eventPaintPlayerInfo (){
   	  m += '<tr><TD class=xtabBR align="center" colspan="3"><B>*** MISTED (' + getDuration(userInfo.fogExpireTimestamp) + ') ***</b></td></tr>';
 	m += '<tr><TD class=xtab align="center" colspan="3">UID: <B>' + parseInt(userInfo.userId) + '</b>&nbsp;<a id=btProfile_'+NameSpace+'>(View Profile)</a>&nbsp;<a id=btKocmon_'+NameSpace+'><img title="View player on Kocmon" width="'+imgwidth+'" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr>';
   	m += '<tr><TD class=xtab align="center" colspan="3">Might: <B>' + addCommas(Math.round(userInfo.might)) + '</b></td></tr>';
+  	m += '<tr><TD class=xtab align="center" colspan="3">TR/CH Might: <B>' + addCommas(Math.round(userInfo.might) - Math.round(userInfo.mightClassic)) + '</b></td></tr>';
 	if (userInfo.allianceName) {
 	  n = ""; if (!isMyself(userInfo.userId)) n += getDiplomacy(userInfo.allianceId);
   	  m += '<tr><TD class=xtabBR align="center" colspan="3">Alliance: <B>' + userInfo.allianceName + n + '</b></td></tr>';
@@ -1997,6 +1998,7 @@ function fetchCourtInfo (notify) {
 	    userInfo.truceExpireTimestamp = rslt.playerInfo.truceExpireTimestamp;
 	    userInfo.lastLogin = rslt.playerInfo.lastLogin;
 	    userInfo.cityCount = rslt.playerInfo.cityCount;
+	    userInfo.mightClassic = rslt.playerInfo.mightClassic;
 		userInfo.userLoaded = true;
         notify ();
       },
