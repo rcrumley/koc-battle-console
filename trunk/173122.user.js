@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141209a
+// @version        20141215a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141209a';
+var Version = '20141215a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -370,16 +370,19 @@ var GameIcons = {
 };
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
-var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119];
-var DefenceEffects = [2,18,25,30,35,40,45,51,114,120,125,126];
-var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121,127,128];
-var RangeEffects = [5,21,37,42,58,63,117,123,131,132,133,134];
+
+var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119,135,140];
+var DefenceEffects = [2,18,25,30,35,40,45,51,114,120,125,126,136,141];
+var LifeEffects = [3,19,26,31,36,41,46,52,104,115,121,127,128,137,142];
+var RangeEffects = [5,21,37,42,58,63,117,123,131,132,133,134,138,143];
 var SpeedEffects = [4,20,27,32,47,53,57,62,116,122,129,130];
-var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65];
+var AccuracyEffects = [7,23,28,33,38,43,49,55,60,65,139,144];
 var OtherCombatEffects = [8,9,118,124,13,14,15,16,73];
 var OtherPVPEffects = [6,22,48,54,59,64];
-var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124,126,128,130,132,134];
-var AlternateSortOrder = [5,37,58,117,21,42,63,123,131,132,133,134,1,24,34,44,56,102,113,17,29,39,50,61,119,2,25,35,45,114,18,30,40,51,120,125,126,3,26,36,46,104,115,19,31,41,52,121,127,128,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,23,33,43,55,65,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
+
+var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63,64,32,53,62,119,120,121,122,123,124,126,128,130,132,134,140,141,142,143,144];
+
+var AlternateSortOrder = [5,37,58,117,131,133,138,21,42,63,123,132,134,143,1,24,34,44,56,102,113,135,17,29,39,50,61,119,140,2,25,35,45,114,125,136,18,30,40,51,120,126,141,3,26,36,46,104,115,127,137,19,31,41,52,121,128,142,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,139,23,33,43,55,65,144,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
 
 var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
 
@@ -1710,6 +1713,7 @@ var Rpt = {
 		unitImg[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>Trap';
 		unitImg[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>Caltrops';
 		unitImg[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>Spiked Barrier';
+		unitImg[100] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/tower_30.jpg width=30></TD><TD>Defensive Tower';
 		for (var i = 101; i < 111; i++)
 			unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>' + eval("uW.g_js_strings.monsterUnitsNames.m" + i);
 		goldImg = GameIcons.goldImg + '</TD><TD>Gold';
@@ -1728,6 +1732,7 @@ var Rpt = {
 		unitImg2[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>';
 		unitImg2[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>';
 		unitImg2[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>';
+		unitImg2[100] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/tower_30.jpg width=30></TD><TD>';
 		for (var i = 101; i < 111; i++)
 			unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>';
 
@@ -2008,6 +2013,16 @@ var Rpt = {
 							}
 						}
 					}
+					if (rslt['fght']["s0"]['u100'] && (rslt['fght']["s0"]['u100'][0] != null)) {
+						m += '<TR><TD>' + unitImg[100] + '</td>';
+						m += '<TD align=center>???</td>';
+						m += '<TD align=center>???</td>';
+						if (rslt['fght']["s0"]['u100'][0] > 0) {
+							m += '<TD align=center><FONT color="#CC0000">(' + addCommas(rslt['fght']["s0"]['u100'][0]) + ')</FONT></td></tr>';
+						} else {
+							m += '<TD align=center>0</td></tr>';
+						}
+					}
 					for (var i = 53; i <= 55; i++) {
 						if (rslt['fght']["s0"]['f' + i]) {
 							m += '<TR><TD>' + unitImg[i] + '</td>';
@@ -2059,6 +2074,18 @@ var Rpt = {
 								m += '<TD align=center>' + addCommas(rslt['fght']["s0"]['u' + i][0]) + '</td>';
 								m += '<TD align=center>' + addCommas(rslt['fght']["s0"]['u' + i][1]) + '</td></tr>';
 							}
+						}
+					}
+					if (rslt['fght']["s0"]['u100'] && (rslt['fght']["s0"]['u100'][0] != null)) {
+						if (rslt['fght']["s0"]['u100'][0] > rslt['fght']["s0"]['u100'][1]) {
+							m += '<TR><TD>' + unitImg[100] + '</td>';
+							m += '<TD align=center>' + addCommas(rslt['fght']["s0"]['u100'][0]) + '</td>';
+							m += '<TD align=center><FONT color="#CC0000">' + addCommas(rslt['fght']["s0"]['u100'][1]) + '</FONT></td>';
+							m += '<TD align=center><FONT color="#CC0000">(' + addCommas((rslt['fght']["s0"]['u100'][0]) - (rslt['fght']["s0"]['u100'][1])) + ')</FONT></td></tr>';
+						} else {
+							m += '<TR><TD>' + unitImg[100] + '</td>';
+							m += '<TD align=center>' + addCommas(rslt['fght']["s0"]['u100'][0]) + '</td>';
+							m += '<TD align=center>' + addCommas(rslt['fght']["s0"]['u100'][1]) + '</td></tr>';
 						}
 					}
 					for (var i = 53; i <= 55; i++) {
@@ -2157,6 +2184,19 @@ var Rpt = {
 								if (rslt['bonus']['mod']['s0']['u' + i]['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u' + i]['spellEffect'][1] * 100) / 100) + '</font></td>';
 								m += '</tr></table></div>';
 							}
+						}
+					}
+					if (rslt['fght']["s0"]['u100']) {
+						if (rslt['fght']["s0"]['u100'] && rslt['bonus']['mod']["s0"]['u100']) {
+							m += '<div style="float:left;width:10%;clear:both;">' + unitImg2[100] + '</div>';
+							m += '<div style="float:left;width:90%;"><table class=ptTab width=100%><tr><td style="width:33%;" align=left><font size="1"><b>HP: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['hp'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['u100']['atk']) m += '<TD style="width:33%;" align=left><font size="1"><b>Atk: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['atk'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['u100']['def']) m += '<TD style="width:33%;" align=left><font size="1"><b>Def: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['def'][1] * 100) / 100) + '</font></td></tr><tr>';
+							if (rslt['bonus']['mod']['s0']['u100']['spd']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spd: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['spd'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['u100']['rng']) m += '<TD style="width:33%;" align=left><font size="1"><b>Rng: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['rng'][1] * 100) / 100) + '</font></td></tr>';
+							if (rslt['bonus']['mod']['s0']['u100']['sp']) m += '<TD style="width:33%;" align=left><font size="1"><b>Spell: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['sp'][1] * 100) / 100) + '</font></td>';
+							if (rslt['bonus']['mod']['s0']['u100']['spellEffect']) m += '<TD style="width:33%;" align=left><font size="1"><b>Effect: </b>' + addCommas(Math.round(rslt['bonus']['mod']['s0']['u100']['spellEffect'][1] * 100) / 100) + '</font></td>';
+							m += '</tr></table></div>';
 						}
 					}
 					for (var i = 53; i <= 55; i++) {
@@ -2860,9 +2900,11 @@ var Rpt = {
 				th = '',
 				tc = '',
 				tf = '';
-			if (rslt['frt']) {
-				if (rslt['frt']['f53'] != undefined || rslt['frt']['f55'] != undefined || rslt['frt']['f60'] != undefined || rslt['frt']['f61'] != undefined || rslt['frt']['f62'] != undefined) {
+			if (rslt['frt'] || (rslt['blds'] && rslt['blds']['b30'])) {
+				if (rslt['frt']['f53'] != undefined || rslt['frt']['f55'] != undefined || rslt['frt']['f60'] != undefined || rslt['frt']['f61'] != undefined || rslt['frt']['f62'] != undefined || (rslt['blds'] && rslt['blds']['b30'])) {
 					th = '<TABLE class=ptTab><TR><TH colspan=3 align=left>Defenses Found</TH></TR>';
+					if (rslt['blds'] && rslt['blds']['b30'])
+						tc += '<TR><TD>' + unitImg[100] + '</TD><TD align=right>(Level ' + rslt['blds']['b30'] + ')</TD></TR>';
 					if (rslt['frt']['f53'] != undefined)
 						tc += '<TR><TD>' + unitImg[53] + '</TD><TD align=right>' + addCommas(rslt['frt']['f53']) + '</TD></TR>';
 					if (rslt['frt']['f55'] != undefined)
@@ -4404,7 +4446,7 @@ var DispReport = {
 		for (var i = 0; i < rpts.length; i++) {
 			// logit(inspect(rpts[i].subject));
 			// logit(inspect(rpts[i].sender));
-			if ((rpts[i].subject.innerHTML.indexOf('¡Nuevo regalo recibido!') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received!') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
+			if ((rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo regalo ricevuto!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido!') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received!') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
 				rpts[i].checkbox.firstChild.checked = true;
 			}
 		}
@@ -8794,7 +8836,7 @@ Tabs.OverView = {
 		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubC type=submit value=' + uW.g_js_strings.modaltitles.buildings + '></td>';
 		main += '<TD><INPUT class=pbSubtab ID=ptmrchSubD type=submit value=' + uW.g_js_strings.commonstr.info + '></td></tr></table><BR><BR>';
 		main += '<DIV id=ptOverOutput align=left style="margin-top:10px; background-color:#F8F8F8; height:680px;"></div>';
-		main += '<TD width = "100px" ; border:none"><a href="https://code.google.com/p/koc-power-tools/wiki/HowToOverview" target="_blank">HELP</a></td></tr>';
+		main += '<TD align=right>&nbsp;</td></tr>';
 		t.cont.innerHTML = main;
 		t.Overv = document.getElementById('ptOverOutput');
 		document.getElementById('ptmrchSubS').addEventListener('click', e_butSubtab, false);
@@ -9262,6 +9304,31 @@ Tabs.OverView = {
 			m += '</td>';
 		}
 		m += '</tr><TR><TD colspan="8" style="background: #FFFFFF; border:none">&nbsp;</td></tr>';
+		m += '<TR valign=top align=right><TD width=85 style="background-color:' + Colors.OverviewDarkRow + ';">' + uW.buildingcost['bdg30'][0] + '</td>';
+		for (c = 0; c < Seed.cities.length; c++) {
+			var cid = Seed.cities[c][0];
+			var fid = 0;
+			if (Seed.cityData.city[cid].isPrestigeCity == true) {
+				fid = Seed.cityData.city[cid].prestigeInfo.prestigeType;
+			}
+			m += '<TD style="width:79px; max-width:79px; word-wrap: break-word; background:#FFFFFF">';
+			city = 'city' + Seed.cities[c][0];
+			var count = 0;
+			for (y in Seed.buildings[city]) {
+				if (Seed.buildings[city][y][0] == 30) {
+					count++;
+					if (count > 1) m += ",";
+					if (Seed.buildings[city][y][1] >= 9) m += '<FONT COLOR= "669900">';
+					m += Seed.buildings[city][y][1];
+					if (Seed.buildings[city][y][1] >= 9) m += '</font>';
+				}
+			}
+			if (count == 0) {
+				m += '<FONT COLOR= "CC0000">0</font>';
+			}
+			m += '</td>';
+		}
+		m += '</tr>';
 		m += '<TR valign=top align=right><TD width=85 style="background-color:' + Colors.OverviewDarkRow + ';">' + uW.fortcost['frt53'][0] + '</td>';
 		for (i = 0; i < Seed.cities.length; i++) {
 			city = 'city' + Seed.cities[i][0];
@@ -10014,6 +10081,15 @@ Tabs.OverView = {
 			}
 			str += _row('StrHse Prot', row, true)
 			str += '<TR><TD><BR></td></tr>';
+			for (i = 0; i < Cities.numCities; i++) {
+				var tower = Seed.buildings['city' + Cities.cities[i].id].pos99;
+				if (tower) tower = parseInt(Seed.buildings['city' + Cities.cities[i].id].pos99[1])
+				if (!tower)
+					row[i] = '<SPAN class=boldRed><B>None!</b></span>';
+				else
+					row[i] = 'Level '+tower;
+			}
+			str += _row('Def.Tower', row, true);
 			for (i = 0; i < Cities.numCities; i++) {
 				var totWilds = 0;
 				dat = Seed.wilderness['city' + Cities.cities[i].id];
