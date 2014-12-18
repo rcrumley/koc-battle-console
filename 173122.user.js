@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141215a
+// @version        20141218a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141215a';
+var Version = '20141218a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -4446,7 +4446,7 @@ var DispReport = {
 		for (var i = 0; i < rpts.length; i++) {
 			// logit(inspect(rpts[i].subject));
 			// logit(inspect(rpts[i].sender));
-			if ((rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo regalo ricevuto!') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido!') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received!') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
+			if ((rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo Regalo ricevuto') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
 				rpts[i].checkbox.firstChild.checked = true;
 			}
 		}
@@ -10118,6 +10118,7 @@ Tabs.OverView = {
 			var row = [];
 			var rowsp = [];
 			var rowrev = [];
+			var rowres = [];
 			for (i = 0; i < Cities.numCities; i++) {
 				var totTime = 0;
 				var totTime2 = 0;
@@ -10168,10 +10169,23 @@ Tabs.OverView = {
 					else
 						rowrev[i] = timestr(totTime);
 				}
+				var qres = Seed.queue_tch['city' + Cities.cities[i].id];
+				if (qres != null && qres.length > 0)
+					totTime = qres[qres.length - 1][3] - now;
+				if (totTime < 0)
+					totTime = 0;
+				rowres[i] = 0;
+				if (qres != null && qres.length > 0) {
+					if (totTime < 3600)
+						rowres[i] = '<SPAN class=boldRed><B>' + timestr(totTime) + '</b></span>';
+					else
+						rowres[i] = timestr(totTime);
+				}
 			}
 			str += _row('TroopQ', row, true);
 			str += _row('SpecialTroopQ', rowsp, true);
 			str += _row('ReviveQ', rowrev, true);
+			str += _row('ResearchQ', rowres, true);
 			var row = [];
 			for (i = 0; i < Cities.numCities; i++) {
 				var wall = {};
