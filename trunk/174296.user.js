@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Power Bot
-// @version        20141216a
+// @version        20141218a
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20141216a';
+var Version = '20141218a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -24113,7 +24113,7 @@ Tabs.gifts = {
             var rslt = eval("(" + message.responseText + ")");
             if (rslt.ok) {
                for(i in rslt.message){
-                  if(rslt.message[i].fromUserId == "0" && (rslt.message[i].subject == "New Gift Received!" || rslt.message[i].subject == "Ãƒâ€šÃ‚Â¡Nuevo regalo recibido!" || rslt.message[i].subject == "Nuovo Regalo ricevuto!" || rslt.message[i].subject == "Yeni Hediye AlÄ±ndÄ±!" || rslt.message[i].subject == "Neues Geschenk erhalten!")){
+                  if(rslt.message[i].fromUserId == "0" && (rslt.message[i].subject.indexOf('Neues Geschenk erhalten') >= 0 || rslt.message[i].subject.indexOf('Nouveaux Cadeaux re�us') >= 0 || rslt.message[i].subject.indexOf('Nuevo regalo recibido') >= 0 || rslt.message[i].subject.indexOf('Nuovo Regalo ricevuto') >= 0 || rslt.message[i].subject.indexOf('New Gift Received') >= 0)){
                      t.foundgift(i);
                   };
                };
