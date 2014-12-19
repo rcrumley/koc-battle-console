@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141218a
+// @version        20141219a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141218a';
+var Version = '20141219a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -4446,7 +4446,7 @@ var DispReport = {
 		for (var i = 0; i < rpts.length; i++) {
 			// logit(inspect(rpts[i].subject));
 			// logit(inspect(rpts[i].sender));
-			if ((rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo Regalo ricevuto') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
+			if ((rpts[i].subject.innerHTML.indexOf('Yeni Hediye AlÄ±ndÄ±') >= 0 || rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo Regalo ricevuto') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
 				rpts[i].checkbox.firstChild.checked = true;
 			}
 		}
