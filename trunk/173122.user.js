@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20141219a
+// @version        20150105a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20141219a';
+var Version = '20150105a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -307,6 +307,7 @@ var Options = {
 	WhisperARList:"",
 	WhisperOutgoing:false,
 	PostIncoming:true,
+	enableReportNumber:true,
 };
 var Colors = {
 	DarkRow: '#eee',
@@ -5080,6 +5081,7 @@ Tabs.AllianceList = {
 	clickedAlly: false,
 	lastLogin: 0,
 	warStatus: 0,
+	allianceleader: false,
 	/***
 ajax/viewCourt.php:
   (boolean) ok = true
@@ -5161,6 +5163,13 @@ ajax/viewCourt.php:
 	init: function (div) {
 		var t = Tabs.AllianceList;
 		t.cont = div;
+		
+		t.friendbtn = '';
+		t.neutralbtn = '';
+		t.hostilebtn = '';
+		
+		t.AreYouALeader();
+		
 		uW.PTgetMembers = t.eventGetMembers;
 		uW.PTPaintMembers = t.GetDataForMap;
 		uW.PTpd = t.clickedPlayerDetail;
@@ -5170,6 +5179,47 @@ ajax/viewCourt.php:
 		uW.PTalClickNext = t.eventListNext;
 		uW.PCplo = t.clickedPlayerGetLastLogin;
 		uW.PTPlayClick = t.clickedPlayerInAll;
+		
+		uW.setDiplomacy = function (aid,dip){ // 1 - friendly, 0 - neutral, 2 - hostile
+			var t = Tabs.AllianceList;
+			var params = uW.Object.clone(uW.g_ajaxparams);
+			params.allianceSelected = aid;
+			params.diplomacyStatus = dip;
+			new MyAjaxRequest(uW.g_ajaxpath + "ajax/allianceSetDiplomacies.php" + uW.g_ajaxsuffix, {
+				method : "post",
+				parameters : params,
+				onSuccess : function(rslt) {
+					if (rslt.ok) {
+						if (document.getElementById('diplo'+aid)) {
+							if (t.allianceleader) {
+								t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+aid+',1);" type=submit value="F" />';
+								t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+aid+',0);" type=submit value="N" />';
+								t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+aid+',2);" type=submit value="H" />';
+							}	
+					
+							if (dip == 1) {
+								dip = '<span style="color:#080;"><b>Friendly</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
+							}
+							else {
+								if (dip == 2) {
+									dip = '<span style="color:#800;"><b>Hostile</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
+								}
+								else {
+									if (getMyAlliance()[0]!=aid) {
+										dip = 'Neutral&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+									}
+									else {
+										dip = '<span style="color:#088;"><b>Yours</b></span>&nbsp;';
+									}
+								}
+							}
+							document.getElementById('diplo'+aid).innerHTML = dip;	
+						}
+					}
+				}
+			},true); // noretry
+		};
+		
 		Lastlogin = 0;
 		t.show();
 	},
@@ -5254,6 +5304,27 @@ ajax/viewCourt.php:
 			t.state = 1;
 		}
 	},
+	AreYouALeader: function () {
+		var t = Tabs.AllianceList;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/allianceGetLeaders.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			loading: true,
+			onSuccess: function (rslt) {
+				if (rslt.officers) {
+					for (uid in rslt.officers) {
+						if (unsafeWindow.tvuid == rslt.officers[uid].userId) {
+							t.allianceleader = true;
+							break;
+						}	
+					}
+				}
+			},
+			onFailure: function () {}
+		});
+	},
+	
 	paintFriendlyDiv: function () {
 		var t = Tabs.AllianceList;
 		var mess = ' ----- Friendlies ----- <BR>';
@@ -5540,12 +5611,26 @@ ajax/viewCourt.php:
 		for (k in rslt.alliancesMatched) {
 			var all = rslt.alliancesMatched[k];
 			var dip = '';
-			if (all.relation && all.relation == 1)
-				dip = uW.g_js_strings.commonstr.friendly;
-			else if (all.relation && all.relation == 2)
-				dip = uW.g_js_strings.commonstr.hostile;
+			dip = getDiplomacy(all.allianceId);
+			if (t.allianceleader) {
+				t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+all.allianceId+',1);" type=submit value="F" />';
+				t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+all.allianceId+',0);" type=submit value="N" />';
+				t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+all.allianceId+',2);" type=submit value="H" />';
+			}	
+
+			if (dip == uW.g_js_strings.commonstr.friendly) {
+				dip = '<span style="color:#080;"><b>'+dip+'</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
+			}
+			else {
+				if (dip == uW.g_js_strings.commonstr.hostile) {
+					dip = '<span style="color:#800;"><b>'+dip+'</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
+				}
+				else {
+					dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+				}
+			}
 			m += '<TR><TD class=xtab>' + all.allianceName + '</td><TD align=right class=xtab>' + all.ranking + '</td><TD align=right class=xtab>' + all.membersCount + '</td>\
-       <TD align=right class=xtab>' + addCommasInt(all.might) + '</td><TD class=xtab>' + dip + '</td>\
+       <TD align=right class=xtab>' + addCommasInt(all.might) + '</td><TD id=diplo'+all.allianceId+' class=xtab>' + dip + '</td>\
        <TD class=xtab><a onclick="PTgetMembers(' + all.allianceId + ')">' + uW.g_js_strings.commonstr.members + '</a></td>\
         <TD class=xtab><a onclick="PTPaintMembers(' + all.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td>\
 		<TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + all.allianceId + '">Kocmon</a></td></tr>';
@@ -5607,8 +5692,34 @@ ajax/viewCourt.php:
 			var alliance = rslt.otherAlliances[i];
 			var dip = '';
 			dip = getDiplomacy(alliance.allianceId);
-			m += '<TR class="' + dip + '"><TD class=xtab>' + alliance.name + '</td><TD align=right class=xtab>' + alliance.ranking + '</td><TD align=right class=xtab>' + alliance.membersCount + '</td>\
-       <TD align=right class=xtab>' + addCommasInt(alliance.might) + '</td><TD class=xtab>' + dip + '</td>\
+			if (t.allianceleader) {
+				t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+alliance.allianceId+',1);" type=submit value="F" />';
+				t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+alliance.allianceId+',0);" type=submit value="N" />';
+				t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+alliance.allianceId+',2);" type=submit value="H" />';
+			}	
+			if (dip == uW.g_js_strings.commonstr.friendly) {
+				dip = '<span style="color:#080;"><b>'+dip+'</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
+			}
+			else {
+				if (dip == uW.g_js_strings.commonstr.hostile) {
+					dip = '<span style="color:#800;"><b>'+dip+'</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
+				}
+				else {
+					if (dip!="Yours") {
+						dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+					}
+					else {
+						if (dip!="Yours") {
+							dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+						}
+						else {
+							dip = '<span style="color:#088;"><b>'+dip+'</b></span>&nbsp;';
+						}
+					}
+				}
+			}
+			m += '<TR><TD class=xtab>' + alliance.name + '</td><TD align=right class=xtab>' + alliance.ranking + '</td><TD align=right class=xtab>' + alliance.membersCount + '</td>\
+       <TD align=right class=xtab>' + addCommasInt(alliance.might) + '</td><TD id=diplo'+alliance.allianceId+' class=xtab>' + dip + '</td>\
        <TD class=xtab><a onclick="PTgetMembers(' + alliance.allianceId + ')">' + uW.g_js_strings.commonstr.members + '</a></td>\
 	       <TD class=xtab><a onclick="PTPaintMembers(' + alliance.allianceId + ')">' + uW.g_js_strings.commonstr.viewmap + '</a></td>\
 			<TD class=xtab><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + alliance.allianceId + '">Kocmon</a></td></tr>';
@@ -5894,6 +6005,27 @@ ajax/viewCourt.php:
 		m += '<TR align=left><TD class=xtab><DIV id=PaintScout></div></td></tr></table>';
 		document.getElementById('altInput').innerHTML = m;
 		m = '<TABLE><TR><TD class=xtab style="width:75px">Alliance:</td><TD class=xtab style="width:150px"><a onclick="PTgetMembers(' + rslt.playerInfo.allianceId + ')">' + rslt.playerInfo.allianceName + '</a></td></tr>';
+		if (rslt.playerInfo.allianceName) {
+			var dip = '';
+			dip = getDiplomacy(rslt.playerInfo.allianceId);
+			if (t.allianceleader) {
+				t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+rslt.playerInfo.allianceId+',1);" type=submit value="F" />';
+				t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+rslt.playerInfo.allianceId+',0);" type=submit value="N" />';
+				t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+rslt.playerInfo.allianceId+',2);" type=submit value="H" />';
+			}	
+			if (dip == uW.g_js_strings.commonstr.friendly) {
+				dip = '<span style="color:#080;"><b>'+dip+'</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
+			}
+			else {
+				if (dip == uW.g_js_strings.commonstr.hostile) {
+					dip = '<span style="color:#800;"><b>'+dip+'</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
+				}
+				else {
+					dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+				}
+			}
+			m += '<TR><TD class=xtab>Diplomacy:</td><TD id=diplo'+rslt.playerInfo.allianceId+' class=xtab>' + dip + '</td></tr>';
+		}	
 		m += '<TR><TD class=xtab>Last Login:</td><TD class=xtab>' + rslt.playerInfo.lastLogin + '</td></tr>';
 		m += '<TR><TD class=xtab>Status:</td><TD class=xtab>' + status + '</td>';
 		now = unixTime();
@@ -11830,7 +11962,7 @@ Tabs.Rpt = {
 						style = "";
 					t.content += '<tr><td align=right ' + style + '>' + rpt.page + '</td><td ' + style + '>' + formatUnixTime(rpt.reportUnixTime, '24hour') + '</td>';
 					if (Options.enableReportNumber)
-						t.content += '<td ' + style + '>' + reportId + '</td>';
+						t.content += '<td ' + style + '><A><SPAN onclick="ptChatReportClicked(' + reportId + ',0)">' + reportId + '</span></a></td>';
 					if (rpt.marchName == 'Desertion') {
 						t.content += '<td ' + style + '></td><td ' + style + '></td>';
 						if (Options.arAttacker != 'Us')
@@ -12842,7 +12974,7 @@ Tabs.Accuracy = {
 		var keyz = unsafeWindow.Object.keys(z);
 		var troopa, troopb;
 		var unitsarr = [];
-		for (j in unsafeWindow.unitcost) {
+		for (var ui in unsafeWindow.cm.UNIT_TYPES){
 			unitsarr.push(0);
 		}	
 		
@@ -13039,7 +13171,7 @@ Tabs.Defend = {
 				var rslt = transport;
 				if (rslt.ok) {
 					var unitsarr = [];
-					for (j in unsafeWindow.unitcost)
+					for (var ui in unsafeWindow.cm.UNIT_TYPES)
 						unitsarr.push(0);
 					for (i = 0; i <= unitsarr.length; i++)
 						if (params["u" + i])
@@ -15194,12 +15326,12 @@ function AsyncAjaxRequest(url, opts) {
 function getDiplomacy(aid) {
 	if (Seed.allianceDiplomacies == null)
 		return uW.g_js_strings.commonstr.neutral;
-	if (Seed.allianceDiplomacies.friendly && Seed.allianceDiplomacies.friendly['a' + aid] != null)
+	if ((Seed.allianceDiplomacies.friendly && Seed.allianceDiplomacies.friendly['a' + aid] != null) || (Seed.allianceDiplomacies.friendlyToThem && Seed.allianceDiplomacies.friendlyToThem['a' + aid] != null))
 		return uW.g_js_strings.commonstr.friendly;
 	if (Seed.allianceDiplomacies.hostile && Seed.allianceDiplomacies.hostile['a' + aid] != null)
 		return uW.g_js_strings.commonstr.hostile;
 	if (aid == Seed.allianceDiplomacies.allianceId)
-		return uW.g_js_strings.modaltitles.alliance;
+		return "Yours";
 	return uW.g_js_strings.commonstr.neutral;
 };
 
