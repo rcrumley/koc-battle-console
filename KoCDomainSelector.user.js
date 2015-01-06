@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.11a
+// @version			0.12a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -25,7 +25,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.11a';
+var Version = '0.12a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -795,9 +795,9 @@ function TokenPopup (){
 		n += '<tr><td width=50 class=xtab>Domain to Receive Tokens:&nbsp;</td><td class=xtab><input type=text id=tkdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.UserDomain+'"></td><td class=xtab align=right><b>Enabled&nbsp;<input type=checkbox id=tkenable '+(KOCAutoAcceptGifts.options.Enabled?'CHECKED':'')+'></b></td></tr>';
 		n += '<tr><td class=xtab>Domains for Chest Links:&nbsp;</td><td class=xtab colspan=2><input type=text id=tkchestdomainlist size=47 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomainList+'" title="List some domains you do NOT play in here, separated by commas."></td></tr>';
 		n += '</table>';
-		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr><tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input  title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'>&nbsp;Rev<input title="Tick to search posts in reverse order, i.e. oldest first." type=checkbox id=tkrev '+(KOCAutoAcceptGifts.options.Reversed?'CHECKED':'')+'></td></tr>';
+		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr><tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input  title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'>&nbsp;Rev<input title="Tick to search posts in reverse order, i.e. oldest first." type=checkbox id=tkrev '+(KOCAutoAcceptGifts.options.Reversed?'CHECKED':'')+'></td></tr><tr><td class=xtab colspan=2 align=right>Search only this ProfileURL:&nbsp;<input type=text id=tksearchuser size=47 class=btInput value="'+KOCAutoAcceptGifts.options.SearchUser+'" title="Leave blank to search all your friends"></td>';
 		n += '<tr><td class=xtab>Link:&nbsp;</td><td class=xtab align=right><input type=text id=tklink size=80 class=btInput title="Copy and paste your Build, Token or Treasure Chest links from Facebook into here!"></td></tr>';
-		n += '<tr><td class=xtab align=right colspan=2><a id=tkcleanwall class="inlineButton btButton brown8" title="Remove Chests already Claimed by others from Your own Wall"><span>Clean your Wall</span></a>&nbsp;<a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
+		n += '<tr><td class=xtab align=right colspan=2><a id=tkcleanwall class="inlineButton btButton brown8" title="Remove Chests already claimed (and other Kabam posts) from your own wall"><span>Clean your Wall</span></a>&nbsp;<a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
 		n += '</table>';
 		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0>';
 		n += '<tr><td width=33% class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><a id=tkprior><<</a>&nbsp;<input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!">&nbsp;<a id=tknext>>></a></td></tr>';
@@ -805,7 +805,7 @@ function TokenPopup (){
 		n += '<div align="center" style="font-size:10px;opacity:0.6;">KoC Domain Selector '+Version+'<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
 		n += '<div id=tkmessage align="center" style="font-size:12px;opacity:0.6">&nbsp;</div>';
 		n += '<div align=center style="font-size:10px;" id=tktokenusebutton><a id=tktokenuse class="inlineButton btButton brown8"><span>Use a Token</span></a></div></div>';
-		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 330, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
+		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 360, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
 		TokenPop.getTopDiv().innerHTML = '<DIV align=center><B>TOKEN OPTIONS</B></DIV>';
 		TokenPop.getMainDiv().innerHTML = n;
 		
@@ -928,6 +928,10 @@ function TokenPopup (){
 			KOCAutoAcceptGifts.options.SearchNum = document.getElementById('tksearchnum').value;
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		}, false);
+		document.getElementById('tksearchuser').addEventListener('keyup', function () {
+			KOCAutoAcceptGifts.options.SearchUser = document.getElementById('tksearchuser').value.trim();
+			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+		}, false);
 		document.getElementById('tkgrabchest').addEventListener('click', function () {
 			document.getElementById('tkmessage').innerHTML = 'Searching for Treasure Chests...';
 			document.getElementById('tklink').value = '';
@@ -941,6 +945,13 @@ function TokenPopup (){
 					};
 						
 					var URL = '/me/home';
+					if (KOCAutoAcceptGifts.options.SearchUser != '') {
+						var FBUser = KOCAutoAcceptGifts.options.SearchUser.split("?")[0];
+						if (FBUser.split("facebook.com/")[1]) {
+							FBUser = FBUser.split("facebook.com/")[1];
+						}
+						URL = '/'+FBUser+'/posts';
+					}
 					if (KOCAutoAcceptGifts.options.YourWall) URL = '/me/posts';
 					
 					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken, "limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
@@ -953,7 +964,7 @@ function TokenPopup (){
 			},{ scope : "read_stream,user_likes" });
 		}, false);
 		document.getElementById('tkcleanwall').addEventListener('click', function () {
-			document.getElementById('tkmessage').innerHTML = 'Searching for claimed Chests on your wall...';
+			document.getElementById('tkmessage').innerHTML = 'Searching for Kabam posts on your wall...';
 			document.getElementById('tklink').value = '';
 			
 		  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
@@ -1090,14 +1101,16 @@ var CleanWall = {
 	CheckNext : function () {
 		var t = CleanWall;
 		if (t.posts.length == 0) {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+t.NumCleaned+' Treasure Chests deleted from your Wall.</b></span>';
+			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+t.NumCleaned+' Kabam posts deleted from your wall.</b></span>';
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.status_type == "app_created_story" && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0) {
+		if (post.status_type == "app_created_story" && post.application && post.application.id=='130402594779') { // belt and braces - only delete kabam posts
 			var likes_found = false;
 			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
-			if (likes_found) {
+			var other_post = false;
+			if (post.link.indexOf("si=85&wccc=fcf-feed-85&ln=31&da=2")>0 || post.link.indexOf("si=95&wccc=fcf-feed-95&ln=31&da=2")>0 || post.link.indexOf("si=201&wccc=fcf-feed-201&ln=31&da=2")>0) {other_post = true;} // 85 token share, 95 build help, 201 faire
+			if (likes_found || other_post) {
 				unsafeWindow.FB.api('/' + post.id, "DELETE", CleanWall.p, function (result) {
 					if (result && !result.error) {
 						CleanWall.NumCleaned++;
@@ -1175,6 +1188,7 @@ var KOCAutoAcceptGifts = {
 			SearchNum : 30,
 			YourWall : false,
 			Reversed : true,
+			SearchUser : '',
 		};
 		for (var n in defOptions) {
 			if (options[n] != undefined) {
