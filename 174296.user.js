@@ -1,4 +1,4 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name           KOC Power Bot
 // @version        20150107a
 // @namespace      mat
