@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150107b
+// @version        20150107a
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150107b';
+var Version = '20150107a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -1004,7 +1004,7 @@ function pbStartup (){
   afkwatcher();
   loadchecker();
   QuickScout();	
-  
+
 	if (smeg) { setTimeout(function () {smeg.init();}, 5000);}
   
 	if ((Options.alertConfig.emailapp == 1) || AttackOptions.EmailEnabled || Options.crestemail) {
@@ -10473,8 +10473,8 @@ Tabs.transport = {
         var t = Tabs.transport;
         for (var i = 0; i < t.tradeRoutes.length; i++) {
             if (typeof t.tradeRoutes[i].target_city == 'undefined' || parseIntNan(t.tradeRoutes[i].target_city) == 0 || Cities.byID[t.tradeRoutes[i].target_city] == 'undefined') continue;
-            if (t.tradeRoutes[i].target_x != Cities.byID[t.tradeRoutes[i].target_city].x) t.tradeRoutes[i].target_x = Cities.byID[t.tradeRoutes[i].target_city].x;
-            if (t.tradeRoutes[i].target_y != Cities.byID[t.tradeRoutes[i].target_city].y) t.tradeRoutes[i].target_y = Cities.byID[t.tradeRoutes[i].target_city].y;
+			if (t.tradeRoutes[i].target_x != Cities.byID[t.tradeRoutes[i].target_city].x) t.tradeRoutes[i].target_x = Cities.byID[t.tradeRoutes[i].target_city].x;
+			if (t.tradeRoutes[i].target_y != Cities.byID[t.tradeRoutes[i].target_city].y) t.tradeRoutes[i].target_y = Cities.byID[t.tradeRoutes[i].target_city].y;
         }
     },
     saveTraderState: function () {
@@ -24192,7 +24192,7 @@ Tabs.gifts = {
             var rslt = eval("(" + message.responseText + ")");
             if (rslt.ok) {
                for(i in rslt.message){
-                  if(rslt.message[i].fromUserId == "0" && (rslt.message[i].subject.indexOf('Yeni Hediye Alındı') >= 0 || rslt.message[i].subject.indexOf('Neues Geschenk erhalten') >= 0 || rslt.message[i].subject.indexOf('Nouveaux Cadeaux re�us') >= 0 || rslt.message[i].subject.indexOf('Nuevo regalo recibido') >= 0 || rslt.message[i].subject.indexOf('Nuovo Regalo ricevuto') >= 0 || rslt.message[i].subject.indexOf('New Gift Received') >= 0)){
+                  if(rslt.message[i].fromUserId == "0" && (rslt.message[i].subject.indexOf('Yeni Hediye AlÄ±ndÄ±') >= 0 || rslt.message[i].subject.indexOf('Neues Geschenk erhalten') >= 0 || rslt.message[i].subject.indexOf('Nouveaux Cadeaux reçus') >= 0 || rslt.message[i].subject.indexOf('Nuevo regalo recibido') >= 0 || rslt.message[i].subject.indexOf('Nuovo Regalo ricevuto') >= 0 || rslt.message[i].subject.indexOf('New Gift Received') >= 0)){
                      t.foundgift(i);
                   };
                };
@@ -26796,7 +26796,7 @@ function BtFilter(e) {
       
       m = m.replace(/Gr/g,'G'+x+'r').replace(/gR/g,'g'+x+'R').replace(/GR/g,'G'+x+'R').replace(/gr/g,'g'+x+'r');
       
-      m = m.replace(/Ri/g,'R'+x+'i').replace(/rI/g,'r'+x+'I').replace(/RI/g,'RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­'+x+'I').replace(/ri/g,'r'+x+'i');
+      m = m.replace(/Ri/g,'R'+x+'i').replace(/rI/g,'r'+x+'I').replace(/RI/g,'RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­'+x+'I').replace(/ri/g,'r'+x+'i');
       
       m = m.replace(/Na/g,'N'+x+'a').replace(/nA/g,'n'+x+'A').replace(/NA/g,'N'+x+'A').replace(/na/g,'n'+x+'a');
       
