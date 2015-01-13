@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150105a
+// @version        20150113a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150105a';
+var Version = '20150113a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -592,8 +592,6 @@ function ptStartup() {
 	if (Options.fixTower2)
 		TowerAlerts.enableFixFalseReports(true);
 	AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
-
-	if (uW.tvuid == "6046539") {AddMainTabLink('DEBUG', debugWin.doit);
 
 	uW.ptLoaded = true;
 }
@@ -4447,7 +4445,7 @@ var DispReport = {
 		for (var i = 0; i < rpts.length; i++) {
 			// logit(inspect(rpts[i].subject));
 			// logit(inspect(rpts[i].sender));
-			if ((rpts[i].subject.innerHTML.indexOf('Yeni Hediye AlÄ±ndÄ±') >= 0 || rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo Regalo ricevuto') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
+			if ((rpts[i].subject.innerHTML.indexOf('Yeni Hediye Al') >= 0 || rpts[i].subject.innerHTML.indexOf('Neues Geschenk erhalten') >= 0 || rpts[i].subject.innerHTML.indexOf('Nouveaux Cadeaux reçus') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuovo Regalo ricevuto') >= 0 || rpts[i].subject.innerHTML.indexOf('Nuevo regalo recibido') >= 0 || rpts[i].subject.innerHTML.indexOf('New Gift Received') >= 0) && rpts[i].sender.innerHTML.indexOf('Kingdoms Of Camelot') >= 0) {
 				rpts[i].checkbox.firstChild.checked = true;
 			}
 		}
@@ -5178,6 +5176,7 @@ ajax/viewCourt.php:
 		uW.PTalClickPrev = t.eventListPrev;
 		uW.PTalClickNext = t.eventListNext;
 		uW.PCplo = t.clickedPlayerGetLastLogin;
+		uW.PTInvite = t.clickedSendInvite;
 		uW.PTPlayClick = t.clickedPlayerInAll;
 		
 		uW.setDiplomacy = function (aid,dip){ // 1 - friendly, 0 - neutral, 2 - hostile
@@ -5404,7 +5403,9 @@ ajax/viewCourt.php:
 			m += '<TR ' + cl + 'valign=top><TD>' + u.genderAndName + '</td><TD><A target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + u.userId + '">' + u.userId + '</a></td><TD align=right>' + addCommas(u.might) + '</td>\
           <TD>' + (rslt.data[u.userId] ? "&nbsp;<SPAN class=boldDarkRed>" + uW.g_js_strings.commonstr.online + "</span>" : "") + '</td>\
           <TD align=center><A target="_tab" href="https://www.facebook.com/profile.php?id=' + u.fbuid + '"><img width=40 src="https://graph.facebook.com/' + u.fbuid + '/picture"></a></td>\
-          <TD><SPAN onclick="PTpd(this, ' + u.userId + ')"><A>' + uW.g_js_strings.modaltitles.memberdetails + '</a></span><br><SPAN onclick="PTpl2(this,' + u.userId + ',' + rslt.data[u.userId] + ')"><A>' + uW.g_js_strings.modaltitles.leaderboard + '</a></span><br><SPAN onclick="PCplo(this, \'' + u.userId + '\')"><A>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</a></span></td></tr>';
+          <TD><SPAN onclick="PTpd(this, ' + u.userId + ')"><A>' + uW.g_js_strings.modaltitles.memberdetails + '</a></span><br><SPAN onclick="PTpl2(this,' + u.userId + ',' + rslt.data[u.userId] + ')"><A>' + uW.g_js_strings.modaltitles.leaderboard + '</a></span><br><SPAN onclick="PCplo(this, \'' + u.userId + '\')"><A>' + uW.g_js_strings.modal_messages_viewreports_view.lastlogin + '</a></span><BR>';
+		  if (t.allianceleader) { m += '<SPAN onclick="PTInvite(this, \''+ u.userId +'\')"><A>'+uW.g_js_strings.membersInfo.invitealli+'</a></span>'; }
+		  m+='</td></tr>';
 		}
 		m += '</table></div>';
 		document.getElementById('allListOut').innerHTML = m;
@@ -5425,7 +5426,22 @@ ajax/viewCourt.php:
 					test = rslt.userInfo[0].name;
 					document.getElementById('altInput').innerHTML = '';
 					document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>' + uW.g_js_strings.commonstr.loadingddd + '</center>';
-					t.fetchPlayerList(test, t.eventGotPlayerList);
+					
+					var userobj = {};
+					userobj[rslt.userInfo[0].userId] = rslt.userInfo[0];
+					userobj[rslt.userInfo[0].userId].might = Math.round(userobj[rslt.userInfo[0].userId].might);
+
+					Tabs.AllianceList.fetchPlayerCourt(rslt.userInfo[0].userId, function (rslt2) {
+						if (rslt2.ok) {
+							userobj[rslt.userInfo[0].userId].fbuid = parseInt(rslt2.playerInfo.fbuid);
+						}	
+						t.playerList = userobj;
+						var uList = [];
+						uList.push(rslt.userInfo[0].userId);
+						t.fetchPlayerStatus(uList, function (r) {
+							t.eventGotPlayerOnlineList(r)
+						});
+					});
 				}	
 				else document.getElementById('allListOut').innerHTML = '<BR><BR><CENTER>' + uW.g_js_strings.barbarian.erroroccured + '</center>';
 			},
@@ -5466,6 +5482,12 @@ ajax/viewCourt.php:
 		t.fetchPlayerLastLogin(uid, function (r) {
 			t.gotPlayerLastLogin(r, span)
 		});
+	},
+	clickedSendInvite : function (span, uid){
+		var t = Tabs.AllianceList;
+		span.onclick = '';
+		span.innerHTML = "Sending ...";
+		t.invitePlayer (uid, function (r) {t.gotInviteResult(r, span)});
 	},
 	gotPlayerLeaderboard2: function (rslt, span, uid, status) {
 		var t = Tabs.AllianceList;
@@ -5626,7 +5648,12 @@ ajax/viewCourt.php:
 					dip = '<span style="color:#800;"><b>'+dip+'</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
 				}
 				else {
-					dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+					if (dip!="Yours") {
+						dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+					}
+					else {
+						dip = '<span style="color:#088;"><b>'+dip+'</b></span>&nbsp;';
+					}
 				}
 			}
 			m += '<TR><TD class=xtab>' + all.allianceName + '</td><TD align=right class=xtab>' + all.ranking + '</td><TD align=right class=xtab>' + all.membersCount + '</td>\
@@ -5709,12 +5736,7 @@ ajax/viewCourt.php:
 						dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
 					}
 					else {
-						if (dip!="Yours") {
-							dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
-						}
-						else {
-							dip = '<span style="color:#088;"><b>'+dip+'</b></span>&nbsp;';
-						}
+						dip = '<span style="color:#088;"><b>'+dip+'</b></span>&nbsp;';
 					}
 				}
 			}
@@ -6021,7 +6043,12 @@ ajax/viewCourt.php:
 					dip = '<span style="color:#800;"><b>'+dip+'</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
 				}
 				else {
-					dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+					if (dip!="Yours") {
+						dip += '&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+					}
+					else {
+						dip = '<span style="color:#088;"><b>'+dip+'</b></span>&nbsp;';
+					}
 				}
 			}
 			m += '<TR><TD class=xtab>Diplomacy:</td><TD id=diplo'+rslt.playerInfo.allianceId+' class=xtab>' + dip + '</td></tr>';
@@ -6683,6 +6710,30 @@ ajax/getOnline.php:
 		}
 		span.innerHTML = m + '';
 	},
+	invitePlayer : function (uid, notify){
+		var params = uW.Object.clone(uW.g_ajaxparams);
+		params.type = 'userId';
+		params.friendId = uid;
+		new MyAjaxRequest(uW.g_ajaxpath + "ajax/allianceSendInviteToFriends.php" + uW.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				notify (rslt);
+			},
+			onFailure: function (rslt) {
+				notify ({errorMsg:'AJAX error'});
+			},
+		});
+	},
+	gotInviteResult : function (rslt, span){
+		var t = Tabs.AllianceList;
+		if (rslt.ok)
+			m = '<span style="color:black">Invite Sent!</span>';
+		else 
+			m = '<span style="color:black">Send Invite Failed!</span>';
+		span.innerHTML = m + '<br>';	
+	},
+
 	ModelCity: {},
 	estETA: function (dist) { // Need Relief Station Levels to estimate transport, reinf, or reassign times. 
 		var t = Tabs.AllianceList;
@@ -10464,9 +10515,11 @@ Tabs.Attaque = {
 			m += "<div id='statpourRAA'></div>";
 			m += "<TABLE width=600 class=ptTab border=0 align=center>\
            <tr><td colspan=4 align=center><INPUT type=checkbox id=ptmarch_autoknight " + (Options.marchautoknight ? 'CHECKED' : '') + " /> Auto select knight&nbsp;&nbsp;<INPUT type=checkbox id=ptmarch_autochamp " + (Options.marchautochamp ? 'CHECKED' : '') + " /> Auto select champ&nbsp;&nbsp;<INPUT type=checkbox id=ptmarch_autospell " + (Options.marchautospell ? 'CHECKED' : '') + " /> Auto select spell</td></tr>\
-           <tr><td colspan=4 align=center><input type=button id=REEaction value='Scout'>&nbsp;<input type=button id=RAAaction value='Attack'>&nbsp<input type=button id=RARaction value='Reassign'>&nbsp;<input type=button id=RENaction value='Reinforce'>&nbsp;<input type=button id=RENBaction value='Reinforce + Max Food'><input type=button id=TRANaction value='Transport'></td></tr><tr align=center valign=top><td width=130><b><u>Source</b></u><br><span id=RAAsrcRptspeedcity></span></td>\
+		   <tr><td colspan=4><div align=center id=ptRAAStatus style='overflow-y:auto; max-height:30px; height: 30px;'></div></td></tr>\
+           <tr><td colspan=4 align=center><input type=button id=REEaction value='Scout'>&nbsp;<input type=button id=RAAaction value='Attack'>&nbsp<input type=button id=RARaction value='Reassign'>&nbsp;<input type=button id=RENaction value='Reinforce'>&nbsp;<input type=button id=RENBaction value='Reinforce + Max Food'><input type=button id=TRANaction value='Transport'></td></tr>\
+		   <tr align=center valign=top><td width=130><b><u>Source</b></u><br><span id=RAAsrcRptspeedcity></span></td>\
            <td><b><u>Destination</b></u><br>X:<input type=text id=RAAtypetrpx size=3>&nbsp;Y:<input type=text id=RAAtypetrpy size=3></td>\
-           <td><b><u>Distance</u></b><br><span id='BOEstimationD'>&nbsp;</span><td><b><u>Closest City</u></b><br><span id=BOVilleProche></span>\
+           <td><b><u>Distance</u></b><br><span id='BOEstimationD'>&nbsp;</span><td><b><u>Destination City</u></b><br><span id=BOVilleProche></span>\
            </tr></tr><tr><td colspan=2 align=right><a href='javascript:void(0);' id='BOchargelistelieux'>Fetch Members</a> : <select id='listeFavori'></select></td><td colspan=2 align=left><a href='javascript:void(0);' id='fetchbookmarks'>Fetch Bookmarks</a> : <select id='listbookmarks'></select></td></tr>\
 		   <tr><td colspan=4>Knight: <SELECT id='RAApiKnight' type=list></select>&nbsp;&nbsp;Champion: <SELECT id='RAApiChampion' type=list></select> (Attack Only!!)&nbsp;&nbsp;Spell: <SELECT id='RAApiSpell' type=list></select></tr>\
            <tr align=center valign=top><td colspan=4 align=left><table border=0 bordercolor=black cellspacing=0 cellpadding=0 width=100% style='text-align:center'><tr><td rowspan=999><div id=RAAstatsource></div></td><td colspan=2><a href='javascript:void(0)' id=BO_RAZ_Units title='Clear' >Units Selected</a></td><td>Attack Time</td><td>Reinforce Time</td></tr>";
@@ -10504,7 +10557,7 @@ Tabs.Attaque = {
 			m += "</table></td></tr>\
               <tr><td colspan=4>" + BOresources + "</td></tr><tr><td colspan=4>" + BOitems + "</td></tr></table>\
               <DIV class=ptstat>Saved Unit Configuration :</div><TABLE><tr><td colspan=2><select id=BO_AT_Fav></select><input type=button value='Reset' id=BO_AT_Fav_Sup><input type=button value='Reset All' id=BO_AT_Fav_RESET></td><td colspan=2>New : <input type=type id=BO_AT_Fav_Nom size=10 maxlength=12>&nbsp;<input type=button value='Save Troops' id=BO_AT_Fav_ajou>\
-              <tr><td colspan=4><div id=ptRAAStatus style='overflow-y:auto; max-height:50px; height: 50px;'></div></td></tr></table>\
+              </table>\
               <DIV class=ptstat>Auto Attack - Work in Progress</div><table></tr><tr><td><input type=button id='BOActiveAttack' value='ACTIVER : OFF' ></td><td colspan=3><span id='BOCompAttack'></span></tr>\
               <tr><td><b>Heure arriv&eacute;e :</b> <input type=text size=7 id='BOHorloge' value='" + Options.AttackHorloge + "'></td><td><input type=button value='Enregistrer' id='BOSaveAttack'></td><td><input type=button value='Editer l\'attaque' id='BOEditAttack' disabled></td></tr>\
               <tr><td colspan=4><span id='BOAttackProg'></span></td></tr></table>";
