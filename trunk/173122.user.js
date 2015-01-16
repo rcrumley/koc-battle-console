@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150113a
+// @version        20150116a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150113a';
+var Version = '20150116a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -5166,7 +5166,8 @@ ajax/viewCourt.php:
 		t.neutralbtn = '';
 		t.hostilebtn = '';
 		
-		t.AreYouALeader();
+		if (getMyAlliance()[0] > 0)
+			t.AreYouALeader();
 		
 		uW.PTgetMembers = t.eventGetMembers;
 		uW.PTPaintMembers = t.GetDataForMap;
