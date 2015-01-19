@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150116a
+// @version        20150119a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150116a';
+var Version = '20150119a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -134,6 +134,7 @@ var Options = {
 	reportDeleteButton: true,
 	overviewFontSize: 12,
 	overviewAllowOverflow: false,
+	knightAllowOverflow: false,
 	curOverTab: 'A',
 	curMarchTab: 'N',
 	curOptTab: 'U',
@@ -593,6 +594,12 @@ function ptStartup() {
 		TowerAlerts.enableFixFalseReports(true);
 	AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
 
+	// fix open multiple of some new chests...
+	
+	for (var i = 30497; i <= 30499; i++) {
+		uW.cm.ItemIdentifier.BOX[i] = 1
+	}
+	
 	uW.ptLoaded = true;
 }
 
@@ -3987,6 +3994,17 @@ Tabs.Knights = {
 		var t = Tabs.Knights;
 		clearTimeout(t.displayTimer);
 
+		function e_allowWidthOverflow(evt) {
+			var t = Tabs.Knights;
+			var tf = document.getElementById('ptKnightOver').checked;
+			Options.knightAllowOverflow = tf;
+			if (tf)
+				document.getElementById('ptknightdiv').style.overflowX = 'visible';
+			else
+				document.getElementById('ptknightdiv').style.overflowX = 'auto';
+			t.show();	
+		}
+		
 		function _dispKnight(roleId, knight, numcid) {
 			var rid = roleId;
 			if (roleId == null)
@@ -4048,9 +4066,14 @@ Tabs.Knights = {
 			}
 			return m;
 		}
+		
+		document.getElementById('ptknightdiv').style.overflowX = Options.knightAllowOverflow ? 'visible' : 'scroll';
+		document.getElementById('ptknightdiv').style.width = Options.knightAllowOverflow ? '' : '745px';
+		document.getElementById('ptknightdiv').style.maxWidth = Options.knightAllowOverflow ? '' : '745px';
+		
 		var totSalary = 0;
 		var m = '<TABLE cellspacing=0 align=center class=ptTabPad><TBODY>';
-		m += '<TR><TD colspan=15><DIV class=ptstat>Knight Assign Methods - <input style="height:20px;font-size:9px;" type=button value="Add Default Skill" id="ptknight_def"><input style="height:20px;font-size:9px;" type=button value="Add Combat Skill" id="ptknight_com"></div></td></tr>';
+		m += '<TR><td colspan=2><DIV class=ptstat><INPUT type=CHECKBOX id=ptKnightOver' + (Options.knightAllowOverflow ? ' CHECKED' : '') + '>Allow width overflow</div></td><TD colspan=13><DIV class=ptstat>Knight Assign Methods - <input style="height:20px;font-size:9px;" type=button value="Add Default Skill" id="ptknight_def"><input style="height:20px;font-size:9px;" type=button value="Add Combat Skill" id="ptknight_com"></div></td></tr>';
 		for (var c = 0; c < Cities.numCities; c++) {
 			var cid = Cities.cities[c].id;
 			m += '<TR><TD colspan=15><DIV class=ptstat>' + Cities.cities[c].name + '</div></td></tr>\
@@ -4082,6 +4105,7 @@ Tabs.Knights = {
 		}
 		document.getElementById('ptknightdiv').innerHTML = m + '</tbody></table></div>';
 		t.action = 0;
+		document.getElementById('ptKnightOver').addEventListener('click', e_allowWidthOverflow, false);
 		document.getElementById('ptknight_com').addEventListener('click', function () {
 			t.action = 1;
 			t.show();
@@ -4092,6 +4116,7 @@ Tabs.Knights = {
 		}, false);
 		t.displayTimer = setTimeout(t.show, 10000);
 	},
+	
 	postDismissKnight: function (kid, cid) {
 		var t = Tabs.Knights;
 		var params = uW.Object.clone(uW.g_ajaxparams);
@@ -10781,9 +10806,38 @@ Tabs.Attaque = {
 	calcmaxload:function () {
 		var t = Tabs.Attaque;
 		t.MaxLoad = 0;
+		var featherweight = parseInt(Seed.tech.tch10) * 0.1;
+		var loadEffectBoost = 0;
+		if (Seed.playerEffects.loadExpire > unsafeWindow.unixtime()) {
+			loadEffectBoost = 0.25;
+		};
 		for (var ui in uW.cm.UNIT_TYPES) {
 			i = uW.cm.UNIT_TYPES[ui];
-			t.MaxLoad += parseInt(unsafeWindow.unitstats['unt' + i][5] * ById("RAAnbunit" + i).value * (1 + (0.10 * Seed.tech.tch10) + Math.min(equippedthronestats(6) / 100, 6.25)));
+			
+			var loadBoostBase = (Math.floor(unsafeWindow.cm.ThroneController.effectBonus(6)) * 0.01) + loadEffectBoost;
+			if (unsafeWindow.cm.unitFrontendType[i] == "siege") {
+                loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(59) * 0.01)
+			};
+			if (unsafeWindow.cm.unitFrontendType[i] == "horsed") {
+                loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(48) * 0.01);
+			};
+			var Load = parseInt(unsafeWindow.unitstats['unt'+i]['5']);
+			var LoadSac = "";
+			if (unsafeWindow.seed.queue_sacr["city"+t.sourceCity.id]) {
+				for(var sacIndex = 0; sacIndex < unsafeWindow.seed.queue_sacr["city"+t.sourceCity.id].length; sacIndex ++ ) { 
+					if(unsafeWindow.seed.queue_sacr["city"+t.sourceCity.id][sacIndex]["unitType"] == i) {
+						Load *= unsafeWindow.seed.queue_sacr["city"+t.sourceCity.id][sacIndex]["multiplier"][0];
+					}
+				}	
+			}
+			if (loadBoostBase > Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100) {
+				loadBoostBase = Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100;
+			};
+			loadBoostBase += featherweight; //Should be done after throne room max check to get max boost?
+			loadBoostBase += 1;
+
+			var LoadUnit = Math.floor(loadBoostBase*Load);
+			t.MaxLoad += parseInt(LoadUnit * ById("RAAnbunit" + i).value);
 		}
 		if (t.MaxLoad > 0) t.MaxLoad = t.MaxLoad - 1; // reduce max by 1 to avoid load capacity errors due to roundoff
 	},
