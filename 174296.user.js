@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150113a
+// @version        20150120a
 // @namespace      mat
 // @homepage       https://code.google.com/p/koc-power-bot/
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -33,7 +33,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150113a';
+var Version = '20150120a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -609,6 +609,8 @@ var nHtml={
 
 }
 
+GM_addStyle("._470m { display: none;}"); // remove annoying facebook games toolbar
+
 readGlobalOptions ();
 readOptions();
 MAP_DELAY = Options.MAP_DELAY;
@@ -825,9 +827,9 @@ function HandlePublishPopup() {
                   // 10: Only Me
                   privacy_setting.innerHTML = '<option value="'+ GlobalOptions.autoPublishPrivacySetting +'"></option>';
                   privacy_setting.selectedIndex = 0;
-                  if (GlobalOptions.autoPublishGamePopups && !GlobalOptions.autoCancelGamePopups){
+                  if (GlobalOptions.autoPublishGamePopups){
                      nHtml.Click(publish_button);
-                  }else if (GlobalOptions.autoCancelGamePopups && !GlobalOptions.autoPublishGamePopups){
+                  }else if (GlobalOptions.autoCancelGamePopups){
                      nHtml.Click(cancel_publish_button);
                   }
                }
@@ -2706,7 +2708,8 @@ Tabs.Throne = {
            
 				if (slot==6) {
 					var qual = 5; // assume bright jewel
-					if (TRCard.id == 30167 || TRCard.id == 30226 || TRCard.id == 30171) {qual = 4;} // some have subdued jewels
+					if (TRCard.id == 30167 || TRCard.id == 30226 || TRCard.id == 30171 || TRCard.id == 30170) {qual = 4;} // some have subdued jewels
+					if (TRCard.id == 30173) {qual = 3;} // one has a cloudy jewel ffs
 					TRCard.effects["slot"+slot].quality = qual; 
 					TRCard.effects["slot"+slot].fromJewel = true;
                
@@ -7838,6 +7841,7 @@ Tabs.Search = {
   SearchList : [],
   IgAlly : [],
   dat : [],  
+  QSMarching : {},
   Provinces : {1:{'name':"Tintagel",'x':75,'y':75},
                 2:{'name':"Cornwall",'x':225,'y':75},
                 3:{'name':"Astolat",'x':375,'y':75},
@@ -7903,7 +7907,7 @@ Tabs.Search = {
 		t.setSlice();
 	});
 	
-	if (Options.LastSearch.mapDat != []) {
+	if (Options.LastSearch.mapDat && Options.LastSearch.mapDat != []) {
 		t.displaylastsearch();
 	}
 	
@@ -7966,7 +7970,7 @@ Tabs.Search = {
     t.opt.maxDistance = parseInt(Options.LastSearch.opt.maxDistance);
     t.opt.searchShape = Options.LastSearch.opt.searchShape;
 	t.setupresultspanel();
-	t.dispMapTable();	
+	t.stopSearch('Previous Search');
   },
   displaylastsearch : function () {
 	var t = Tabs.Search;
@@ -8115,12 +8119,6 @@ Tabs.Search = {
       return;
     }
 
-	t.clearlastsearch();
-	Options.LastSearch.opt = t.opt;
-	Options.LastSearch.time = unixTime();
-	Options.LastSearch.mapDat = [];
-	saveOptions();
-	
     t.searchRunning = true;
     document.getElementById ('pasrcStart').value = translate('Stop Search');
 
@@ -8234,6 +8232,7 @@ Tabs.Search = {
       t.dispMapTable ();
       }, false);
     document.getElementById('pacoordsOnly').addEventListener ('change', function (){ t.dispMapTable (); }, false);
+    document.getElementById('paautoqs').addEventListener ('change', function (){ t.dispMapTable (); }, false);
     if (t.opt.searchType == 1){
       document.getElementById('pafilWildType').addEventListener ('change', function (){
         Options.wildType = document.getElementById('pafilWildType').value;
@@ -8374,10 +8373,6 @@ Tabs.Search = {
       return a[2] - b[2];
     }
     
-	Options.LastSearch.mapDat = t.mapDat.slice();
-	saveOptions();
-	t.displaylastsearch();
-	
     t.dat = [];
     for (i=0; i<t.mapDat.length; i++){  
       lvl = parseInt (t.mapDat[i][4]);
@@ -8438,9 +8433,15 @@ Tabs.Search = {
             if ( t.dat[i][5] && t.dat[i][7] == 0) {
 			  if (t.dat[i][9] == "") {
 				m += '<TD colspan=4 id=pbsrch'+t.dat[i][0]+t.dat[i][1]+'>* '+translate("MISTED")+' * &nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+ t.dat[i][0] +','+ t.dat[i][1] +','+t.selectedCity.id+');return false;"><A>'+translate("QuickScout")+'</a></span></td></tr>';
-				if (document.getElementById('paautoqs') && t.searchRunning) {
-					if (document.getElementById('paautoqs').checked) { setTimeout(unsafeWindow.quickscoutsearch,5000*qsdelay,t.dat[i][0],t.dat[i][1],t.selectedCity.id); }
-					qsdelay = qsdelay + 1; }
+				if (document.getElementById('paautoqs')) {
+					if (document.getElementById('paautoqs').checked) {
+						if (!Tabs.Search.QSMarching[t.dat[i][0]+t.dat[i][1]+''] || Tabs.Search.QSMarching[t.dat[i][0]+t.dat[i][1]+'']==0) {
+							Tabs.Search.QSMarching[t.dat[i][0]+t.dat[i][1]+''] = 1;
+							setTimeout(unsafeWindow.quickscoutsearch,(5000*qsdelay),t.dat[i][0],t.dat[i][1],t.selectedCity.id);
+						}
+					}		
+					qsdelay = qsdelay + 1;
+				}
 			  }	
 			  else
 				m += '<TD colspan=4 id=pbsrch'+t.dat[i][0]+t.dat[i][1]+'>'+t.dat[i][9]+'</td></tr>';
@@ -8845,6 +8846,12 @@ Tabs.Search = {
       t.curY += t.opt.searchDistance;
       if (t.curY > t.lastY){
         t.stopSearch (translate('Done!'));
+		t.clearlastsearch();
+		Options.LastSearch.opt = t.opt;
+		Options.LastSearch.time = unixTime();
+		Options.LastSearch.mapDat = t.mapDat.slice();
+		saveOptions();
+		t.displaylastsearch();
         return;
       }
     }
@@ -16553,6 +16560,14 @@ function ToggleDivDisplay(h,w,div) {
 
 function onUnload (){
   Options.pbWinPos = mainPop.getLocation();
+
+  if (Tabs.Search.searchRunning) {
+	Tabs.Search.clearlastsearch();
+	Options.LastSearch.opt = Tabs.Search.opt;
+	Options.LastSearch.time = unixTime();
+	Options.LastSearch.mapDat = Tabs.Search.mapDat.slice();
+  }	
+  
   if (!ResetAll) saveOptions();
 }
 
@@ -21274,7 +21289,7 @@ Tabs.Inventory = {
             <TD><input type=checkbox id=pbinventory_useall />Use all by default</td>\
                </tr></table>\
             <DIV class=pbStat>Items</div>\
-            <DIV id=pbinventory></div>\
+            <DIV id=pbinventory style='max-height:600px;overflow-y:auto;'></div>\
             <DIV id=pbinventory_info></div>";
       t.myDiv.innerHTML = m;
       t.sort_Items();
@@ -24723,7 +24738,6 @@ Tabs.Champion = {
 		unsafeWindow.pbrefreshchuniques = function (chID,div) {GetInventory(chID,div);};
 		
 		// need to manually populate this crap
-		//UniqueItems["28007"] = {Id:28007,Name:"Blade of the Wild", Effects:[{type:201,tier:5},{type:5,tier:2},{type:204,tier:2},{type:207,tier:2},{type:1,tier:3}],Faction:3,Type:1};
 		UniqueItems = {};
 		UniqueItems["28001"] = {Id:28001,Name:"Blade of Radiance", Effects:[{type:201,tier:5},{type:2,tier:2},{type:206,tier:2},{type:203,tier:2},{type:209,tier:3}],Faction:1,Type:1};
 		UniqueItems["28002"] = {Id:28002,Name:"Armor of Radiance", Effects:[{type:206,tier:3},{type:203,tier:2},{type:204,tier:2},{type:2,tier:3},{type:21,tier:3}],Faction:1,Type:2};
@@ -24774,11 +24788,11 @@ Tabs.Champion = {
 		UniqueItems["28047"] = {Id:28047,Name:"Armsman's Shield", Effects:[{type:7,tier:2},{type:47,tier:2},{type:1,tier:2},{type:209,tier:2},{type:206,tier:2}],Faction:1,Type:5};
 		UniqueItems["28048"] = {Id:28048,Name:"Armsman's Armor", Effects:[{type:203,tier:3},{type:24,tier:2},{type:206,tier:2},{type:207,tier:3},{type:1,tier:2}],Faction:1,Type:2};
 		UniqueItems["28049"] = {Id:28049,Name:"Armsman's Helmet", Effects:[{type:18,tier:2},{type:207,tier:2},{type:202,tier:2},{type:25,tier:2},{type:209,tier:3}],Faction:1,Type:3};
-
+		UniqueItems["28050"] = {Id:28050,Name:"Armsman's Boots", Effects:[{type:205,tier:1},{type:17,tier:2},{type:44,tier:2},{type:204,tier:2},{type:205,tier:2}],Faction:1,Type:4};
 		UniqueItems["28051"] = {Id:28051,Name:"Armsman's Cloak", Effects:[{type:205,tier:1},{type:207,tier:2},{type:202,tier:3},{type:63,tier:2},{type:7,tier:2}],Faction:1,Type:9};		
 		UniqueItems["28052"] = {Id:28052,Name:"Sickle of the Wraith", Effects:[{type:201,tier:5},{type:17,tier:1},{type:202,tier:2},{type:204,tier:3},{type:207,tier:3}],Faction:2,Type:1};		
 		UniqueItems["28053"] = {Id:28053,Name:"Shield of the Wraith", Effects:[{type:18,tier:1},{type:204,tier:1},{type:205,tier:1},{type:206,tier:2},{type:209,tier:3}],Faction:2,Type:5};
-		
+		UniqueItems["28054"] = {Id:28054,Name:"Armor of the Wraith", Effects:[{type:203,tier:1},{type:207,tier:3},{type:206,tier:2},{type:21,tier:1},{type:203,tier:3}],Faction:2,Type:2};		
 		UniqueItems["28055"] = {Id:28055,Name:"Helmet of the Wraith", Effects:[{type:3,tier:1},{type:207,tier:3},{type:1,tier:1},{type:202,tier:2},{type:205,tier:2}],Faction:2,Type:3};
 		UniqueItems["28056"] = {Id:28056,Name:"Boots of the Wraith", Effects:[{type:17,tier:1},{type:207,tier:2},{type:202,tier:2},{type:205,tier:1},{type:18,tier:1}],Faction:2,Type:4};
 		UniqueItems["28057"] = {Id:28057,Name:"Cloak of the Wraith", Effects:[{type:209,tier:2},{type:206,tier:2},{type:208,tier:2},{type:7,tier:1},{type:202,tier:3}],Faction:2,Type:9};
@@ -24787,9 +24801,11 @@ Tabs.Champion = {
 		UniqueItems["28502"] = {Id:28502,Name:"Cloak of Radiance", Effects:[{type:206,tier:2},{type:1,tier:2},{type:202,tier:2},{type:25,tier:3},{type:2,tier:3}],Faction:1,Type:9};
 		UniqueItems["28503"] = {Id:28503,Name:"Cloak of the Wild", Effects:[{type:208,tier:2},{type:204,tier:2},{type:4,tier:2},{type:47,tier:3},{type:208,tier:3}],Faction:3,Type:9};
 		UniqueItems["28504"] = {Id:28504,Name:"Scourge Knight's Cloak", Effects:[{type:204,tier:2},{type:21,tier:2},{type:1,tier:2},{type:56,tier:3},{type:207,tier:3}],Faction:2,Type:9};
-
+		UniqueItems["28505"] = {Id:28505,Name:"Noble Cloak", Effects:[{type:5,tier:2},{type:22,tier:2},{type:209,tier:2},{type:53,tier:3},{type:204,tier:3}],Faction:1,Type:9};
+		UniqueItems["28506"] = {Id:28506,Name:"Feral Cloak", Effects:[{type:202,tier:2},{type:4,tier:2},{type:206,tier:3},{type:42,tier:3},{type:1,tier:3}],Faction:3,Type:9};
 		UniqueItems["28507"] = {Id:28507,Name:"Commander's Cloak", Effects:[{type:207,tier:2},{type:209,tier:2},{type:202,tier:3},{type:30,tier:3},{type:2,tier:3}],Faction:1,Type:9};
 		UniqueItems["28508"] = {Id:28508,Name:"Mire Knight's Cloak", Effects:[{type:202,tier:2},{type:4,tier:2},{type:202,tier:3},{type:61,tier:3},{type:1,tier:3}],Faction:2,Type:9};
+		
 		
 		for (var i=28001;i<28500;i++) {
 			if (!unsafeWindow.itemlist['i'+i]) break;
@@ -27817,9 +27833,11 @@ function QuickScout() {
 
 		March.addMarch(params, function(rslt){
 			if (rslt.ok) {
+				Tabs.Search.QSMarching[x+y+''] = 0;
 				fetchmarch(rslt.marchId,FillSearchDiv); // mist scout
 			}
 			else {
+				Tabs.Search.QSMarching[x+y+''] = 0;
 				divid = 'pbsrch'+x+y;
 				if (!document.getElementById(divid)) return;
 				var msg = '<span style="color:#f00;">Error Code - '+rslt.error_code+'</span>&nbsp; &nbsp; <SPAN onclick="quickscoutsearch('+x+','+y+','+cid+');return false;"><A>'+translate("QuickScout")+'</a></span>';
