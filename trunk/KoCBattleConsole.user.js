@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20141215a
+// @version			20150120a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Support for Defensive Towers</p>
+// @releasenotes 	<p>Fix occasional bug reading champion data</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -23,10 +23,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	December 2014 Barbarossa69 (www.facebook.com/barbarossa69)											¦
+//	¦	January 2015 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20141215a'; 
+var Version = '20150120a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -203,7 +203,7 @@ var AlternateSortOrder = [5,37,58,117,131,133,138,21,42,63,123,132,134,143,1,24,
 var guardTypes = ["wood", "ore", "food", "stone"];
 var tileTypes = {0:"Bog",10:"Grassland",11:"Lake",20:"Wood",30:"Hill",40:"Mountain",50:"Plain",51:"City",52:"Ruin",53:"Misted City",54:"Dark Forest",55:"Merc Camp"};
 
-var IMGURL = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/";
+var IMGURL = uW.stimgUrl+"img/";
  
 var TitleBG = IMGURL+"modal/700_bars_4.png";
 var PanelBG = IMGURL+"dialog_740_r2_c1.jpg";
@@ -4440,7 +4440,7 @@ function PaintCityInfo(cityId) {
 	try {
 		for (y in Seed.champion.champions) {
 			citychamp = Seed.champion.champions[y];
-			if (citychamp.assignedCity == cityId) {
+			if (citychamp.assignedCity && citychamp.assignedCity == cityId) {
 				GotChamp = true;
 				if (oldchamp != citychamp.championId) { ExpandChampion = false; }
 				if (citychamp.status != '10') {champstat = '<span class=xtab style="color:#080">(Defending)</span>';}
@@ -4455,16 +4455,16 @@ function PaintCityInfo(cityId) {
 		}	
 		else {
 			if (!GotChamp) { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Assign</span></a>'; }
-			else { if (citychamp.status == '1') { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Change</span></a>'; }}
-			if (GotChamp && (citychamp.status == '1')) { Champion += '&nbsp;<a id="btFreeChampion" class="inlineButton btButton brown8" onclick="btFreeChampion()"><span>Unassign</span></a>'; }
+			else { if (citychamp.status != '10') { Champion += '<a id="btChangeChampion" class="inlineButton btButton brown8" onclick="btChangeChampion()"><span>Change</span></a>'; }}
+			if (GotChamp && (citychamp.status != '10')) { Champion += '&nbsp;<a id="btFreeChampion" class="inlineButton btButton brown8" onclick="btFreeChampion()"><span>Unassign</span></a>'; }
 			Champion += '</td></tr></table><div class=divHide><table cellspacing=0>';
 		}
 		for (y in Seed.champion.champions) {
 			chkchamp = Seed.champion.champions[y];
 			if (chkchamp.championId) {
-				if (chkchamp.assignedCity != cityId) {
+				if (!chkchamp.assignedCity || chkchamp.assignedCity != cityId) {
 					CheckChamp = true;
-					if (chkchamp.assignedCity == 0) { chkcity = 'Unassigned';} else { chkcity = Cities.byID[chkchamp.assignedCity].name;}
+					if (!chkchamp.assignedCity || chkchamp.assignedCity == 0) { chkcity = 'Unassigned';} else { chkcity = Cities.byID[chkchamp.assignedCity].name;}
 					chkbtn = '';
 					defendingCity = chkcity;
 					chkcol = "";
@@ -4479,7 +4479,7 @@ function PaintCityInfo(cityId) {
 						}
 						chkbtn = '<a id="btSetChampion'+chkchamp.championId+'" class="inlineButton btButton brown8" onclick="btSetChampion(this)"><span>Assign</span></a>'; 
 					} 
-					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.championId+'td"><img height=14 style="vertical-align:text-top;" id="ChampStats'+chkchamp.championId+'" onMouseover="btCreateChampionPopUp(this,'+chkchamp.assignedCity+',true,'+chkchamp.championId+');" src="'+ChampImagePrefix+chkchamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
+					Champion += '<tr style="font-weight:normal;align:left;"><td class="xtab trimg" id="ChampStats'+chkchamp.championId+'td"><img height=14 style="vertical-align:text-top;" id="ChampStats'+chkchamp.championId+'" onMouseover="btCreateChampionPopUp(this,'+(chkchamp.assignedCity?chkchamp.assignedCity:0)+',true,'+chkchamp.championId+');" src="'+ChampImagePrefix+chkchamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+chkchamp.name+'</td><td class=xtab><span style="'+chkcol+'">'+defendingCity+'</span></td><td class=xtab>'+chkbtn+'</td></tr>';
 				}
 			}	
 		}
