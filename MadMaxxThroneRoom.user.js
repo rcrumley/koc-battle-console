@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20141124a
+// @version        20150123a
 // @namespace      mmm
 // @delay 2000
 // @priority -10
@@ -26,13 +26,13 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20141124a';
+var Version = '20150123a';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
 
-var maxTrLevel = 20;
+var maxTrLevel = unsafeWindow.cm.MAX_MASTERS_TOKEN_LEVEL;
 var JewelImages = {1 : "http://i.imgur.com/SecBRT5.png", 2 : "http://i.imgur.com/dnrId1I.png", 3 : "http://i.imgur.com/fjgZUh9.png", 4 : "http://i.imgur.com/h7tMQaB.png", 5 : "http://i.imgur.com/BZSuCiN.png"};
 /*
  * Modifiedd from object.watch polyfill
