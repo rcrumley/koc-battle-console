@@ -24843,7 +24843,6 @@ Tabs.Champion = {
 		UniqueItems["28507"] = {Id:28507,Name:"Commander's Cloak", Effects:[{type:207,tier:2},{type:209,tier:2},{type:202,tier:3},{type:30,tier:3},{type:2,tier:3}],Faction:1,Type:9};
 		UniqueItems["28508"] = {Id:28508,Name:"Mire Knight's Cloak", Effects:[{type:202,tier:2},{type:4,tier:2},{type:202,tier:3},{type:61,tier:3},{type:1,tier:3}],Faction:2,Type:9};
 		
-		
 		for (var i=28001;i<28500;i++) {
 			if (!unsafeWindow.itemlist['i'+i]) break;
 			if (!UniqueItems[i]) {
