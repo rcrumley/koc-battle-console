@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150119a
+// @version        20150128a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150119a';
+var Version = '20150128a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -283,6 +283,7 @@ var Options = {
 	mapInfo: false,
 	mapInfo2: false,
 	mapInfo3: false,
+	mapMenuInfo: true,
 	dispStatus: true,
 	fixApothTime: true,
 	fixTRAetherCost: true,
@@ -1009,6 +1010,10 @@ var mapinfoFix = {
 			[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
 		]);
 		t.dispStatusMod.setEnable(Options.dispStatus);
+		
+		t.MapContextMenuAdd = new CalterUwFunc ('modal_maptile', [[/}\s*$/, ';setTimeout(function() { MapContextMenuAdd_hook(j,k,m,a,h,f,o); },0); }']]);
+		unsafeWindow.MapContextMenuAdd_hook = t.MapContextMenu;
+		t.MapContextMenuAdd.setEnable (Options.mapMenuInfo);
 	},
 	setEnable: function (tf) {
 		var t = mapinfoFix;
@@ -1021,6 +1026,10 @@ var mapinfoFix = {
 	setEnable3: function (tf) {
 		var t = mapinfoFix;
 		t.bookMarkMod.setEnable(tf);
+	},
+	setMenuEnable: function (tf) {
+		var t = mapinfoFix;
+		t.MapContextMenuAdd.setEnable(tf);
 	},
 	setEnableDispStatus: function (tf) {
 		var t = mapinfoFix;
@@ -1043,10 +1052,61 @@ var mapinfoFix = {
 		var t = mapinfoFix;
 		return t.bookMarkMod.isAvailable();
 	},
+	isMenuAvailable: function () {
+		var t = mapinfoFix;
+		return t.MapContextMenuAdd.isAvailable();
+	},
 	isAvailableDispStatus: function () {
 		var t = mapinfoFix;
 		return t.dispStatusMod.isAvailable();
 	},
+	MapContextMenu : function(uid,x,y,a,h,f,o) {
+		var div = ById('contextMenu');
+		if (uid!=null && uid!=0 && uid!="0") {
+			var scr = document.createElement('div');
+			scr.innerHTML = '<div align=center><b>Loading...</b></div>';
+//			scr.className = "maptilewrap";
+			div.appendChild(scr);
+			if (uid!=null && uid!=0 && uid!="0") {
+				var params = uW.Object.clone(uW.g_ajaxparams);
+				params.checkArr = uid;
+				new MyAjaxRequest(uW.g_ajaxpath + "ajax/getOnline.php" + uW.g_ajaxsuffix, {
+					method: "post",
+					parameters: params,
+					onSuccess: function (rslt) {
+						var p = rslt.data;
+						var params = uW.Object.clone(uW.g_ajaxparams);
+						params.pid = uid;
+						new MyAjaxRequest(uW.g_ajaxpath + "ajax/viewCourt.php" + uW.g_ajaxsuffix, {
+							method: "post",
+							parameters: params,
+							onSuccess: function (rslt) {
+								if (rslt.ok) {
+									var u = unixTime();
+									var f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
+									var misted = (f >= u);
+									m = '<TABLE width="100%" class=ptTab style="font-size:11px"><tr><td align="center"><div style="font-size:12px"><b>' + rslt.playerInfo.displayName +'</b></div></td></tr>';
+									m += '<tr><TD align="center"><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + rslt.playerInfo.userId + '">' + parseInt(rslt.playerInfo.userId) + '</a></td></tr>';
+									var g=uW.g_js_strings.commonstr,h={1:g.normal,2:uW.g_js_strings.MapObject.begprotect,3:g.truce,4:g.vacation};
+									m += '<tr><TD align="center"><B>' + h[rslt.playerInfo.warStatus] + '</b></td></tr>';
+									if (!p[uid])
+										m+= '<tr><TD align="center">'+ getLastLogDuration(rslt.playerInfo.lastLogin) +'</td></tr>';
+									else 	
+										m+= '<tr><TD align="center"><span style="color:#f00;"><b>(ONLINE)</b></span></td></tr>';
+									if (misted) 
+										m += '<tr><TD align="center"><B>*** MISTED ***</b></td></tr>';
+									scr.innerHTML = m + '</table>';
+								}	
+							},onFailure: function (rslt) {},
+
+						});
+
+					},onFailure: function (rslt) {},
+				});
+			}
+		}	
+	},
+	
 }
 var ApothTimeFix = {
 	apothFix: null,
@@ -5207,42 +5267,67 @@ ajax/viewCourt.php:
 		
 		uW.setDiplomacy = function (aid,dip){ // 1 - friendly, 0 - neutral, 2 - hostile
 			var t = Tabs.AllianceList;
-			var params = uW.Object.clone(uW.g_ajaxparams);
-			params.allianceSelected = aid;
-			params.diplomacyStatus = dip;
-			new MyAjaxRequest(uW.g_ajaxpath + "ajax/allianceSetDiplomacies.php" + uW.g_ajaxsuffix, {
-				method : "post",
-				parameters : params,
-				onSuccess : function(rslt) {
-					if (rslt.ok) {
-						if (document.getElementById('diplo'+aid)) {
-							if (t.allianceleader) {
-								t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+aid+',1);" type=submit value="F" />';
-								t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+aid+',0);" type=submit value="N" />';
-								t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+aid+',2);" type=submit value="H" />';
-							}	
-					
-							if (dip == 1) {
-								dip = '<span style="color:#080;"><b>Friendly</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
-							}
-							else {
-								if (dip == 2) {
-									dip = '<span style="color:#800;"><b>Hostile</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
+			var popConfirm = null;
+			popConfirm = new CPopup('ptConfirmAction', 0, -100, 500, 70, true, function () {
+				clearTimeout(1000);
+			});
+			var DiploText = 'NEUTRAL';
+			if (dip==1) DiploText = 'FRIENDLY';
+			if (dip==2) DiploText = 'HOSTILE';
+			popConfirm.centerMe(mainPop.getMainDiv());
+			var m = '<DIV style="max-height:50px; height:50px; overflow-y:auto"><br><TABLE align=center cellpadding=0 cellspacing=0 width=100% class="ptTab">';
+			m += '<tr><TD align=center><INPUT id=ptConfirm type=submit value="Set '+DiploText+'" \>&nbsp;<INPUT id=ptCancel type=submit value="Cancel" \></td></tr></table></div>';
+			popConfirm.getMainDiv().innerHTML = m;
+			popConfirm.getTopDiv().innerHTML = '<DIV align=center><b>Confirm Set Diplomacy?</b></div>';
+			popConfirm.show(true);
+			document.getElementById('ptConfirm').addEventListener('click', function () {
+				popConfirm.show(false);
+				popConfirm.onClose();
+				popConfirm.destroy();
+				popConfirm = null;
+				var params = uW.Object.clone(uW.g_ajaxparams);
+				params.allianceSelected = aid;
+				params.diplomacyStatus = dip;
+				new MyAjaxRequest(uW.g_ajaxpath + "ajax/allianceSetDiplomacies.php" + uW.g_ajaxsuffix, {
+					method : "post",
+					parameters : params,
+					onSuccess : function(rslt) {
+						if (rslt.ok) {
+							if (document.getElementById('diplo'+aid)) {
+								if (t.allianceleader) {
+									t.friendbtn = '<INPUT style="color:#080;font-size:9px" onclick="setDiplomacy('+aid+',1);" type=submit value="F" />';
+									t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+aid+',0);" type=submit value="N" />';
+									t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+aid+',2);" type=submit value="H" />';
+								}	
+						
+								if (dip == 1) {
+									dip = '<span style="color:#080;"><b>Friendly</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
 								}
 								else {
-									if (getMyAlliance()[0]!=aid) {
-										dip = 'Neutral&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+									if (dip == 2) {
+										dip = '<span style="color:#800;"><b>Hostile</b></span>&nbsp;'+t.friendbtn+'&nbsp;'+t.neutralbtn; 
 									}
 									else {
-										dip = '<span style="color:#088;"><b>Yours</b></span>&nbsp;';
+										if (getMyAlliance()[0]!=aid) {
+											dip = 'Neutral&nbsp;'+t.friendbtn+'&nbsp;'+t.hostilebtn; 
+										}
+										else {
+											dip = '<span style="color:#088;"><b>Yours</b></span>&nbsp;';
+										}
 									}
 								}
+								document.getElementById('diplo'+aid).innerHTML = dip;	
 							}
-							document.getElementById('diplo'+aid).innerHTML = dip;	
 						}
 					}
-				}
-			},true); // noretry
+				},true); // noretry
+			}, false);
+			document.getElementById('ptCancel').addEventListener('click', function () {
+				popConfirm.show(false);
+				popConfirm.onClose();
+				popConfirm.destroy();
+				popConfirm = null;
+			}, false);
 		};
 		
 		Lastlogin = 0;
@@ -5511,9 +5596,31 @@ ajax/viewCourt.php:
 	},
 	clickedSendInvite : function (span, uid){
 		var t = Tabs.AllianceList;
-		span.onclick = '';
-		span.innerHTML = "Sending ...";
-		t.invitePlayer (uid, function (r) {t.gotInviteResult(r, span)});
+		var popConfirm = null;
+		popConfirm = new CPopup('ptConfirmAction', 0, -100, 500, 70, true, function () {
+			clearTimeout(1000);
+		});
+		popConfirm.centerMe(mainPop.getMainDiv());
+		var m = '<DIV style="max-height:50px; height:50px; overflow-y:auto"><br><TABLE align=center cellpadding=0 cellspacing=0 width=100% class="ptTab">';
+		m += '<tr><TD align=center><INPUT id=ptConfirm type=submit value="Send Invite" \>&nbsp;<INPUT id=ptCancel type=submit value="Cancel" \></td></tr></table></div>';
+		popConfirm.getMainDiv().innerHTML = m;
+		popConfirm.getTopDiv().innerHTML = '<DIV align=center><b>Confirm Alliance Invite?</b></div>';
+		popConfirm.show(true);
+		document.getElementById('ptConfirm').addEventListener('click', function () {
+			popConfirm.show(false);
+			popConfirm.onClose();
+			popConfirm.destroy();
+			popConfirm = null;
+			span.onclick = '';
+			span.innerHTML = "Sending ...";
+			t.invitePlayer (uid, function (r) {t.gotInviteResult(r, span)});
+		}, false);
+		document.getElementById('ptCancel').addEventListener('click', function () {
+			popConfirm.show(false);
+			popConfirm.onClose();
+			popConfirm.destroy();
+			popConfirm = null;
+		}, false);
 	},
 	gotPlayerLeaderboard2: function (rslt, span, uid, status) {
 		var t = Tabs.AllianceList;
@@ -7140,6 +7247,7 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togTowerFix type=checkbox /></td><TD>Fix tower report to show exact target (city, wild or invalid)</td></tr>';
 			m += '<TR><TD><INPUT id=togKnightSelect type=checkbox /></td><TD>Do not automatically select a knight when changing march type to scout, transport or reassign</td></tr>';
 			m += '<TR><TD><INPUT id=togCoordBox type=checkbox /></td><TD>Keep map coordinate box/bookmarks on top of troop activity</td></tr>';
+			m += '<TR><TD><INPUT id=togMapMenuInfo type=checkbox /></td><TD>Include Extra Player Information in Map Context Menu<SPAN class=boldRed>&nbsp;(NEW)</span></td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo type=checkbox /></td><TD>Fix reassign button on maptile info</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo2 type=checkbox /></td><TD>Add reassign button when clicked on own city</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo3 type=checkbox /></td><TD>Include player name / city name in new bookmarks</td></tr>';
@@ -7177,6 +7285,7 @@ Tabs.Options = {
 			t.togOpt('togDbClkDef', 'DbClkDefBtns');
 			t.togOpt('togColrCty', 'ColrCityBtns');
 			t.togOpt('togCoordBox', 'mapCoordsTop', CoordBox.setEnable, CoordBox.isAvailable);
+			t.togOpt('togMapMenuInfo', 'mapMenuInfo', mapinfoFix.setMenuEnable, mapinfoFix.isMenuAvailable);
 			t.togOpt('togMapInfo', 'mapInfo', mapinfoFix.setEnable, mapinfoFix.isAvailable);
 			t.togOpt('togMapInfo2', 'mapInfo2', mapinfoFix.setEnable2, mapinfoFix.isAvailable2);
 			t.togOpt('togMapInfo3', 'mapInfo3', mapinfoFix.setEnable3, mapinfoFix.isAvailable3);
@@ -11089,7 +11198,7 @@ Tabs.Attaque = {
 			params.r2 = Math.min(t.Wood,t.MaxWood);
 			params.r3 = Math.min(t.Stone,t.MaxStone);
 			params.r4 = Math.min(t.Ore,t.MaxOre);
-			params.r5 = Math.floor(Math.min(t.Astone/5,t.MaxAstone/5));
+			params.r5 = Math.floor(Math.min(t.Astone/5,t.MaxAstone));
 			params.gold = Math.min(t.Gold,t.MaxGold);
 		}
 		params.champid = 0;
@@ -15442,6 +15551,20 @@ function getDiplomacy(aid) {
 		return "Yours";
 	return uW.g_js_strings.commonstr.neutral;
 };
+
+function convertTime (datestr){
+	if (!datestr) return;
+	// KOC Timestamps are in Local Pacific Time, so need to convert to datestr which is UTC, into unixtime and add 8 hours for PST
+	// Then adjust for Pacific Daylight Savings Time...
+	return parseInt(datestr.getTime()/1000)+(480*60)-getDST(datestr);
+}
+
+function getLastLogDuration (datestr){
+	if (!datestr) return;
+	var Interval = convertTime(new Date(datestr.replace(" ","T")+"Z")) - unixTime();
+	if (Interval < 0) return uW.timestr(Interval*(-1));
+	else return 'minutes ago';  
+}
 
 function getMyAlliance() {
 	if (Seed.allianceDiplomacies == null || Seed.allianceDiplomacies.allianceName == null)
