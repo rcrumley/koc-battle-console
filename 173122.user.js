@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150128a
+// @version        20150128b
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150128a';
+var Version = '20150128b';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1006,9 +1006,16 @@ var mapinfoFix = {
 		uW.ptGetProvince = function (N) {
 			return '<div class="thead" align="center"><b>' + uW.provincenames['p' + N.tileProvinceId] + '</b></div>';
 		}
-		t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
-			[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
-		]);
+		if (FFVersion.substring(2,4) > 16) {
+			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
+				[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
+			]);
+		}	
+		else {
+			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
+				['var g = "";','var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
+			]);
+		}		
 		t.dispStatusMod.setEnable(Options.dispStatus);
 		
 		t.MapContextMenuAdd = new CalterUwFunc ('modal_maptile', [[/}\s*$/, ';setTimeout(function() { MapContextMenuAdd_hook(j,k,m,a,h,f,o); },0); }']]);
