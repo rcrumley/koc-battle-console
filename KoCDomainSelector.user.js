@@ -15,7 +15,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.12a
+// @version			0.12c
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -25,7 +25,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.12a';
+var Version = '0.12c';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -190,12 +190,14 @@ if (!this.JSON2) {
 						('0000' + a.charCodeAt(0).toString(16)).slice(-4);
 					});
 			}
-			if (/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
-				j = eval('(' + text + ')');
-				return typeof reviver === 'function' ? walk({
-					'' : j
-				}, '') : j;
-			}
+			if (text) {
+				if (/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+					j = eval('(' + text + ')');
+					return typeof reviver === 'function' ? walk({
+						'' : j
+					}, '') : j;
+				}
+			}	
 			throw new SyntaxError('JSON.parse');
 		};
 	}
@@ -763,6 +765,7 @@ function getDST(today) {
   
 function TokenPopup (){
 
+
 	CheckTokenDay();
 
 	if (TokenPop) {
@@ -933,7 +936,19 @@ function TokenPopup (){
 			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 		}, false);
 		document.getElementById('tkgrabchest').addEventListener('click', function () {
-			document.getElementById('tkmessage').innerHTML = 'Searching for Treasure Chests...';
+			var FBUser = '';
+			if (KOCAutoAcceptGifts.options.SearchUser != '') {
+				FBUser = KOCAutoAcceptGifts.options.SearchUser.split("?")[0];
+				if (FBUser.split("facebook.com/")[1]) {
+					FBUser = FBUser.split("facebook.com/")[1];
+				}
+			}
+			if (FBUser != '' && !KOCAutoAcceptGifts.options.YourWall) {
+				document.getElementById('tkmessage').innerHTML = 'Searching for Treasure Chests by '+FBUser+'...';
+			}
+			else {
+				document.getElementById('tkmessage').innerHTML = 'Searching for Treasure Chests...';
+			}
 			document.getElementById('tklink').value = '';
 			
 		  	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
@@ -945,20 +960,19 @@ function TokenPopup (){
 					};
 						
 					var URL = '/me/home';
-					if (KOCAutoAcceptGifts.options.SearchUser != '') {
-						var FBUser = KOCAutoAcceptGifts.options.SearchUser.split("?")[0];
-						if (FBUser.split("facebook.com/")[1]) {
-							FBUser = FBUser.split("facebook.com/")[1];
-						}
-						URL = '/'+FBUser+'/posts';
-					}
+					if (FBUser != '') URL = '/'+FBUser+'/posts';
 					if (KOCAutoAcceptGifts.options.YourWall) URL = '/me/posts';
 					
 					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken, "limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
-						ClaimChest.p = p;
-						if (KOCAutoAcceptGifts.options.Reversed) { ClaimChest.posts = result.data.reverse(); }
-						else { ClaimChest.posts = result.data; }
-						ClaimChest.CheckNext();
+						if (result.data) {
+							ClaimChest.p = p;
+							if (KOCAutoAcceptGifts.options.Reversed) { ClaimChest.posts = result.data.reverse(); }
+							else { ClaimChest.posts = result.data; }
+							ClaimChest.CheckNext();
+						}
+						else {
+							document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>Error encountered :(</b></span>';
+						}
 					});
 				}
 			},{ scope : "read_stream,user_likes" });
@@ -978,10 +992,15 @@ function TokenPopup (){
 					var URL = '/me/posts';
 					
 					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
-						CleanWall.p = p;
-						CleanWall.posts = result.data; 
-						CleanWall.NumCleaned = 0;
-						CleanWall.CheckNext();
+						if (result.data) {
+							CleanWall.p = p;
+							CleanWall.posts = result.data; 
+							CleanWall.NumCleaned = 0;
+							CleanWall.CheckNext();
+						}
+						else {
+							document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>Error encountered :(</b></span>';
+						}
 					});
 				}
 			},{ scope : "read_stream,user_likes" });
@@ -1150,6 +1169,7 @@ var KOCAutoAcceptGifts = {
 		GM_log(str);
 	},
 
+
 	GetValue : function (name, default_val) {
 		return GM_getValue(name, default_val);
 	},
@@ -1171,10 +1191,9 @@ var KOCAutoAcceptGifts = {
 	},
 
 	GetOptions : function () {
-		var json = this.GetValue('Options', '{}');
-		if (json == '')
-			json = '{}';
-		var options = JSON2.parse(json);
+		var json = this.GetValue('Options');
+		var options = {};
+		if (json !=null) options = JSON2.parse(json);
 		var defOptions = {
 			UserDomain : 454,
 			Enabled : true,
