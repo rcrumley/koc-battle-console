@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20150120a
+// @version			20150130a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Fix occasional bug reading champion data</p>
+// @releasenotes 	<p>Fix monitor button in throne room</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -26,7 +26,7 @@
 //	¦	January 2015 Barbarossa69 (www.facebook.com/barbarossa69)											¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20150120a'; 
+var Version = '20150130a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -880,8 +880,8 @@ function btStartup (){
 	// throne room alteration
 	
 	var str = uW.cm.FETemplates.Throne.mainThrone.replace(
-		'<li id="throneStatTab" class="inactive"> Stats </li>',
-		'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> Stats </li>');
+		'<li id="throneStatTab" class="inactive"> #{stats} </li>',
+		'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> #{stats} </li>');
 	uW.cm.FETemplates.Throne.mainThrone = str;
    
 	uW.btThroneMonitorTR = function() {
