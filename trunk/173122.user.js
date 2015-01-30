@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150128b
+// @version        20150130a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150128b';
+var Version = '20150130a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1434,6 +1434,7 @@ var ChatStuff = {
 		var element_class = '';
 		var alliance = false;
 		var whisper = false;
+		var whisper2 = false;
 		var m = /div class=\'info\'>.*<\/div>/im.exec(msg);
 		if (m == null)
 			return msg;
@@ -1443,6 +1444,9 @@ var ChatStuff = {
 			}
 			if (type.indexOf('whispers to you') > 0) {
 				whisper = true;
+			}
+			if (type.indexOf('whispers to') > 0) { // when local whisper it says your name! need this for tower alert whisper change in bot
+				whisper2 = true;
 			}
 		}
 		var whisp = m[0];
@@ -1476,7 +1480,7 @@ var ChatStuff = {
 		}
 		var fchar = new RegExp(atob('rQ=='), "g");
 		msg = msg.replace(fchar, "").replace(/\&\#8232\;/g, "");
-		if (alliance) {
+		if (alliance || whisper2) {
 			if (m[0].indexOf('My embassy has') >= 0 && Options.chatAttack)
 				element_class = ' ptChatAttack';
 			if (m[0].indexOf('My wilderness at') >= 0 && Options.chatAttack)
@@ -1493,13 +1497,6 @@ var ChatStuff = {
 				}
 				msg = msg.replace(/\|/g, '<br>');
 				msg = msg.replace('..:.', '');
-				if (Options.enableTowerAlert) {
-					AudioManager.setSource(SOUND_FILES.alert);
-					AudioManager.play();
-					setTimeout(function () {
-						AudioManager.stop();
-					}, 5000);
-				}
 			}
 			if (m[0].indexOf('.::.') >= 0 && Options.chatAttack) {
 				element_class = ' ptChatRecall';
@@ -1533,13 +1530,13 @@ var ChatStuff = {
 		
 		if (m[0].indexOf('UID:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bUID:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
 		if (m[0].indexOf('TRC:') && unsafeWindow.btLoaded){ msg = msg.replace (/(\bTRC:\s([0-9]+))/g, 'UID: $2 <a onclick=\'btMonitorExternalCallUID($2)\'>(Monitor)</a>'); }
-
 		if (m[0].indexOf('March id:')){ msg = msg.replace (/(\bMarch\sid:\s([0-9]+))/g, '<a onclick=\'ptfetchmarch($2)\'>Additional March details ---></a>'); }
 		
 		msg = msg.replace(/(\byoutu([0-9a-z\.\?\/\=\-\_]+))/gi, '<a onclick=\"window.open\(\'http\:\/\/www\.$1\',\'_blank\'\)\">$1</a>');
 		msg = msg.replace(/(\W)(bot)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-bot/")>$2</a>$3');
 		msg = msg.replace(/(\W)(tools)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/koc-power-tools/")>$2</a>$3');
 		msg = msg.replace(/(\W)(tro)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/ne0-kocbot/")>$2</a>$3');
+		msg = msg.replace(/(\W)(tco)(\W)/gi, '$1<a onclick=window.open("http://code.google.com/p/ne0-kocbot/")>$2</a>$3');
 		msg = msg.replace(/(\W)(kocmon)(\W)/gi, '$1<a onclick=window.open("http://kocmon.com/")>$2</a>$3');
 		msg = msg.replace(/(\W)(forums)(\W)/gi, '$1<a onclick=window.open("http://community.kabam.com/forums/forumdisplay.php?4-Kingdoms-of-Camelot")>$2</a>$3');
 		var m = /(Lord|Lady) (.*?)</im.exec(msg);
@@ -1553,21 +1550,14 @@ var ChatStuff = {
 				AudioManager.stop();
 			}, 2500);
 		}
+		if ((element_class == ' ptChatAttack') && Options.enableTowerAlert) {
+			AudioManager.setSource(SOUND_FILES.alert);
+			AudioManager.play();
+			setTimeout(function () {
+				AudioManager.stop();
+			}, 5000);
+		}
 		if (alliance) {
-			if (whisp.indexOf('My embassy has') >= 0 && Options.enableTowerAlert) {
-				AudioManager.setSource(SOUND_FILES.alert);
-				AudioManager.play();
-				setTimeout(function () {
-					AudioManager.stop();
-				}, 5000);
-			}
-			if (whisp.indexOf('My wilderness at') >= 0 && Options.enableTowerAlert) {
-				AudioManager.setSource(SOUND_FILES.alert);
-				AudioManager.play();
-				setTimeout(function () {
-					AudioManager.stop();
-				}, 5000);
-			}
 			t.sendToIRC(suid, m[2], msg);
 		}
 		//lets remove the null character which could be a problem when copy and paste web addresses Null:"­",UnicodeLS:"&#8232;",
