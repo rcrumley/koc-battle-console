@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20141215a
+// @version         20150130a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Support for Defensive Tower Throne Effects</p>
+// @releasenotes 	<p>Fix monitor button in throne room</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,10 +23,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	December 2014 Barbarossa69 (www.facebook.com/barbarossa69)											│
+//	│	January 2015 Barbarossa69 (www.facebook.com/barbarossa69)											│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20141215a';
+var Version = '20150130a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -292,8 +292,8 @@ function btStartup (){
 		// throne room alteration
 	
 		var str = uW.cm.FETemplates.Throne.mainThrone.replace(
-			'<li id="throneStatTab" class="inactive"> Stats </li>',
-			'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> Stats </li>');
+			'<li id="throneStatTab" class="inactive"> #{stats} </li>',
+			'<li id="throneMonitor" class="inactive" onclick="btThroneMonitorTR()"> Monitor </li><li id="throneStatTab" class="inactive"> #{stats} </li>');
 		uW.cm.FETemplates.Throne.mainThrone = str;
    
 		uW.btThroneMonitorTR = function() {

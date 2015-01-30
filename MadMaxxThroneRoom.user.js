@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20150123a
+// @version        20150130a
 // @namespace      mmm
 // @delay 2000
 // @priority -10
@@ -26,7 +26,7 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20150123a';
+var Version = '20150130a';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
@@ -1743,8 +1743,8 @@ function attachTab() {
     unsafeWindow.clickNext    = Tabs.organizer.showNext;
 
     var str = unsafeWindow.cm.FETemplates.Throne.mainThrone.replace(
-            '<li id="throneStatTab" class="inactive"> Stats </li>',
-    '<li id="throneStatTab" class="inactive"> Stats </li><li id="throneTest" class="inactive" onclick="hideShow()"> Controls </li><li id="trexecupgrade" class="inactive" onclick="execUpgrade()">Upgrade</li><li id="trexecsalvage" class="inactive" onclick="execSalvage()">Salvage</li><li id="trtimerdisp" class="inactive">Timer</li>');
+            '<li id="throneStatTab" class="inactive"> #{stats} </li>',
+    '<li id="throneStatTab" class="inactive"> #{stats} </li><li id="throneTest" class="inactive" onclick="hideShow()"> Controls </li><li id="trexecupgrade" class="inactive" onclick="execUpgrade()">Upgrade</li><li id="trexecsalvage" class="inactive" onclick="execSalvage()">Salvage</li><li id="trtimerdisp" class="inactive">Timer</li>');
 
     str = str.replace( '<div id="thronePanelContainer">', '<div id="thronePanelContainer" style="z-index: 101">');
     unsafeWindow.cm.FETemplates.Throne.mainThrone = str;
