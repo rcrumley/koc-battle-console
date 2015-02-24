@@ -25,7 +25,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.12c';
+var Version = '0.13a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -765,7 +765,6 @@ function getDST(today) {
   
 function TokenPopup (){
 
-
 	CheckTokenDay();
 
 	if (TokenPop) {
@@ -963,7 +962,7 @@ function TokenPopup (){
 					if (FBUser != '') URL = '/'+FBUser+'/posts';
 					if (KOCAutoAcceptGifts.options.YourWall) URL = '/me/posts';
 					
-					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken, "limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
+					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken, "limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "others" }, function (result) {
 						if (result.data) {
 							ClaimChest.p = p;
 							if (KOCAutoAcceptGifts.options.Reversed) { ClaimChest.posts = result.data.reverse(); }
@@ -991,7 +990,7 @@ function TokenPopup (){
 						
 					var URL = '/me/posts';
 					
-					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "app_130402594779" }, function (result) {
+					unsafeWindow.FB.api(URL, { access_token : o.authResponse.accessToken,	"limit" : KOCAutoAcceptGifts.options.SearchNum, "filter" : "others" }, function (result) {
 						if (result.data) {
 							CleanWall.p = p;
 							CleanWall.posts = result.data; 
@@ -1074,7 +1073,7 @@ var ClaimChest = {
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.status_type == "app_created_story" && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
+		if (post.application && post.application.id == 130402594779 && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
 			var likes_found = false;
 			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
 			if (!likes_found) {
@@ -1124,7 +1123,7 @@ var CleanWall = {
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.status_type == "app_created_story" && post.application && post.application.id=='130402594779') { // belt and braces - only delete kabam posts
+		if (post.application && post.application.id=='130402594779') { // belt and braces - only delete kabam posts
 			var likes_found = false;
 			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
 			var other_post = false;
@@ -1168,7 +1167,6 @@ var KOCAutoAcceptGifts = {
 	Log : function (str) {
 		GM_log(str);
 	},
-
 
 	GetValue : function (name, default_val) {
 		return GM_getValue(name, default_val);
