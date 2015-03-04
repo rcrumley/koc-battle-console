@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150219a
+// @version        20150304a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150219a';
+var Version = '20150304a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -6514,7 +6514,7 @@ ajax/viewCourt.php:
 		if (distFrom)
 			distFrom.innerHTML = m;
 		t.ModelCity = city;
-		if (city != null) t.JumpCity(city.name);
+		if (city != null) t.JumpCity(city.idx);
 		t.setDistances(x, y);
 		t.setEta();
 		t.reDisp();
@@ -6920,11 +6920,8 @@ ajax/getOnline.php:
 		}
 		return ret;
 	},
-	JumpCity: function (city) {
+	JumpCity: function (cityNum) {
 		var t = Tabs.AllianceList;
-		for (i = 0; i < Seed.cities.length; i++) {
-			if (Seed.cities[i][1] == city) var cityNum = i;
-		}
 		cityNum++;
 		var obj = document.getElementById('citysel_' + cityNum);
 		if (obj)
@@ -8025,13 +8022,10 @@ Tabs.Train = {
 		t.displayCityStats();
 		t.changeTroopSelect();
 		t.changeDefSelect();
-		t.JumpCity(city.name);
+		t.JumpCity(city.idx);
 	},
-	JumpCity: function (city) {
+	JumpCity: function (cityNum) {
 		var t = Tabs.AllianceList;
-		for (i = 0; i < Seed.cities.length; i++) {
-			if (Seed.cities[i][1] == city) var cityNum = i;
-		}
 		cityNum++;
 		var obj = document.getElementById('citysel_' + cityNum);
 		if (obj)
