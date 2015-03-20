@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150317a
+// @version        20150320a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150317a';
+var Version = '20150320a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -4380,6 +4380,8 @@ var messageNav = {
 	},
 }
 var AttackDialog = {
+	hideAttackEffortsState : true,
+
 	init: function () {
 		var t = AttackDialog;
 		t.modal_attackFunc = new CalterUwFunc('modal_attack', [
@@ -4410,7 +4412,61 @@ var AttackDialog = {
 			var sf = document.getElementById('modal_attack_supplyfilter_checkbox');
 			if (sf) { if (sf.checked) { sf.click(); }}
 		}
+
+		var divContainer = document.getElementById('modal_attack_speed_boost');
+		divContainer.appendChild(t.HideAttackEfforts());	
+
 	},
+	HideAttackEfforts: function () {
+		var t = AttackDialog;
+		if (!ById('modal_attack_march_boost')) { return; }
+		var span = document.createElement('span');
+		var a = document.createElement('a');
+		a.innerHTML = 'Show Attack/Speed Boosts';
+		a.id = 'ptShowBoosts';
+		span.appendChild(a);
+		if (t.hideAttackEffortsState) {
+			hideshow();
+		}
+		a.addEventListener('click', function (evt) {
+			t.hideAttackEffortsState = !t.hideAttackEffortsState;
+			hideshow();
+		}, false);
+		for (var i = 1; i < 5; i++) {
+			document.getElementById('modal_attack_tab_' + i).addEventListener('click', hideshow, false);
+		}
+		return span;
+
+		function hideshow() {
+			var a = document.getElementById('ptShowBoosts');
+			if (t.hideAttackEffortsState) {
+				disp = 'none';
+				if (a) a.innerHTML = 'Show Attack/Speed Boosts';
+			}else{
+				disp = 'block';
+				if (a) a.innerHTML = 'Hide Attack/Speed Boosts';
+			}
+			ById('modal_attack_march_boost').style.display = disp;
+			ById('modal_attack_attack_boost').style.display = disp;
+			ById('modal_attack_defense_boost').style.display = disp;
+			var div = ById('modal_attack_speed_boost');
+			for (var i = 0; i < i < div.childNodes.length; i++) {
+				if (div.childNodes[i].className == 'section_title'){
+					div.childNodes[i].style.display = disp;
+				}
+				if (div.childNodes[i].className == 'section_content') {
+					div = div.childNodes[i];
+					for (i = 0; i < div.childNodes.length; i++) {
+						if (div.childNodes[i].style != undefined && div.childNodes[i].className != 'estimated') {
+							div.childNodes[i].style.display = disp;
+						}
+					}
+					break;
+				}
+			}
+		}
+	},
+
 	initCityPicker: function () {
 		var t = AttackDialog;
 		var div = document.getElementById('modal_attack_target_numflag'); // as of KofC version 96;
