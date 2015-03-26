@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150320a
+// @version        20150326a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150320a';
+var Version = '20150326a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -7223,7 +7223,7 @@ Tabs.Options = {
 	curTabName: null,
 	fixAvailable: {},
 	refreshTimer: null,
-	AscensionTimer: null,
+	WarnAscensionTimer: null,
 	init: function (div) {
 		var t = Tabs.Options;
 		t.cont = div;
@@ -7254,6 +7254,14 @@ Tabs.Options = {
 			t.curTabName = but.id.substr(9);
 			Options.curOptTab = t.curTabName;
 			t.show();
+		}
+
+		if (Options.EnhCBtns && Options.WarnAscension) {
+			Tabs.Options.checkAscension();
+			clearInterval(t.WarnAscensionTimer);
+			t.WarnAscensionTimer = setInterval(function () {
+				Tabs.Options.checkAscension();
+			}, 60 * 1000);
 		}
 	},
 	SetOptions: function () {
@@ -7395,13 +7403,6 @@ Tabs.Options = {
 				Options.WarnAscensionInterval = x;
 				saveOptions();
 			}, false);
-			if (Options.EnhCBtns && Options.WarnAscension) {
-				Tabs.Options.checkAscension();
-				clearInterval(t.WarnAscensionTimer);
-				t.WarnAscensionTimer = setInterval(function () {
-					Tabs.Options.checkAscension();
-				}, 60 * 1000);
-			}
 			document.getElementById('optAutoTrainMins').addEventListener('change', function () {
 				AutoTrainOptions.intervalSecs = 60 * document.getElementById('optAutoTrainMins').value;
 				saveAutoTrainOptions();
