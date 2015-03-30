@@ -1,10 +1,10 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150326a
+// @version        20150330a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
-// @icon  http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
+// @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
 // @grant       unsafeWindow
 // @grant       GM_deleteValue
 // @grant       GM_getValue
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150326a';
+var Version = '20150330a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -141,7 +141,7 @@ var Options = {
 	playersNoCities: false,
 	enableWhisperAlert: true,
 	whisperplay: 'whisper',
-	enableTowerAlert: true,
+	enableTowerAlert: false,
 	OverViewShowExtra: 'maximum',
 	alertConfig: {
 		aChat: false,
@@ -310,6 +310,7 @@ var Options = {
 	WhisperOutgoing:false,
 	PostIncoming:true,
 	enableReportNumber:true,
+	hideAttackEfforts:true,
 };
 var Colors = {
 	DarkRow: '#eee',
@@ -348,28 +349,31 @@ var IRCOptions = {
 		message: ""
 	},
 };
+
+var IMGURL = unsafeWindow.stimgUrl+"img/";
+
 var GameIcons = {
-	goldImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_gold.png>',
-	foodImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_food.png>',
-	woodImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_wood.png>',
-	stoneImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_stone.png>',
-	oreImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_ore.png>',
-	astoneImgTiny: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/chrome_icon_aetherstone.png>',
-	goldImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/gold_30.png>',
-	foodImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/food_30.png>',
-	woodImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/wood_30.png>',
-	stoneImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/stone_30.png>',
-	oreImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/iron_30.png>',
-	astoneImg: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/aetherstone_30.png>',
-	RightArrow: 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png',
-	DownArrow: 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png',
-	transport: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/transporting.jpg>',
-	reinforce: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/reinforce.jpg>',
-	scouting: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/scouting.jpg>',
-	attacking: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/attacking.jpg>',
-	raidStopped: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/autoAttack/raid_stopped_desat.png>',
-	raidResting: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/autoAttack/raid_resting.png>',
-	returning: '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/returning.jpg>',
+	goldImgTiny: '<img src='+IMGURL+'chrome_icon_gold.png>',
+	foodImgTiny: '<img src='+IMGURL+'chrome_icon_food.png>',
+	woodImgTiny: '<img src='+IMGURL+'chrome_icon_wood.png>',
+	stoneImgTiny: '<img src='+IMGURL+'chrome_icon_stone.png>',
+	oreImgTiny: '<img src='+IMGURL+'chrome_icon_ore.png>',
+	astoneImgTiny: '<img src='+IMGURL+'chrome_icon_aetherstone.png>',
+	goldImg: '<img src='+IMGURL+'gold_30.png>',
+	foodImg: '<img src='+IMGURL+'food_30.png>',
+	woodImg: '<img src='+IMGURL+'wood_30.png>',
+	stoneImg: '<img src='+IMGURL+'stone_30.png>',
+	oreImg: '<img src='+IMGURL+'iron_30.png>',
+	astoneImg: '<img src='+IMGURL+'aetherstone_30.png>',
+	RightArrow: IMGURL+'autoAttack/across_arrow.png',
+	DownArrow: IMGURL+'autoAttack/down_arrow.png',
+	transport: '<img src='+IMGURL+'transporting.jpg>',
+	reinforce: '<img src='+IMGURL+'reinforce.jpg>',
+	scouting: '<img src='+IMGURL+'scouting.jpg>',
+	attacking: '<img src='+IMGURL+'attacking.jpg>',
+	raidStopped: '<img src='+IMGURL+'autoAttack/raid_stopped_desat.png>',
+	raidResting: '<img src='+IMGURL+'autoAttack/raid_resting.png>',
+	returning: '<img src='+IMGURL+'/returning.jpg>',
 };
 
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
@@ -456,7 +460,7 @@ function ptStartup() {
 				div#throneMainContainer div#heroContainer{width:85px;height:150px;top:190px;left:585px;z-index:97;}';
 	var styles = '\
 	.kocmain .mod_comm .comm_global .chatlist .global { background-color:transparent; }\
-    .ptdivHeader       {transparent;height: 16px;border-bottom:0px solid #000000;font-weight:bold;font-size:11px;opacity:0.75;margin-left:0px;margin-right:0px;margin-top:1px;margin-bottom:0px;padding-top:4px;padding-right:10px;vertical-align:text-top;align:left}\
+	.ptdivHeader       {transparent;height: 16px;border-bottom:0px solid #000000;font-weight:bold;font-size:11px;opacity:0.75;margin-left:0px;margin-right:0px;margin-top:1px;margin-bottom:0px;padding-top:4px;padding-right:10px;vertical-align:text-top;align:left}\
     .ptdivLink         {color:#000;text-decoration:none;}\
     .ptdivLink:Hover   {color:#000;text-decoration:none;}\
     .ptdivLink:Active  {color:#000;text-decoration:none;}\
@@ -1320,69 +1324,7 @@ var anticd = {
 	},
 }
 anticd.init();
-/***
-<img src='https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/avatars/25/m16.jpg'/>
-<div class='content'>
-  <div class='info'> 
-    <a  class='nm' onclick='Chat.viewProfile(this,9640194,false);return false;'>Lord Sasuke_of_leaf</a>
-    <span class='time'>17:17</span>
-  </div>
-  <div class='clearfix'>
-    <div class='tx'>
-      if ur really bored try it
-    </div>
-  </div>
-</div>
 
-
-<img src="https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/avatars/25/f9.jpg">
-<div class="content">
-  <div class="info">
-    <a class="nm" onclick="Chat.viewProfile(this,3813948,false);return false;">Lady Aerwyn</a>
-    <b style="color: rgb(165, 102, 49); font-size: 9px;"> says to the alliance:</b> 
-    <span class="time">17:32</span>
-  </div>
-  <div class="clearfix">
-    <div class="tx">
-      ok, heading out to dinner with family... be back laters
-    </div>
-  </div>
-</div>
-
-
-WHISPER (chatDivContentHook) .....
-
-<img src='https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/avatars/25/m1.jpg'/>
-<div class='content'>
-  <div class='info'>
-    <a  class='nm' onclick='Chat.viewProfile(this,2282354,false);return false;'>Lord Jetson</a>
-    <b style='color:#A56631;font-size:9px;'> whispers to you:</b> 
-    <span class='time'>17:46</span>
-  </div>
-  <div class='clearfix'>
-    <div class='tx'>
-      test
-    </div>
-  </div>
-</div>
-
-
-<div class="chatwrap clearfix direct">
-  <img src="https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/avatars/25/m1.jpg">
-  <div class="content">
-    <div class="info">
-      <span class="nm">Lord Jetson</span>
-      <b style="color: rgb(165, 102, 49); font-size: 9px;"> whispers to <a onclick="Chat.viewProfile(this,2282354); return false;" class="nm">jetson</a>:</b> 
-      <span class="time">20:47</span>
-    </div>
-    <div class="clearfix">
-      <div class="tx">
-        test
-      </div>
-    </div>
-  </div>
-</div>
-****/
 var ChatStuff = {
 	chatDivContentFunc: null,
 	getChatFunc: null,
@@ -1420,7 +1362,7 @@ var ChatStuff = {
 			var e = document.getElementById('bot_comm_input');
 		else
 			var e = document.getElementById('mod_comm_input');
-		name = name.replace(/Ã‚Â°Ã‚Â°/g, "'");
+		name = name.replace(/Ãƒâ€šÃ‚Â°Ãƒâ€šÃ‚Â°/g, "'");
 		e.value = '@' + name + ' ';
 	},
 	chatDivContentHook2: function (msg) {
@@ -1542,7 +1484,7 @@ var ChatStuff = {
 		msg = msg.replace(/(\W)(forums)(\W)/gi, '$1<a onclick=window.open("http://community.kabam.com/forums/forumdisplay.php?4-Kingdoms-of-Camelot")>$2</a>$3');
 		var m = /(Lord|Lady) (.*?)</im.exec(msg);
 		if (m != null)
-			m[2] = m[2].replace(/\'/g, "Ã‚Â°Ã‚Â°");
+			m[2] = m[2].replace(/\'/g, "Ãƒâ€šÃ‚Â°Ãƒâ€šÃ‚Â°");
 		msg = msg.replace(/<img (.*?>)/img, '<A onclick=\"ptChatIconClicked(\'' + m[2] + '\')\"><img class=\"ptChatIcon\" $1</a>');
 		if (whisper && Options.enableWhisperAlert) {
 			AudioManager.setSource(eval('SOUND_FILES.' + Options.whisperplay));
@@ -1561,7 +1503,7 @@ var ChatStuff = {
 		if (alliance) {
 			t.sendToIRC(suid, m[2], msg);
 		}
-		//lets remove the null character which could be a problem when copy and paste web addresses Null:"­",UnicodeLS:"&#8232;",
+		//lets remove the null character which could be a problem when copy and paste web addresses Null:"Â­",UnicodeLS:"&#8232;",
 		return msg;
 	},
 	getAllianceLeaders: function () {
@@ -1770,16 +1712,16 @@ var Rpt = {
 		var unitImg = [];
 		for (var ui in uW.cm.UNIT_TYPES) {
 			i = uW.cm.UNIT_TYPES[ui];
-			unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>' + uW.unitcost['unt' + i][0];
+			unitImg[i] = '<img src='+IMGURL+'units/unit_' + i + '_30.jpg></TD><TD>' + uW.unitcost['unt' + i][0];
 		}
-		unitImg[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>Crossbows';
-		unitImg[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>Trebuchet';
-		unitImg[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>Trap';
-		unitImg[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>Caltrops';
-		unitImg[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>Spiked Barrier';
-		unitImg[100] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/tower_30.jpg width=30></TD><TD>Defensive Tower';
+		unitImg[53] = '<img src='+IMGURL+'units/unit_53_30.png></TD><TD>Crossbows';
+		unitImg[55] = '<img src='+IMGURL+'units/unit_55_30.png></TD><TD>Trebuchet';
+		unitImg[60] = '<img src='+IMGURL+'units/unit_60_30.png></TD><TD>Trap';
+		unitImg[61] = '<img src='+IMGURL+'units/unit_61_30.png></TD><TD>Caltrops';
+		unitImg[62] = '<img src='+IMGURL+'units/unit_62_30.png></TD><TD>Spiked Barrier';
+		unitImg[100] = '<img src='+IMGURL+'units/tower_30.jpg width=30></TD><TD>Defensive Tower';
 		for (var i = 101; i < 111; i++)
-			unitImg[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>' + eval("uW.g_js_strings.monsterUnitsNames.m" + i);
+			unitImg[i] = '<img src='+IMGURL+'units/unit_' + i + '_30.jpg></TD><TD>' + eval("uW.g_js_strings.monsterUnitsNames.m" + i);
 		goldImg = GameIcons.goldImg + '</TD><TD>Gold';
 		foodImg = GameIcons.foodImg + '</TD><TD>Food';
 		woodImg = GameIcons.woodImg + '</TD><TD>Wood';
@@ -1789,16 +1731,16 @@ var Rpt = {
 		var unitImg2 = [];
 		for (var ui in uW.cm.UNIT_TYPES) {
 			i = uW.cm.UNIT_TYPES[ui];
-			unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>';
+			unitImg2[i] = '<img src='+IMGURL+'units/unit_' + i + '_30.jpg></TD><TD>';
 		}
-		unitImg2[53] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_53_30.png></TD><TD>';
-		unitImg2[55] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_55_30.png></TD><TD>';
-		unitImg2[60] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_60_30.png></TD><TD>';
-		unitImg2[61] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_61_30.png></TD><TD>';
-		unitImg2[62] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/unit_62_30.png></TD><TD>';
-		unitImg2[100] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/units/tower_30.jpg width=30></TD><TD>';
+		unitImg2[53] = '<img src='+IMGURL+'units/unit_53_30.png></TD><TD>';
+		unitImg2[55] = '<img src='+IMGURL+'units/unit_55_30.png></TD><TD>';
+		unitImg2[60] = '<img src='+IMGURL+'units/unit_60_30.png></TD><TD>';
+		unitImg2[61] = '<img src='+IMGURL+'units/unit_61_30.png></TD><TD>';
+		unitImg2[62] = '<img src='+IMGURL+'units/unit_62_30.png></TD><TD>';
+		unitImg2[100] = '<img src='+IMGURL+'units/tower_30.jpg width=30></TD><TD>';
 		for (var i = 101; i < 111; i++)
-			unitImg2[i] = '<img src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + i + '_30.jpg></TD><TD>';
+			unitImg2[i] = '<img src='+IMGURL+'units/unit_' + i + '_30.jpg></TD><TD>';
 
 		var trEffect = [];
 		for (var k in uW.cm.thronestats.effects)
@@ -2417,13 +2359,13 @@ var Rpt = {
 									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s0'][0][i]*100)/100) + EndStyle + '</TD></TR>';
 								if (rslt.bonus['chp']['s1'] && rslt.bonus['chp']['s1'][1][i])
 									m+='<TR><TD colspan=4>' + LineStyle + trEffect[i] +': ' + (Math.round(rslt.bonus['chp']['s1'][1][i]*100)/100) + EndStyle + '</TD></TR>';
-							}
-							m += '</table></br>'
-							m += '</div>'; //defender
-							m += '</div>'; //ChampAdjContainer
-							m += '<div style="clear:both">&nbsp;</div>';
-						}
-					}
+							   }
+							m+='</table></br>'
+							m+='</div>';//defender
+							m+='</div>';//ChampAdjContainer
+							m+='<div style="clear:both">&nbsp;</div>';
+						}	
+					}	
 					m += '</div>'; //reportChampDuel
 				}
 			}
@@ -2675,7 +2617,7 @@ var Rpt = {
 							if (rslt['loot'][5][item] != 1) { amt = ' ('+rslt['loot'][5][item]+')';}
 							var itemurl = parseInt(item);
 							if (itemurl > 30669 && itemurl < 32111) itemurl = 30303;
-							itemdetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/items/70/' + itemurl + '.jpg>&nbsp;' + uW.itemlist['i' + item].name + amt +'&nbsp;&nbsp;&nbsp;';
+							itemdetails += '<img width=20 src='+IMGURL+'items/70/' + itemurl + '.jpg>&nbsp;' + uW.itemlist['i' + item].name + amt +'&nbsp;&nbsp;&nbsp;';
 						}
 					}	
 					if (rslt['throneRoomDrop']) {
@@ -2697,7 +2639,7 @@ var Rpt = {
 							Current = p.base + ((level * level + level) * p.growth * 0.5);
 							thronetitle += eval("unsafeWindow.g_js_strings.effects.name_"+id)+ " " + Current+"%&nbsp;&nbsp;";
 						}
-						thronedetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/throne/icons/30/' + TR.faction + '/' + TR.faction + '_'+ TR.type +'_normal_1_'+ TR.quality+'.png title="' + thronetitle + '">&nbsp;' + thronename + '&nbsp;&nbsp;&nbsp;';
+						thronedetails += '<img width=20 src='+IMGURL+'throne/icons/30/' + TR.faction + '/' + TR.faction + '_'+ TR.type +'_normal_1_'+ TR.quality+'.png title="' + thronetitle + '">&nbsp;' + thronename + '&nbsp;&nbsp;&nbsp;';
 					}	
 					if (rslt['equipmentDrop']) {
 						var EQ = rslt['equipmentDrop']; 
@@ -2716,7 +2658,7 @@ var Rpt = {
 							Current = p.Base + ((level * level + level) * p.Growth * 0.5);
 							equiptitle += eval("unsafeWindow.g_js_strings.effects.name_"+id)+ " " + Current+"%&nbsp;&nbsp;";
 						}
-						equipdetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/champion_hall/' + Quality[EQ.rarity].toLowerCase() + '_' + ImgType[EQ.type-1] + '_' + Faction[EQ.faction-1] + '_30x30.png title="' + equiptitle + '">&nbsp;' + equipname + '&nbsp;&nbsp;&nbsp;';
+						equipdetails += '<img width=20 src='+IMGURL+'champion_hall/' + Quality[EQ.rarity].toLowerCase() + '_' + ImgType[EQ.type-1] + '_' + Faction[EQ.faction-1] + '_30x30.png title="' + equiptitle + '">&nbsp;' + equipname + '&nbsp;&nbsp;&nbsp;';
 					}	
 					if (rslt['lootJewel'] && JSON2.stringify(rslt['lootJewel']) != '[]') { // crapola CHECK THIS CODE!
 						var ImgType = ["general_buff", "general_debuff", "unit_specific", "base_building"];
@@ -2724,7 +2666,7 @@ var Rpt = {
 						item = rslt['lootJewel'];
 						var amt="";
 						if (item.quantity != 1) { amt = ' ('+item.quantity+')';}
-						jeweldetails += '<img width=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/throne/icons/70/jewel_' + ImgType[unsafeWindow.cm.ThroneController.jewelType(item)] + '_' + ImgQuality[item.quality-1] + '.jpg>&nbsp;' + unsafeWindow.cm.ThroneController.jewelQualityName(item.quality)+" "+unsafeWindow.cm.ThroneController.getEffectName(item.id)+" Jewel" + amt +'&nbsp;&nbsp;&nbsp;';
+						jeweldetails += '<img width=20 src='+IMGURL+'throne/icons/70/jewel_' + ImgType[unsafeWindow.cm.ThroneController.jewelType(item)] + '_' + ImgQuality[item.quality-1] + '.jpg>&nbsp;' + unsafeWindow.cm.ThroneController.jewelQualityName(item.quality)+" "+unsafeWindow.cm.ThroneController.getEffectName(item.id)+" Jewel" + amt +'&nbsp;&nbsp;&nbsp;';
 					}	
 					m += '<tr><td colspan=6>'+itemdetails+thronedetails+equipdetails+jeweldetails+'</TD></TR>';
 				}
@@ -3319,7 +3261,7 @@ Tabs.Tournament = {
 				mhtl += "<td>N/A</td>";
 			}	
 		}
-		mhtl += "</tr><tr><td><img height=18 src=https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/population_40.png title=Population> Population/h</td>";
+		mhtl += "</tr><tr><td><img height=18 src="+IMGURL+"population_40.png title=Population> Population/h</td>";
 		var pop = [];
 		for (var i = 0; i < Cities.numCities; i++) {
 			cityID = 'city' + Cities.cities[i].id;
@@ -3338,7 +3280,7 @@ Tabs.Tournament = {
 				mhtl += "<td " + couleur + "><b>" + addCommas(parseInt(diff)) + "</b></td>";
 			}
 		}
-		mhtl += "</tr><tr><td><img height=18 src=https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/happiness.png title=happiness> happiness</td>";
+		mhtl += "</tr><tr><td><img height=18 src="+IMGURL+"happiness.png title=happiness> happiness</td>";
 		for (var i = 0; i < Cities.numCities; i++) {
 			cityID = 'city' + Cities.cities[i].id;
 			var bon = parseInt(Seed.citystats[cityID]["pop"][2]);
@@ -4384,6 +4326,7 @@ var AttackDialog = {
 
 	init: function () {
 		var t = AttackDialog;
+		t.hideAttackEffortsState = Options.hideAttackEfforts;
 		t.modal_attackFunc = new CalterUwFunc('modal_attack', [
 			[/}\s*$/, '; attackDialog_hook(); }']
 		]);
@@ -5383,7 +5326,7 @@ ajax/viewCourt.php:
 				popConfirm = null;
 			}, false);
 		};
-		
+
 		Lastlogin = 0;
 		t.show();
 	},
@@ -5749,7 +5692,7 @@ ajax/viewCourt.php:
 			var created = '';
 			if (c.dateCreated && c.dateCreated.substr(0, 2) == '20')
 				created = ' &nbsp; created: ' + c.dateCreated.substr(0, 10);
-			m += '<TR><TD align=right><B>City #' + (i + 1) + ':</b></td><TD> &nbsp; ' + c.cityName + ' (<a onclick="ptGotoMap (' + c.xCoord + ',' + c.yCoord + ')">' + c.xCoord + ',' + c.yCoord + '</a>)</td><TD width=75%> &nbsp; level: ' + c.tileLevel + ' &nbsp; status: ' + cityStatusString(c.cityStatus) + created + '</td></tr>';
+			m += '<TR><TD align=right><B>City #' + (i + 1) + ':</b></td><TD> &nbsp; ' + c.cityName + ' (<a onclick="ptGotoMap(' + c.xCoord + ',' + c.yCoord + ')">' + c.xCoord + ',' + c.yCoord + '</a>)</td><TD width=75%> &nbsp; level: ' + c.tileLevel + ' &nbsp; status: ' + cityStatusString(c.cityStatus) + created + '</td></tr>';
 		}
 		span.innerHTML = m + '</table>';
 	},
@@ -5814,7 +5757,7 @@ ajax/viewCourt.php:
 			document.getElementById('allListOut').innerHTML = rslt.errorMsg;
 			return;
 		}
-		var m = '<DIV class=ptstat>' + uW.g_js_strings.commonstr.alliances + '<B>"' + t.aName + '"</b></div>\
+		var m = '<DIV class=ptstat>' + uW.g_js_strings.commonstr.alliances + ' <B>"' + t.aName + '"</b></div>\
     <TABLE><TR style="font-weight:bold"><TD class=xtab>' + uW.g_js_strings.commonstr.alliance + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.rank + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.members + '</td>\
         <TD align=right class=xtab>' + uW.g_js_strings.commonstr.might + '</td><TD class=xtab>' + uW.g_js_strings.getAllianceSearchResults.currdiplo + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.members + '</td><TD class=xtab>' + uW.g_js_strings.commonstr.viewmap + '</td><TD class=xtab>Kocmon</td></tr>';
 		for (k in rslt.alliancesMatched) {
@@ -5826,7 +5769,7 @@ ajax/viewCourt.php:
 				t.neutralbtn = '<INPUT style="font-size:9px" onclick="setDiplomacy('+all.allianceId+',0);" type=submit value="N" />';
 				t.hostilebtn = '<INPUT style="color:#800;font-size:9px" onclick="setDiplomacy('+all.allianceId+',2);" type=submit value="H" />';
 			}	
-
+			
 			if (dip == uW.g_js_strings.commonstr.friendly) {
 				dip = '<span style="color:#080;"><b>'+dip+'</b></span>&nbsp;'+t.neutralbtn+'&nbsp;'+t.hostilebtn; 
 			}
@@ -6060,7 +6003,7 @@ ajax/viewCourt.php:
 			cityName = t.dat[i][5].toString() + t.dat[i][6].toString();
 			var bless = t.showBlessings(i);
 			if (bless != "") {
-				var bless = '<a class=trimg><img src="https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/bonus_prestige.png"><SPAN class=trtip><table class=ptTab>'+bless+'</table></span></a>';
+				var bless = '<a class=trimg><img src="'+IMGURL+'bonus_prestige.png"><SPAN class=trtip><table class=ptTab>'+bless+'</table></span></a>';
 			}
 			var status = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAWJJREFUeNrUU79PwkAUvv5IG6iAg8HEMIlxNLBCNxkkYah/gP6NmAChiYQUupjA4uCicbKJBQ0E24OWtvjdgCHGdmHyJV/efffuvrx37x232WzIPsaTPW1vAXGXaJpGRFGUOY67AD0FMsAX8IpSH4Mg8JrNZrwATI6i6KrRaGjVarWWTqePXde1TdO873Q67GYX8GIFwjAs1ev160qlckMp5QG2XQC/Xa1WnK7r7+APsQLr9fq8XC7XbNvmWXd832d7BFnxxWKxhnUvUQAXcqg/7zgOcRyKjIKfmCRJeRZPfETP89zJ5HO6XIYngiAThq1R6k5ZPLGNOPBsGMYglcpEsqyQLSRJicbj8YDFEzOwLGvUat21KfVFVb1Us9nc0WIx/xgOe2a/323PZrPRbwFud5RRvyQIwpmiKCX4AvgB4g6684Z2PsG/MJ4kIMAdsnn4Y+jYi85x3o8V+J+f6VuAAQDR57f+eJX9fgAAAABJRU5ErkJggg=="/>';
 			if (t.dat[i][9] == 1) status = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAVNJREFUeNrUk09OwkAUh9+gUKpAFIuIfxJilLIlMd6gaw+Ax/AY7r2AnMFFb2DcC5gYYlBotYKttEwp83zjQtFIN6x8yZfJ9PfypZM3wxARFqkELFgLC5ZnN+yyQF9YjrR12hpEiegRJghoQIQunj7PF1DlQOB5dadi6Nt6cSWlKiPu8+ZTq9bu3tUoPyPc+UcQWK9sHRh6oVIOXF91XpzE2AtUXTss72tlQ+axR4AQjb313aJlWSCEAM75J3JS2dVMUebUdREjECWcojLwBiCZRJOvKB2mFZnH/wEXvb7b5zbaKmR+No6jMZd5/Bg5mt3HByupJQE24Js8gD/0LJnHC0zecNuO6d06HcGmAWRBTCEK/NZbh9+PTJn/FrDZq8wYS0GeVeE4cQIldkT6TZq/DT28gWtxBa/YpP73OMESLWuE8seli4gh9YdzBf/zMX0IMACs96WetcYlTQAAAABJRU5ErkJggg=="/>';
@@ -6125,7 +6068,7 @@ ajax/viewCourt.php:
 		var m = '<STYLE>.clickable{background-color:#ddd; border:2px outset; border-color:#555; padding-left:5px; padding-right:5px}\
             .clickableSel{background-color:#ffffcc;}\
             .xxtab{background-color:none; padding-left:5px; padding-right:5px;} </style>\
-      <DIV class=ptstat ><TABLE id=tabAllMembers cellpadding=0  width=100%><TR font-weight:bold"><TD class=xtab> &nbsp; ' + allName + '</td>\
+      <DIV class=ptstat ><TABLE id=tabAllMembers cellpadding=0  width=100%><TR font-weight:bold"><TD class=xtab>&nbsp;'+allName+'</td>\
         <TD class=xtab width=80% align=center>'+uW.g_js_strings.commonstr.distance+'&nbsp;'+uW.g_js_strings.commonstr.from + ' <SPAN id=distFrom>' + Cities.cities[0].name + ' (' + Cities.cities[0].x + ',' + Cities.cities[0].y + ')</span></td><TD class=xtab align=right>'+numPlayers+'&nbsp;'+uW.g_js_strings.commonstr.members+'&nbsp;<a target="_tab" href="http://kocmon.com/' + GetServerId() + '/alliances/' + t.memberListRslt.allianceId + '"><img title="View alliance on Kocmon" style="vertical-align:bottom;" src="http://kocmon.com/src/img/favicon.ico"></a></td></tr></table></div>\
        <div style="max-height:500px; height:500px; overflow-y:auto;"><TABLE id=tabAllMembers align=center cellpadding=0 cellspacing=0><THEAD style="overflow-y:auto;">\
       <TR style="font-weight:bold"><TD id=clickCol0 onclick="PTalClickSort(this)" class=clickable><A><DIV>' + uW.g_js_strings.commonstr.player + '</div></a></td>\
@@ -7294,6 +7237,7 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togPageNav type=checkbox /></td><TD>Enhanced page navigation for messages and reports.</td></tr>';
 			m += '<TR><TD><INPUT id=togGmtClock type=checkbox /></td><TD>Enable GMT clock next to "Camelot Time" </td></tr>';
 			m += '<TR><TD><INPUT id=togAttackPicker type=checkbox /></td><TD>Enable target city picker in attack dialog (reinforce, reassign and transport)</td></tr>';
+			m += '<TR><TD><INPUT id=togHideAttackEfforts type=checkbox /></td><TD>Hide Attack/Speed boosts by default in attack dialog</td></tr>';
 			m += '<TR><TD><INPUT id=togBatRounds type=checkbox /></td><TD>Display # of rounds in battle reports</td></tr>';
 			m += '<TR><TD><INPUT id=togAtkDelete type=checkbox /></td><TD>Enable delete button when displaying battle report</td></tr>';
 			m += '<TR><TD><INPUT id=togMapInfo4 type=checkbox /></td><TD>Display Province and Truce Status in map tooltips</td></tr>';
@@ -7339,6 +7283,7 @@ Tabs.Options = {
 			t.togOpt('togGmtClock', 'gmtClock', GMTclock.setEnable);
 			t.togOpt('togKnightSelect', 'fixKnightSelect', AttackDialog.setEnable, AttackDialog.isKnightSelectAvailable);
 			t.togOpt('togAttackPicker', 'attackCityPicker', AttackDialog.setEnable, AttackDialog.isCityPickerAvailable);
+			t.togOpt('togHideAttackEfforts', 'hideAttackEfforts');
 			t.togOpt('togRptGift', 'enhancedinbox', DispReport.setEnable, DispReport.isDispReportAvailable);
 			t.togOpt('togCV', 'EnhCBtns', t.e_WarnAscensionChanged);
 			t.togOpt('togDbClkDef', 'DbClkDefBtns');
@@ -9175,7 +9120,7 @@ function getWallInfo(cityId, objOut) {
 				objOut.fieldSpaceQueued += parseInt(uW.fortstats["unt"+ q[i][0]][5]) * parseInt(q[i][1]);
 		}
 	}	
-}	
+}
 	
 Tabs.OverView = {
 	tabOrder: 1,
@@ -9493,7 +9438,7 @@ Tabs.OverView = {
 			}
 			if (tottraining > 0) var rowsp = 3;
 			else var rowsp = 2;
-			n += '<TR><TD rowspan="' + rowsp + '" style="background: #FFFFFF; vertical-align:top;"><img title="'+unsafeWindow.unitcost['unt' + a][0]+'" src="https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + a + '_30.jpg"></td>';
+			n += '<TR><TD rowspan="' + rowsp + '" style="background: #FFFFFF; vertical-align:top;"><img title="'+unsafeWindow.unitcost['unt' + a][0]+'" src="'+IMGURL+'units/unit_' + a + '_30.jpg"></td>';
 			for (b = 0; b < Cities.numCities; b++) total += parseInt(Seed.units['city' + Seed.cities[b][0]]['unt' + a]);
 			if (total > 0) n += '<TD align=right >' + addCommas(total) + '</td>';
 			else n += '<TD align=right >&nbsp;</td>';
@@ -10709,14 +10654,14 @@ Tabs.Attaque = {
            <tr align=center valign=top><td colspan=4 align=left><table border=0 bordercolor=black cellspacing=0 cellpadding=0 width=100% style='text-align:center'><tr><td rowspan=999><div id=RAAstatsource></div></td><td colspan=2><a href='javascript:void(0)' id=BO_RAZ_Units title='Clear' >Units Selected</a></td><td>Attack Time</td><td>Reinforce Time</td></tr>";
 			for (var ui in uW.cm.UNIT_TYPES) {
 				r = uW.cm.UNIT_TYPES[ui];
-				m += '<tr><td align=right><img height=20 title="' + unsafeWindow.unitcost['unt' + r][0] + '" alt="' + unsafeWindow.unitcost['unt' + r][0] + '" src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + r + '_30.jpg></td><td align=left><input style="border:1px solid black;height:16px;font-size:11px;" id="RAAnbunit' + r + '" type=text size=7 value="0" ></td><td><span id="BOEstimationTT' + r + '">&nbsp;</span></td><td><span id="BOEstimationTZ' + r + '">&nbsp;</span></td></tr>';
+				m += '<tr><td align=right><img height=20 title="' + unsafeWindow.unitcost['unt' + r][0] + '" alt="' + unsafeWindow.unitcost['unt' + r][0] + '" src='+IMGURL+'units/unit_' + r + '_30.jpg></td><td align=left><input style="border:1px solid black;height:16px;font-size:11px;" id="RAAnbunit' + r + '" type=text size=7 value="0" ></td><td><span id="BOEstimationTT' + r + '">&nbsp;</span></td><td><span id="BOEstimationTZ' + r + '">&nbsp;</span></td></tr>';
 			}
 			var itemlist = [55, 57, 931, 932];
 			var BOitems = "&nbsp;&nbsp;<table class=ptTab><tr>";
-			BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/aetherstone_30.png' /></td><td><span id='BOitemSpan_Aether'>&nbsp;</span></td>";
-			BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/gold_30.png' /></td><td><span id='BOitemSpan_Gold'>&nbsp;</span></td>";
+			BOitems += "<td rowspan=2><img src='"+IMGURL+"aetherstone_30.png' /></td><td><span id='BOitemSpan_Aether'>&nbsp;</span></td>";
+			BOitems += "<td rowspan=2><img src='"+IMGURL+"gold_30.png' /></td><td><span id='BOitemSpan_Gold'>&nbsp;</span></td>";
 			for (var i = 0; i < itemlist.length; i++) {
-				BOitems += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/items/30/" + itemlist[i] + ".jpg' /></td><td><span id='BOitemSpan_" + itemlist[i] + "'>(" + unsafeWindow.ksoItems[itemlist[i]].count + ")&nbsp;&nbsp;&nbsp;</span></td>";
+				BOitems += "<td rowspan=2><img src='"+IMGURL+"items/30/" + itemlist[i] + ".jpg' /></td><td><span id='BOitemSpan_" + itemlist[i] + "'>(" + unsafeWindow.ksoItems[itemlist[i]].count + ")&nbsp;&nbsp;&nbsp;</span></td>";
 			}
 			BOitems += "</tr><tr>";
 			BOitems += "<td><INPUT id=BOmarchAether type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxAether type=submit value='Max'></td>";
@@ -10727,10 +10672,10 @@ Tabs.Attaque = {
 			BOitems += "</tr></table>";
 			
 			var BOresources = "&nbsp;&nbsp;<table class=ptTab><tr>";
-			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/food_30.png' /></td><td><span id='BOitemSpan_Food'>&nbsp;</span></td>";
-			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/wood_30.png' /></td><td><span id='BOitemSpan_Wood'>&nbsp;</span></td>";
-			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/stone_30.png' /></td><td><span id='BOitemSpan_Stone'>&nbsp;</span></td>";
-			BOresources += "<td rowspan=2><img src='https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/ore_30.png' /></td><td><span id='BOitemSpan_Ore'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='"+IMGURL+"food_30.png' /></td><td><span id='BOitemSpan_Food'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='"+IMGURL+"wood_30.png' /></td><td><span id='BOitemSpan_Wood'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='"+IMGURL+"stone_30.png' /></td><td><span id='BOitemSpan_Stone'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='"+IMGURL+"ore_30.png' /></td><td><span id='BOitemSpan_Ore'>&nbsp;</span></td>";
 			BOresources += "</tr><tr>";
 			BOresources += "<td><INPUT id=BOmarchFood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxFood type=submit value='Max'></td>";
 			BOresources += "<td><INPUT id=BOmarchWood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxWood type=submit value='Max'></td>";
@@ -11021,7 +10966,7 @@ Tabs.Attaque = {
 		return closestNum;
 	},
 	AutoattackOnOff: function () {
-		// click click sur le bouton Activer le compte Ãƒ  rebour !
+		// click click sur le bouton Activer le compte ÃƒÆ’  rebour !
 		var t = Tabs.Attaque;
 		t.BOCompAttack.innerHTML = '';
 		clearTimeout(t.BOAttackTimer);
@@ -11498,7 +11443,7 @@ Tabs.Attaque = {
 		var cityID = 'city' + t.sourceCity.id;
 		for (var ui in uW.cm.UNIT_TYPES) {
 			r = uW.cm.UNIT_TYPES[ui];
-			m += '<tr><td align=right><img title="' + unsafeWindow.unitcost['unt' + r][0] + '" alt="' + unsafeWindow.unitcost['unt' + r][0] + '" height=20 src=https://kabam1-a.akamaihd.net/silooneofcamelot//fb/e2/src/img/units/unit_' + r + '_30.jpg></td>\
+			m += '<tr><td align=right><img title="' + unsafeWindow.unitcost['unt' + r][0] + '" alt="' + unsafeWindow.unitcost['unt' + r][0] + '" height=20 src='+IMGURL+'units/unit_' + r + '_30.jpg></td>\
              <td align=left><input style="border:1px solid black;height:20px;font-size:11px;" id="RAAdestunit' + r + '" type=text size=10 readonly value="' + parseInt(Seed.units[cityID]['unt' + r]) + '">&nbsp;\
              <input type=button value="--->" id="RAApdestunit' + r + '"  style="border:1px solid black;height:16px;font-size:11px;"></td></tr>';
 		}
@@ -13553,12 +13498,12 @@ Tabs.Defend = {
 		var cityID = 'city' + t.sourceCity.id;
 		for (var ui in uW.cm.UNIT_TYPES) {
 			r = uW.cm.UNIT_TYPES[ui];
-			m += '<tr><td align=right><img title="' + unsafeWindow.unitcost['unt' + r][0] + '" height=20 src=http://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_' + r + '_30.jpg></td>\
+			m += '<tr><td align=right><img title="' + unsafeWindow.unitcost['unt' + r][0] + '" height=20 src='+IMGURL+'units/unit_' + r + '_30.jpg></td>\
              <td align=left><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAdestunit' + r + '" type=text size=10 readonly value="' + (parseInt(Seed.units[cityID]['unt' + r]) + parseInt(Seed.defunits[cityID]['unt' + r])) + '">&nbsp;</td>\
              <td></td><td ><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAdefunit' + r + '" type=text size=10 readonly value="' + parseInt(Seed.defunits[cityID]['unt' + r]) + '">&nbsp;\
              <td></td><td ><input style="border:1px solid black;height:16px;font-size:11px;" id="DAArsrvunit' + r + '" type=text size=10 value="' + parseIntNan(Options.DefendRsrv[r]) + '">&nbsp;\
              <input type=button value="--->" id="DAApdestunit' + r + '"  style="border:1px solid black;height:16px;font-size:11px;"></td>';
-			m += '<td align=right><img height=20 title="' + unsafeWindow.unitcost['unt' + r][0] + '" src=http://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/units/unit_' + r + '_30.jpg></td>\
+			m += '<td align=right><img height=20 title="' + unsafeWindow.unitcost['unt' + r][0] + '" src='+IMGURL+'units/unit_' + r + '_30.jpg></td>\
 	     <td ><input style="border:1px solid black;height:16px;font-size:11px;" id="DAAnbunit' + r + '" type=text size=10 value="' + parseInt(Seed.defunits[cityID]['unt' + r]) + '" ></td></tr>';
 		}
 		m += "</table>";
@@ -13704,35 +13649,35 @@ Tabs.Marches = {
 				if (marchType == 2 && marchStatus == 2) marchType = 102;
 				switch (marchType) {
 				case 1:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/transporting.jpg";
+					icon = IMGURL+"transporting.jpg";
 					status = uW.g_js_strings.commonstr.transport;
 					break;
 				case 2:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/reinforce.jpg";
+					icon = IMGURL+"reinforce.jpg";
 					status = uW.g_js_strings.commonstr.reinforce;
 					break;
 				case 3:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/scouting.jpg";
+					icon = IMGURL+"scouting.jpg";
 					status = uW.g_js_strings.commonstr.scout;
 					break;
 				case 4:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/attacking.jpg";
+					icon = IMGURL+"attacking.jpg";
 					status = uW.g_js_strings.commonstr.attack;
 					break;
 				case 9:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/attacking.jpg";
+					icon = IMGURL+"attacking.jpg";
 					status = uW.g_js_strings.commonstr.attack;
 					break;
 				case 5:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/transporting.jpg";
+					icon = IMGURL+"transporting.jpg";
 					status = uW.g_js_strings.commonstr.reassign;
 					break;
 				case 100:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/returning.jpg";
+					icon = IMGURL+"returning.jpg";
 					status = uW.g_js_strings.commonstr.returning;
 					break;
 				case 102:
-					icon = "https://kabam1-a.akamaihd.net/silooneofcamelot/fb/e2/src/img/reinforce.jpg";
+					icon = IMGURL+"reinforce.jpg";
 					status = uW.g_js_strings.commonstr.encamped;
 					break;
 				}
@@ -17572,7 +17517,7 @@ var cdtd = {
 					}
 				}
 			}
-			document.getElementById('mod_citylist').children[i].innerHTML = "<SPAN><FONT fontFamily='georgia,​arial,​sans-serif' font-weight=700 font-size=10px color=" + color + ">" + unsafeWindow.roman[i] + "</font></span>";
+			document.getElementById('mod_citylist').children[i].innerHTML = "<SPAN><FONT fontFamily='georgia,â€‹arial,â€‹sans-serif' font-weight=700 font-size=10px color=" + color + ">" + unsafeWindow.roman[i] + "</font></span>";
 		}
 	},
 	replace: function () {
@@ -17641,9 +17586,9 @@ function getDST(today) {
 	var dst_start = new Date(yr+"-03-14T02:00:00"); // 2nd Sunday in March can't occur after the 14th 
 	var dst_end = new Date(yr+"-11-07T02:00:00"); // 1st Sunday in November can't occur after the 7th
 	var day = dst_start.getDay(); // day of week of 14th
-	dst_start.setDate(14 - day); // Calculate 2nd Sunday in March of this year
+	dst_start.setDate(14-day); // Calculate 2nd Sunday in March of this year
 	day = dst_end.getDay(); // day of the week of 7th
-	dst_end.setDate(7 - day); // Calculate first Sunday in November of this year
+	dst_end.setDate(7-day); // Calculate first Sunday in November of this year
 	var dstadj = 0;
 	if (today >= dst_start && today < dst_end) { //does today fall inside of DST period?
 		dstadj = (3600); // 60 mins!
