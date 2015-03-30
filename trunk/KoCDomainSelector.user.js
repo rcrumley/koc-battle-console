@@ -16,7 +16,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.15b
+// @version			0.15c
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -27,7 +27,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.15b';
+var Version = '0.15c';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -1107,7 +1107,7 @@ function GetWallSearch() {
 			ClaimChest.CheckNext();
 		}
 		else {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>Error encountered :('+(result.error?'#'+result.error.message+'#'+result.error.type+'#'+result.error.code:'')+'</b></span>';
+			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' '+result.error.message+' ('+result.error.code+')':'Error encountered :(')+'</b></span>';
 		}
 	});
 }
@@ -1191,7 +1191,7 @@ function GetWallDel() {
 			CleanWall.CheckNext();
 		}
 		else {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>Error encountered :(</b></span>';
+			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' '+result.error.message+' ('+result.error.code+')':'Error encountered :(')+'</b></span>';
 		}
 	});
 }
