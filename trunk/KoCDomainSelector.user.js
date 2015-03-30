@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			KoC Merlin Token Domain Selector
-// @icon			https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/merlin_magical_token.jpg
+// @icon			https://rycamelot1-a.akamaihd.net/fb/e2/src/img/feeds/merlin_magical_token.jpg
 // @namespace		KoCDomSel
 // @description		This script will automatically select your domain when accepting Merlins Tokens from Facebook!
 // @include			*kingdomsofcamelot.com/fb/e2/src/claimVictoryToken_src.php*
@@ -16,17 +16,18 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.14a
+// @version			0.15a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
 //
-//	May 2014 Barbarossa69 (www.facebook.com/barbarossa69)
+//	March 2015 Barbarossa69 (www.facebook.com/barbarossa69)
+//	Aided in development by Audrius Audriulaitis
 //	Script adapted from "Auto Accept Kingdoms of Camelot Gifts" by Thomas Chapin
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.14a';
+var Version = '0.15a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -370,6 +371,27 @@ function getBadServerId() {
 		myServerId = Sresult;
 	return myServerId;
 }
+
+function getFeedId() {
+	var myServerId = 'n/a';
+	var squery = /[\?,\&]f=\d+/;
+	var dquery = /\d+/;
+	var Sresult = dquery.exec(squery.exec(document.location.search));
+	if (Sresult)
+		myServerId = Sresult;
+	return myServerId;
+}
+
+function getFeedUserId() {
+	var myServerId = 'n/a';
+	var squery = /[\?,\&]in=\d+/;
+	var dquery = /\d+/;
+	var Sresult = dquery.exec(squery.exec(document.location.search));
+	if (Sresult)
+		myServerId = Sresult;
+	return myServerId;
+}
+
 function createButton(label) {
 	var a = document.createElement('a');
 	a.className = 'button20';
@@ -745,6 +767,8 @@ function CheckTokenDay() {
 	if (today != KOCAutoAcceptGifts.options.TokenDate) {
 		KOCAutoAcceptGifts.options.TokenDate = today;
 		KOCAutoAcceptGifts.options.TokenCount = 0;
+		KOCAutoAcceptGifts.options.TokenCollected = false;
+		KOCAutoAcceptGifts.options.BuildCollected = false;
 		KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 	}
 }
@@ -800,7 +824,7 @@ function TokenPopup (){
 		n += '<tr><td class=xtab align=right colspan=2><a id=tkcleanwall class="inlineButton btButton brown8" title="Remove Chests already claimed (and other Kabam posts) from your own wall"><span>Clean your Wall</span></a>&nbsp;<a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
 		n += '</table>';
 		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0>';
-		n += '<tr><td width=33% class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br>&nbsp;</td><td width=33% class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><a id=tkprior><<</a>&nbsp;<input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!">&nbsp;<a id=tknext>>></a></td></tr>';
+		n += '<tr><td width=33% class=xtab align=center><a id=tktokenlink><img height=40 style="vertical-align:text-top;" src="'+TokenImage+'" title="'+KOCAutoAcceptGifts.options.TokenLink+'"></a><br><span id=tktokencollected>&nbsp;</span></td><td width=33% class=xtab align=center><a id=tkbuildlink><img height=40 style="vertical-align:text-top;" src="'+BuildImage+'" title="'+KOCAutoAcceptGifts.options.BuildLink+'"></a><br><span id=tkbuildcollected>&nbsp;</span></td><td width=33% class=xtab align=center><a id=tkchestlink><img height=40 style="vertical-align:text-top;" src="'+ChestImage+'" title="Launch current link replacing domain number if specified below..."></a><br><a id=tkprior><<</a>&nbsp;<input type=text id=tkchestdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomain+'" title="Enter a domain you do not play to collect chests from your own wall!">&nbsp;<a id=tknext>>></a></td></tr>';
 		n += '</table>';
 		n += '<div align="center" style="font-size:10px;opacity:0.6;">KoC Domain Selector '+Version+'<br>'+KOCAutoAcceptGifts.options.TokenCount+' tokens collected today.<br>You currently possess <span id=tknum>'+NumTokens+'</span> tokens.</div>';
 		n += '<div id=tkmessage align="center" style="font-size:12px;opacity:0.6">&nbsp;</div>';
@@ -808,6 +832,13 @@ function TokenPopup (){
 		TokenPop = new CPopup('tkTokenOptions', 0, 0, 400, 360, true, function () {	KOCAutoAcceptGifts.options.OpenState = false; KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options); });
 		TokenPop.getTopDiv().innerHTML = '<DIV align=center><B>TOKEN OPTIONS</B></DIV>';
 		TokenPop.getMainDiv().innerHTML = n;
+
+		if (KOCAutoAcceptGifts.options.TokenCollected) {
+			document.getElementById('tktokencollected').innerHTML = '<span style="color:#080;"><b>Collected</b></span>';
+		}
+		if (KOCAutoAcceptGifts.options.BuildCollected) {
+			document.getElementById('tkbuildcollected').innerHTML = '<span style="color:#080;"><b>Collected</b></span>';
+		}
 		
 		if (NumTokens < 1) {
 			unsafeWindow.jQuery('#tktokenusebutton').addClass('divHide');
@@ -880,14 +911,22 @@ function TokenPopup (){
 				KOCAutoAcceptGifts.options.BuildLink = document.getElementById('tklink').value;
 				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 				document.getElementById('tkbuildlink').title = document.getElementById('tklink').value;
+				document.getElementById('tkbuildcollected').innerHTML = '<b>Saved</b>';
 			}	
+			else {
+				document.getElementById('tkbuildcollected').innerHTML = '<span style="color:#f00;"><b>No Link</b></span>';			
+			}
 		}, false);
 		document.getElementById('tktokenbmk').addEventListener('click', function () {
 			if (document.getElementById('tklink').value != "") { 
 				KOCAutoAcceptGifts.options.TokenLink = document.getElementById('tklink').value;
 				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
 				document.getElementById('tktokenlink').title = document.getElementById('tklink').value;
-			}	
+				document.getElementById('tktokencollected').innerHTML = '<b>Saved</b>';
+			}
+			else {
+				document.getElementById('tktokencollected').innerHTML = '<span style="color:#f00;"><b>No Link</b></span>';			
+			}
 		}, false);
 		document.getElementById('tktokenlink').addEventListener('click', function () {
 			if (KOCAutoAcceptGifts.options.TokenLink != "") { 
@@ -1268,6 +1307,8 @@ var KOCAutoAcceptGifts = {
 			TokenLink : '',
 			TokenDate : 0,
 			TokenCount : 0,
+			TokenCollected : false,
+			BuildCollected : false,
 			ChestDomainList : '',
 			OpenState : false,
 			SearchNum : 30,
@@ -1333,6 +1374,8 @@ var KOCAutoAcceptGifts = {
 								t.giftAccepted = true;
 								t.Log("Merlins Token collected :)");
 								CheckTokenDay();
+								if (document.URL.search(/merlinShare_src.php/i) != -1) { t.options.TokenCollected = true; }
+								if (document.URL.search(/accepttoken_src.php/i) != -1) { t.options.BuildCollected = true; }
 								t.options.TokenCount = t.options.TokenCount + 1;
 								t.SetOptions(t.options);
 								break;
@@ -1367,28 +1410,48 @@ var KOCAutoAcceptGifts = {
 										claim_gift.textContent.indexOf("You can not click on your own feed")>-1 ||
 										claim_gift.textContent.indexOf("You have followed an invalid feed link")>-1 ||										
 										claim_gift.textContent.indexOf("You cannot click on your own feed")>-1)
-										goto1 += '&s_expired_mt='+getBadServerId(); // to communicate with BOT script that merlin token not taken expired and BOT should try another link;
+										goto1 += '&s_expired_mt='+getBadServerId(); // to communicate with BOT script that merlin token expired and BOT should try another link;
 									else goto1 += '&s_bad_mt='+getBadServerId(); // to communicate with BOT script that from this domain merlin token not taken;
 								}							
 								setTimeout (function (){window.top.location = goto1;}, 10000);								
 							}
+							else {
+								if (domain_selector == null && (typeof unsafeWindow.checkServer == 'function')) {
+									t.giftAccepted = true;
+									t.Log("Suspected Blank Decree page...");
+									var FeedID = getFeedId();
+									var goto_null = window.location.protocol+'//apps.facebook.com/kingdomsofcamelot/?s='+UserDomain;
+									if (FeedID !='n/a'){
+										goto_null = 'https://apps.facebook.com/kingdomsofcamelot/?f='+FeedID+'&t=118&lang=en&f='+FeedID+'&t=118&in='+getFeedUserId()+'&si=118&s='+UserDomain;
+										t.Log("Merlins Token collected :)");
+										CheckTokenDay();
+										t.options.TokenCount = t.options.TokenCount + 1;
+										t.SetOptions(t.options);
+										window.top.location = goto_null;
+									} else {
+										var a = document.createElement('div');
+										a.innerHTML = '<div align=center><br><b>Token Id not found.</b><br><br><i>Merlins Token could not be collected.<br>(KoC will automatically reload in 10 seconds)</i></div>';
+										claim_gift.appendChild(a);	
+										goto_null += '&s_expired_mt='+getBadServerId(); // I don't know, let's assume expired token, not sure what these are really used for lol (?)
+										setTimeout (function (){window.top.location = goto_null;}, 10000);
+									}
+								}
+							}	
 						}	
 					}
 				}
 			}
 
-			if (!domTickTimer) {
+			if (!domTickTimer) { // is this even used anymore?
 				domTickTimer = window.setTimeout(function () {
-						domTickTimer = null;
-						domTick();
-						domTickUpto++;
-					}, 250);
+					domTickTimer = null;
+					domTick();
+					domTickUpto++;
+				}, 1000);
 			}
 		};
-
 		domTick();
 	}
-
 };
 
 // start by reading options...
@@ -1397,9 +1460,9 @@ KOCAutoAcceptGifts.options = KOCAutoAcceptGifts.GetOptions();
 var UserDomain = getServerId();
 var TokenPop = null;
 
-var ChestImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/treasurechest_icon.png';
-var TokenImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/merlin_magical_token.jpg';
-var BuildImage = 'https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/feeds/build_help_construction.jpg';
+var ChestImage = 'https://rycamelot1-a.akamaihd.net/fb/e2/src/img/feeds/treasurechest_icon.png';
+var TokenImage = 'https://rycamelot1-a.akamaihd.net/fb/e2/src/img/feeds/merlin_magical_token.jpg';
+var BuildImage = 'https://rycamelot1-a.akamaihd.net/fb/e2/src/img/feeds/new_city_outskirts.jpg';
 
 if (document.URL.search(/main_src.php/i) == -1) {
 	if (KOCAutoAcceptGifts.options.Enabled) {

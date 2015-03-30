@@ -2,7 +2,7 @@
 // @name            KoC Additional Throne Monitor
 // @namespace       kba
 // @description     Throne Room Monitor for Kingdoms of Camelot - For Standalone use as "Monitor Lite", or in conjunction with KoC Battle Console as an Additional Monitor.
-// @icon			https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/chrome_quest_over.png
+// @icon			https://rycamelot1-a.akamaihd.net/fb/e2/src/img/nav/chrome_quest_over.png
 // @include         *.kingdomsofcamelot.com/*main_src.php*
 // @grant       	GM_getValue
 // @grant       	GM_setValue
@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version         20150130a
+// @version         20150327a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Fix monitor button in throne room</p>
+// @releasenotes 	<p>Move Image URLs to RockYou</p>
 // ==/UserScript==
 
 //	┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -23,10 +23,10 @@
 //	│	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	│
 //	│	http://creativecommons.org/licenses/by-nc-nd/3.0													│
 //	│																										│
-//	│	January 2015 Barbarossa69 (www.facebook.com/barbarossa69)											│
+//	│	March 2015 Barbarossa69 (www.facebook.com/barbarossa69)												│
 //	└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-var Version = '20150130a';
+var Version = '20150327a';
 var NameSpace = 'kba';
 var TitleSuffix = 'A';
 
@@ -102,12 +102,14 @@ var DebuffEffects = [17,18,19,20,22,21,23,29,39,50,54,61,30,40,51,31,41,52,42,63
 
 var AlternateSortOrder = [5,37,58,117,131,133,138,21,42,63,123,132,134,143,1,24,34,44,56,102,113,135,17,29,39,50,61,119,140,2,25,35,45,114,125,136,18,30,40,51,120,126,141,3,26,36,46,104,115,127,137,19,31,41,52,121,128,142,4,27,47,57,116,20,32,53,62,122,129,130,7,28,38,49,60,139,23,33,43,55,65,144,8,9,118,124,13,14,15,16,73,6,48,59,22,54,64];
  
-var TitleBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/700_bars_4.png";
-var PanelBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg";
-var DivBG = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/nav/resource_bar_ascension.png";
+var IMGURL = uW.stimgUrl+"img/";
 
-var RightArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/across_arrow.png";
-var DownArrow = "https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/autoAttack/down_arrow.png";
+var TitleBG = IMGURL+"modal/700_bars_4.png";
+var PanelBG = IMGURL+"dialog_740_r2_c1.jpg";
+var DivBG = IMGURL+"nav/resource_bar_ascension.png";
+
+var RightArrow = IMGURL+"autoAttack/across_arrow.png";
+var DownArrow = IMGURL+"autoAttack/down_arrow.png";
 
 for (k in uW.cm.thronestats.effects) {
 	if (AlternateSortOrder.indexOf(parseInt(k)) == -1) {
