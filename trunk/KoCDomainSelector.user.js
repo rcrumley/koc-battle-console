@@ -16,7 +16,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.15c
+// @version			0.20a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -27,7 +27,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.15c';
+var Version = '0.20a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -397,6 +397,27 @@ function createButton(label) {
 	a.className = 'button20';
 	a.innerHTML = '<span style="color: #ff6">' + label + '</span>';
 	return a;
+}
+
+function htmlSelector (valNameObj, curVal, tags){
+  var m = [];
+  m.push ('<SELECT');
+  if (tags){
+    m.push (' ');
+    m.push (tags);
+  }  
+  for (var k in valNameObj){
+    m.push ('><OPTION ');
+    if (k == curVal)
+      m.push ('SELECTED ');
+    m.push ('value="');
+    m.push (k);
+    m.push ('">');
+    m.push (valNameObj[k]);
+    m.push ('</option>');
+  }
+  m.push ('</select>');
+  return m.join ('');
 }
 
 function AddMainTabLink(text, eventListener, mouseListener) {
@@ -787,6 +808,40 @@ function getDST(today) {
 	}
 	return dstadj;
 }
+
+function AddFriends() {
+	unsafeWindow.FB.getLoginStatus(function(response) { if (response.status != 'connected') { return; } });
+
+	unsafeWindow.FB.login(function (o) {
+		if (o.authResponse) {
+			var p = {
+				access_token : o.authResponse.accessToken,
+			};
+			unsafeWindow.FB.api('/me/friends', p, function(result) {
+				KOCAutoAcceptGifts.options.FriendList = {};
+				var markup = '';
+				var FriendList = {0:'(Everyone)'};
+				for (var l in FriendList) {
+					var selected = "";
+					if (KOCAutoAcceptGifts.options.SelectedFriendId == l) selected = "selected";
+					markup += '<option value="'+l +'" '+selected+'>'+FriendList[l] +'</option>';
+				}
+				var lists = result.data;
+				lists.sort(function(a, b){ return a.name > b.name});
+				for(var i in lists){
+					if (lists[i].id) {
+						KOCAutoAcceptGifts.options.FriendList[lists[i].id] = lists[i].name;
+						var selected = "";
+						if (KOCAutoAcceptGifts.options.SelectedFriendId == lists[i].id) selected = "selected";
+						markup += '<option value="'+lists[i].id +'" '+selected+'>'+lists[i].name +'</option>';
+					}	
+				} 
+				KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+				document.getElementById('selectfriend').innerHTML = markup;
+			});
+		}
+	},{ scope : "user_friends" });
+}
   
 function TokenPopup (){
 
@@ -814,12 +869,19 @@ function TokenPopup (){
 						  .btInput		 {font-size:10px; }';
 		}		
 		
+		var FriendList = {0:'(Everyone)'};
+		for (var l in KOCAutoAcceptGifts.options.FriendList) {
+			FriendList[l] = KOCAutoAcceptGifts.options.FriendList[l];
+		}
+		
 		var n = '<STYLE>'+ styles +'</style>';	
 		n += '<br>&nbsp;&nbsp;&nbsp;<b><i>Settings</i></b><br><table align=center width=95% cellspacing=0 cellpadding=0>';
 		n += '<tr><td width=50 class=xtab>Domain to Receive Tokens:&nbsp;</td><td class=xtab><input type=text id=tkdomain size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.UserDomain+'"></td><td class=xtab align=right><b>Enabled&nbsp;<input type=checkbox id=tkenable '+(KOCAutoAcceptGifts.options.Enabled?'CHECKED':'')+'></b></td></tr>';
 		n += '<tr><td class=xtab>Domains for Chest Links:&nbsp;</td><td class=xtab colspan=2><input type=text id=tkchestdomainlist size=47 class=btInput value="'+KOCAutoAcceptGifts.options.ChestDomainList+'" title="List some domains you do NOT play in here, separated by commas."></td></tr>';
 		n += '</table>';
-		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr><tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input  title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'>&nbsp;Rev<input title="Tick to search posts in reverse order, i.e. oldest first." type=checkbox id=tkrev '+(KOCAutoAcceptGifts.options.Reversed?'CHECKED':'')+'></td></tr><tr><td class=xtab colspan=2 align=right>Search only this ProfileURL:&nbsp;<input type=text id=tksearchuser size=47 class=btInput value="'+KOCAutoAcceptGifts.options.SearchUser+'" title="Leave blank to search all your friends"></td>';
+		n += '<br><table align=center width=95% cellspacing=0 cellpadding=0><tr><td colspan=2 class=xtab align=left><b><i>Collect Tokens</i></b></td></tr>';
+		n += '<tr><td colspan=2 class=xtab align=right><a id=tkgrabchest class="inlineButton btButton brown8"><span>Search for Chests</span></a>&nbsp;&nbsp;Posts to Search<input title="Enter the number of wall posts you wish to search through." type=text id=tksearchnum size=2 maxlength=3 class=btInput value="'+KOCAutoAcceptGifts.options.SearchNum+'">&nbsp;&nbsp;Your Wall<input title="Tick to search your posts on your wall. Untick to search other peoples posts in your news feed." type=checkbox id=tkyourwall '+(KOCAutoAcceptGifts.options.YourWall?'CHECKED':'')+'>&nbsp;Rev<input title="Tick to search posts in reverse order, i.e. oldest first." type=checkbox id=tkrev '+(KOCAutoAcceptGifts.options.Reversed?'CHECKED':'')+'></td></tr>';
+		n += '<tr><td class=xtab colspan=2 align=right><a id=RefreshFriendList title="Click to refresh friends list">Search Friend</a>&nbsp;'+htmlSelector(FriendList,KOCAutoAcceptGifts.options.SelectedFriendId,'id=selectfriend class=btInput style="width:150px;" title="Select friend to search"')+'&nbsp;-&nbsp;Fb Id:&nbsp;<input type=text id=tksearchuser size=20 class=btInput value="'+KOCAutoAcceptGifts.options.SearchUser+'" title="Leave blank to search all your friends"></td>';
 		n += '<tr><td class=xtab>Link:&nbsp;</td><td class=xtab align=right><input type=text id=tklink size=80 class=btInput title="Copy and paste your Build, Token or Treasure Chest links from Facebook into here!"></td></tr>';
 		n += '<tr><td class=xtab align=right colspan=2><a id=tkcleanwall class="inlineButton btButton brown8" title="Remove Chests already claimed (and other Kabam posts) from your own wall"><span>Clean your Wall</span></a>&nbsp;<a id=tktokenbmk class="inlineButton btButton brown8"><span>Save as Token</span></a>&nbsp;<a id=tkbuildbmk class="inlineButton btButton brown8"><span>Save as Build</span></a></td></tr>';
 		n += '</table>';
@@ -844,6 +906,18 @@ function TokenPopup (){
 			unsafeWindow.jQuery('#tktokenusebutton').addClass('divHide');
 		}
 		
+		document.getElementById('RefreshFriendList').addEventListener ('click',function(){AddFriends()},false);    
+		document.getElementById('selectfriend').addEventListener ('change', function(){
+			KOCAutoAcceptGifts.options.SelectedFriendId = document.getElementById('selectfriend').value;
+			if (KOCAutoAcceptGifts.options.SelectedFriendId != 0) {
+				KOCAutoAcceptGifts.options.SearchUser = KOCAutoAcceptGifts.options.SelectedFriendId;
+			}	
+			else {
+				KOCAutoAcceptGifts.options.SearchUser = '';
+			}
+			document.getElementById('tksearchuser').value = KOCAutoAcceptGifts.options.SearchUser;
+			KOCAutoAcceptGifts.SetOptions(KOCAutoAcceptGifts.options);
+		},false);
 		document.getElementById('tkdomain').addEventListener('keyup', function () {
 			if (isNaN(document.getElementById('tkdomain').value)) { document.getElementById('tkdomain').value = ""; }
 			KOCAutoAcceptGifts.options.UserDomain = document.getElementById('tkdomain').value;
@@ -996,8 +1070,12 @@ function TokenPopup (){
 					};
 						
 					ClaimChest.URL = '/me/home';
-					if (FBUser != '') ClaimChest.URL = '/'+FBUser+'/posts';
-					if (KOCAutoAcceptGifts.options.YourWall) ClaimChest.URL = '/me/posts';
+					if (FBUser != '') {
+						ClaimChest.URL = '/'+FBUser+'/posts';
+					}
+					else {
+						if (KOCAutoAcceptGifts.options.YourWall) ClaimChest.URL = '/me/posts';
+					}	
 					
 					ClaimChest.p = p;
 					ClaimChest.access_token = o.authResponse.accessToken;
@@ -1315,6 +1393,8 @@ var KOCAutoAcceptGifts = {
 			YourWall : false,
 			Reversed : true,
 			SearchUser : '',
+			FriendList : {},
+			SelectedFriendId : 0,
 		};
 		for (var n in defOptions) {
 			if (options[n] != undefined) {
@@ -1326,7 +1406,7 @@ var KOCAutoAcceptGifts = {
 	},
 
 	SetOptions : function (v) {
-		this.SetValue('Options', JSON2.stringify(v));
+		setTimeout(function () {KOCAutoAcceptGifts.SetValue('Options', JSON2.stringify(v));},0); // get around GM_SetValue unsafeWindow error
 	},
 
 	FactoryReset : function () {
