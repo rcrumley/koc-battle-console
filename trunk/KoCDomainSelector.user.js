@@ -16,7 +16,7 @@
 // @grant			GM_log
 // @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
-// @version			0.20a
+// @version			0.21a
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // ==/UserScript==
 
@@ -27,7 +27,7 @@
 //	https://koc-battle-console.googlecode.com/svn/trunk/KoCDomainSelector.user.js
 //
 
-var Version = '0.20a';
+var Version = '0.21a';
 
 String.prototype.trim = function () {
 	return this.replace(/^\s+|\s+$/g, '');
@@ -1048,9 +1048,9 @@ function TokenPopup (){
 		document.getElementById('tkgrabchest').addEventListener('click', function () {
 			var FBUser = '';
 			if (KOCAutoAcceptGifts.options.SearchUser != '') {
-				FBUser = KOCAutoAcceptGifts.options.SearchUser.split("?")[0];
+				FBUser = KOCAutoAcceptGifts.options.SearchUser.split("?")[0].trim();
 				if (FBUser.split("facebook.com/")[1]) {
-					FBUser = FBUser.split("facebook.com/")[1];
+					FBUser = FBUser.split("facebook.com/")[1].trim();
 				}
 			}
 			if (FBUser != '' && !KOCAutoAcceptGifts.options.YourWall) {
@@ -1068,13 +1068,17 @@ function TokenPopup (){
 					var p = {
 						access_token : o.authResponse.accessToken
 					};
-						
-					ClaimChest.URL = '/me/home';
-					if (FBUser != '') {
-						ClaimChest.URL = '/'+FBUser+'/posts';
+
+					if (KOCAutoAcceptGifts.options.YourWall) {
+						ClaimChest.URL = '/me/posts';
 					}
 					else {
-						if (KOCAutoAcceptGifts.options.YourWall) ClaimChest.URL = '/me/posts';
+						if (FBUser != '') {
+							ClaimChest.URL = '/'+FBUser+'/posts';
+						}
+						else {
+							ClaimChest.URL = '/me/home';
+						}
 					}	
 					
 					ClaimChest.p = p;
@@ -1185,7 +1189,7 @@ function GetWallSearch() {
 			ClaimChest.CheckNext();
 		}
 		else {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' '+result.error.message+' ('+result.error.code+')':'Error encountered :(')+'</b></span>';
+			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' ('+result.error.code+') '+result.error.message+:'Error encountered :(')+'</b></span>';
 		}
 	});
 }
@@ -1202,14 +1206,18 @@ var ClaimChest = {
 	CheckNext : function () {
 		var t = ClaimChest;
 		if (t.posts.length == 0) {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>No available Treasure Chests ('+t.NumPosts+' checked)</b></span>';
 			if (ClaimChest.until != 'empty' && ClaimChest.until != 'null' && ClaimChest.NumPosts < KOCAutoAcceptGifts.options.SearchNum){
+				document.getElementById('tkmessage').innerHTML = '<span><b>Searching... ('+t.NumPosts+' checked)</b></span>';
 				GetWallSearch();
 			}	
+			else {
+				document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>No available Treasure Chests ('+t.NumPosts+' checked)</b></span>';
+			}
 			return;
 		}
 		var post = t.posts.splice(0,1)[0];
-		if (post.link && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
+		if (post.link && post.link.indexOf("apps.facebook.com/kingdomsofcamelot/convert.php?pl=1&ty=3&si=118&wccc=fcf-feed-118&ln=31&da=2")>=0 && (KOCAutoAcceptGifts.options.YourWall || (post.link.indexOf('&in='+ unsafeWindow.tvuid+'&')<0))) {
+			KOCAutoAcceptGifts.Log(JSON2.stringify(post));
 			var likes_found = false;
 			if (post.likes && post.likes.data.length > 0) {likes_found = true;}
 			if (!likes_found) {
@@ -1269,7 +1277,7 @@ function GetWallDel() {
 			CleanWall.CheckNext();
 		}
 		else {
-			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' '+result.error.message+' ('+result.error.code+')':'Error encountered :(')+'</b></span>';
+			document.getElementById('tkmessage').innerHTML = '<span style="color:#f00;"><b>'+(result.error?result.error.type+' ('+result.error.code+') '+result.error.message+:'Error encountered :(')+'</b></span>';
 		}
 	});
 }
