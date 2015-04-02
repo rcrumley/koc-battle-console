@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150330a
+// @version        20150402a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -25,7 +25,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your Userscript project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150330a';
+var Version = '20150402a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -88,6 +88,8 @@ var GlobalOptions = {
 	ptupdatebeta: 0,
 };
 var Options = {
+	KillSounds:true,
+	KillMusic:true,
 	includeCity: true,
 	includeMarching: true,
 	includeTraining: false,
@@ -600,6 +602,15 @@ function ptStartup() {
 		TowerAlerts.enableFixFalseReports(true);
 	AddMainTabLink('TOOLS', eventHideShow, mouseMainTab);
 
+	if (Options.KillSounds) {
+		var killsound = document.getElementsByClassName('sfx_effects')[0];
+		if (killsound && killsound.classList.contains("on")) {killsound.click();}
+	}
+	if (Options.KillMusic) {
+		var killmusic = document.getElementsByClassName('sfx_music')[0];
+		if (killmusic && killmusic.classList.contains("on")) {unsafeWindow.AM_pauseMusic();killmusic.click();}
+	}	
+	
 	// fix open multiple of some new chests...
 	
 	for (var i = 30497; i <= 30499; i++) {
@@ -4365,7 +4376,12 @@ var AttackDialog = {
 		if (!ById('modal_attack_march_boost')) { return; }
 		var span = document.createElement('span');
 		var a = document.createElement('a');
-		a.innerHTML = 'Show Attack/Speed Boosts';
+		if (t.hideAttackEffortsState) {
+			a.innerHTML = 'Show Attack/Speed Boosts';
+		}	
+		else {
+			a.innerHTML = 'Hide Attack/Speed Boosts';
+		}		
 		a.id = 'ptShowBoosts';
 		span.appendChild(a);
 		if (t.hideAttackEffortsState) {
@@ -7213,6 +7229,8 @@ Tabs.Options = {
 			m = '<TABLE class=ptTab>';
 			m += '<TR><TD colspan=2><B>Config:</b></td></tr>';
 			m += '<TR><TD><INPUT id=ptAllowWinMove type=checkbox /></td><TD>Enable window drag (move window by dragging top bar with mouse)</td></tr>';
+			m += '<TR><TD><INPUT id=ptkillmusic type=checkbox /></td><TD>Kill music on startup</td></tr>';
+			m += '<TR><TD><INPUT id=ptkillsounds type=checkbox /></td><TD>Kill sound effects on startup</td></tr>';
 			m += '<TR><TD><INPUT id=ptHideOnGoto type=checkbox /></td><TD>Hide window when clicking on map coordinates.</td></tr>';
 			m += '<TR><TD><INPUT id=ptEnableFoodWarn type=checkbox /></td><TD>Show \'food left\' in RED if food will run out in less than';
 			m += '<INPUT id=optFoodHours type=text size=3 value="' + Options.foodWarnHours + '"> hours, does NOT affect the food alert anymore!</td></tr>';
@@ -7273,6 +7291,8 @@ Tabs.Options = {
 			t.togOpt('ptEnableFoodTower', 'enableFoodTower');
 			t.togOpt('ptEnableWisperAlert', 'enableWhisperAlert');
 			t.togOpt('ptEnableTowerAlert', 'enableTowerAlert');
+			t.togOpt('ptkillmusic', 'KillMusic');
+			t.togOpt('ptkillsounds', 'KillSounds');
 			t.togOpt('ptHideOnGoto', 'hideOnGoto');
 			t.togOpt('ptAllowWinMove', 'ptWinDrag', mainPop.setEnableDrag);
 			t.togOpt('togAllowAlter', 'allowAlterAR');
@@ -10675,7 +10695,7 @@ Tabs.Attaque = {
 			BOresources += "<td rowspan=2><img src='"+IMGURL+"food_30.png' /></td><td><span id='BOitemSpan_Food'>&nbsp;</span></td>";
 			BOresources += "<td rowspan=2><img src='"+IMGURL+"wood_30.png' /></td><td><span id='BOitemSpan_Wood'>&nbsp;</span></td>";
 			BOresources += "<td rowspan=2><img src='"+IMGURL+"stone_30.png' /></td><td><span id='BOitemSpan_Stone'>&nbsp;</span></td>";
-			BOresources += "<td rowspan=2><img src='"+IMGURL+"ore_30.png' /></td><td><span id='BOitemSpan_Ore'>&nbsp;</span></td>";
+			BOresources += "<td rowspan=2><img src='"+IMGURL+"iron_30.png' /></td><td><span id='BOitemSpan_Ore'>&nbsp;</span></td>";
 			BOresources += "</tr><tr>";
 			BOresources += "<td><INPUT id=BOmarchFood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxFood type=submit value='Max'></td>";
 			BOresources += "<td><INPUT id=BOmarchWood type=text size=11 maxlength=20 value='0'\><INPUT id=BOmaxWood type=submit value='Max'></td>";
