@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150402a
+// @version        20150414a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -23,9 +23,9 @@ if (window.self.location != window.top.location) {
 	}
 }
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
-//Please change it to your Userscript project name.
+//Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150402a';
+var Version = '20150414a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -616,6 +616,10 @@ function ptStartup() {
 	for (var i = 30497; i <= 30499; i++) {
 		uW.cm.ItemIdentifier.BOX[i] = 1
 	}
+	
+	// Set to check for updates in 15 seconds
+	
+	if (GlobalOptions.ptupdate) setTimeout(function(){AutoUpdater.check();},15000); 
 	
 	uW.ptLoaded = true;
 }
@@ -7339,7 +7343,7 @@ Tabs.Options = {
 				saveOptions();
 			}, false);
 			document.getElementById('ptupdatenow').addEventListener('click', function () {
-				AutoUpdater_103659.call(true, true);
+				AutoUpdater.call(true, true);
 			}, false);
 			document.getElementById('optFoodHours').addEventListener('change', function () {
 				var x = document.getElementById('optFoodHours').value;
@@ -14499,108 +14503,114 @@ function display_confirm(confirm_msg, ok_function, cancel_function) {
 		}, false);
 	}
 }
-// The following code is released under public domain.
-var AutoUpdater_103659 = {
+
+//******************** Auto Update ***************************//
+
+var AutoUpdater = {
     id: 173122,
-	days: 1,
-	name: "KOC Power Tools",
-	version: Version,
-	beta: GlobalOptions.ptupdatebeta,
-	betaUrl: 'https://svn.code.sf.net/p/koc-battle-console/code/trunk/173122.user.js',
-	time: new Date().getTime(),
-	call: function (response, secure) {
-		GM_xmlhttpRequest({
-			method: 'GET',
-			url: this.beta ? this.betaUrl : 'http' + (secure ? 's' : '') + '://greasyfork.org/scripts/893-koc-power-tools/code/KOC Power Tools.user.js',
-			onload: function (xpr) {
-				AutoUpdater_103659.compare(xpr, response);
+	SourceForgeURL:'svn.code.sf.net/p/koc-battle-console/code/trunk/173122.user.js',
+	GreasyForkURL:'greasyfork.org/scripts/893-koc-power-tools/code/KOC Power Tools.user.js',
+	name: 'KoC Power Tools',
+	homepage: 'https://greasyfork.org/en/scripts/893-koc-power-tools',
+    version: Version,
+	secure: true,
+    call: function(secure,response) {logit("Checking for "+this.name+" Update!"+(secure ? ' (SSL)' : ' (plain)'));
+		this.secure = secure;
+		var CheckURL = this.GreasyForkURL;
+		if (GlobalOptions.ptupdatebeta) {CheckURL = this.SourceForgeURL;}
+        GM_xmlhttpRequest({
+            method: 'GET',
+			url: 'http'+(secure ? 's' : '')+'://'+CheckURL,
+			onload: function(xpr) {AutoUpdater.compare(xpr,response);},
+            onerror: function(xpr) {if (secure) {AutoUpdater.call(false,response);} else {AutoUpdater.compare({responseText:""},response);}}
+        });
+    },
+	
+    compareVersion: function(r_version, l_version) {
+            var r_parts = r_version.split(''),
+            l_parts = l_version.split(''),
+            r_len = r_parts.length,
+            l_len = l_parts.length,
+            r = l = 0;
+            for(var i = 0, len = (r_len > l_len ? r_len : l_len); i < len && r == l; ++i) {
+                r = +(r_parts[i] || '0');
+                l = +(l_parts[i] || '0');
+            }
+            return (r !== l) ? r > l : false;
+    },
+	
+    compare: function(xpr,response) {
+        this.xversion=/\/\/\s*@version\s+(.+)\s*\n/i.exec(xpr.responseText);   
+        if (this.xversion) this.xversion = this.xversion[1];
+        else {
+			if (response) {
+				unsafeWindow.Modal.showAlert('<div align="center">'+translate('Unable to check for updates to')+' '+this.name+'.<br>'+translate('Please change the update options or visit the')+'<br><a href="'+this.homepage+'" target="_blank">'+translate('script homepage')+'</a></div>');
+			}
+			logit("Unable to check for updates :(");
+			return;
+		}
+        this.xrelnotes=/\/\/\s*@releasenotes\s+(.+)\s*\n/i.exec(xpr.responseText);   
+        if (this.xrelnotes) this.xrelnotes = this.xrelnotes[1];
+        var updated = this.compareVersion(this.xversion, this.version);   
+        if (updated) {logit('New Version Available!');                  
+ 			var body = '<BR><DIV align=center><FONT size=3><B>'+translate('New version')+' '+this.xversion+' '+translate('is available!')+'</b></font></div><BR>';
+			if (this.xrelnotes)
+				body+='<BR><div align="center" style="border:0;width:470px;height:120px;max-height:120px;overflow:auto"><b>'+translate('New Features!')+'</b><p>'+this.xrelnotes+'</p></div><BR>';
+ 			body+='<BR><DIV align=center><a class="gemButtonv2 green" id="doBotUpdate">Update</a></div>';
+ 			this.ShowUpdate(body);
+        }
+        else
+        {
+			logit("No updates available :(");
+			if (response) {
+				unsafeWindow.Modal.showAlert('<div align="center">'+translate('No updates available for')+' '+this.name+' '+translate('at this time.')+'</div>');
+			}
+        } 		
+    },
+	
+    check: function() {
+    	var now = unixTime();
+    	var lastCheck = 0;
+    	if (GM_getValue('updated_'+this.id, 0)) lastCheck = parseInt(GM_getValue('updated_'+this.id, 0));
+		if (now > (lastCheck + 60*60*12)) this.call(true,false);
+    },
+	
+	ShowUpdate: function (body) {
+		var now = unixTime();	 
+		unsafeWindow.cm.ModalManager.addMedium({
+			title: this.name,
+			body: body,
+			closeNow: false,
+			close: function () {
+				setTimeout (function (){GM_setValue('updated_'+AutoUpdater.id, now);}, 0);
+				unsafeWindow.cm.ModalManager.closeAll();
 			},
-			onerror: function (xpr) {
-				if (secure) AutoUpdater_103659.call(response, false);
-			}
+			"class": "Warning",
+			curtain: false,
+			width: 500,
+			height: 700,
+			left: 140,
+			top: 140
 		});
+		document.getElementById('doBotUpdate').addEventListener ('click', this.doUpdate, false);   
 	},
-	enable: function () {
-		GM_registerMenuCommand("Enable " + this.name + " updates", function () {
-			GM_setValue('updated_103659', new Date().getTime() + '');
-			AutoUpdater_103659.call(true, true)
-		});
+
+	doUpdate: function () {
+		unsafeWindow.cm.ModalManager.closeAll();
+		unsafeWindow.cm.ModalManager.close();
+		var now = unixTime();
+		GM_setValue('updated_'+AutoUpdater.id, now);
+		var DownloadURL = AutoUpdater.GreasyForkURL;
+		if (GlobalOptions.ptupdatebeta) {DownloadURL = AutoUpdater.SourceForgeURL;}
+		location.href = 'http'+(AutoUpdater.secure ? 's' : '')+'://'+DownloadURL;
 	},
-	compareVersion: function (r_version, l_version) {
-		var r_parts = r_version.split(''),
-			l_parts = l_version.split(''),
-			r_len = r_parts.length,
-			l_len = l_parts.length,
-			r = l = 0;
-		for (var i = 0, len = (r_len > l_len ? r_len : l_len); i < len && r == l; ++i) {
-			r = +(r_parts[i] || '0');
-			l = +(l_parts[i] || '0');
-		}
-		return (r !== l) ? r > l : false;
-	},
-	compare: function (xpr, response) {
-		this.xversion = /\/\/\s*@version\s+(.+)\s*\n/i.exec(xpr.responseText);
-		this.xname = /\/\/\s*@name\s+(.+)\s*\n/i.exec(xpr.responseText);
-		if ((this.xversion) && (this.xname[1] == this.name)) {
-			this.xversion = this.xversion[1];
-			this.xname = this.xname[1];
-		} else {
-			if ((xpr.responseText.match("the page you requested doesn't exist")) || (this.xname[1] != this.name)) {
-				//GM_setValue('updated_103659', 'off');
-			}
-			return false;
-		}
-		var updated = this.compareVersion(this.xversion, this.version);
-		if (updated) {
-			display_confirm('A new version of ' + this.xname + ' is available.\nDo you wish to install the latest version?',
-				// Ok
-				function () {
-					try {
-						location.href = this.beta ? this.betaUrl : 'https://greasyfork.org/scripts/893-koc-power-tools/code/KOC Power Tools.user.js';
-					} catch (e) {}
-				},
-				// Cancel
-				function () {
-					if (AutoUpdater_103659.xversion) {
-						if (confirm('Do you want to turn off auto updating for this script?')) {
-							//GM_setValue('updated_103659', 'off');
-							GlobalOptions.ptupdate = false;
-							GM_setValue('Options_??', JSON2.stringify(GlobalOptions));
-							AutoUpdater_103659.enable();
-							alert('Automatic updates can be re-enabled for this script from the User Script Commands submenu.');
-						}
-					}
-				}
-			);
-		} else if (response) {
-			alert('No updates available for ' + this.name);
-		}
-	},
-	check: function (tf) {
-		if (!tf) {
-			this.enable();
-		} else {
-			if (+this.time > (+GM_getValue('updated_103659', 0) + 1000 * 60 * 60 * 24 * this.days)) {
-				GM_setValue('updated_103659', this.time + '');
-				this.call(false, true);
-			}
-			GM_registerMenuCommand("Check " + this.name + " for updates", function () {
-				GM_setValue('updated_103659', new Date().getTime() + '');
-				AutoUpdater_103659.call(true, true)
-			});
-		}
-	}
+
 };
-if (typeof (GM_xmlhttpRequest) !== 'undefined' && typeof (GM_updatingEnabled) === 'undefined') { // has an updater?
-	try {
-		if (unsafeWindow.frameElement === null) {
-			AutoUpdater_103659.check(GlobalOptions.ptupdate);
-		}
-	} catch (e) {
-		AutoUpdater_103659.check(GlobalOptions.ptupdate);
-	}
+
+function translate (str) {
+    return str;    
 }
-/********* End updater code *************/
+
 //****************************
 //This is a new implementation of the CalterUwFunc class to modify a function of the 'unsafewWindow' object.
 //For reverse compatibility this implementation operates like the original, but multiple CalterUwFunc objects can be created for the same function.
