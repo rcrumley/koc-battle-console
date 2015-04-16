@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150414a
+// @version        20150415a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,6 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
+// @releasenotes 	<p>Fixed problem with autoscout</p><p>Fixed problem with alliance help results showing in global chat</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -33,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150414a';
+var Version = '20150415a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -8859,10 +8860,10 @@ Tabs.Search = {
 	
 	March.addMarch(params, function(rslt){
 		if (rslt.ok) {
+			var t = Tabs.Search;
 			document.getElementById('pbSrcScoutResult').innerHTML += translate('Sent!')+'<BR>';
 			if(t.opt.searchType==2 && document.getElementById('pbsquick').checked) {
 				var misted = false;
-				var t = Tabs.Search;
 				var numRows = t.mapDat.length;
 				for (i=0; i<numRows; i++){
 					if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
@@ -8877,9 +8878,9 @@ Tabs.Search = {
 				setTimeout(function(){ notify(count+1); }, 4000);
 		}
 		else {
+			var t = Tabs.Search;
 			if(t.opt.searchType==2 && document.getElementById('pbsquick').checked) {
 				var misted = false;
-				var t = Tabs.Search;
 				var numRows = t.mapDat.length;
 				for (i=0; i<numRows; i++){
 					if (t.mapDat[i][0] == x && t.mapDat[i][1] == y) {
@@ -18168,20 +18169,20 @@ var ChatPane = {
 								}
 							}
 							// Hide alliance reports in chat
-							if (thisPost.innerHTML.match(myregexp1) || thisPost.innerHTML.match(myregexp2) || thisPost.innerHTML.match(myregexp3) || thisPost.innerHTML.match(myregexp4) || thisPost.innerHTML.match(myregexp5)) {
-								thisPost.parentNode.removeChild(thisPost);
+							if (gthisPost.innerHTML.match(myregexp1) || gthisPost.innerHTML.match(myregexp2) || gthisPost.innerHTML.match(myregexp3) || gthisPost.innerHTML.match(myregexp4) || gthisPost.innerHTML.match(myregexp5)) {
+								gthisPost.parentNode.removeChild(gthisPost);
 							}
 						}
 						if(Options.DeleteFood){
 							var NameArray = [];
 							if (Options.DeleteFoodUsers.trim() != "")
 								NameArray = Options.DeleteFoodUsers.trim().toUpperCase().split(",");
-							var postAuthor = document.evaluate('.//*[@class="nm"]', thisPost, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
+							var postAuthor = document.evaluate('.//*[@class="nm"]', gthisPost, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
 							if(postAuthor.snapshotItem(0)){
 								var postAuthorName = postAuthor.snapshotItem(0).innerHTML;
 								if(postAuthorName != DisplayName && ((NameArray.indexOf(postAuthorName.split(" ")[1].toUpperCase()) != -1) || NameArray.length==0)){
-									if (thisPost.innerHTML.match(myregexp6)) {
-										thisPost.parentNode.removeChild(thisPost);
+									if (gthisPost.innerHTML.match(myregexp6)) {
+										gthisPost.parentNode.removeChild(gthisPost);
 									}	
 								}		
 							}
