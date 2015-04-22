@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150414a
+// @version        20150422a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,6 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
+// @releasenotes 	<p>Make march presets available to BOT (for Quick Attack)</p><p>Display city defend status on map context menu</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -25,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150414a';
+var Version = '20150422a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -88,6 +89,7 @@ var GlobalOptions = {
 	ptupdatebeta: 0,
 };
 var Options = {
+	OneClickAttackPreset        : 0,
 	KillSounds:true,
 	KillMusic:true,
 	includeCity: true,
@@ -1038,7 +1040,7 @@ var mapinfoFix = {
 		}		
 		t.dispStatusMod.setEnable(Options.dispStatus);
 		
-		t.MapContextMenuAdd = new CalterUwFunc ('modal_maptile', [[/}\s*$/, ';setTimeout(function() { MapContextMenuAdd_hook(j,k,m,a,h,f,o); },0); }']]);
+		t.MapContextMenuAdd = new CalterUwFunc ('modal_maptile', [[/}\s*$/, ';setTimeout(function() { MapContextMenuAdd_hook(j,k,m,a,h,f,o,e); },0); }']]);
 		unsafeWindow.MapContextMenuAdd_hook = t.MapContextMenu;
 		t.MapContextMenuAdd.setEnable (Options.mapMenuInfo);
 	},
@@ -1087,53 +1089,115 @@ var mapinfoFix = {
 		var t = mapinfoFix;
 		return t.dispStatusMod.isAvailable();
 	},
-	MapContextMenu : function(uid,x,y,a,h,f,o) {
+	MapContextMenu : function(uid,x,y,a,h,f,o,e) {
+		var t = mapinfoFix;
 		var div = ById('contextMenu');
+		
+		var MarchPresets = {0:"--Select March Preset--"};
+		for (var PN in Options.AttackFav) {
+			MarchPresets[PN] = Options.AttackFav[PN][0];
+		}
+
+		var DefendStat = '';
+		var citytile = ((e.indexOf("city") > -1 && uid!=null && uid!=0 && uid!="0") || e.indexOf("mist") > -1);
+		if (citytile) { DefendStat = '<div style="margin-top:6px;" align=center id=ptDefendStatus>&nbsp;</div>';}
+		
+		uW.ptStopProp = function (e) { e.stopPropagation();};
+		uW.ptMapSelMarchPreset = function () {
+			Options.OneClickAttackPreset = document.getElementById('ptMapOneClickAttackPreset').value;
+			uW.ptOneClickAttackPreset = Options.OneClickAttackPreset;
+			saveOptions();
+		};
+
+		var QAPreset = '<div align=center>'+htmlSelector(MarchPresets, Options.OneClickAttackPreset, 'id=ptMapOneClickAttackPreset class=btInput onChange="ptMapSelMarchPreset();" onMouseMove="ptStopProp(event);" onMouseOut="ptStopProp(event);" onClick="ptStopProp(event);" onMouseUp="ptStopProp(event);"')+'</div>';
+		
 		if (uid!=null && uid!=0 && uid!="0") {
 			var scr = document.createElement('div');
-			scr.innerHTML = '<div align=center><b>Loading...</b></div>';
-//			scr.className = "maptilewrap";
-			div.appendChild(scr);
-			if (uid!=null && uid!=0 && uid!="0") {
-				var params = uW.Object.clone(uW.g_ajaxparams);
-				params.checkArr = uid;
-				new MyAjaxRequest(uW.g_ajaxpath + "ajax/getOnline.php" + uW.g_ajaxsuffix, {
-					method: "post",
-					parameters: params,
-					onSuccess: function (rslt) {
-						var p = rslt.data;
-						var params = uW.Object.clone(uW.g_ajaxparams);
-						params.pid = uid;
-						new MyAjaxRequest(uW.g_ajaxpath + "ajax/viewCourt.php" + uW.g_ajaxsuffix, {
-							method: "post",
-							parameters: params,
-							onSuccess: function (rslt) {
-								if (rslt.ok) {
-									var u = unixTime();
-									var f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
-									var misted = (f >= u);
-									m = '<TABLE width="100%" class=ptTab style="font-size:11px"><tr><td align="center"><div style="font-size:12px"><b>' + rslt.playerInfo.displayName +'</b></div></td></tr>';
-									m += '<tr><TD align="center"><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + rslt.playerInfo.userId + '">' + parseInt(rslt.playerInfo.userId) + '</a></td></tr>';
-									var g=uW.g_js_strings.commonstr,h={1:g.normal,2:uW.g_js_strings.MapObject.begprotect,3:g.truce,4:g.vacation};
-									m += '<tr><TD align="center"><B>' + h[rslt.playerInfo.warStatus] + '</b></td></tr>';
-									if (!p[uid])
-										m+= '<tr><TD align="center">'+ getLastLogDuration(rslt.playerInfo.lastLogin) +'</td></tr>';
-									else 	
-										m+= '<tr><TD align="center"><span style="color:#f00;"><b>(ONLINE)</b></span></td></tr>';
-									if (misted) 
-										m += '<tr><TD align="center"><B>*** MISTED ***</b></td></tr>';
-									scr.innerHTML = m + '</table>';
-								}	
-							},onFailure: function (rslt) {},
-
-						});
-
-					},onFailure: function (rslt) {},
-				});
+			if ((h!=0 && h == getMyAlliance()[0]) || uid == uW.tvuid) {
+				var QAPreset = '';
 			}
-		}	
+			scr.innerHTML = QAPreset+'<div align=center><b>Loading...</b></div>';
+			div.appendChild(scr);
+			var params = uW.Object.clone(uW.g_ajaxparams);
+			params.checkArr = uid;
+			new MyAjaxRequest(uW.g_ajaxpath + "ajax/getOnline.php" + uW.g_ajaxsuffix, {
+				method: "post",
+				parameters: params,
+				onSuccess: function (rslt) {
+					var p = rslt.data;
+					var params = uW.Object.clone(uW.g_ajaxparams);
+					params.pid = uid;
+					new MyAjaxRequest(uW.g_ajaxpath + "ajax/viewCourt.php" + uW.g_ajaxsuffix, {
+						method: "post",
+						parameters: params,
+						onSuccess: function (rslt) {
+							if (rslt.ok) {
+								var u = unixTime();
+								var f = convertTime(new Date(rslt.playerInfo.fogExpireTimestamp.replace(" ","T")+"Z"));
+								var misted = (f >= u);
+								m = '<TABLE width="100%" class=ptTab style="font-size:11px"><tr><td align="center"><div style="font-size:12px"><b>' + rslt.playerInfo.displayName +'</b></div></td></tr>';
+								m += '<tr><TD align="center"><a target="_tab" href="http://kocmon.com/' + GetServerId() + '/players/' + rslt.playerInfo.userId + '">' + parseInt(rslt.playerInfo.userId) + '</a></td></tr>';
+								var g=uW.g_js_strings.commonstr,h={1:g.normal,2:uW.g_js_strings.MapObject.begprotect,3:g.truce,4:g.vacation};
+								m += '<tr><TD align="center"><B>' + h[rslt.playerInfo.warStatus] + '</b></td></tr>';
+								if (!p[uid])
+									m+= '<tr><TD align="center">'+ getLastLogDuration(rslt.playerInfo.lastLogin) +'</td></tr>';
+								else 	
+									m+= '<tr><TD align="center"><span style="color:#f00;"><b>(ONLINE)</b></span></td></tr>';
+								if (misted) 
+									m += '<tr><TD align="center"><B>*** MISTED ***</b></td></tr>';
+								scr.innerHTML = QAPreset+m + '</table>'+DefendStat;
+								var MenuHeight = parseInt(div.offsetHeight);
+								div.style.height = MenuHeight + 'px';
+								div.style.overflow = 'visible';
+								scr.style.height = '500px';
+								scr.style.background = '';
+								if (citytile) {t.getDefendStatus(x,y,document.getElementById('ptDefendStatus'));}
+							}	
+						},onFailure: function (rslt) {},
+					});
+				},onFailure: function (rslt) {},
+			});
+		}
+		else {
+			var scr = document.createElement('div');
+			scr.innerHTML = QAPreset+DefendStat;
+			div.appendChild(scr);
+			var MenuHeight = parseInt(div.offsetHeight);
+			div.style.height = MenuHeight + 'px';
+			div.style.overflow = 'visible';
+			scr.style.height = '500px';
+			scr.style.background = '';
+			if (citytile) {t.getDefendStatus(x,y,document.getElementById('ptDefendStatus'));}
+		}
 	},
-	
+
+	getDefendStatus : function(x,y,div,notify) {
+		var t = mapinfoFix;
+		var params = uW.Object.clone(uW.g_ajaxparams);
+		params.xcoord = x;
+		params.ycoord = y;
+		params.currentcityid = uW.currentcityid;
+		params.use_champion = false;
+		params.knight = 0;
+		params.cityId = 0;
+		for (var ui in uW.cm.UNIT_TYPES) {
+			i = uW.cm.UNIT_TYPES[ui];		
+			params["u" + i] = 0;
+		}
+		new MyAjaxRequest(uW.g_ajaxpath + "ajax/ifCityDefending.php" + uW.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (rslt.ok && rslt.ok=="true") {
+					if (div) div.innerHTML = '<span style="color:#808;"><b>*&nbsp;DEFENDING&nbsp;*</b></span>';
+				}
+				else {
+					if (div) div.innerHTML = '<span>Hiding</span>';
+				}
+				if (notify) notify(rslt);
+			},onFailure: function (rslt) {},
+		});
+	},
 }
 var ApothTimeFix = {
 	apothFix: null,
@@ -10640,6 +10704,8 @@ Tabs.Attaque = {
 		t.cont = div;
 		t.state = null;
 		clearTimeout(t.displayTimer);
+		uW.ptAttackFav = Options.AttackFav;
+		uW.ptOneClickAttackPreset = Options.OneClickAttackPreset;
 	},
 	getContent: function () {
 		var t = Tabs.Attaque;

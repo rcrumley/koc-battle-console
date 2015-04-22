@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150415c
+// @version        20150422a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Fixed problem with autoscout</p><p>Fixed problem with alliance help results showing in global chat</p>
+// @releasenotes 	<p>Quick Attack from map context menu (Needs PowerTools update)</p><p>Increase farm tab max might to 14 digits</p><p>Fix problem with chat posts in global</p><p>Two more champ uniques</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150415c';
+var Version = '20150422a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -1327,7 +1327,7 @@ Tabs.farm = {
 	m +='</tr>';
     m += '<TR><TD>Might:</td>';
     m += '<TD width=50>Min.:<INPUT type=text id=FarmMinMight size=10 maxlength=11 value='+ FarmOptions.MinMight +'></td>';
-    m += '<TD>Max.:<INPUT type=text id=FarmMaxMight size=10 maxlength=11 value='+ FarmOptions.MaxMight +'></td></tr>';
+    m += '<TD>Max.:<INPUT type=text id=FarmMaxMight size=10 maxlength=14 value='+ FarmOptions.MaxMight +'></td></tr>';
     m += '<TR><TD>Farm if inactive for more then: </td>';
     m += '<TD><INPUT type=text id=FarmInactive size=2 value='+ FarmOptions.Inactive +'>days(checked every 23 hours).</td>';
 	m += '<TD> Farm is BAD if brought less then: ';
@@ -18085,6 +18085,7 @@ var ChatPane = {
 	var myregexp4 = /\'s project has received the maximum amount of help\./i;
 	var myregexp5 = /You already helped with (.*?)\'s project\./i;
 	var myregexp6 = /is low on food. Remaining:/i;
+	var myregexp7 = /\> says to the alliance\:\<\/b\>/i;
     
     if(AllianceChatBox){
         var chatPosts = document.evaluate(".//div[contains(@class,'chatwrap')]", AllianceChatBox, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null );
@@ -18161,8 +18162,7 @@ var ChatPane = {
 						}
 					}
 					if(Options.DeletegAl) {
-						var myregexp1 = /\> says to the alliance\:\<\/b\>/i;
-						if (gthisPost.innerHTML.match(myregexp1))
+						if (gthisPost.innerHTML.match(myregexp7))
 							gthisPost.parentNode.removeChild(gthisPost);
 					}
 					else {
@@ -25256,8 +25256,9 @@ Tabs.Champion = {
 		UniqueItems["28506"] = {Id:28506,Name:"Feral Cloak", Effects:[{type:202,tier:2},{type:4,tier:2},{type:206,tier:3},{type:42,tier:3},{type:1,tier:3}],Faction:3,Type:9};
 		UniqueItems["28507"] = {Id:28507,Name:"Commander's Cloak", Effects:[{type:207,tier:2},{type:209,tier:2},{type:202,tier:3},{type:30,tier:3},{type:2,tier:3}],Faction:1,Type:9};
 		UniqueItems["28508"] = {Id:28508,Name:"Mire Knight's Cloak", Effects:[{type:202,tier:2},{type:4,tier:2},{type:202,tier:3},{type:61,tier:3},{type:1,tier:3}],Faction:2,Type:9};
-
+		UniqueItems["28509"] = {Id:28509,Name:"Black Knight's Necklace", Effects:[{type:202,tier:2},{type:26,tier:3},{type:205,tier:1},{type:3,tier:3},{type:202,tier:3}],Faction:2,Type:8};
 		UniqueItems["28600"] = {Id:28600,Name:"Necklace of Radiance", Effects:[{type:204,tier:2},{type:47,tier:3},{type:206,tier:3},{type:4,tier:3},{type:204,tier:3}],Faction:1,Type:8};
+		UniqueItems["28601"] = {Id:28601,Name:"Necklace of the Wild", Effects:[{type:203,tier:2},{type:34,tier:2},{type:209,tier:2},{type:1,tier:3},{type:203,tier:2}],Faction:3,Type:8};
 		UniqueItems["28602"] = {Id:28602,Name:"Scourge Knight's Necklace", Effects:[{type:208,tier:2},{type:58,tier:2},{type:207,tier:3},{type:5,tier:2},{type:208,tier:3}],Faction:2,Type:8};		
 		
 		for (var i=28001;i<28500;i++) {
@@ -28166,24 +28167,25 @@ function QuickScout() {
 	// add a new option to the context menu
 	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City["5"].push("portal"); // add portal to mists
 	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City["5"].push("qqmod");
+	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City["5"].push("qamod");
 	var cityType = unsafeWindow.cm.CITY_STATUS.ANOTHER_PLAYER_CITY_AND_NOT_IN_YOUR_ALLIANCE;
 	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City[cityType].push("qqmod");
+	uW.cm.ContextMenuMapController.prototype.MapContextMenus.City[cityType].push("qamod");
 	var wildContext;
 	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.EnemyWilderness;
 	for (wild in wildContext) {
 		wildContext[wild].push("qqmod");
+		wildContext[wild].push("qamod");
 	}
 	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.Wilderness;
 	for (wild in wildContext) {
 		wildContext[wild].push("qqmod");
+		wildContext[wild].push("qamod");
 	}
 	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.FriendlyWilderness;
 	for (wild in wildContext) {
 		wildContext[wild].push("qqmod");
-	}
-	wildContext = uW.cm.ContextMenuMapController.prototype.MapContextMenus.AllianceWilderness;
-	for (wild in wildContext) {
-		wildContext[wild].push("qqmod");
+		wildContext[wild].push("qamod");
 	}
 
 	// add actions to the menu item
@@ -28192,6 +28194,12 @@ function QuickScout() {
 		' b.text = "QuickScout"; b.color = "green"; ' +
 		' b.action = function () { ' +
 		' quickscout(e); ' +
+		' }; ' +
+		' d.push(b); break; ' +
+		'case "qamod":' +
+		' b.text = "QuickAttack"; b.color = "red"; ' +
+		' b.action = function () { ' +
+		' quickattack(e); ' +
 		' }; ' +
 		' d.push(b); break; ' +
 		' default: ']]);
@@ -28224,6 +28232,63 @@ function QuickScout() {
 		});
 		
 	}
+
+	uW.quickattack = function(e) {
+		var uW = unsafeWindow;
+		if (!uW.ptAttackFav || uW.ptOneClickAttackPreset == 0 || !uW.ptAttackFav[uW.ptOneClickAttackPreset]) {
+			uW.Modal.showAlert('PowerTools March preset not selected, not defined, or not available');
+			return;
+		}
+	
+		// send selected preset on attack
+		
+		var knt = new Array();
+		for (k in Seed.knights['city' + uW.currentcityid]) {
+			if (Seed.knights['city' + uW.currentcityid][k]["knightStatus"] == 1 && Seed.leaders['city' + uW.currentcityid]["resourcefulnessKnightId"] != Seed.knights['city' + uW.currentcityid][k]["knightId"] && Seed.leaders['city' + uW.currentcityid]["politicsKnightId"] != Seed.knights['city' + uW.currentcityid][k]["knightId"] && Seed.leaders['city' + uW.currentcityid]["combatKnightId"] != Seed.knights['city' + uW.currentcityid][k]["knightId"] && Seed.leaders['city' + uW.currentcityid]["intelligenceKnightId"] != Seed.knights['city' + uW.currentcityid][k]["knightId"]) {
+				knt.push({
+					Name: Seed.knights['city' + uW.currentcityid][k]["knightName"],
+					Combat: Seed.knights['city' + uW.currentcityid][k]["combat"],
+					ID: Seed.knights['city' + uW.currentcityid][k]["knightId"],
+				});
+			}
+		}
+		if (!knt[0]) {
+			uW.Modal.showAlert('No available knights');
+			return;
+		}
+		knt = knt.sort(function sort(a, b) {
+			a = parseInt(a['Combat']);
+			b = parseInt(b['Combat']);
+			return a == b ? 0 : (a > b ? -1 : 1);
+		});
+		
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.cid = uW.currentcityid;
+		params.type = 4
+		params.kid = knt[0].ID;
+		params.xcoord = e.tile.x;
+		params.ycoord = e.tile.y;
+		params.gold = 0;
+		params.r1 = 0;
+		params.r2 = 0;
+		params.r3 = 0;
+		params.r4 = 0;
+		params.r5 = 0;
+		for (var ui in uW.cm.UNIT_TYPES) {
+			var i = uW.cm.UNIT_TYPES[ui];
+			params["u"+i] = 0;
+			if (uW.ptAttackFav[uW.ptOneClickAttackPreset][i]) {
+				params["u"+i] = parseIntNan(uW.ptAttackFav[uW.ptOneClickAttackPreset][i]);
+			}
+		}
+		params.champid = 0; 
+
+		March.addMarch(params, function(rslt){
+			if (!rslt.ok) {
+				uW.Modal.showAlert(uW.printLocalError(rslt.error_code, rslt.msg, rslt.feedback));
+			}
+		});
+	};
 
 	uW.quickscoutsearch = function(x,y,cid) {
 		// send 1 scout
