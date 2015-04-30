@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150422a
+// @version        20150430a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Quick Attack from map context menu (Needs PowerTools update)</p><p>Increase farm tab max might to 14 digits</p><p>Fix problem with chat posts in global</p><p>Two more champ uniques</p>
+// @releasenotes 	<p>Send champs on quickattack (Needs Tools update!)</p><p>Fix tower alerts for lower tower levels</p><p>Fix search when changing co-ords</p><p>Bypass RockYou Object watch code (they are trying to kill scripts!)</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150422a';
+var Version = '20150430a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -112,8 +112,8 @@ var Options = {
   neutralOnly  : false,  
   srcAll       : true,  
   srcScoutAmt  : 1,
-  minmight     : 1,
-  maxmight     : 99999999,
+  minmight     : 0,
+  maxmight     : 0,
   srcdisttype  : 'square',
   srctype      : 0,
   pbWinIsOpen  : false,
@@ -716,8 +716,10 @@ var aj2 = function(c, d, b, a)
             unsafeWindow.AjaxCall.gAjaxRequest(c, d, b, a, "post");
         }
     }
-if(unsafeWindow.AjaxCall)
-    unsafeWindow.AjaxCall.gPostRequest = aj2
+if(unsafeWindow.AjaxCall) {
+	unsafeWindow.AjaxCall.unwatch("gPostRequest");
+	unsafeWindow.AjaxCall.gPostRequest = aj2;
+}
 /***  Run only in "apps.facebook.com" instance ... ***/
 function facebookInstance (){
   function setWide (){
@@ -1085,7 +1087,7 @@ function GESeverymin (unixtime) {//put functions here to execute every min
 		};
 	//end window open in other browser warning auto click
 		new Tabs.Throne.throneHUDredraw();
-		new unsafeWindow.update_seed_ajax();
+//		new unsafeWindow.update_seed_ajax(); don't think this is required, and could cause probs
 };
 
 function GESeverytwomin (unixtime) {//put functions here to execute every 2 min
@@ -6415,9 +6417,12 @@ Tabs.tower = {
 			}
 			new t.sendalert(m); 
 		}
-		var totTroops = 0;
-		for (k in m.unts){
-			totTroops += Number(m.unts[k]);
+		if (!m.unts) { var totTroops = 99999999; } // no unit info, watchtower not high enough? Force to alliance chat not whisper.
+		else {
+			var totTroops = 0;
+			for (k in m.unts){
+				totTroops += Number(m.unts[k]);
+			}
 		}
 		if (Options.alertConfig.aChat) {
 			if (Options.alertConfig.whisper && totTroops < Options.alertConfig.whisperTroops) {
@@ -8179,10 +8184,12 @@ Tabs.Search = {
   show : function (cont){
   },
 
-  citySelNotify : function (city){
+  citySelNotify : function (city,x,y){
     var t = Tabs.Search;
-    t.selectedCity = city;
-    t.JumpCity(city.idx);
+	if (city) {
+		t.selectedCity = city;
+		t.JumpCity(city.idx);
+	}	
   },
   
   JumpCity:function(cityNum) {
@@ -20348,7 +20355,6 @@ var DeleteReports = {
 				}	
             }
             if (Options.DeleteMsgs3){
-                for(i in CrestData) {
                for (l in unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
                   if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendlyToThem[l].allianceId)
                         deletes1.push(k.substr(2));
@@ -20358,9 +20364,7 @@ var DeleteReports = {
                         deletes1.push(k.substr(2));
                }
                 }
-         }            
             if (Options.DeleteMsgs4){
-                for(i in CrestData) {
 					if (Options.DeleteMsgsUID != "") {
 						// split string by commas
 						var UIDArray = Options.DeleteMsgsUID.split(","); 
@@ -20369,7 +20373,6 @@ var DeleteReports = {
 					}
 				}
 			}            
-        }
         if(deletes1.length > 0 || deletes0.length > 0){
             t.deleteCheckedReports(deletes1, deletes0);
         } else {
@@ -28281,7 +28284,18 @@ function QuickScout() {
 				params["u"+i] = parseIntNan(uW.ptAttackFav[uW.ptOneClickAttackPreset][i]);
 			}
 		}
+		
 		params.champid = 0; 
+		if (uW.ptAutoChamp) {
+			for (y in Seed.champion.champions) {
+				citychamp = Seed.champion.champions[y];
+				if (citychamp.assignedCity == uW.currentcityid) {
+					var champstatus = citychamp.status;
+					if (champstatus != "10") { params.champid = citychamp.championId; }
+					break;	
+				}
+			}
+		}
 
 		March.addMarch(params, function(rslt){
 			if (!rslt.ok) {
