@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150422a
+// @version        20150430a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
-// @releasenotes 	<p>Make march presets available to BOT (for Quick Attack)</p><p>Display city defend status on map context menu</p>
+// @releasenotes 	<p>IMPORTANT! Fix multi-browser window disable option so you don't lose communication from the server</p><p>Make auto champ setting available to BOT (for Quick Attack)</p><p>Fix coloured city buttons in FF31</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -26,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150422a';
+var Version = '20150430a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -1338,10 +1338,15 @@ var bypassMulti = {
 	MultiBrowserBypass: null,
 	init: function () {
 		t = bypassMulti;
-		//      t.MultiBrowserBypass = new CalterUwFunc ('update_seed_ajax', [[/if\(typeof\s*isCancelTraining/im,'var l_lastCallTime = 0; var reload_requests = 0; var l_callIntervalMin = 10; if(typeof isCancelTraining'],[/if\(rslt\.error_code\s*==\s*60\)/im,'return; if(rslt.error_code == 60)']]);
+		
+		unsafeWindow.ptRefreshSeedHook = function () {
+			logit("multi-browser message detected... attempting to reconnect with server");
+			Tabs.Options.updateAll();
+		}
+		
 		t.MultiBrowserBypass = new CalterUwFunc('update_seed_ajax', [
 			[/if\s*\(typeof\s*isCancelTraining/im, 'var l_lastCallTime = cm.l_lastCallTime; var reload_requests = cm.reload_requests; var l_callIntervalMin = cm.l_callIntervalMin; if(typeof isCancelTraining'],
-			[/if\s*\(rslt\.error_code\s*==\s*60\)/im, 'return; if(rslt.error_code == 60)']
+			[/if\s*\(rslt\.error_code\s*==\s*60\)/im, 'ptRefreshSeedHook();return; if(rslt.error_code == 60)']
 		]);
 		t.MultiBrowserBypass.setEnable(Options.allowMultiBroswer);
 	},
@@ -7347,7 +7352,7 @@ Tabs.Options = {
 			m += '<TR><TD><INPUT id=togTRAetherCostFix type=checkbox /></td><TD>Fix display of aetherstones for throne room upgrade/enhance</td></tr>';
 			m += '<TR><TD><INPUT id=togMMBImageFix type=checkbox /></td><TD>Post correct image to facebook for Merlin Box</td></tr>';
 			m += '<TR><TD><INPUT id=togChatTimeFix type=checkbox /></td><TD>Always show local time on chat posts</td></tr>';
-			m += '<TR><TD><INPUT id=togAllowMulti type=checkbox /></td><TD>Disable Multi-Browser check v2 (experimental)</td></tr>';
+			m += '<TR><TD><INPUT id=togAllowMulti type=checkbox /></td><TD>Disable Multi-Browser Check <SPAN class=boldRed>(USE WITH CAUTION!)</span></td></tr>';
 			m += '<TR><TD><INPUT id=togRaidPatch type=checkbox /></td><TD>Fix stuck raid marches (experimental)</td></tr>';
 			m += '<TR><td><INPUT id=MoveFurnitureChk type=checkbox /></td><td>Rearrange throne room furniture for better visibility&nbsp;(needs refresh)</td></tr>';
 			m += '<TR><TD><INPUT id=togMapDblClickFix type=checkbox /></td><TD>Restore double click map tile</td></tr>';
@@ -7633,10 +7638,14 @@ Tabs.Options = {
 	// This function grabs a fresh copy of the main_src and replaces the seed variable with the returned data.
 	// This refreshes the data without a full web page refresh.
 	updateAll: function () {
+		// if update_seed_ajax is running, wait for it to finish before going any further..
+		if (uW.g_update_seed_ajax_do) {
+			setTimeout(Tabs.Options.updateAll,1000);
+			return;
+		}
 		// stop update_seed_ajax while this is happening. This is a kabam indicator (but it does still fire on a cancel training.. who knows why they've done it like that)
 		uW.g_update_seed_ajax_do = true;
-		//potential fix for missing troop recalls:  true flag forces troop march update
-		//unsafeWindow.update_seed_ajax(true);
+
 		// update the timestamps
 		var ts = (new Date().getTime() / 1000) + uW.g_timeoff;
 		var cts = parseInt((ts - 25.1) * 1000);
@@ -7650,8 +7659,6 @@ Tabs.Options = {
 				method: "POST",
 				parameters: params,
 				onSuccess: function (rslt) {
-					// let update_seed_ajax run again in game
-					uW.g_update_seed_ajax_do = false;
 					var mainSrcHTMLCode = rslt.responseText;
 					var myregexp = /var seed=\{.*?\};/;
 					var match = myregexp.exec(mainSrcHTMLCode);
@@ -7666,7 +7673,7 @@ Tabs.Options = {
 									Seed[jj] = seed2[jj];
 								}
 						}
-						//                         delete Seed.ss;
+
 						for (var o = 0; o < Seed.cities.length; o++) {
 							var n = Seed.cities[o][0];
 							Seed.citystats["city" + n].pop[0] = parseInt(Seed.citystats["city" + n].pop[0]);
@@ -7700,10 +7707,12 @@ Tabs.Options = {
 						unsafeWindow.cm.ThroneView.renderInventory(unsafeWindow.kocThroneItems);
 						unsafeWindow.seed.player.g = seed_player_g;
 					}
+					// let update_seed_ajax run again in game
+					setTimeout( function () {uW.g_update_seed_ajax_do = false;},5000); // 5 second delay before we allow update_seed_ajax to run again :)
 				},
 				onFailure: function () {
 					// let update_seed_ajax run again in game
-					uW.g_update_seed_ajax_do = false;
+					setTimeout( function () {uW.g_update_seed_ajax_do = false;},5000); // 5 second delay before we allow update_seed_ajax to run again :)
 					logit("ERROR ********: ", inspect(rslt, 3, 1));
 					if (notify != null)
 						notify(rslt.errorMsg);
@@ -10706,6 +10715,7 @@ Tabs.Attaque = {
 		clearTimeout(t.displayTimer);
 		uW.ptAttackFav = Options.AttackFav;
 		uW.ptOneClickAttackPreset = Options.OneClickAttackPreset;
+		uW.ptAutoChamp = Options.marchautochamp;
 	},
 	getContent: function () {
 		var t = Tabs.Attaque;
@@ -10800,6 +10810,7 @@ Tabs.Attaque = {
 			}, false);
 			ById("ptmarch_autochamp").addEventListener('click', function () {
 				Options.marchautochamp = this.checked;
+				uW.ptAutoChamp = Options.marchautochamp;
 				saveOptions();
 				t.show();
 			}, false);
@@ -17517,6 +17528,7 @@ function formatUnixTime(unixTimeString, format) {
 var cdtd = {
 	views: null,
 	init: function () {
+		unsafeWindow.unwatch("update_citylist");
 		var t = cdtd;
 		t.views = new CalterUwFunc("citysel_click", [
 			[/cm\.PrestigeCityView\.render\(\)/im, 'cm.PrestigeCityView.render();cdtdhook();']
