@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150430a
+// @version        20150515a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Send champs on quickattack (Needs Tools update!)</p><p>Fix tower alerts for lower tower levels</p><p>Fix search when changing co-ords</p><p>Bypass RockYou Object watch code (they are trying to kill scripts!)</p>
+// @releasenotes 	<p>Revamped Inventory Tab</p><p>Nomad Camps in Search</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150430a';
+var Version = '20150515a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -562,6 +562,22 @@ var HOURGLASSES_TIME_MIN_THRESHOLD = {
 
 // Get element by id shortform with parent node option
 function $(ID,root) {return (root||document).getElementById(ID);}
+function ById(id) {return document.getElementById(id);}
+
+function getAbsoluteOffsets(e) {
+	ret = {
+		left: 0,
+		top: 0
+	};
+	while (e.offsetParent) {
+		if (e.style.position == 'absolute')
+			break;
+		ret.left += e.offsetLeft;
+		ret.top += e.offsetTop;
+		e = e.offsetParent;
+	}
+	return ret;
+}
 
 var nHtml={
   FindByXPath:function(obj,xpath,nodetype) {
@@ -819,6 +835,7 @@ function CheckRemoveAlert() {
 }  
   
 function HandlePublishPopup() {
+
    if(GlobalOptions.autoPublishGamePopups || GlobalOptions.autoCancelGamePopups){
    // Check the app id (we only want to handle the popup for kingdoms of camelot)
       var FBInputForm = document.getElementById('uiserver_form');
@@ -8328,7 +8345,7 @@ Tabs.Search = {
         }
     if (t.opt.searchType == 1){
       m += '<TR><TD class=xtab align=right>'+translate("Wilderness Type")+':</td><TD class=xtab><SELECT id=pafilWildType>';
-      m += htmlOptions ( {1:translate('Grassland/Lake'), 3:translate('Woodlands'), 4:translate('Hills'), 5:translate('Mountain'), 6:translate('Plain'), 8:translate('Dark Forest'), 9:translate('Ruin'), 10:translate('Merc'), 11:translate('Bog'), 0:translate('ALL')}, Options.wildType );
+      m += htmlOptions ( {1:translate('Grassland/Lake'), 3:translate('Woodlands'), 4:translate('Hills'), 5:translate('Mountain'), 6:translate('Plain'), 8:translate('Dark Forest'), 9:translate('Ruin'), 10:translate('Merc'), 11:translate('Bog'), 12:translate('Nomad'), 0:translate('ALL')}, Options.wildType );
       m+= '</select></td></tr>';
       // m+= '<TR><TD class=xtab align=right>Grassland/Lake:</td><TD class=xtab><INPUT name=pbfil id=pafilGrass type=CHECKBOX '+ (Options.GrassOnly?' CHECKED':'') +'\><td></tr>';
       // m+= '<TR><TD class=xtab align=right>Woodlands:</td><TD class=xtab><INPUT name=pbfil id=pafilWood type=CHECKBOX '+ (Options.WoodOnly?' CHECKED':'') +'\><td></tr>';
@@ -8549,7 +8566,7 @@ Tabs.Search = {
   },
   
   dispMapTable : function (){
-    var tileNames = ['Barb Camp', 'Grassland', 'Lake', 'Woodlands', 'Hills', 'Mountain', 'Plain', null, 'Dark Forest', 'Ruin', 'Merc', 'Bog' ];
+    var tileNames = ['Barb Camp', 'Grassland', 'Lake', 'Woodlands', 'Hills', 'Mountain', 'Plain', null, 'Dark Forest', 'Ruin', 'Merc', 'Bog', 'Nomad' ];
     var t = Tabs.Search;
     var coordsOnly = document.getElementById('pacoordsOnly').checked;
     if (DEBUG_SEARCH) DebugTimer.start();
@@ -9005,6 +9022,8 @@ Tabs.Search = {
             type = 11;
       } else if (t.opt.searchType==1 && map[k].tileType==55) {
             type = 10;
+      } else if (t.opt.searchType==1 && map[k].tileType==56) {
+            type = 12;
       } else if (t.opt.searchType==1 && map[k].tileType==52) {
             type = 9;
       } else if (t.opt.searchType==2 && map[k].tileCityId>=0 && map[k].tileType>50 && map[k].cityName) {
@@ -21697,302 +21716,347 @@ Tabs.Combat = {
 
 /**************************** Inventory Tab ****************************************/
 Tabs.Inventory = {
-   myDiv: null,
-   general: [],
-   combat: [],
-   tabLabel: unsafeWindow.g_js_strings.commonstr.inventory,
-   resources: [],
-   chest: [],
-   court: [],
-   jewels: [],
-   type: null,
-   queue:[],
-   isBusy:false,
-   counter:0,
-   max:0,
-   city_holder : 0,
+	tabLabel: translate('Inventory'),
+	myDiv: null,
+	general: [],
+	speedup: [],
+	combat: [],
+	resources: [],
+	chest: [],
+	court: [],
+	jewels: [],
+	type: null,
+	queue:[],
+	isBusy:false,
+	counter:0,
+	max:0,
+	city_holder : 0,
+	mightarray : {1510:2250,1511:7500,1512:11250,1513:15000,1514:3300,1515:11000,1516:16500,1517:22000,1518:3750,1519:12500,1520:18750,1521:25000,1522:2250,1523:7500,1524:11250,1525:15000,1498:2250,1499:7500,1500:11250,1501:1500,1502:3000,1503:10000,1504:15000,1505:20000,1361:3750,1422:100,1423:150,1410:500,1444:300,1478:1950,1479:6500,1480:9750,1481:13000,1482:2250,1483:7500,1484:11250,1485:15000,1487:6500,1488:9750,1489:13000,1490:2250,1491:7500,1492:11250,1493:15000,1494:7500,1495:11250,1496:15000,1497:2250,1331:2000,1469:900,1473:750,1477:50000,1340:450,1454:525,1330:400,1350:600,1475:1500,1411:2000,1412:10,1440:300,1468:675,1476:10000,1455:1350,1370:700,1381:3000,1471:100,1390:900,1474:1000,1465:1350,1351:3000,1445:400,1452:175,1461:90,1506:3300,1507:11000,1508:16500,1509:22000,1371:3500,1391:4500,1427:150,1443:200,1311:1000,1401:1800,1341:2250,1321:2000,},
+	timearray : {1:1,2:15,3:60,4:150,5:480,6:900,7:1440,8:3600,10:5760,},
    
-   init: function(div){
-      var t = Tabs.Inventory;
-      t.myDiv = div;
+	init: function(div){
+		var t = Tabs.Inventory;
+		t.myDiv = div;
       
-      var m = "<DIV class=pbStat>Inventory Tab</div>\
-            <CENTER><span class=boldRed>***Use at own risk***</span></center>\
-            <TABLE width=100% ><TR>\
-            <TD width=50%><input type=submit id=pbinventory_general value='General' />\
-               <input type=submit id=pbinventory_combat value='Combat' />\
-               <input type=submit id=pbinventory_resources value='Resources' />\
-               <input type=submit id=pbinventory_chest value='Chest' />\
-               <input type=submit id=pbinventory_court value='Court' />\
-               <input type=submit id=pbinventory_jewels value='Jewels' /></td>\
-            <TD width=50% align=center ><input type=submit id=pbinventory_start value='Start' /></td>\
-               </tr>\
-            <TD><span id='pbinventory_cityselect'></span></td>\
-            <TD><input type=checkbox id=pbinventory_useall />Use all by default</td>\
-               </tr></table>\
-            <DIV class=pbStat>Items</div>\
-            <DIV id=pbinventory style='max-height:600px;overflow-y:auto;'></div>\
-            <DIV id=pbinventory_info></div>";
-      t.myDiv.innerHTML = m;
-      t.sort_Items();
+		var m = '<DIV class=pbStat align=center>'+translate('INVENTORY')+'</div>';
+		m += '<TABLE align=center width=98% cellpadding=0 cellspacing=0 class=xtab>';
+		m += '<TR><TD colspan=3><br><div align=center><input type=button id=pbinventory_general value="'+unsafeWindow.g_js_strings.commonstr.general+'" />';
+		m += '<input type=button id=pbinventory_speedup value="'+unsafeWindow.g_js_strings.commonstr.speedup+'" />&nbsp;';
+		m += '<input type=button id=pbinventory_combat value="'+unsafeWindow.g_js_strings.commonstr.combat+'" />&nbsp;';
+		m += '<input type=button id=pbinventory_resources value="'+unsafeWindow.g_js_strings.commonstr.resources+'" />&nbsp;';
+		m += '<input type=button id=pbinventory_chest value="'+unsafeWindow.g_js_strings.commonstr.chest+'" />&nbsp;';
+		m += '<input type=button id=pbinventory_court value="'+unsafeWindow.g_js_strings.commonstr.court+'" />&nbsp;';
+		m += '<input type=button id=pbinventory_jewels value="'+unsafeWindow.g_js_strings.jewel.jewels+'" /></div><br></td></tr></table>';
+
+		m += '<DIV class=pbStat id=pbinventory_type_header align=center>&nbsp;</div>';
+		m += '<DIV align=center id=pbinventory style="height:500px;overflow-y:auto;">&nbsp;</div>';
+		m += '<DIV class=pbStat align=center>'+translate('USE ITEMS')+'</div><br>';
+		m += '<TABLE align=center width=98% cellpadding=0 cellspacing=0 class=xtab>';
+		m += '<tr><td>Target City:&nbsp;<span id=pbinventory_cityselect></span></td><TD><input type=checkbox id=pbinventory_useall />'+translate('Default to Use All items')+'<br><input type=checkbox id=pbinventory_useable checked />'+translate('Show only Useable Items')+'</td>';
+		m += '<TD align=right>' + strButton20('Use Selected Items', 'id=pbinventory_start') + '</td></tr></table><br>';
+		
+		t.myDiv.innerHTML = m;
+		t.sort_Items();
       
-      t.city = new CdispCityPicker ('pbinventory_city', document.getElementById('pbinventory_cityselect'), true, null, Cities.byID[unsafeWindow.currentcityid].idx);
+		t.city = new CdispCityPicker ('pbinventory_city', document.getElementById('pbinventory_cityselect'), true, null, Cities.byID[unsafeWindow.currentcityid].idx);
       
-      $("pbinventory_general").addEventListener('click', t.display_general, false);
-      $("pbinventory_combat").addEventListener('click', t.display_combat, false);
-      $("pbinventory_resources").addEventListener('click', t.display_resources, false);
-      $("pbinventory_chest").addEventListener('click', t.display_chest, false);
-      $("pbinventory_court").addEventListener('click', t.display_court, false);
-      $("pbinventory_jewels").addEventListener('click', t.display_jewels, false);
-      $("pbinventory_start").addEventListener('click', t.start, false);
+		$("pbinventory_general").addEventListener('click', t.display_general, false);
+		$("pbinventory_speedup").addEventListener('click', t.display_speedup, false);
+		$("pbinventory_combat").addEventListener('click', t.display_combat, false);
+		$("pbinventory_resources").addEventListener('click', t.display_resources, false);
+		$("pbinventory_chest").addEventListener('click', t.display_chest, false);
+		$("pbinventory_court").addEventListener('click', t.display_court, false);
+		$("pbinventory_jewels").addEventListener('click', t.display_jewels, false);
+		$("pbinventory_start").addEventListener('click', t.start, false);
+		$("pbinventory_useable").addEventListener('click', t.show, false);
+		$("pbinventory_general").click();
       
-      $("pbinventory_general").click();
-      
-      //Hack for ItemController
-      t.ItemController = new CalterUwFunc("cm.MultiBuyUse.getNumberUsed", [[/(.|\n)*/i,'function (e) {return ItemController_hook();}']]);
-      unsafeWindow.ItemController_hook = t.e_total;
-   },
+		//Hack for ItemController
+		t.ItemController = new CalterUwFunc("cm.MultiBuyUse.getNumberUsed", [[/(.|\n)*/i,'function (e) {return ItemController_hook();}']]);
+		unsafeWindow.ItemController_hook = Tabs.Inventory.e_total;
+	},
    
-   sort_Items : function (){
-      var t = Tabs.Inventory;
-      for(var k in unsafeWindow.ksoItems){
-         var item = unsafeWindow.ksoItems[k];
-         if(item.count > 0 && item.usable){
-            if(item.category == 1){
-               t.general.push(item);
-            }
-            if(item.category == 3){
-               t.combat.push(item);
-            }
-            if(item.category == 4){
-               t.resources.push(item);
-            }
-            if(item.category == 5){
-               t.chest.push(item);
-            }
-            if(item.category == 6){
-               t.court.push(item);
-            }
-            if(item.category == 7){
-               t.jewels.push(item);
-            }
-            
-         }
-      }
-   },
+	sort_Items : function (){
+		var t = Tabs.Inventory;
+		
+		t.general = [];
+		t.speedup = [];
+		t.combat = [];
+		t.resources = [];
+		t.chest = [];
+		t.court = [];
+		t.jewels = [];
+
+		for(var k in unsafeWindow.ksoItems){
+			var item = unsafeWindow.ksoItems[k];
+			if(item.count > 0){
+				if(item.category == 1){ t.general.push(item); }
+				if(item.category == 2){	t.speedup.push(item); }
+				if(item.category == 3){	t.combat.push(item); }
+				if(item.category == 4){	t.resources.push(item);	}
+				if(item.category == 5){	t.chest.push(item);	}
+				if(item.category == 6){	t.court.push(item);	}
+				if(item.category == 7){	t.jewels.push(item); }
+			}
+		}
+	},
    
-   display_general : function (){
-      var t = Tabs.Inventory;
-      t.type = "general";
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='20px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td></tr><TR>";
-      for (var k in t.general){
-         var item = t.general[k];
-         if(!item.name) continue;
-         m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_general' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,20)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_general_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += (count%3 == 2)?"</tr>":"";
-         count++;
-      }
-      m += "</table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
+	display_general : function (){
+		var t = Tabs.Inventory;
+		t.type = "general";
+		var div = document.getElementById("pbinventory");
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.general.toUpperCase();
+		var count = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th></tr><TR>";
+		for (var k in t.general){
+			var item = t.general[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_general' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_general_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += (count%3 == 2)?"</tr>":"";
+			count++;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+
+		t.setEventHandlers();
+	},
+	
+	display_speedup : function (){
+		var t = Tabs.Inventory;
+		t.type = "speedup";
+		var div = document.getElementById("pbinventory");
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.speedup.toUpperCase();
+		var count = 0;
+		var totaltime = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<tr><td align=center colspan=11><b>Total Speedup Time:&nbsp;<span id=pbinvspeedtime>&nbsp;</span></b></td></tr>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TH class=xtabHD align=right>Time</td><TD width='20px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TH class=xtabHD align=right>Time</th></tr><TR>";
+		for (var k in t.speedup){
+			var item = t.speedup[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			var itemtime = 0;
+			if (t.timearray[item.id])
+				itemtime = t.timearray[item.id] * 60 * item.count;	
+			m += (count%2 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_speedup' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_speedup_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += "<TD align=right>"+((itemtime!=0)?unsafeWindow.timestr(itemtime):'')+"</td>";
+			m += (count%2 == 1)?"</tr>":"";
+			count++;
+			totaltime = totaltime+itemtime;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+
+		var tm = ById('pbinvspeedtime')
+		if (tm) tm.innerHTML = unsafeWindow.timestr(totaltime);
+		
+		t.setEventHandlers();
+	},
+	
+	display_combat : function (){
+		var t = Tabs.Inventory;
+		t.type = "combat";
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.combat.toUpperCase();
+		var div = document.getElementById("pbinventory");
+		var count = 0;
+		var totalmight = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<tr><td align=center colspan=11><b>Total Troop Might:&nbsp;<span id=pbinvcombatmight>&nbsp;</span></b></td></tr>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TH class=xtabHD align=right>Might</td><TD width='20px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TH class=xtabHD align=right>Might</th></tr><TR>";
+		for (var k in t.combat){
+			var item = t.combat[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			var might = 0;
+			if (t.mightarray[item.id])
+				might = t.mightarray[item.id] * item.count;	
+			m += (count%2 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_combat' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_combat_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += "<TD align=right>"+((might!=0)?addCommas(might):'')+"</td>";
+			m += (count%2 == 1)?"</tr>":"";
+			count++;
+			totalmight = totalmight+might;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
       
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
-   display_combat : function (){
-      var t = Tabs.Inventory;
-      t.type = "combat";
-      var mightarray={1510:2250,1511:7500,1512:11250,1513:15000,1514:3300,1515:11000,1516:16500,1517:22000,1518:3750,1519:12500,1520:18750,1521:25000,1522:2250,1523:7500,1524:11250,1525:15000,1498:2250,1499:7500,1500:11250,1501:1500,1502:3000,1503:10000,1504:15000,1505:20000,1361:3750,1422:100,1423:150,1410:500,1444:300,1478:1950,1479:6500,1480:9750,1481:13000,1482:2250,1483:7500,1484:11250,1485:15000,1487:6500,1488:9750,1489:13000,1490:2250,1491:7500,1492:11250,1493:15000,1494:7500,1495:11250,1496:15000,1497:2250,1331:2000,1469:900,1473:750,1477:50000,1340:450,1454:525,1330:400,1350:600,1475:1500,1411:2000,1412:10,1440:300,1468:675,1476:10000,1455:1350,1370:700,1381:3000,1471:100,1390:900,1474:1000,1465:1350,1351:3000,1445:400,1452:175,1461:90,1506:3300,1507:11000,1508:16500,1509:22000,1371:3500,1391:4500,1427:150,1443:200,1311:1000,1401:1800,1341:2250,1321:2000,};
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-	  var totalmight = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD align=right>Might</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD align=right>Might</td></tr><TR>";
-      for (var k in t.combat){
-         var item = t.combat[k];
-         if(!item.name) continue;
-		 var might = 0;
-		 if (mightarray[item.id])
-			might = mightarray[item.id] * item.count;	
-         m += (count%2 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_combat' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,25)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_combat_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += "<TD align=right>"+((might!=0)?addCommas(might):'')+"</td>";
-         m += (count%2 == 1)?"</tr>":"";
-         count++;
-		 totalmight = totalmight+might;
-      }
-      m += "<tr><td colspan=11><b>Total Troop Might:&nbsp;"+addCommas(totalmight)+"</b></td></tr></table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
-      
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
-   display_resources : function (){
-      var t = Tabs.Inventory;
-      t.type = "resources";
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='20px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td></tr><TR>";
-      for (var k in t.resources){
-         var item = t.resources[k];
-         if(!item.name) continue;
-         m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_resources' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,20)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_resources_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += (count%3 == 2)?"</tr>":"";
-         count++;
-      }
-      m += "</table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
-      
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
-   display_chest : function (){
-      var t = Tabs.Inventory;
-      t.type = "chest";
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='20px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td></tr><TR>";
-      for (var k in t.chest){
-         var item = t.chest[k];
-         if(!item.name) continue;
-         m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_chest' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,20)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_chest_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += (count%3 == 2)?"</tr>":"";
-         count++;
-      }
-      m += "</table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
-      
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
-   display_court : function (){
-      var t = Tabs.Inventory;
-      t.type = "court";
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='20px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td></tr><TR>";
-      for (var k in t.court){
-         var item = t.court[k];
-         if(!item.name) continue;
-         m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_court' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,20)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_court_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += (count%3 == 2)?"</tr>":"";
-         count++;
-      }
-      m += "</table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
-      
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
-   display_jewels : function (){
-      var t = Tabs.Inventory;
-      t.type = "jewel";
-      var div = document.getElementById("pbinventory");
-      var count = 0;
-      var m = "<TABLE>";
-      m += "<TR><TD></td><TD>Name</td><TD>Use</td><TD>Count</td><TD width='10px'>&nbsp;</td><TD></td><TD>Name</td><TD>Use</td><TD>Count</td></tr><TR>";
-      for (var k in t.jewels){
-         var item = t.jewels[k];
-         if(!item.name) continue;
-         m += (count%2 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
-         m += "<TD><input type=checkbox class='pbinv_jewel' data-ft='"+JSON.stringify(item)+"' /></td>";
-         m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,40)+"</td>";
-         m += "<TD><input type=text size=2 id='pb_inv_jewel_"+item.id+"' /></td>";
-         m += "<TD>"+item.count+"</td>";
-         m += (count%2 == 1)?"</tr>":"";
-         count++;
-      }
-      m += "</table>";
-      div.innerHTML = (count!=0)?m:"<CENTER>No useable items in this category</CENTER>";
-      
-      var nodes = document.getElementsByClassName("pbinv_"+t.type);
-      if(nodes.length > 0){
-         for(var i=0; i<nodes.length; i++){
-            nodes[i].addEventListener('click', function(e){
-               var item = JSON.parse(e.target.getAttribute("data-ft"));
-               if(e.target.checked)
-                  $("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
-               else
-                  $("pb_inv_"+t.type+"_"+item.id).value = '';
-            },false);
-         }
-      }
-   },
+		var tm = ById('pbinvcombatmight')
+		if (tm) tm.innerHTML = addCommas(totalmight);
+	  
+		t.setEventHandlers();
+	},
    
+	display_resources : function (){
+		var t = Tabs.Inventory;
+		t.type = "resources";
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.resources.toUpperCase();
+		var div = document.getElementById("pbinventory");
+		var count = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th></tr><TR>";
+		for (var k in t.resources){
+			var item = t.resources[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_resources' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_resources_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += (count%3 == 2)?"</tr>":"";
+			count++;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+		
+		t.setEventHandlers();
+	},
+	display_chest : function (){
+		var t = Tabs.Inventory;
+		t.type = "chest";
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.chest.toUpperCase();
+		var div = document.getElementById("pbinventory");
+		var count = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th></tr><TR>";
+		for (var k in t.chest){
+			var item = t.chest[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_chest' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_chest_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += (count%3 == 2)?"</tr>":"";
+			count++;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+		
+		t.setEventHandlers();
+	},
+   
+	display_court : function (){
+		var t = Tabs.Inventory;
+		t.type = "court";
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.commonstr.court.toUpperCase();
+		var div = document.getElementById("pbinventory");
+		var count = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='10px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th></tr><TR>";
+		for (var k in t.court){
+			var item = t.court[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			m += (count%3 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,30)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_court' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_court_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += (count%3 == 2)?"</tr>":"";
+			count++;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+      
+		t.setEventHandlers();
+	},
+	
+	display_jewels : function (){
+		var t = Tabs.Inventory;
+		t.type = "jewel";
+		ById('pbinventory_type_header').innerHTML = unsafeWindow.g_js_strings.jewel.jewels.toUpperCase();
+		var div = document.getElementById("pbinventory");
+		var count = 0;
+		var m = "<TABLE class=xtab cellspacing=0>";
+		m += "<TR><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th><TD width='20px'>&nbsp;</th><TH class=xtabHD>Name</th><TH colspan=2 class=xtabHD>Use</th><TH class=xtabHD>Count</th></tr><TR>";
+		for (var k in t.jewels){
+			var item = t.jewels[k];
+			if(!item.name) continue;
+			if(!item.usable && ById('pbinventory_useable').checked) continue;
+			m += (count%2 == 0)?"<TR>":"<TD width='10px'>&nbsp;</td>";
+			m += "<TD><img width='20px' height='20px' src='"+t.getItemImageURL(item.id)+"' /> "+item.name.substr(0,40)+"</td>";
+			if (item.usable) {
+				m += "<TD><input type=checkbox class='pbinv_jewel' data-ft='"+JSON.stringify(item).replace("'", "")+"' /></td>";
+				m += "<TD><input type=text size=2 id='pb_inv_jewel_"+item.id+"' disabled /></td>";
+			}
+			else {
+				m += "<TD>&nbsp;</td><TD>&nbsp;</td>";
+			}
+			m += "<TD>"+item.count+"</td>";
+			m += (count%2 == 1)?"</tr>":"";
+			count++;
+		}
+		m += "</table>";
+		div.innerHTML = (count!=0)?m:'<br><CENTER>'+translate('No useable items in this category')+'</CENTER><br>';
+		
+		t.setEventHandlers();
+	},
+
+	setEventHandlers : function () {
+		var t = Tabs.Inventory;
+		var nodes = document.getElementsByClassName("pbinv_"+t.type);
+		if(nodes.length > 0){
+			for(var i=0; i<nodes.length; i++){
+				nodes[i].addEventListener('click', function(e){
+					var item = JSON.parse(e.target.getAttribute("data-ft"));
+					if(e.target.checked) {
+						$("pb_inv_"+t.type+"_"+item.id).disabled = false;
+						$("pb_inv_"+t.type+"_"+item.id).value = $("pbinventory_useall").checked?item.count:1;
+					}	
+					else {
+						$("pb_inv_"+t.type+"_"+item.id).disabled = true;
+						$("pb_inv_"+t.type+"_"+item.id).value = '';
+					}	
+				},false);
+			}
+		}
+	},
+	
 	getItemImageURL : function (id) {
 		var s = "";
 		if (id == 999) {
@@ -22024,129 +22088,211 @@ Tabs.Inventory = {
 		return s
 	},
    
-   e_total : function (){
-      var t = Tabs.Inventory;
-      return t.max;
-   },
-   start : function (){
-      var t = Tabs.Inventory;
-      if(t.isBusy){
-         t.isBusy = false;
-         $("pbinventory_start").value = "Start";
-      } else {
-         t.isBusy = true;
-         $("pbinventory_start").value = "Stop";
-         t.queue = [];
-         $("pbinventory_info").innerHTML = "";
-         var nodes = document.getElementsByClassName("pbinv_"+t.type);
-         for(var i = 0; i < nodes.length; i++){
-            if(nodes[i].checked){
-               try{
-                  t.queue.push(JSON.parse(nodes[i].getAttribute("data-ft")));
-               } catch (e){
-                  logit(inspect(e,7,1));
-               }
-            }
-         }
-         if(t.queue.length > 0)
-            t.nextqueue();
-      }
-   },
+	e_total : function (){
+		var t = Tabs.Inventory;
+		return t.max;
+	},
+	
+	start : function (){
+		var t = Tabs.Inventory;
+		t.queue = [];
+		var nodes = document.getElementsByClassName("pbinv_"+t.type);
+		for(var i = 0; i < nodes.length; i++){
+			if(nodes[i].checked){
+				try{
+					t.queue.push(JSON.parse(nodes[i].getAttribute("data-ft")));
+				} catch (e){
+					logit(inspect(e,7,1));
+				}
+			}
+		}
+
+		if(t.queue.length > 0) {
+			t.isBusy = true;
+			t.setCurtain(true);
+			var popDiv = t.setPopup(true);
+			popDiv.innerHTML = '<TABLE class=xtab width=100% height=100%><TR><TD align=center>\
+			<DIV class=pbStat>Using Selected Inventory Items</div>\
+			<DIV id=pbinventory_info style="padding:10px; height:225px; max-height:225px; overflow-y:auto"></div>\
+			</td></tr><TR><TD align=center>' + strButton20('Cancel', 'id=pbInvCancel') + '</td></tr></table>';
+			document.getElementById('pbInvCancel').addEventListener('click', t.e_Cancel, false);
+			t.nextqueue();
+		}	
+	},
    
-   nextqueue : function (){
-      var t = Tabs.Inventory;
-      if(!t.isBusy)
-         return;
-      var div = $("pbinventory_info");
-      var m = document.createElement('span');
-      if(t.queue.length > 0){
-         var item = t.queue[0];
-         t.counter = 0;
-         t.max = parseIntNan($("pb_inv_"+t.type+"_"+item.id).value);
-         m.innerHTML = "<span id='pb_inv_info_"+item.id+"'>Using item "+item.name+" <span id='pb_inv_info_count_"+item.id+"'>1</span> of <span id='pb_inv_info_max_"+item.id+"'>"+t.max+"</span>. Left <span id='pb_inv_info_left_"+item.id+"'>"+(t.max-t.counter)+"</span> <span id='pb_inv_info_extra_"+item.id+"'> </span></span><br />";
-      } else {
-         m.innerHTML = "Completed! \n";
-         t.isBusy = false;
-         $("pbinventory_start").value = "Start";
-      }
-      if(div.firstChild){
-         div.insertBefore(m, div.firstChild);
-      } else {
-         div.appendChild(m);
-      }
-      if(t.ItemController.isAvailable)
-         t.useitem_new();
-      else
-         t.useitem();
-   },
+	nextqueue : function (){
+		var t = Tabs.Inventory;
+		if(!t.isBusy)
+			return;
+		var div = $("pbinventory_info");
+		if(t.queue.length > 0){
+			var item = t.queue[0];
+			t.counter = 0;
+			t.max = parseIntNan($("pb_inv_"+t.type+"_"+item.id).value);
+			div.innerHTML += "<br><span id='pb_inv_info_"+item.id+"'>Using item "+item.name+" <span id='pb_inv_info_count_"+item.id+"'>1</span> of <span id='pb_inv_info_max_"+item.id+"'>"+t.max+"</span>. <span id='pb_inv_info_extra_"+item.id+"'> </span></span>";
+		} else {
+			div.innerHTML += "<br><span>Completed!</span>";
+			document.getElementById('pbInvCancel').firstChild.innerHTML = 'Close';
+			t.isBusy = false;
+			return;
+		}
+		
+		var MultiUse = true;
+		if (item.id==30130 || item.id==30131 || item.id==30132 || item.id==30133 || item.id==30134) { // random jewels don't multi-use - do it the old way...
+			MultiUse = false;
+		}
+		if(t.ItemController.isAvailable && MultiUse)
+			t.useitem_new();
+		else
+			t.useitem();
+	},
    
-   useitem_new : function (){
-      var t = Tabs.Inventory;
-      if(!t.isBusy)
-         return;
-      t.ItemController.setEnable(true); //Set to use current value specified
-      if(t.city.city.id){ //Set to use city specified
-         t.city_holder = unsafeWindow.currentcityid;
-         unsafeWindow.currentcityid = t.city.city.id;
-      }
-      var item = t.queue[0];
-      $("pb_inv_info_left_"+item.id).innerHTML = 0;
-      $("pb_inv_info_count_"+item.id).innerHTML = t.max;
-      unsafeWindow.cm.ItemController.use(item.id);
-      setTimeout(t.wait_new, 250, 0);
-   },
+	useitem_new : function (){
+		var t = Tabs.Inventory;
+
+		if(!t.isBusy)
+			return;
+
+		var item = t.queue[0];
+
+		$("pb_inv_info_count_"+item.id).innerHTML = t.max;
+
+		t.ItemController.setEnable(true); //Set to use current value specified
+		if(t.city.city.id){ //Set to use city specified
+			t.city_holder = unsafeWindow.currentcityid;
+			unsafeWindow.currentcityid = t.city.city.id;
+		}
+		unsafeWindow.cm.ItemController.use(item.id);
+		if(t.city.city.id){ //Set currentcity to old value
+			unsafeWindow.currentcityid = t.city_holder;
+		}
+		t.ItemController.setEnable(false); //Switch off value fixed
+
+		setTimeout(t.wait_new, 250, 0);
+	},
    
-   wait_new : function (){
-      var t = Tabs.Inventory;
-      if(!t.isBusy)
-         return;
-      var item = t.queue[0];
-      item = unsafeWindow.ksoItems[item.id];
-      t.queue[0] = item;
-      $("pb_inv_info_extra_"+item.id).innerHTML = "All done";
-      t.queue.shift();
-      t.ItemController.setEnable(false); //Switch off value fixed
-      if(t.city.city.id){ //Set currentcity to old value
-         unsafeWindow.currentcityid = t.city_holder;
-      }
-      t.nextqueue();
-   },
+	wait_new : function (){
+		var t = Tabs.Inventory;
+		if(!t.isBusy)
+			return;
+		var item = t.queue[0];
+		item = unsafeWindow.ksoItems[item.id];
+		t.queue[0] = item;
+		$("pb_inv_info_extra_"+item.id).innerHTML = "Done.";
+		t.queue.shift();
+		t.nextqueue();
+	},
    
-   useitem : function (){
-      var t = Tabs.Inventory;
-      if(!t.isBusy)
-         return;
-      var item = t.queue[0];
-      unsafeWindow.cm.ItemController.use(item.id);
-      setTimeout(t.wait, 250, 0);
-   },
+	useitem : function (){
+		var t = Tabs.Inventory;
+		if(!t.isBusy) { return; }
+		var item = t.queue[0];
+		if(t.city.city.id){ //Set to use city specified
+			t.city_holder = unsafeWindow.currentcityid;
+			unsafeWindow.currentcityid = t.city.city.id;
+		}
+		unsafeWindow.cm.ItemController.use(item.id);
+		if(t.city.city.id){ //Set currentcity to old value
+			unsafeWindow.currentcityid = t.city_holder;
+		}
+		setTimeout(t.wait, 500, 0);
+	},
    
-   wait : function (retries){
-      var t = Tabs.Inventory;
-      if(!t.isBusy)
-         return;
-      var item = t.queue[0];
-      item = unsafeWindow.ksoItems[item.id];
-      t.queue[0] = item;
-      t.counter++;
-      $("pb_inv_info_count_"+item.id).innerHTML = t.counter;
-      $("pb_inv_info_left_"+item.id).innerHTML = (t.max-t.counter);
-      if(t.counter >= t.max){
-         $("pb_inv_info_extra_"+item.id).innerHTML = "All done";
-         t.queue.shift();
-         t.nextqueue();
-         return;
-      }
-      $("pb_inv_info_extra_"+item.id).innerHTML = "Done. Wait for 1 second..";
-      setTimeout(t.useitem, 150);
-   },
+	wait : function (retries){
+		var t = Tabs.Inventory;
+		if(!t.isBusy)
+			return;
+		var item = t.queue[0];
+		item = unsafeWindow.ksoItems[item.id];
+		t.queue[0] = item;
+		t.counter++;
+		$("pb_inv_info_count_"+item.id).innerHTML = t.counter;
+		$("pb_inv_info_extra_"+item.id).innerHTML = '('+(t.max-t.counter)+' Left)';
+		if(t.counter >= t.max){
+			$("pb_inv_info_extra_"+item.id).innerHTML = "Done.";
+			t.queue.shift();
+			t.nextqueue();
+			return;
+		}
+		$("pb_inv_info_extra_"+item.id).innerHTML = "Done. Wait for 1 second..";
+		setTimeout(t.useitem, 500);
+	},
    
-   show: function (){
-   
-   },
-   hide: function (){
-   
-   }
+	show: function (){
+		var t = Tabs.Inventory;
+		t.sort_Items();
+		if (t.type=='general') { t.display_general(); }
+		else {
+			if (t.type=='speedup') { t.display_speedup(); }
+			else {
+				if (t.type=='combat') { t.display_combat(); }
+				else {
+					if (t.type=='resources') { t.display_resources(); }
+					else {
+						if (t.type=='chest') { t.display_chest(); }
+						else {
+							if (t.type=='court') { t.display_court(); }
+							else {
+								if (t.type=='jewel') { t.display_jewels(); }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+
+	hide: function (){
+	},
+	
+	setPopup: function (onoff) {
+		var t = Tabs.Inventory;
+		if (onoff) {
+			var div = document.createElement('div');
+			div.id = 'ptInvPop';
+			div.style.backgroundColor = '#fff';
+			div.style.zindex = mainPop.div.zIndex + 2;
+			div.style.opacity = '1';
+			div.style.border = '3px outset black';
+			div.style.width = '550px';
+			div.style.height = '300px';
+			div.style.display = 'block';
+			div.style.position = 'absolute';
+			div.style.top = '100px';
+			div.style.left = '100px';
+			t.myDiv.appendChild(div);
+			return div;
+		} else {
+			t.myDiv.removeChild(document.getElementById('ptInvPop'));
+		}
+	},
+	setCurtain: function (onoff) {
+		var t = Tabs.Inventory;
+		if (onoff) {
+			var off = getAbsoluteOffsets(t.myDiv);
+			var curtain = document.createElement('div');
+			curtain.id = 'ptInvCurtain';
+			curtain.style.zindex = mainPop.div.zIndex + 1;
+			curtain.style.backgroundColor = "#000000";
+			curtain.style.opacity = '0.5';
+			curtain.style.width = (t.myDiv.clientWidth+4) + 'px';
+			curtain.style.height = (t.myDiv.clientHeight+4) + 'px';
+			curtain.style.display = 'block';
+			curtain.style.position = 'absolute';
+			curtain.style.top = off.top + 'px';
+			curtain.style.left = off.left + 'px';
+			t.myDiv.appendChild(curtain);
+		} else {
+			t.myDiv.removeChild(document.getElementById('ptInvCurtain'));
+		}
+	},
+	e_Cancel: function () {
+		var t = Tabs.Inventory;
+		t.isBusy = false;
+		t.setCurtain(false);
+		t.setPopup(false);
+		t.show();
+	},
 }
 
 
