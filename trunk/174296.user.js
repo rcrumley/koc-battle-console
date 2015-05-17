@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150515a
+// @version        20150517a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Revamped Inventory Tab</p><p>Nomad Camps in Search</p>
+// @releasenotes 	<p>Option to send Champ on Auto-Attack (crest)</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150515a';
+var Version = '20150517a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -260,6 +260,7 @@ var CrestOptions = {
   Y            :  0,
   isWild       :  false,
   isMerc       :  false,
+  ChampOnly    : false,
 
   Paused       :  false,
 };
@@ -298,6 +299,7 @@ var CrestData = new Array();
 
       this.isWild       =  Arr.isWild;
       this.isMerc       =  Arr.isMerc;
+      this.ChampOnly    =  Arr.ChampOnly;
 
 	  this.Paused       =  Arr.Paused;
    };
@@ -22813,7 +22815,8 @@ Tabs.Attack = {
 		m += '<TABLE class=ptTab><TR><TD>Target Co-ords:&nbsp;&nbsp;X:&nbsp;<INPUT id=pbcrestx type=text size=3 maxlength=3 value=""></td>';
 		m += '<TD>Y:&nbsp;<INPUT id=pbcresty type=text size=3 maxlength=3 value=""></td></tr>';
 		m += '<TR><TD><INPUT type=checkbox id=pbcrest_iswild /> Target is Wilderness</td><td>(if ticked will auto-abandon wild, and reduce wave 1 MM for subsequent attacks)</td></tr>';
-		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, this attack will stop running when chest target amount reached (See above))</td></tr></table>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_ismerc /> Target is Merc. Camp&nbsp;</td><td>&nbsp;(if ticked, this attack will stop running when chest target amount reached (See above))</td></tr>';
+		m += '<TR><TD><INPUT type=checkbox id=pbcrest_champonly /> Send with Champ ONLY!&nbsp;</td><td>&nbsp;(if ticked, march will not send unless a Champ is available to march. CHAMP SENT ON WAVE 2 ONLY!)</td></tr></table>';
    
 		var dude = unsafeWindow.unitnamedesctranslated;
 		m += '<TABLE class=ptTab><TR valign=top><TD><INPUT type=checkbox id=pbcrest_rnd1 CHECKED /></td><TD><b>Wave 1</b>&nbsp;(initial):</td><td><table class=ptTab><tr>';
@@ -22896,6 +22899,10 @@ Tabs.Attack = {
 			CrestOptions.isMerc = this.checked;
 		},false);
 
+		$('pbcrest_champonly').addEventListener('click', function(){
+			CrestOptions.ChampOnly = this.checked;
+		},false);
+
 		$('pbRattacks').addEventListener('click', function(){
 			Options.CrestRand = this.checked;
 			saveOptions();
@@ -22917,6 +22924,7 @@ Tabs.Attack = {
 
 		document.getElementById('pbcrest_iswild').addEventListener('click', function(){CrestOptions.isWild = this.checked;} , false);
 		document.getElementById('pbcrest_ismerc').addEventListener('click', function(){CrestOptions.isMerc = this.checked;} , false);
+		document.getElementById('pbcrest_champonly').addEventListener('click', function(){CrestOptions.ChampOnly = this.checked;} , false);
 
 		document.getElementById('crestcity').addEventListener('click', function(){CrestOptions.CrestCity = t.tcp.city.id;} , false);
 		document.getElementById('Cresttoggle').addEventListener('click', function(){t.toggleCrestState(this)} , false);
@@ -23120,7 +23128,12 @@ Tabs.Attack = {
 		t = Tabs.Attack;
 
 		for(var i = 0; i < CrestData.length; i++) {
-			t._addTabCrest(i, "Attack: " + CrestData[i].X + "," + CrestData[i].Y, "Wave 2");
+			var extrainf = '';
+			if (CrestData[i].isWild) extrainf += 'is Wild ';
+			if (CrestData[i].isMerc) extrainf += 'is Merc ';
+			if (CrestData[i].ChampOnly) extrainf += 'Champ Only ';
+			if (extrainf != '') extrainf = '<br>('+extrainf.trim()+')';
+			t._addTabCrest(i, "Attack: " + CrestData[i].X + "," + CrestData[i].Y+extrainf, "Wave 2");
 			t._addTabCrest(i, CrestData[i].CrestCity, "Wave 1");
 			t._addTabCrest(i, "","");
 		}
@@ -23333,6 +23346,22 @@ Tabs.Attack = {
 			return;
 		}
 
+		var champid = 0; 
+		for (y in Seed.champion.champions) {
+			citychamp = Seed.champion.champions[y];
+			if (citychamp.assignedCity == CrestData[CrestDataNum].CrestCity) {
+				var champstatus = citychamp.status;
+				if (champstatus != "10") { champid = citychamp.championId; }
+				break;	
+			}
+		}
+		
+		if (CrestData[CrestDataNum].ChampOnly && (champid==0)) {
+			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
+			return;
+		}
+		
+		
 		if (!t.checkCityTroops(r,CrestDataNum)) {
 //			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},Options.Crestinterval*1000);
 			t.timer = setTimeout(function(){ t.Rounds(1,retry,parseInt(CrestDataNum)+1);},2000);
@@ -23414,6 +23443,9 @@ Tabs.Attack = {
 				params.kid    = kid;
 				params.xcoord = CrestData[CrestDataNum].X;
 				params.ycoord = parseIntNan(CrestData[CrestDataNum].Y);
+				if (CrestData[CrestDataNum].ChampOnly) {				
+					params.champid = champid;
+				}
 
 				for (var k in t.trooparray){
 					params["u"+k] = parseIntNan(CrestData[CrestDataNum]["R2"+t.trooparray[k]]);
