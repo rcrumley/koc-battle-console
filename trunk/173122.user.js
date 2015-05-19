@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150430a
+// @version        20150519a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
-// @releasenotes 	<p>IMPORTANT! Fix multi-browser window disable option so you don't lose communication from the server</p><p>Make auto champ setting available to BOT (for Quick Attack)</p><p>Fix coloured city buttons in FF31</p>
+// @releasenotes 	<p>Champion Viewer (Players Tab - Details)</p><p>Alliance Membership Monitor (Alliance Tab)</p><p>Export to Excel (Alliance Tab)</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -26,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150430a';
+var Version = '20150519a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -410,6 +410,10 @@ var uW = unsafeWindow;
 var seed_player_g = uW.seed.player.g;
 var ResetColors = false;
 var reportpos = {
+	x: -999,
+	y: -999
+};
+var champpos = {
 	x: -999,
 	y: -999
 };
@@ -6288,6 +6292,7 @@ ajax/viewCourt.php:
 			notes = notes.text.replace(/<br\/>/g, "\n");
 		}
 		m += '<TR><TD class=xtab><a onclick="edit_notes(ptuser);">Player Notes:</a></td><TD id=ptplayernotes class=xtab>' + notes + '</td></tr>';
+		m += '<TR><TD class=xtab>Champion Hall:</td><TD><INPUT id=btViewChamp type=submit value="View Champions"></td></tr>';
 		if (uW.btLoaded)
 			m += '</table><BR>Compare Throne Room : <INPUT id=CompareTR type=submit value="Compare"><INPUT id=CalcTR type=submit value="Calculate"><INPUT id=MonitorTR type=submit value="Monitor"><BR><BR>';
 		else
@@ -6299,6 +6304,9 @@ ajax/viewCourt.php:
 		}, false);
 		document.getElementById('CalcTR').addEventListener('click', function () {
 			t.TRStats(rslt.playerInfo.userId, rslt.playerInfo.displayName, "Calc")
+		}, false);
+		document.getElementById('btViewChamp').addEventListener('click', function () {
+			t.ViewChamps(rslt.playerInfo.userId, rslt.playerInfo.displayName)
 		}, false);
 		if (uW.btLoaded)
 			document.getElementById('MonitorTR').addEventListener('click', function () {
@@ -6331,6 +6339,119 @@ ajax/viewCourt.php:
 	},
 	HisStatEffects: [],
 	MyStatEffects: [],
+	ViewChamps: function (uid,name) {
+		var t = Tabs.AllianceList;
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.action = 'getEquipped';
+		params.playerId = uid;
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/otherChampionHall.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			loading: true,
+			onSuccess: function (rslt) {
+				if (t.popChamp) {
+					t.popChamp.show(false);
+					if (t.popChamp.onClose) t.popChamp.onClose();
+					t.popChamp.destroy();
+					t.popChamp = null;
+				}
+				t.popChamp = new CPopup('pbMailBody', champpos.x, champpos.y, 750, 550, true, function () { champpos = t.popChamp.getLocation(); clearTimeout(1000); });
+				if ((champpos.x == -999) && (champpos.y == -999)) {
+					t.popChamp.centerMe(mainPop.getMainDiv());
+				}	
+				var m = '';
+				if (rslt.ok) {
+					m += '<div align=center><table width=99% cellpadding=1 cellspacing=1><tr>';
+					for (var c in rslt.champion.champions) {
+						var champ = rslt.champion.champions[c];
+						if (champ.name) {
+							if (champ.status != '10') {champstat = '<span class=xtab style="color:#080">Status:&nbsp;'+translate('Defending')+'</span>';}
+							else { champstat = '<span class=xtab style="color:#f00">Status:&nbsp;'+translate('Marching')+'</span>';}
+							if (champ.assignedCity && champ.assignedCity!=0) { 
+								for (var cities in rslt.cities) {
+									if (champ.assignedCity==rslt.cities[cities][0]) {
+										champcity = 'City:&nbsp;'+rslt.cities[cities][1];
+										break;
+									}
+								}
+							}
+							else {
+								champcity = '<i>No City Assigned</i>';
+								champstat = '&nbsp;';
+							};
+							m += '<td align=center style="vertical-align:top;" class=xtab><table style="vertical-align:top;border:1px solid black;"><tr><td colspan=2><table style="vertical-align:top;"><tr><td rowspan=3 class=xtab><img src="'+IMGURL+'champion_hall/championPort_0'+champ.avatarId+'_50x50.jpg"></td><td class=xtab><b>Name:&nbsp;'+champ.name+'</b></td></tr><tr><td class=xtab>'+champcity+'</td></tr><tr><td class=xtab>'+champstat+'</td></tr></table></td></tr>';
+
+							// equipped items
+							
+							var equippedchampstats =  {201:30,202:0,203:7,204:27,205:27,206:60,207:4,208:3,209:3}; // base stats for champ
+							var equippedtroopstats = {};
+							for (var y in rslt.champion.equipment) {
+								var item = rslt.champion.equipment[y];
+								if (item.equippedTo && item.equippedTo==champ.championId) {
+									for (var e in item.effects) {
+										if (Number(e) <= Number(item.rarity)) {
+											var id = item.effects[e].id;
+											var S = unsafeWindow.cm.WorldSettings.getSettingAsObject("CE_EFFECTS_TIERS");
+											var P = id + "," + item.effects[e].tier;
+											var tier = S[P];
+											var base = tier.Base || 0;
+											var growth = tier.Growth || 0;
+											var level = Number(item.level) || 0;
+											var percent = Number(base + ((level * level + level) * growth * 0.5));
+											if (id>=200) {
+												if (!equippedchampstats[id]) { equippedchampstats[id] = 0; }
+												equippedchampstats[id] += percent;
+											}
+											else {
+												if (!equippedtroopstats[id]) { equippedtroopstats[id] = 0; }
+												equippedtroopstats[id] += percent;
+											}	
+										}
+									}
+								}
+							}
+							m += '<tr><td colspan=2 class=xtab><b>Champion Stats</b></td></tr>';
+							for (k in equippedchampstats) {
+								str = eval('uW.g_js_strings.effects.name_'+k);
+								if (str && str!= "") { m += '<tr><td class=xtab>'+str+':</td><td class=xtab>'+(Math.round(equippedchampstats[k]*100)/100)+'</td></tr>'; }
+							}	
+							m += '<tr><td colspan=2 class=xtab><b>Troop Stats</b></td></tr>';
+							var gottroops = false;
+							for (k in equippedtroopstats) {
+								gottroops=true;
+								str = eval('uW.g_js_strings.effects.name_'+k);
+								if (str && str!= "") { m += '<tr><td class=xtab>'+str+':</td><td class=xtab>'+(Math.round(equippedtroopstats[k]*100)/100)+'</td></tr>'; }
+							}	
+							if (!gottroops) {
+								m += '<tr><td colspan=2 class=xtab><i>No Troop Stats</i></td></tr>';
+							}
+							m += '</table></td>';
+						}
+					}
+					m += '</tr></table></div><div align=center>'+strButton20('Refresh', 'id=ptchamprefresh')+'</div>';
+				} 
+				else {
+					if (rslt.msg) {
+						m += '<div align=center><br>'+rslt.msg+'<br></div>';
+					}
+					else {
+						m += '<div align=center><br>Unknown error trying to display champ hall</div>';
+					}	
+					m += '<div align=center><br>'+strButton20('Refresh', 'id=ptchamprefresh')+'<br></div>';
+				}
+				t.popChamp.getMainDiv().innerHTML = m;
+				
+				document.getElementById('ptchamprefresh').addEventListener('click',function() {t.ViewChamps(uid,name);}, false);
+				
+				t.popChamp.getTopDiv().innerHTML = '<DIV align=center><B>'+name+'\'s Champion Hall</B></DIV>';
+				t.popChamp.show(true);
+			},
+			onFailure: function () {
+				return;
+			},
+		},true);
+	},
+	
 	TRStats: function (uid, name, what) {
 		var t = Tabs.AllianceList;
 		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
@@ -12314,13 +12435,35 @@ Tabs.Alliance = {
 	tabLabel: uW.g_js_strings.commonstr.alliance,
 	myDiv: null,
 	alliancemembers: [],
+	sortmembers: [],
 	number: 0,
 	totalmembers: 0,
 	error: false,
 	sortType: 1,
 	sortBy: 'Name',
+	Options: {
+		Monitor:false,
+		MonitorHours:1,
+		MonitorCC:"",
+		LastChecked:0,
+		MonitorId:0,
+		LastMemberList:{},
+	},	
+	
 	init: function (div) {
 		var t = Tabs.Alliance;
+		
+		if (!Options.AllianceOptions) {
+			Options.AllianceOptions = t.Options;
+		}
+		else {
+			for (var y in t.Options) {
+				if (!Options.AllianceOptions.hasOwnProperty(y)) {
+					Options.AllianceOptions[y] = t.Options[y];
+				}	
+			}
+		}
+		
 		t.myDiv = div;
 		t.myDiv.style.overflowY = 'scroll';
 		t.myDiv.style.maxHeight = '730px';
@@ -12334,7 +12477,7 @@ Tabs.Alliance = {
 			return;
 		}
 		m += '<table width=100%><tr><TD class=xtab align=center style="font-size:14px;";><b>'+Seed.allianceDiplomacies['allianceName']+'&nbsp('+Seed.allianceDiplomacies['allianceId']+')</b></td></tr></table>';
-		m += '<TABLE class=ptTab><TD width=200px>List Alliance Members</td><TD>Sort by: ' + htmlSelector({
+		m += '<TABLE class=ptTab width=100%><TD width=200px>List Alliance Members</td><TD colspan=2>Sort by: ' + htmlSelector({
 			Name: 'Name',
 			Might: 'Might',
 			glory: 'Glory',
@@ -12343,20 +12486,35 @@ Tabs.Alliance = {
 			dip: 'Days in Position',
 			uid: 'User Id',
 			fbuid: 'Facebook id'
-		}, null, 'id=searchAlli') + '</td>';
-		m += '<TD><INPUT id=alList type=submit value="List"></td>';
-		m += '<TD id=progress></td></tr>';
-		m += '<TR><TD width=200px>Show alliance diplomacies</td><TD><INPUT id=aldiplo type=submit value="List diplomacies"></td></tr></table>';
+		}, null, 'id=searchAlli') + '&nbsp;<INPUT id=alList type=submit value="List">&nbsp;<span id=ptalliprogress></span></td>';
+		m += '<TR><TD width=200px>Show alliance diplomacies</td><TD><INPUT id=aldiplo type=submit value="List diplomacies"></td>';
+		m += '<td align=right>Membership Monitor&nbsp;<INPUT id=pballimonitor type=checkbox '+ (Options.AllianceOptions.Monitor?'CHECKED ':'') +'/>&nbsp;Check Every&nbsp;<INPUT id=pballihours type=text size=2 value="' + Options.AllianceOptions.MonitorHours + '">&nbsp;hours</td></tr>';
+		m += '</tr></table>';
 		m += '<DIV class=ptstat>OVERVIEW</div><TABLE align=center cellpadding=1 cellspacing=0></table>';
-		m += '<TABLE id=alOverviewTab class=alTab><TR align="center"></tr></table>';
+		m += '<TABLE id=alOverviewTab class=alTab><TR align="center"></tr></table><div style="display:none;" id=ptalliexport align=right><input type=button value="Export to Excel" id=alListExcel>&nbsp;</div>';
 		t.myDiv.innerHTML = m;
+		
+		document.getElementById('alListExcel').addEventListener('click', function() {
+			t.ExportToExcel();
+		}, false);
+		
+		t.ToggleOption('pballimonitor','Monitor',t.ToggleAllianceMonitor);
+		document.getElementById('pballihours').addEventListener ('change', function(){
+			Options.AllianceOptions.MonitorHours = document.getElementById('pballihours').value;
+			if (isNaN(Options.AllianceOptions.MonitorHours)) {
+				Options.AllianceOptions.MonitorHours = 1;
+				document.getElementById('pballihours').value = 1;
+			}	
+            saveOptions ();
+		},false);    
+		
 		document.getElementById('alList').addEventListener('click', function () {
 			if (!t.searching) {
 				t.totalmembers = 0;
 				t.alliancemembers = [];
 				document.getElementById('alOverviewTab').innerHTML = "";
-				document.getElementById('progress').innerHTML = "";
-				document.getElementById('progress').innerHTML = uW.g_js_strings.commonstr.loadingddd;
+				document.getElementById('ptalliprogress').innerHTML = "";
+				document.getElementById('ptalliprogress').innerHTML = uW.g_js_strings.commonstr.loadingddd;
 				document.getElementById('alList').disabled = true;
 				t.error = false;
 				t.fetchAllianceMemberPage();
@@ -12372,7 +12530,40 @@ Tabs.Alliance = {
 			t.paintDiplomacy();
 		}, false);
 		//window.addEventListener('unload', t.onUnload, false);
+		
+		setTimeout(function () {
+			t.EverySecond();
+		}, 1000);
 	},
+	
+	ToggleOption : function (checkboxId, optionName, callOnChange) {
+		var t = Tabs.Alliance;
+		var checkbox = document.getElementById(checkboxId);
+		if (Options.AllianceOptions[optionName])
+			checkbox.checked = true;
+		checkbox.addEventListener ('change', new eventHandler(checkboxId, optionName, callOnChange).handler, false);
+
+		function eventHandler (checkboxId, optionName, callOnChange) {
+			this.handler = handler;
+			var optName = optionName;
+			var callback = callOnChange;
+			function handler(event){
+				Options.AllianceOptions[optionName] = this.checked;
+				saveOptions();
+				if (callback != null)
+				callback (this.checked);
+			}
+		}	
+	},
+	
+	ToggleAllianceMonitor : function () {
+		var t = Tabs.Alliance;
+		if (Options.AllianceOptions.Monitor) { // reset last sent time...
+			Options.AllianceOptions.LastChecked = 0;
+			saveOptions();
+		}
+	},
+	
 	paintMembers: function () {
 		var t = Tabs.Alliance;
 		if (document.getElementById('searchAlli').value == t.sortBy) {
@@ -12381,7 +12572,7 @@ Tabs.Alliance = {
 			t.sortType = 1;
 		}
 		t.sortBy = document.getElementById('searchAlli').value;
-		var sortmembers = t.alliancemembers.sort(function (a, b) {
+		t.sortmembers = t.alliancemembers.sort(function (a, b) {
 			var sortA = a[t.sortBy],
 				sortB = b[t.sortBy];
 			if (t.sortType > 0) {
@@ -12398,11 +12589,12 @@ Tabs.Alliance = {
 				}
 			}
 		});
-		for (var y = (sortmembers.length - 1); y >= 0; y--) {
-			t._addTab(sortmembers[y].Name, sortmembers[y].Might, sortmembers[y].LastLogin, sortmembers[y].Position, sortmembers[y].dip, sortmembers[y].uid, sortmembers[y].fbuid, sortmembers[y].Cities, sortmembers[y].avatarurl, sortmembers[y].glory, sortmembers[y].dateJoined);
+		for (var y = (t.sortmembers.length - 1); y >= 0; y--) {
+			t._addTab(t.sortmembers[y].Name, t.sortmembers[y].Might, t.sortmembers[y].LastLogin, t.sortmembers[y].Position, t.sortmembers[y].dip, t.sortmembers[y].uid, t.sortmembers[y].fbuid, t.sortmembers[y].Cities, t.sortmembers[y].avatarurl, t.sortmembers[y].glory, t.sortmembers[y].dateJoined);
 			t.myDiv.style.overflowY = 'scroll';
 		}
 		t._addTabHeader();
+		document.getElementById('ptalliexport').style.display = 'block';
 	},
 	_addTab: function (Name, Might, LastLogin, Position, dip, uid, fbuid, Cities, avatar, gloire, arrive) {
 		var t = Tabs.Alliance;
@@ -12444,7 +12636,7 @@ Tabs.Alliance = {
 	},
 	paintDiplomacy: function () {
 		document.getElementById('alOverviewTab').innerHTML = "";
-		document.getElementById('progress').innerHTML = "";
+		document.getElementById('ptalliprogress').innerHTML = "";
 		var m = '<tr><td valign=top><table class=xtab><TR><TD colspan=4 style=\'background: #33CC66;\' align=center><B>Friendly: </b></td></tr>';
 		if (Seed.allianceDiplomacies['friendly'] == null) m += '<TR><TD>No Friendlies found...</td></tr>';
 		else m += '<TR><TD><b>Alliance Name</b></td><TD><b>Members</b></td></tr>';
@@ -12478,10 +12670,52 @@ Tabs.Alliance = {
 		}
 		m += '</table></td></tr></table>';
 		document.getElementById('alOverviewTab').innerHTML = m;
+		document.getElementById('ptalliexport').style.display = 'none';
 	},
-	fetchAllianceMemberPage: function () {
+	
+	ExportToExcel: function () {
 		var t = Tabs.Alliance;
-		document.getElementById('alList').disabled = true;
+		var headers = [ "UID", "Name", "Might", "Glory", "Cities", "Position", "DIP", "Last Login", "Joined"];
+		var ExcelTable = document.createElement('table');
+		var ExcelBody = document.createElement('tbody');
+		var ExcelRow = document.createElement('tr'); 
+		var ExcelColumn = "";
+		for (i = 0; i < headers.length; i++) {
+			ExcelColumn = document.createElement('th');
+			ExcelColumn.appendChild(document.createTextNode(headers[i]));
+			ExcelRow.appendChild(ExcelColumn);
+		}
+		ExcelBody.appendChild(ExcelRow);
+    
+		var columns = [];
+
+		for (var y in t.sortmembers) {
+			columns = [];
+			columns.push(t.sortmembers[y].uid);
+			columns.push(t.sortmembers[y].Name);
+			columns.push(t.sortmembers[y].Might);
+			columns.push(t.sortmembers[y].glory);
+			columns.push(t.sortmembers[y].Cities);
+			columns.push(officerId2String(t.sortmembers[y].Position));
+			columns.push(t.sortmembers[y].dip);
+			columns.push(t.sortmembers[y].LastLogin);
+			columns.push(t.sortmembers[y].dateJoined);
+			columns.reverse();
+			ExcelRow = document.createElement('tr');
+			while (columns.length > 0) {
+				ExcelColumn = document.createElement('td');
+				ExcelColumn.appendChild(document.createTextNode(columns.pop()));
+				ExcelRow.appendChild(ExcelColumn);
+			}
+			ExcelBody.appendChild(ExcelRow);
+		}
+		ExcelTable.appendChild(ExcelBody);
+		window.open('data:application/vnd.ms-excel,' + encodeURIComponent(ExcelTable.outerHTML));
+	},
+	
+	fetchAllianceMemberPage: function (silent,notify) {
+		var t = Tabs.Alliance;
+		if (!silent) document.getElementById('alList').disabled = true;
 		var params = uW.Object.clone(uW.g_ajaxparams);
 		params.pf = 0;
 		new AjaxRequest(uW.g_ajaxpath + "ajax/allianceGetInfo.php" + uW.g_ajaxsuffix, {
@@ -12489,8 +12723,8 @@ Tabs.Alliance = {
 			parameters: params,
 			onSuccess: function (transport) {
 				var rslt = eval("(" + transport.responseText + ")");
-				t.totalmembers = (rslt["allianceInfo"]["members"]);
-				for (var i = 1; i <= 10; i++) {
+				t.totalmembers = parseIntNan(rslt["allianceInfo"]["members"]);
+				for (var i = 1; i <= Math.ceil(t.totalmembers/10); i++) {
 					params.pageNo = i;
 					params.pf = 0;
 					new AjaxRequest(uW.g_ajaxpath + "ajax/allianceGetMembersInfo.php" + uW.g_ajaxsuffix, {
@@ -12515,29 +12749,40 @@ Tabs.Alliance = {
 											dateJoined: info["memberInfo"][k]["dateJoined"],
 										});
 									}
-									document.getElementById('alOverviewTab').innerHTML = "";
-									t.paintMembers();
+									if (!silent) {
+										document.getElementById('alOverviewTab').innerHTML = "";
+										t.paintMembers();
+									}	
 								}
-								if (!t.error) document.getElementById('progress').innerHTML = '(' + (t.alliancemembers.length) + '/' + t.totalmembers + ')';
-								if (t.alliancemembers.length >= t.totalmembers) document.getElementById('alList').disabled = false;
+								if (!t.error && !silent) document.getElementById('ptalliprogress').innerHTML = '(' + (t.alliancemembers.length) + '/' + t.totalmembers + ')';
+								if (t.alliancemembers.length >= t.totalmembers) {
+									if (!silent) document.getElementById('alList').disabled = false;
+									if (notify) { notify(); }
+								}	
 							} else if (info.error) {
-								document.getElementById('alList').disabled = false;
-								document.getElementById('progress').innerHTML = "ERROR!";
+								if (!silent) {
+									document.getElementById('alList').disabled = false;
+									document.getElementById('ptalliprogress').innerHTML = "ERROR!";
+								}	
 								t.error = true;
 							}
 						},
 						onFailure: function (rslt) {;
-							notify({
-								errorMsg: 'AJAX error'
-							});
+							if (!silent) {
+								document.getElementById('alList').disabled = false;
+								document.getElementById('ptalliprogress').innerHTML = "ERROR!";
+							}	
+							t.error = true;
 						},
 					});
 				}
 			},
 			onFailure: function (rslt) {;
-				notify({
-					errorMsg: 'AJAX error'
-				});
+				if (!silent) {
+					document.getElementById('alList').disabled = false;
+					document.getElementById('ptalliprogress').innerHTML = "ERROR!";
+				}	
+				t.error = true;
 			},
 		});
 	},
@@ -12548,7 +12793,130 @@ Tabs.Alliance = {
 		var t = Tabs.Alliance;
 		mainPop.div.style.width = 750 + 'px';
 	},
+
+	EverySecond : function () {
+		var t = Tabs.Alliance;
+		var aid = getMyAlliance()[0];
+		var now = unixTime();
+		if (aid > 0) {
+			if (Options.AllianceOptions.Monitor && Options.AllianceOptions.LastChecked + (Options.AllianceOptions.MonitorHours*60*60) < now) {
+				Options.AllianceOptions.LastChecked = now;
+				if (aid != Options.AllianceOptions.MonitorId) { // new alliance, just set members, don't send message..
+					logit ('Setting alliance monitor start position for this alliance');
+					t.totalmembers = 0;
+					t.alliancemembers = [];
+					t.error = false;
+					t.fetchAllianceMemberPage(true,t.SaveMembers);
+				}
+				else {
+					logit ('Checking alliance member list for changes');
+					t.totalmembers = 0;
+					t.alliancemembers = [];
+					t.error = false;
+					t.fetchAllianceMemberPage(true,t.CompareMembers);
+				}	
+				Options.AllianceOptions.MonitorId = aid;
+				saveOptions();
+			}
+		}
+		setTimeout(function () {
+			t.EverySecond();
+		}, 1000);
+	},
+	
+	SaveMembers: function () {
+		var t = Tabs.Alliance;
+		Options.AllianceOptions.LastMemberList = {};
+		for (var y in t.alliancemembers) {
+			if (t.alliancemembers[y].uid) {
+				Options.AllianceOptions.LastMemberList[t.alliancemembers[y].uid] = t.alliancemembers[y];
+			}	
+		}
+		saveOptions();
+	},
+	
+	CompareMembers : function () {
+		var t = Tabs.Alliance;
+		var MemberChanges = false;
+		var message = '%0A Additional Members: %0A';
+    
+		for (var y in t.alliancemembers) {
+			if (t.alliancemembers[y].uid && !Options.AllianceOptions.LastMemberList[t.alliancemembers[y].uid]) {
+				MemberChanges = true;
+				message += t.alliancemembers[y].Name+' (Might '+addCommas(t.alliancemembers[y].Might)+') '+officerId2String(t.alliancemembers[y].Position)+' UID:'+t.alliancemembers[y].uid+' %0A';
+			}	
+		}
+		if (!MemberChanges) { message += 'None %0A'; }
+
+		var MemberLeft = false;
+		message += '%0A Departed Members: %0A';
+		for (var x in Options.AllianceOptions.LastMemberList) {
+			if (Options.AllianceOptions.LastMemberList[x].uid) {
+				var Found = false;
+				for (var y in t.alliancemembers) {
+					if (t.alliancemembers[y].uid && x==t.alliancemembers[y].uid) {
+						Found = true;
+						break;
+					}
+				}
+				if (!Found) {
+					MemberLeft = true;
+					MemberChanges = true;
+					message += Options.AllianceOptions.LastMemberList[x].Name+' (Might '+addCommas(Options.AllianceOptions.LastMemberList[x].Might)+') '+officerId2String(Options.AllianceOptions.LastMemberList[x].Position)+' UID:'+Options.AllianceOptions.LastMemberList[x].uid+' %0A';
+				}
+			}
+		}
+		if (!MemberLeft) { message += 'None %0A'; }
+		
+		if (MemberChanges) {
+			var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+			params.emailTo = Seed.player['name'];
+			params.subject = "Alliance Membership Change Report for "+getMyAlliance()[1];
+			params.message = message;  
+			params.requestType = "COMPOSED_MAIL";
+			new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getEmail.php" + unsafeWindow.g_ajaxsuffix, {
+				method: "post",
+				parameters: params,
+				onSuccess: function (rslt) {
+					if (rslt.ok) { DeleteLastMessage(); }
+				},
+				onFailure: function () {},
+			},true);
+
+			// save current position...
+			t.SaveMembers();
+		}	
+	},
+	
 };
+
+function DeleteLastMessage() {
+	var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+	params.requestType = 'GET_MESSAGE_HEADERS_FOR_USER_INBOX';
+	params.boxType = 'outbox';
+	params.pageNo = 1;
+	new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getEmail.php" + unsafeWindow.g_ajaxsuffix, {
+		method: "post",
+		parameters: params,
+		onSuccess: function (rslt) {
+			if (rslt.ok) {
+				if (rslt.mostRecentMessageId) {
+					var params2 = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+					params2.requestType = 'ACTION_ON_MESSAGES';
+					params2.boxType = 'outbox';
+					params2.selectedAction = 'delete';
+					params2.selectedMessageIds = rslt.mostRecentMessageId;
+					new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getEmail.php" + unsafeWindow.g_ajaxsuffix, {
+						method: "post",
+						parameters: params2,
+						onSuccess: function (rslt2) {},
+					},true);
+				}	
+			}
+		},
+	},true);
+};
+
 /*********************************** IRC TAB ***********************************/
 Tabs.IRC = {
 	tabOrder: 1000,
