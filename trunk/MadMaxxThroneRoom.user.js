@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20150130a
+// @version        20150523a
 // @namespace      mmm
 // @delay 2000
 // @priority -10
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @include        *kabam.com/kingdoms-of-camelot/play*
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
-// @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png
+// @icon		   https://rycamelot1-a.akamaihd.net/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
 // @grant       unsafeWindow
@@ -26,12 +26,12 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20150130a';
+var Version = '20150523a';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
-
+var IMGURL = unsafeWindow.stimgUrl+"img/";
 var maxTrLevel = unsafeWindow.cm.MAX_MASTERS_TOKEN_LEVEL;
 var JewelImages = {1 : "http://i.imgur.com/SecBRT5.png", 2 : "http://i.imgur.com/dnrId1I.png", 3 : "http://i.imgur.com/fjgZUh9.png", 4 : "http://i.imgur.com/h7tMQaB.png", 5 : "http://i.imgur.com/BZSuCiN.png"};
 /*
@@ -352,7 +352,7 @@ function trStartup (){
         table.trPopMain tbody tr td,th {background: transparent;}\
         table.trTabDef tbody tr td {background: transparent; height: 0px; }\
         table.trTab tr td, th { border: 1px solid brown;}\
-        #tr_footer {height: 50px; background: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r3_c1.jpg") scroll no-repeat center bottom;}\
+        #tr_footer {height: 50px; background: url("'+IMGURL+'dialog_740_r3_c1.jpg") scroll no-repeat center bottom;}\
         #tr_footer { background-size: cover; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; }\
         table.trTab tr td,th {border:none; background:none; padding: 0px}\
         table.trTab#trDisplayTable tr th { border: 3px solid grey; font-size:1.2em; }\
@@ -394,51 +394,51 @@ function trStartup (){
         .trPopMain  {  -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px;}\
         .trPopup  { border:3px ridge #666; opacity:'+upgradeData.Opacity+'; -moz-border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
         .trPopup { overflow-x: hide; overflow-y: hide; max-height: 900px; min-height: 400px; height: 500px;  }\
-        #tr_top {  background: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg") no-repeat transparent 0% 0%; }\
+        #tr_top {  background: url("'+IMGURL+'dialog_740_r2_c1.jpg") no-repeat transparent 0% 0%; }\
         #tr_top { background-size: cover; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; }\
         /* this was needed because the css used a object id and not a class.  reusing the ID caused display issues w/ the TR tooltips */ \
         div.trCard {width: 200px;}\
         div.trCard div.description>div{width:70px;height:70px; }\
-        div.trCard div.description div.briton.advisor{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_advisor_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.briton.banner{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_banner_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.briton.chair{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_chair_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.briton.table{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_table_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.briton.window{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_window_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.briton.trophy{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_trophy_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.briton.hero{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_hero_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.briton.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_statue_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.briton.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_candelabrum_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.briton.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_pet_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.briton.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_tapestry_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.briton.pillar{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/briton_pillar_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.druid.advisor{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_advisor_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.druid.banner{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_banner_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.druid.chair{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_chair_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.druid.table{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_table_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.druid.window{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_window_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.druid.trophy{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_trophy_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.druid.hero{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_hero_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.druid.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_statue_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.druid.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_pet_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.druid.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_tapestry_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.druid.pillar{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_pillar_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.druid.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/druid_candelabrum_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.fey.advisor{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_advisor_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.fey.banner{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_banner_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.fey.chair{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_chair_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.fey.table{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_table_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.fey.window{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_window_normal_1.png") top left no-repeat;}\
-        div.trCard div.description div.fey.trophy{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_trophy_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.fey.hero{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_hero_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.fey.statue{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_statue_normal_1_5.png") top left no-repeat;}\
-        div.trCard div.description div.fey.candelabrum{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_candelabrum_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.fey.pet{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_pet_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.fey.tapestry{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_tapestry_normal_1_5.png") top left no-repeat;}\
-		div.trCard div.description div.fey.pillar{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/icons/70/fey_pillar_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.briton.advisor{background:transparent url("'+IMGURL+'throne/icons/70/briton_advisor_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.briton.banner{background:transparent url("'+IMGURL+'throne/icons/70/briton_banner_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.briton.chair{background:transparent url("'+IMGURL+'throne/icons/70/briton_chair_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.briton.table{background:transparent url("'+IMGURL+'throne/icons/70/briton_table_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.briton.window{background:transparent url("'+IMGURL+'throne/icons/70/briton_window_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.briton.trophy{background:transparent url("'+IMGURL+'throne/icons/70/briton_trophy_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.briton.hero{background:transparent url("'+IMGURL+'throne/icons/70/briton_hero_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.briton.statue{background:transparent url("'+IMGURL+'throne/icons/70/briton_statue_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.briton.candelabrum{background:transparent url("'+IMGURL+'throne/icons/70/briton_candelabrum_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.briton.pet{background:transparent url("'+IMGURL+'throne/icons/70/briton_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.briton.tapestry{background:transparent url("'+IMGURL+'throne/icons/70/briton_tapestry_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.briton.pillar{background:transparent url("'+IMGURL+'throne/icons/70/briton_pillar_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.druid.advisor{background:transparent url("'+IMGURL+'throne/icons/70/druid_advisor_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.druid.banner{background:transparent url("'+IMGURL+'throne/icons/70/druid_banner_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.druid.chair{background:transparent url("'+IMGURL+'throne/icons/70/druid_chair_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.druid.table{background:transparent url("'+IMGURL+'throne/icons/70/druid_table_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.druid.window{background:transparent url("'+IMGURL+'throne/icons/70/druid_window_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.druid.trophy{background:transparent url("'+IMGURL+'throne/icons/70/druid_trophy_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.druid.hero{background:transparent url("'+IMGURL+'throne/icons/70/druid_hero_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.druid.statue{background:transparent url("'+IMGURL+'throne/icons/70/druid_statue_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.druid.pet{background:transparent url("'+IMGURL+'throne/icons/70/druid_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.druid.tapestry{background:transparent url("'+IMGURL+'throne/icons/70/druid_tapestry_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.druid.pillar{background:transparent url("'+IMGURL+'throne/icons/70/druid_pillar_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.druid.candelabrum{background:transparent url("'+IMGURL+'throne/icons/70/druid_candelabrum_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.fey.advisor{background:transparent url("'+IMGURL+'throne/icons/70/fey_advisor_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.fey.banner{background:transparent url("'+IMGURL+'throne/icons/70/fey_banner_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.fey.chair{background:transparent url("'+IMGURL+'throne/icons/70/fey_chair_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.fey.table{background:transparent url("'+IMGURL+'throne/icons/70/fey_table_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.fey.window{background:transparent url("'+IMGURL+'throne/icons/70/fey_window_normal_1.png") top left no-repeat;}\
+        div.trCard div.description div.fey.trophy{background:transparent url("'+IMGURL+'throne/icons/70/fey_trophy_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.fey.hero{background:transparent url("'+IMGURL+'throne/icons/70/fey_hero_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.fey.statue{background:transparent url("'+IMGURL+'throne/icons/70/fey_statue_normal_1_5.png") top left no-repeat;}\
+        div.trCard div.description div.fey.candelabrum{background:transparent url("'+IMGURL+'throne/icons/70/fey_candelabrum_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.fey.pet{background:transparent url("'+IMGURL+'throne/icons/70/fey_pet_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.fey.tapestry{background:transparent url("'+IMGURL+'throne/icons/70/fey_tapestry_normal_1_5.png") top left no-repeat;}\
+		div.trCard div.description div.fey.pillar{background:transparent url("'+IMGURL+'throne/icons/70/fey_pillar_normal_1_5.png") top left no-repeat;}\
         div.trCard{font:bold 16px Georiga; overflow: hidden;}\
-        div.trCard>div{float:left;border:1px solid #a56631;margin:0px;padding:0px;width:200px; background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/modal/modal_med_bg_4.png") -200px 0 no-repeat;}\
-        div.trCard div.title{font:bold 16px Georgia;border-bottom:1px solid #703200;padding:4px 3px 5px 8px;background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/panel/modal/item_bg.png") -20px -100px no-repeat;}\
-        div.trCard div.title span.icon{background:transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/equip.png") top right no-repeat;display:block;height:20px;width:20px;top:12px;right:12px;position:absolute;}\
+        div.trCard>div{float:left;border:1px solid #a56631;margin:0px;padding:0px;width:200px; background:transparent url("'+IMGURL+'modal/modal_med_bg_4.png") -200px 0 no-repeat;}\
+        div.trCard div.title{font:bold 16px Georgia;border-bottom:1px solid #703200;padding:4px 3px 5px 8px;background:transparent url("'+IMGURL+'throne/panel/modal/item_bg.png") -20px -100px no-repeat;}\
+        div.trCard div.title span.icon{background:transparent url("'+IMGURL+'throne/modal/equip.png") top right no-repeat;display:block;height:20px;width:20px;top:12px;right:12px;position:absolute;}\
         div.trCard .disabled{opacity:.5;}\   div.trCard ul{margin:0px;padding:0;list-style:none;}\
         div.trCard li{padding:0px 0 0 0px;color:#3f2300;font-weight:bold;font-size:16px;}\
         div.trCard div.description{overflow:hidden;border-bottom:1px solid #703200;padding:5px 0;}\
@@ -454,9 +454,9 @@ function trStartup (){
         div.blueBorder2 { border: 10px solid blue; } \
         div.yellowBorder { outline: 2px solid yellow; outline-offset:0px; }\
         div.yellowBorder2 { outline: 10px solid yellow; outline-offset:0px; }\
-        #trhammer { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
-        div.trhammer { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
-        div.trbroken { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_fail_overlay.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        #trhammer { background-image: url("'+IMGURL+'throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        div.trhammer { background-image: url("'+IMGURL+'throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        div.trbroken { background-image: url("'+IMGURL+'throne/modal/sm_fail_overlay.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
         div.trsuccess { background-image: url('+ success_image +'); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
         div.trup { display=inline;  background-image: url('+ up_img +'); background-repeat: no-repeat; background-color: transparent;  width: 28px; height: 24px; }\
         div.trup:hover { display=inline;  background-image: url('+ up_glow +'); background-repeat: no-repeat; background-color: transparent;  width: 28px; height: 24px; }\
@@ -466,10 +466,10 @@ function trStartup (){
         div.trdown:hover { display=inline;  background-image: url('+ down_glow +'); background-repeat: no-repeat; background-color: transparent;  width: 28px; height: 24px; }\
         div.trgbtn { display=inline;  background-image: url('+ gbtn_img +'); background-repeat: no-repeat; background-color: transparent;  width: 32px; height: 32px; margin: 0px; }\
         ul#MM_throneStatList li { float: left; width: 22px; height: 22px; text-align: center; color: white; }\
-        ul#MM_throneStatList li.active { background: transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_active.png") top left no-repeat; } \
-        ul#MM_throneStatList li.selected { background: transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_selected.png") top left no-repeat; }\
-        ul#MM_throneStatList li.locked { background: transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_locked.png") top left no-repeat; text-indent: -999px; }\
-        ul#MM_throneStatList li.buy { background: transparent url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/set_buy.png") top left no-repeat; text-indent: -999px; }\
+        ul#MM_throneStatList li.active { background: transparent url("'+IMGURL+'throne/modal/set_active.png") top left no-repeat; } \
+        ul#MM_throneStatList li.selected { background: transparent url("'+IMGURL+'throne/modal/set_selected.png") top left no-repeat; }\
+        ul#MM_throneStatList li.locked { background: transparent url("'+IMGURL+'throne/modal/set_locked.png") top left no-repeat; text-indent: -999px; }\
+        ul#MM_throneStatList li.buy { background: transparent url("'+IMGURL+'throne/modal/set_buy.png") top left no-repeat; text-indent: -999px; }\
         #trQueue th { text-align: center; }\
         a.loadGPreset { border-radius:5px; border-style: solid; border-width: 3px; }\
         div.indent25 {padding-left:25px}\
@@ -507,8 +507,8 @@ function trStartup (){
     // clear some styles
     var styles2 = ".trDiag .ui-widget-content { font-size: 1.0em; background: none; border: none;}" +
     ".trDiag.ui-widget-content { font-size: 0.95em; background: none; border: none;}" +
-    ".trDiag .ui-tabs .ui-tabs-nav li a { font-weight: bold; font-family: georgia,arial,sans-serif; color: white; font-size: 1.0em; background: url('https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/tab_unselected.png') no-repeat scroll 0% 0% transparent;}" +
-    ".trDiag .ui-tabs .ui-tabs-nav li.ui-tabs-active a {   background: url('https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/tab_selected.png') no-repeat scroll 0% 0% transparent;}" +
+    ".trDiag .ui-tabs .ui-tabs-nav li a { font-weight: bold; font-family: georgia,arial,sans-serif; color: white; font-size: 1.0em; background: url('"+IMGURL+"tab_unselected.png') no-repeat scroll 0% 0% transparent;}" +
+    ".trDiag .ui-tabs .ui-tabs-nav li.ui-tabs-active a {   background: url('"+IMGURL+"tab_selected.png') no-repeat scroll 0% 0% transparent;}" +
     ".trDiag .ui-widget-content a { color: white;}" +
     ".trDiag a.buttonDown20 span { color: white;}" +
     ".trDiag .ui-widget {font-size: 1.0em;}" +
@@ -517,7 +517,7 @@ function trStartup (){
     ".trDiag .ui-state-deafault {background-color: none; }" +
     ".trDiag .ui-widget .ui-widget {font-size: 0.9em;}" +
     ".trDiag .ui-dialog-titlebar {text-shadow: 0px 1px 0px white; line-height: 24px; text-align: center; color: #5C3317; font: bold 1.3em Georiga;}" +
-    '.trDiag.ui-dialog .ui-dialog-titlebar-close { background-position: 0px 0px; background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/close_icon.png"); background-repeat: no-repeat; height: 20px; width: 20px; }' +
+    '.trDiag.ui-dialog .ui-dialog-titlebar-close { background-position: 0px 0px; background-image: url("'+IMGURL+'close_icon.png"); background-repeat: no-repeat; height: 20px; width: 20px; }' +
     ".trDiag.ui-dialog .ui-dialog-titlebar-close { width: 20px; height: 20px;}" +
     ".trDiag .ui-resizable-s { background: rgba(0,0,255,0.3);}" +
     ".trDiag .ui-tabs .ui-tabs-nav { position: relative; top: 10px; left: 15px;}" +
@@ -920,7 +920,7 @@ function buildPresetWidget() {
         var bb = $("<li/>").html('<div/>').css(
                 {
                     'padding': '0px',
-                    'background': 'url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/guardian_change_spritemap102.png") no-repeat scroll ' + offsets[g] + ' white',
+                    'background': 'url("'+IMGURL+'guardian_change_spritemap102.png") no-repeat scroll ' + offsets[g] + ' white',
                     'background-size': '350px'
                 });
         bb.addClass("guardbutton").addClass(type);

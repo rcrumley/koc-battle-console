@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             mmChampion
 // @name           MadMaxx Champion Organizer
-// @version        20141111a
+// @version        20150523a
 // @namespace      mm2
 // @author         PC
 // @description    Organizes the Champion equipment in Kingdoms of Camelot
@@ -14,7 +14,7 @@
 // @resource       jqcss http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css
 // @updateURL      https://userscripts.org/scripts/source/464044.meta.js
 // @downloadURL    https://userscripts.org/scripts/source/464044.user.js
-// @icon  https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/uncommon_chestArmor_briton_70x70.png
+// @icon		   https://rycamelot1-a.akamaihd.net/fb/e2/src/img/champion_hall/uncommon_chestArmor_briton_70x70.png
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require        https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js
 // @grant       unsafeWindow
@@ -32,13 +32,13 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20141111a';
+var Version = '20150523a';
 
 var chPopUpTopClass = 'chPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
-
-var maxChLevel = 14;
+var IMGURL = unsafeWindow.stimgUrl+"img/";
+var maxChLevel = unsafeWindow.cm.CHAMPION.MAX_LEVELS;
 
 /*
  * Modifiedd from object.watch polyfill
@@ -319,7 +319,7 @@ function chStartup (){
         table.chPopMain tbody tr td,th {background: transparent;}\
         table.chTabDef tbody tr td {background: transparent; height: 0px; }\
         table.chTab tr td, th { border: 1px solid brown;}\
-        #ch_footer {height: 50px; background: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r3_c1.jpg") scroll no-repeat center bottom;}\
+        #ch_footer {height: 50px; background: url("'+IMGURL+'dialog_740_r3_c1.jpg") scroll no-repeat center bottom;}\
         #ch_footer { background-size: cover; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; }\
         table.chTab tr td,th {border:none; background:none; padding: 0px}\
         table.chTab#chDisplayTable tr th { border: 3px solid grey; font-size:1.2em; }\
@@ -361,7 +361,7 @@ function chStartup (){
         .chPopMain  {  -moz-box-shadow:inset 0px 0px 10px #6a6a6a; -moz-border-radius-bottomright: 20px; -moz-border-radius-bottomleft: 20px;}\
         .chPopup  { border:3px ridge #666; opacity:'+upgradeData.Opacity+'; -moz-border-radius:25px; -moz-box-shadow: 1px 1px 5px #000000;}\
         .chPopup { overflow-x: hide; overflow-y: hide; max-height: 900px; min-height: 400px; height: 500px;  }\
-        #ch_top {  background: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/dialog_740_r2_c1.jpg") no-repeat transparent 0% 0%; }\
+        #ch_top {  background: url("'+IMGURL+'dialog_740_r2_c1.jpg") no-repeat transparent 0% 0%; }\
         #ch_top { background-size: cover; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; }\
         /* this was needed because the css used a object id and not a class.  reusing the ID caused display issues w/ the TR tooltips */ \
         div.chCard {width: 200px;}\
@@ -390,9 +390,9 @@ function chStartup (){
         div.blueBorder2 { border: 4px solid blue; } \
         div.yellowBorder { outline: 2px solid yellow; outline-offset:0px; }\
         div.yellowBorder2 { outline: 4px solid yellow; outline-offset:0px; }\
-        #chhammer { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
-        div.chhammer { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
-        div.chbroken { background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/throne/modal/sm_fail_overlay.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        #chhammer { background-image: url("'+IMGURL+'throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        div.chhammer { background-image: url("'+IMGURL+'throne/modal/sm_hammer.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
+        div.chbroken { background-image: url("'+IMGURL+'throne/modal/sm_fail_overlay.png"); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
         div.chsuccess { background-image: url('+ success_image +'); background-repeat: no-repeat; background-color: transparent; display: inline-block; width: 28px; height: 32px; margin: 2px; vertical-align: middle;}\
         div.chup { display=inline;  background-image: url('+ up_img +'); background-repeat: no-repeat; background-color: transparent;  width: 28px; height: 24px; }\
         div.chup:hover { display=inline;  background-image: url('+ up_glow +'); background-repeat: no-repeat; background-color: transparent;  width: 28px; height: 24px; }\
@@ -434,8 +434,8 @@ function chStartup (){
     // clear some styles
     var styles2 = ".chDiag .ui-widget-content { font-size: 1.0em; background: none; border: none;}" +
     ".chDiag.ui-widget-content { font-size: 0.95em; background: none; border: none;}" +
-    ".chDiag .ui-tabs .ui-tabs-nav li a { font-weight: bold; font-family: georgia,arial,sans-serif; color: white; font-size: 1.0em; background: url('https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/tab_unselected.png') no-repeat scroll 0% 0% transparent;}" +
-    ".chDiag .ui-tabs .ui-tabs-nav li.ui-tabs-active a {   background: url('https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/tab_selected.png') no-repeat scroll 0% 0% transparent;}" +
+    ".chDiag .ui-tabs .ui-tabs-nav li a { font-weight: bold; font-family: georgia,arial,sans-serif; color: white; font-size: 1.0em; background: url('"+IMGURL+"tab_unselected.png') no-repeat scroll 0% 0% transparent;}" +
+    ".chDiag .ui-tabs .ui-tabs-nav li.ui-tabs-active a {   background: url('"+IMGURL+"tab_selected.png') no-repeat scroll 0% 0% transparent;}" +
     ".chDiag .ui-widget-content a { color: white;}" +
     ".chDiag a.buttonDown20 span { color: white;}" +
     ".chDiag .ui-widget {font-size: 1.0em;}" +
@@ -444,7 +444,7 @@ function chStartup (){
     ".chDiag .ui-state-deafault {background-color: none; }" +
     ".chDiag .ui-widget .ui-widget {font-size: 0.9em;}" +
     ".chDiag .ui-dialog-titlebar {text-shadow: 0px 1px 0px white; line-height: 24px; text-align: center; color: #5C3317; font: bold 1.3em Georiga;}" +
-    '.chDiag.ui-dialog .ui-dialog-titlebar-close { background-position: 0px 0px; background-image: url("https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/close_icon.png"); background-repeat: no-repeat; height: 20px; width: 20px; }' +
+    '.chDiag.ui-dialog .ui-dialog-titlebar-close { background-position: 0px 0px; background-image: url("'+IMGURL+'close_icon.png"); background-repeat: no-repeat; height: 20px; width: 20px; }' +
     ".chDiag.ui-dialog .ui-dialog-titlebar-close { width: 20px; height: 20px;}" +
     ".chDiag .ui-resizable-s { background: rgba(0,0,255,0.3);}" +
     ".chDiag .ui-tabs .ui-tabs-nav { position: relative; top: 10px; left: 15px;}" +
@@ -2935,7 +2935,7 @@ Tabs.organizer = {
             var U = (+Z.unique > 0) ? UW.g_js_strings.throneRoom[c.getRarityClasses(6)] : UW.g_js_strings.throneRoom[c.getRarityClasses(Y.rarity)];
             
             X +=
-                '<div class="champ_item_hover" style="background: url(https://kabam1-a.akamaihd.net/kingdomsofcamelot/fb/e2/src/img/champion_hall/' +
+                '<div class="champ_item_hover" style="background: url('+IMGURL+'champion_hall/' +
                 Y.getSrc("70") +
                 ');"></div><div class="stats_item_hover">' + UW.g_js_strings.commonstr.faction +
                 ": " + UW.g_js_strings.commonstr[c.getFactionClasses(Y.faction)] + 
