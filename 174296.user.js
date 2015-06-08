@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150517a
+// @version        20150608a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150517a';
+var Version = '20150608a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -261,7 +261,6 @@ var CrestOptions = {
   isWild       :  false,
   isMerc       :  false,
   ChampOnly    : false,
-
   Paused       :  false,
 };
 var GiftDB = {
@@ -300,7 +299,6 @@ var CrestData = new Array();
       this.isWild       =  Arr.isWild;
       this.isMerc       =  Arr.isMerc;
       this.ChampOnly    =  Arr.ChampOnly;
-
 	  this.Paused       =  Arr.Paused;
    };
 
@@ -5100,7 +5098,7 @@ Tabs.Throne = {
 		var m = '<DIV  class=pbStat>Throne room toggle</div><center><TABLE height=0% class=pbTab><TR align="center">';
 		for (var k = 1; k < Number(Seed.throne.slotNum + 1); k++) {
 			m += '<TD><INPUT id=autotr' + k + ' type=checkbox ' + (ThroneOptions.autotoggle[k] ? 'CHECKED ' : '') + '/><INPUT id=tra' + k + ' type=submit value=' + k + '><br><input type="text" id=trt' + k + ' size=10 value=' + ThroneOptions.tabnames[k] + '></td>';
-			if (k == 8) m += '</TR><TR>';
+			if (k%8 == 0) m += '</TR><TR align="center">';
 		};
 		m += '</TR></table>' + translate('Will auto change to checked Throne rooms and rotate when afk') + '<br><br><button id=ttptc>Post to chat</button> <br>';
 		m += '<table><TD><DIV id=ThroneTRS></div></td></table>';
@@ -5906,8 +5904,8 @@ Tabs.tower = {
 		for (var k in Seed.queue_atkinc) {   // check each incoming march
 			var m = Seed.queue_atkinc[k];
 			if (m.marchType==3 || m.marchType==4) {
-				if(Options.alertConfig.lastatkarr.indexOf(Number(m.mid)) == -1) {
-					Options.alertConfig.lastatkarr.push(Number(m.mid));
+				if(Options.alertConfig.lastatkarr.indexOf(String(m.mid)+String(m.departureTime)) == -1) {
+					Options.alertConfig.lastatkarr.push(String(m.mid)+String(m.departureTime));
 					Options.alertConfig.lastarrtime.push(Number(m.arrivalTime));
 					if (Number(m.arrivalTime) > Options.alertConfig.lastAttack) Options.alertConfig.lastAttack = Number(m.arrivalTime);//for tr toggle back
 					saveOptions();
@@ -22925,7 +22923,6 @@ Tabs.Attack = {
 		document.getElementById('pbcrest_iswild').addEventListener('click', function(){CrestOptions.isWild = this.checked;} , false);
 		document.getElementById('pbcrest_ismerc').addEventListener('click', function(){CrestOptions.isMerc = this.checked;} , false);
 		document.getElementById('pbcrest_champonly').addEventListener('click', function(){CrestOptions.ChampOnly = this.checked;} , false);
-
 		document.getElementById('crestcity').addEventListener('click', function(){CrestOptions.CrestCity = t.tcp.city.id;} , false);
 		document.getElementById('Cresttoggle').addEventListener('click', function(){t.toggleCrestState(this)} , false);
 		document.getElementById('pbcrestx').addEventListener('change', function(){CrestOptions.X = document.getElementById('pbcrestx').value;;} , false);
@@ -23446,7 +23443,6 @@ Tabs.Attack = {
 				if (CrestData[CrestDataNum].ChampOnly) {				
 					params.champid = champid;
 				}
-
 				for (var k in t.trooparray){
 					params["u"+k] = parseIntNan(CrestData[CrestDataNum]["R2"+t.trooparray[k]]);
 				}	
