@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20150430a
+// @version			20150608a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Fix cancelled march return times</p><p>Fix possible multi browser warnings popups caused by this script</p><p>Minor display improvements</p><p>Move update links to SourceForge</p>
+// @releasenotes 	<p>Allow for more than 16 TR presets</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -26,7 +26,7 @@
 //	¦	April 2015 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20150430a'; 
+var Version = '20150608a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -1799,7 +1799,8 @@ var AudioManager = {
 	setVolume: function(vol){
 		var t = AudioManager;
 		t.volume = vol;
-		t.player.volume = t.volume * 0.01;
+		if (t.player)
+			t.player.volume = t.volume * 0.01;
 	},
 	play: function(){
 		var t = AudioManager;
@@ -1825,7 +1826,8 @@ var AudioManager = {
 	},
 	pause: function(){
 		var t = AudioManager;
-		t.player.pause();
+		if (t.player)
+			t.player.pause();
 	},
 	setSource: function(src){
 		var t = AudioManager;
@@ -1837,7 +1839,8 @@ var AudioManager = {
 	},
 	toggleMute: function () {
 		var t = AudioManager;
-		t.player.muted = !t.player.muted;
+		if (t.player)
+			t.player.muted = !t.player.muted;
 	},
 	creatediv : function(){
 		var t = AudioManager;
@@ -5921,18 +5924,27 @@ function PaintTRPresets () {
 	var n = '<div class="xtab" style="opacity:0.6;font-size:'+Options.MonitorFontSize+'px;" align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
 	if (Options.TRPresetByName) { m+='<td class="xtabBR" align=center>'; }
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
+	
+	var numrows = Math.ceil(Seed.throne.slotNum/16);
+	var perrow = Math.ceil(Seed.throne.slotNum/numrows);
+	var nummonrows = Math.ceil(Seed.throne.slotNum/12);
+	var permonrow = Math.ceil(Seed.throne.slotNum/nummonrows);
+
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		if (Options.TRPresetByName) {
 			m+='<div id="trpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
 		}
 		else {
+			if ((i % perrow)==1) {
+				m+='</tr><TR>';
+			}
 			m+='<TD id="trpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="trlink'+i+'"><div id="trpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		}	
 		if (Options.TRMonPresetByName) {
 			n+='<div id="tmpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="tmlink'+i+'"><span style="width:'+Math.floor(85*fontratio)+'px;font-size:'+(Options.MonitorFontSize<10?Options.MonitorFontSize:10)+'px;" id="tmpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
 		}
 		else {
-			if ((Seed.throne.slotNum > 8) && ((i-1) == Math.floor(Seed.throne.slotNum/2))) {
+			if ((i % permonrow)==1) {
 				n+='</tr><TR>';
 			}
 			n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
