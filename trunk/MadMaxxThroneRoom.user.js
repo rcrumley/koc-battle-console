@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           KOC Throne Room Organizer
-// @version        20150523a
+// @version        20150608a
 // @namespace      mmm
 // @delay 2000
 // @priority -10
@@ -26,13 +26,14 @@
 
 //var xx= {level: 2}; alert(CM.ThronePanelController.calcRiskBarWidth("upgrade", xx, 0))
 
-var Version = '20150523a';
+var Version = '20150608a';
 
 var trPopUpTopClass = 'trPopTop';
 var ResetAll = false;
 var DEBUG_TRACE = false;
 var IMGURL = unsafeWindow.stimgUrl+"img/";
 var maxTrLevel = unsafeWindow.cm.MAX_MASTERS_TOKEN_LEVEL;
+var OrganizerPresetSlots = 24;
 var JewelImages = {1 : "http://i.imgur.com/SecBRT5.png", 2 : "http://i.imgur.com/dnrId1I.png", 3 : "http://i.imgur.com/fjgZUh9.png", 4 : "http://i.imgur.com/h7tMQaB.png", 5 : "http://i.imgur.com/BZSuCiN.png"};
 /*
  * Modifiedd from object.watch polyfill
@@ -835,7 +836,7 @@ function buildPresetWidget() {
     var J = Seed.throne.activeSlot;
     var F = Seed.throne.slotNum;
 
-    for (var G = 0; G < 16; ++G) {
+    for (var G = 0; G < OrganizerPresetSlots; ++G) {
         var H = G + 1;
         var I = $("<li/>");
         if (H === J) {
@@ -1291,8 +1292,11 @@ function installHandlerFunctions() {
 			} 
 		} 
 		
-        $("ul#throneInventoryList").css('height', '520px');
-        $("div#throneInventoryContainer").css('height', '520px');
+		var h = 564; 
+		var el1 = document.getElementById('throneStatList');
+		if (el1) { h=h-el1.clientHeight; }
+        $("ul#throneInventoryList").css('height', h+'px');
+        $("div#throneInventoryContainer").css('height', h+'px');
 
         // update the other presets buttons when clicked
         $('ul#throneStatList li.active, ul#throneStatList li.selected').click( 
@@ -1570,7 +1574,19 @@ function installHandlerFunctions() {
                                unsafeWindow.ksoItems[20016].name, // +10
                                unsafeWindow.ksoItems[20017].name, // +11
                                unsafeWindow.ksoItems[20018].name, // +12
-                               unsafeWindow.ksoItems[20019].name  // super lucky token
+                               unsafeWindow.ksoItems[20019].name, // super lucky token
+                               unsafeWindow.ksoItems[20020].name, // +13
+                               unsafeWindow.ksoItems[20021].name, // +14
+                               unsafeWindow.ksoItems[20022].name, // apprentice token
+                               unsafeWindow.ksoItems[20023].name, // +15
+                               unsafeWindow.ksoItems[20024].name, // +16
+                               unsafeWindow.ksoItems[20025].name, // +17
+                               unsafeWindow.ksoItems[20026].name, // +18
+                               unsafeWindow.ksoItems[20027].name, // +19
+                               unsafeWindow.ksoItems[20028].name, // +20
+                               unsafeWindow.ksoItems[20029].name, // +21
+                               unsafeWindow.ksoItems[20030].name, // +22
+                               unsafeWindow.ksoItems[20031].name // +23
                                ];
 
             $(document.querySelector("#buffDropDown")).children("option").each( function() {
