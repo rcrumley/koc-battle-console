@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Option to send Champ on Auto-Attack (crest)</p>
+// @releasenotes 	<p>Small Tower bugfix</p><p>Display tweak for 16+ presets</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
