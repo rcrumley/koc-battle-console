@@ -5969,7 +5969,7 @@ function PaintTRPresets () {
 			if (!Options.TRPresetByName) {
 				m+='<TD class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div class="presetBut presetButLck"></div></a></td>';
 			}
-			if (!Options.TRPresetByName) {
+			if (!Options.TRMonPresetByName) {
 				n+='<TD class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div class="presetBut presetButLck"></div></a></td>';
 			}
 			i++;
