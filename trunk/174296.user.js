@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150608a
+// @version        20150612a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Small Tower bugfix</p><p>Display tweak for 16+ presets</p>
+// @releasenotes 	<p>NEW Nomad Camp Trade Tab!</p><p>Kabam support link replaced with RockYou link</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150608a';
+var Version = '20150612a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -1031,7 +1031,7 @@ function pbStartup (){
   
 	if(Options.amain) setTimeout(function (){unsafeWindow.citysel_click(document.getElementById('citysel_'+Number(Number(Options.smain)+1)))},1000);
 	document.getElementById('main_engagement_tabs').innerHTML+= '<a class="navTab" onclick=" window.open(\'https://community.kabam.com/forums/forumdisplay.php?4-Kingdoms-of-Camelot\');"><span>Forum</span></a>\
-																<a class="navTab" onclick=" window.open(\'https://kabam.secure.force.com/PKB/KbContactUsForm?language=en_US&game=Kingdoms_of_Camelot&issue=Other_Game_Issues\');"><span>Kabam</span></a>\
+																<a class="navTab" onclick=" window.open(\'https://rockyougames.zendesk.com/hc/en-us/requests/new\');"><span>RockYou</span></a>\
 																<a class="navTab" onclick=" window.open(\'https://www.trialpay.com/support/contactus/\');"><span>Trialpay</span></a>';
 
   if(Options.ThroneHUD)Tabs.Throne.ThroneHUDinit();
@@ -28734,5 +28734,260 @@ function fetchmarchPlayerInfo(uid, notify, march){
 };
 
 /*************************************** QUICKSCOUT END ***********************************/ 
+
+/***************************** Nomad Tab *******************************/
+
+Tabs.Nomad = {
+	tabOrder: 40000,
+	tabLabel : 'Nomads',
+	myDiv : null,
+	timer : null,
+	ValidNomad: false,
+	tradeItem: 0,
+	tradeItemQuantity: 0,
+	prizes: [],
+	eventId :0,
+	isBusy: false,
+	NomadMessage: 'Fetching details from server...',
+	Options: {
+		x: 0,
+		y: 0,
+		TradeAmount: 0,
+		TradeInterval: 1,
+		AutoTrade: false,
+	},
+   
+	init : function (div) {
+		var t = Tabs.Nomad;
+		t.myDiv = div;
+      
+		if (!Options.NomadOptions) {
+			Options.NomadOptions = t.Options;
+		}
+		else {
+			for (var y in t.Options) {
+				if (!Options.NomadOptions.hasOwnProperty(y)) {
+					Options.NomadOptions[y] = t.Options[y];
+				}	
+			}
+		}
+
+		t.eventFetchNomadDetails();
+	  
+		t.time = setTimeout(function() {t.checkAutoTrade();},Options.NomadOptions.TradeInterval*1000);
+	},
+
+	checkAutoTrade: function () {
+	
+	},
+	
+	eventFetchNomadDetails: function () {
+		var t = Tabs.Nomad;
+		NomadMessage = 'Fetching Nomad details from server...';
+		t.ValidNomad = false;
+		t.tradeItem = 0;
+		t.tradeItemQuantity = 0;
+		t.eventId = 0;
+		t.prizes = [];
+		t.show();
+		
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.xCoord = Options.NomadOptions.x;
+		params.yCoord = Options.NomadOptions.y;
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/getNomadCamp.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (!rslt.ok){
+					if (rslt.msg) { t.NomadMessage = rslt.msg; }
+					else { t.NomadMessage = 'No Nomad Camp Details Available'; }
+					Options.NomadOptions.AutoTrade = false;
+					saveOptions();
+					t.show();
+					return;
+				}
+				t.ValidNomad = true;
+				t.tradeItem = rslt.tradeItem;
+				t.tradeItemQuantity = rslt.tradeItemQuantity;
+				t.eventId = rslt.eventId;
+				t.prizes = rslt.prizes["2"];
+				t.show();
+			},
+			onFailure: function () {
+				t.NomadMessage = 'AJAX Error'; 
+				Options.NomadOptions.AutoTrade = false;
+				saveOptions();
+				t.show();
+			},
+		},true);		
+	},
+	
+	eventDoTrade: function () {
+		var t = Tabs.Nomad;
+
+		var div = $("pbnomad_info");
+		
+		var params = unsafeWindow.Object.clone(unsafeWindow.g_ajaxparams);
+		params.eventId = t.eventId;
+		params.lootType = 2;
+		new MyAjaxRequest(unsafeWindow.g_ajaxpath + "ajax/nomadTrade.php" + unsafeWindow.g_ajaxsuffix, {
+			method: "post",
+			parameters: params,
+			onSuccess: function (rslt) {
+				if (rslt.ok){
+					unsafeWindow.cm.NomadModel.removeItems(t.tradeItem, t.tradeItemQuantity);
+					unsafeWindow.update_inventory(rslt.bonusItems);
+					for (var lootId in rslt.bonusItems) {
+						if (lootId) {
+							div.innerHTML += '<br><span>You received '+rslt.bonusItems[lootId]+' '+unsafeWindow.itemlist["i"+lootId].name+'</span>';
+						}
+					}
+					Options.NomadOptions.TradeAmount = Options.NomadOptions.TradeAmount-1;
+				}
+				setTimeout(t.nextqueue, 500);
+			},
+			onFailure: function () {
+				div.innerHTML = 'Server Error'; 
+				Options.NomadOptions.AutoTrade = false;
+				saveOptions();
+				t.isBusy = false;
+				t.show();
+			},
+		},true);		
+	},
+	
+	hide : function (){	},
+
+	show : function (){
+		var t = Tabs.Nomad;
+
+		var m = '<DIV class=pbStat>Nomad Camp Auto Trade</div><br>';
+        m += '<TABLE align=center width=98% cellpadding=0 cellspacing=0 class=pbTab>';
+		m += '<TR><td colspan=3>X:&nbsp<INPUT id=btNomadX size=3 maxlength=3 type=text value="'+Options.NomadOptions.x+'">&nbsp&nbsp&nbspY:&nbsp<INPUT id=btNomadY size=3 maxlength=3 type=text value="'+Options.NomadOptions.y+'">&nbsp;&nbsp;&nbsp;<INPUT id=btNomadRefresh type=submit value="Refresh Nomad Details">&nbsp;(Co-ordinates currently not required, but added to the tab in case they are in the future)</td></tr>';
+		m += '<TR><td colspan=3>&nbsp;</td></tr>';
+		if (t.ValidNomad) {
+			m += '<TR><td align=right>Trade Item:&nbsp;</td><td colspan=2><b>'+unsafeWindow.itemlist["i"+t.tradeItem].name+'</b></td></tr>';
+			m += '<TR><td align=right>Quantity per Trade:&nbsp;</td><td colspan=2><b>'+t.tradeItemQuantity+'</b></td></tr>';
+			m += '<TR><td align=right>You Own:&nbsp;</td><td><b>'+(Seed.items["i"+t.tradeItem]?Seed.items["i"+t.tradeItem]:0)+'</b></td><td>Amount to Trade:&nbsp;<INPUT size=4 id=btNomadItemAmount type=text value="'+Options.NomadOptions.TradeAmount+'">&nbsp;<INPUT id=btNomadTrade type=submit value="Do Trade"></td></tr>';
+			m += '<TR><td colspan=3>&nbsp;</td></tr>';
+			m += '<TR><td>&nbsp;</td><td colspan=2><b>Possible Prizes from Trade:-</b></td></tr>';
+
+			for (var p in t.prizes) {
+				if (t.prizes[p].itemId) {
+					m += '<TR><td>&nbsp;</td><td colspan=2>'+t.prizes[p].quantity + ' ' +unsafeWindow.itemlist["i"+t.prizes[p].itemId].name+'</td></tr>';
+				}	
+			}
+		}
+		else {
+			m += '<TR><td align=center colspan=3>'+t.NomadMessage+'</td></tr>';
+		}
+		m += '</table><br>';
+		
+		t.myDiv.innerHTML = m;
+		
+		document.getElementById('btNomadRefresh').addEventListener('click', function() {t.eventFetchNomadDetails();},false);
+
+		document.getElementById('btNomadX').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadX').value)) document.getElementById('btNomadX').value='';}, false);
+		document.getElementById('btNomadY').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadY').value)) document.getElementById('btNomadY').value='';}, false);
+
+		document.getElementById('btNomadX').addEventListener('change', function(){Options.NomadOptions.x = document.getElementById('btNomadX').value;} , false);
+		document.getElementById('btNomadY').addEventListener('change', function(){Options.NomadOptions.y = document.getElementById('btNomadY').value;} , false);
+
+		if (t.ValidNomad) {
+			document.getElementById('btNomadTrade').addEventListener('click', function() {t.start();},false);
+			document.getElementById('btNomadItemAmount').addEventListener('change', function(e) {
+				Options.NomadOptions.TradeAmount = parseIntNan(e.target.value);
+				e.target.value = Options.NomadOptions.TradeAmount;
+				saveOptions();
+			},false);
+		}	
+	},  
+	
+	setPopup: function (onoff) {
+		var t = Tabs.Nomad;
+		if (onoff) {
+			var div = document.createElement('div');
+			div.id = 'ptNomadPop';
+			div.style.backgroundColor = '#fff';
+			div.style.zindex = mainPop.div.zIndex + 2;
+			div.style.opacity = '1';
+			div.style.border = '3px outset black';
+			div.style.width = '550px';
+			div.style.height = '300px';
+			div.style.display = 'block';
+			div.style.position = 'absolute';
+			div.style.top = '100px';
+			div.style.left = '100px';
+			t.myDiv.appendChild(div);
+			return div;
+		} else {
+			t.myDiv.removeChild(document.getElementById('ptNomadPop'));
+		}
+	},
+	setCurtain: function (onoff) {
+		var t = Tabs.Nomad;
+		if (onoff) {
+			var off = getAbsoluteOffsets(t.myDiv);
+			var curtain = document.createElement('div');
+			curtain.id = 'ptNomadCurtain';
+			curtain.style.zindex = mainPop.div.zIndex + 1;
+			curtain.style.backgroundColor = "#000000";
+			curtain.style.opacity = '0.5';
+			curtain.style.width = (t.myDiv.clientWidth+4) + 'px';
+			curtain.style.height = (t.myDiv.clientHeight+4) + 'px';
+			curtain.style.display = 'block';
+			curtain.style.position = 'absolute';
+			curtain.style.top = off.top + 'px';
+			curtain.style.left = off.left + 'px';
+			t.myDiv.appendChild(curtain);
+		} else {
+			t.myDiv.removeChild(document.getElementById('ptNomadCurtain'));
+		}
+	},
+	e_Cancel: function () {
+		var t = Tabs.Nomad;
+		if (t.isBusy) {
+			t.isBusy = false;
+			var div = $("pbnomad_info");
+			div.innerHTML += "<br><span>Cancelled!</span>";
+			document.getElementById('pbNomadCancel').firstChild.innerHTML = 'Close';
+			return;
+		}
+		t.setCurtain(false);
+		t.setPopup(false);
+		t.show();
+	},
+	
+	start : function (){
+		var t = Tabs.Nomad;
+
+		Options.NomadOptions.TradeAmount = parseIntNan(Options.NomadOptions.TradeAmount);
+		if(Options.NomadOptions.TradeAmount > 0) {
+			t.isBusy = true;
+			t.setCurtain(true);
+			var popDiv = t.setPopup(true);
+			popDiv.innerHTML = '<TABLE class=xtab width=100% height=100%><TR><TD align=center>\
+			<DIV class=pbStat>Trading with the Nomads...</div>\
+			<DIV id=pbnomad_info style="padding:10px; height:225px; max-height:225px; overflow-y:auto"></div>\
+			</td></tr><TR><TD align=center>' + strButton20('Cancel', 'id=pbNomadCancel') + '</td></tr></table>';
+			document.getElementById('pbNomadCancel').addEventListener('click', t.e_Cancel, false);
+			t.nextqueue();
+		}	
+	},
+   
+	nextqueue : function (){
+		var t = Tabs.Nomad;
+		if(!t.isBusy)
+			return;
+		var div = $("pbnomad_info");
+		if(Options.NomadOptions.TradeAmount == 0){
+			div.innerHTML += "<br><span>Completed!</span>";
+			document.getElementById('pbNomadCancel').firstChild.innerHTML = 'Close';
+			t.isBusy = false;
+			return;
+		}
+		t.eventDoTrade();
+	},
+}
 
 pbStartup ();
