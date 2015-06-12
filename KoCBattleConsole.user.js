@@ -13,9 +13,9 @@
 // @grant			GM_xmlhttpRequest
 // @grant			GM_getResourceText
 // @grant			unsafeWindow
-// @version			20150608a
+// @version			20150612a
 // @license			http://creativecommons.org/licenses/by-nc-nd/3.0/
-// @releasenotes 	<p>Allow for more than 16 TR presets</p>
+// @releasenotes 	<p>Option to display fixed with TR widgets (8 per row)</p>
 // ==/UserScript==
 
 //	+-------------------------------------------------------------------------------------------------------+
@@ -23,10 +23,10 @@
 //	¦	It is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License:	¦
 //	¦	http://creativecommons.org/licenses/by-nc-nd/3.0													¦
 //	¦																										¦
-//	¦	April 2015 Barbarossa69 (www.facebook.com/barbarossa69)												¦
+//	¦	June 2015 Barbarossa69 (www.facebook.com/barbarossa69)												¦
 //	+-------------------------------------------------------------------------------------------------------+
 
-var Version = '20150608a'; 
+var Version = '20150612a'; 
 
 //Fix weird bug with koc game
 if (window.self.location != window.top.location){
@@ -115,6 +115,7 @@ var Options = {
 	MonitorRefreshRate  : 3,
 	GeneralRefreshRate  : 1,
 	FixDefendingTroops  : false,
+	TRFixPresetWidth	: false,
 };
 
 var JSON2 = JSON; 
@@ -231,6 +232,7 @@ var DownArrow = IMGURL+"autoAttack/down_arrow.png";
 var ThroneImage = IMGURL+"bonus_throne.png";
 var PresetImage = IMGURL+"throne/modal/set_active.png";
 var PresetImage_SEL = IMGURL+"throne/modal/set_selected.png";
+var PresetImage_LCK = IMGURL+"throne/modal/set_locked.png";
 var MistImage = IMGURL+"items/70/10021.jpg";
 var DoveImage = IMGURL+"items/70/901.jpg";
 var RefugeImage = IMGURL+"items/70/911.jpg";
@@ -645,6 +647,7 @@ function btStartup (){
 				.trimg span.trtip:hover { display:none;}\
 				.presetBut       {outline:0px; margin-left:0px; margin-right:0px; width:22px; height:22px; font-family: georgia,arial,sans-serif;font-size: 12px;color:white; line-height:19px;}\
 				.presetButNon    {background:url("'+ PresetImage +'") no-repeat center center;}\
+				.presetButLck    {background:url("'+ PresetImage_LCK +'") no-repeat center center;}\
 				.presetButSel    {background:url("'+ PresetImage_SEL +'") no-repeat center center;}\
 				.presetButDis    {opacity: 0.4;}\
 				.guardBut        {outline:0px; margin-left:0px; margin-right:0px; width:31px; height:33px; font-family: georgia,arial,sans-serif;line-height:52px;font-size:11px;font-weight:bold;color:#fff;text-shadow: 1px 1px 2px #000,-1px -1px 2px #000; background: url("' + GuardBG + '") no-repeat scroll 0% 0% transparent; background-size:350px;}\
@@ -678,6 +681,7 @@ function btStartup (){
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AlertOverrideChk type=checkbox /></td><td class=xtab>Replace gem containers with incoming attack alert timer</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=CompareChampChk type=checkbox /></td><td class=xtab>Compare champions in march tooltips windows</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=EnableOutgoingChk type=checkbox /></td><td class=xtab>Enable outgoing march monitoring functionality&nbsp;*</td></tr>';
+	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TRFixPresetWidth type=checkbox /></td><td class=xtab>Fix throne room preset changer width to 8 per row</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=TransparencyChk type=checkbox /></td><td class=xtab>Transparent windows&nbsp;*</td></tr>';
 	m += '<TR class=divHide><TD class=xtab>&nbsp;</td><td class=xtab>&nbsp;</td><td class=xtab>Panel refresh rate: ' + htmlSelector({1: 1, 2: 2, 3: 3, 4: 4, 5: 5}, Options.GeneralRefreshRate, 'id=btRefreshRate class=btInput') + '&nbspseconds</td></tr>';
 	m += '<TR><TD class=xtab>&nbsp;</td><td class=xtab><INPUT id=AutoUpdateChk type=checkbox /></td><td class=xtab>Automatically check for script updates&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a id=btUpdateCheck class="inlineButton btButton brown11"><span>Check Now</span></a></td></tr>';
@@ -825,7 +829,8 @@ function btStartup (){
 	ToggleOption ('DefaultSacChk', 'DefaultSacrifice', SacToggle);
 	SacToggle ();
 
-	ToggleOption ('TRPresetByNameChk', 'TRPresetByName');
+	ToggleOption ('TRFixPresetWidth', 'TRFixPresetWidth', PaintTRPresets);
+	ToggleOption ('TRPresetByNameChk', 'TRPresetByName', PaintTRPresets);
 	ToggleOption ('TRMonPresetByNameChk', 'TRMonPresetByName', PaintTRPresets);
 
     document.getElementById('btGC').addEventListener('change', function () {
@@ -928,7 +933,7 @@ function btStartup (){
 	}	
 	if (Options.DefenceStartState || (Options.DashboardMode && !Options.SleepMode)) {ToggleDashboard(Options.CurrentCity);}
 	if (Options.MonitorStartState && (Options.LastMonitoredUID != 0)) {initMonitor(Options.LastMonitoredUID);}
-	
+
 	// start main looper
 
 	SecondTimer = setTimeout(EverySecond,0);
@@ -1101,7 +1106,7 @@ function ShowHideRow(div,tf) {
 
 function RefreshSeed() {
 	RefreshingSeed = true;
-	
+
     if (!Options.RefreshSeed) {
 		uW.jQuery('#btRefreshSeed').addClass("disabled");
 		uW.jQuery('#btRefreshSeedInc').addClass("disabled");
@@ -2917,7 +2922,7 @@ var AutoUpdater = {
             return (r !== l) ? r > l : false;
     },
     compare: function(xpr,response) {
-        this.xversion=/\/\/\s*@version\s+(.+)\s*\n/i.exec(xpr.responseText);   
+        this.xversion=/\/\/\s*@version\s+(.+)\s*\n/i.exec(xpr.responseText); 
         if (this.xversion) this.xversion = this.xversion[1];
         else {
 			if (response) {
@@ -3924,7 +3929,7 @@ function Recall (marchId,cityview) {
 						j = uW.cm.UNIT_TYPES[j];
 						Seed.queue_atkp["city" + params.cid]["m" + params.mid]["unit" + j + "Return"] = parseInt(Seed.queue_atkp["city" + params.cid]["m" + params.mid]["unit" + j + "Count"])
 					}
-				}	
+				}
 				setOutError('March Recalled',cityview);
 			}
 			else {
@@ -5924,12 +5929,20 @@ function PaintTRPresets () {
 	var n = '<div class="xtab" style="opacity:0.6;font-size:'+Options.MonitorFontSize+'px;" align="center" id=btMonThroneMsg>&nbsp;</div><TABLE cellspacing=0 cellpadding=0 style="padding-bottom: 10px;" align=center><TR>';
 	if (Options.TRPresetByName) { m+='<td class="xtabBR" align=center>'; }
 	if (Options.TRMonPresetByName) { n+='<td class="xtabBR" align=center>'; }
+
+	var numperrow = 16;
+	var numpermonrow = 12;
 	
-	var numrows = Math.ceil(Seed.throne.slotNum/16);
+	var numrows = Math.ceil(Seed.throne.slotNum/numperrow);
 	var perrow = Math.ceil(Seed.throne.slotNum/numrows);
-	var nummonrows = Math.ceil(Seed.throne.slotNum/12);
+	var nummonrows = Math.ceil(Seed.throne.slotNum/numpermonrow);
 	var permonrow = Math.ceil(Seed.throne.slotNum/nummonrows);
 
+	if (Options.TRFixPresetWidth) {
+		perrow = 8;
+		permonrow = 8;
+	}
+	
     for (i=1;i<=Seed.throne.slotNum;i++) {
 		if (Options.TRPresetByName) {
 			m+='<div id="trpresetcell'+i+'" class="xtabBR trimg" style="display:inline-block"><a class="inlineButton btButton brown11" id="trlink'+i+'"><span style="width:85px;font-size:10px;" id="trpreset'+i+'"><center>'+(Options.TRPresets[i]?Options.TRPresets[i].name:'Preset '+i)+'</center></span></a></div>&nbsp;';
@@ -5950,6 +5963,19 @@ function PaintTRPresets () {
 			n+='<TD id="tmpresetcell'+i+'" class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;" id="tmlink'+i+'"><div id="tmpreset'+i+'" class="presetBut presetButNon"><center>'+i+'</center></div></a></td>';
 		}	
 	}	
+	
+	if (Options.TRFixPresetWidth) {
+		while ((i % perrow)!=1) {
+			if (!Options.TRPresetByName) {
+				m+='<TD class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div class="presetBut presetButLck"></div></a></td>';
+			}
+			if (!Options.TRPresetByName) {
+				n+='<TD class="xtab trimg" style="padding-right: 0px;"><a style="text-decoration:none;"><div class="presetBut presetButLck"></div></a></td>';
+			}
+			i++;
+		}
+	}
+	
 	if (Options.TRPresetByName) { m+='</td>'; }
 	if (Options.TRMonPresetByName) { n+='</td>'; }
     m += '</tr></table>';
