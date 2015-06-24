@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150624a
+// @version        20150625a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Remember Nomad trade state after refresh</p><p>Craft Tab Chest image display fix</p><p>Two new champ uniques</p>
+// @releasenotes 	<p>Error in nomad tab timing!</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150624a';
+var Version = '20150625a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -28861,7 +28861,7 @@ Tabs.Nomad = {
 						}
 					}
 					Options.NomadOptions.TradeAmount = Options.NomadOptions.TradeAmount-1;
-					setTimeout(t.nextqueue, 20000);
+					setTimeout(t.nextqueue, 500);
 				}
 				else {
 					div.innerHTML = '<span style="color:#800;">'+rslt.msg+'</span><br>'+div.innerHTML; 
