@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150615a
+// @version        20150624a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Crafting tab fix for inactive recipes</p>
+// @releasenotes 	<p>Remember Nomad trade state after refresh</p><p>Craft Tab Chest image display fix</p><p>Two new champ uniques</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150615a';
+var Version = '20150624a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -12269,7 +12269,7 @@ Tabs.AutoCraft = {
 				var craftingstr = "";
 				var crafting = t.checkCraftQueues(h);
 				if (crafting != 0) craftingstr = " ("+crafting+")";
-				m += "<td align=center><img src='"+IMGURL+"items/70/"+ h + ".jpg' width=25></td><td align=center class=craftdesc id=craftdes"+h+" >"+unsafeWindow.itemlist["i"+h].name+"</td><td align=center><span id='Craft_inv_"+h+"' class=boldGreen>"+parseIntNan(Seed.items["i"+h])+craftingstr+"</span></td>";
+				m += "<td align=center><img src='"+Tabs.Inventory.getItemImageURL(h)+"' width=25></td><td align=center class=craftdesc id=craftdes"+h+" >"+unsafeWindow.itemlist["i"+h].name+"</td><td align=center><span id='Craft_inv_"+h+"' class=boldGreen>"+parseIntNan(Seed.items["i"+h])+craftingstr+"</span></td>";
 				m += "<td><input type=text size=4 id='Craft_nb_"+h+"' value='"+ parseIntNan(TrainOptions.CraftingNb[h]) +"'></td><td><INPUT id='Craft_nbfix_"+h+"' type=checkbox "+(TrainOptions.CraftingNbFix[h]?'CHECKED':'')+"></td><td id='Craft_stats_"+h+"'>"+t.getCraftPercent(TrainOptions.CraftingStats[h])+"</td>";
 				if ((count+1)%2 == 0) m += "</tr><tr>";
 				count++;
@@ -12290,7 +12290,7 @@ Tabs.AutoCraft = {
 				var craftingstr = "";
 				var crafting = t.checkCraftQueues(h);
 				if (crafting != 0) craftingstr = " ("+crafting+")";
-				m += "<td align=center><img src='"+IMGURL+"items/70/"+ h + ".jpg' width=25></td><td align=center class=craftdesc id=craftdes"+h+" >"+unsafeWindow.itemlist["i"+h].name+"</td><td align=center><span id='Craft_inv_"+h+"' class=boldGreen>"+parseIntNan(Seed.items["i"+h])+craftingstr+"</span></td>";
+				m += "<td align=center><img src='"+Tabs.Inventory.getItemImageURL(h)+"' width=25></td><td align=center class=craftdesc id=craftdes"+h+" >"+unsafeWindow.itemlist["i"+h].name+"</td><td align=center><span id='Craft_inv_"+h+"' class=boldGreen>"+parseIntNan(Seed.items["i"+h])+craftingstr+"</span></td>";
 				m += "<td><input type=text size=4 id='Craft_nb_"+h+"' value='"+ parseIntNan(TrainOptions.CraftingNb[h]) +"'></td><td><INPUT id='Craft_nbfix_"+h+"' type=checkbox "+(TrainOptions.CraftingNbFix[h]?'CHECKED':'')+"></td><td id='Craft_stats_"+h+"'>"+t.getCraftPercent(TrainOptions.CraftingStats[h])+"</td>";
 				if ((count+1)%2 == 0) m += "</tr><tr>";
 				count++;
@@ -25448,6 +25448,8 @@ Tabs.Champion = {
 		UniqueItems["28600"] = {Id:28600,Name:"Necklace of Radiance", Effects:[{type:204,tier:2},{type:47,tier:3},{type:206,tier:3},{type:4,tier:3},{type:204,tier:3}],Faction:1,Type:8};
 		UniqueItems["28601"] = {Id:28601,Name:"Necklace of the Wild", Effects:[{type:203,tier:2},{type:34,tier:2},{type:209,tier:2},{type:1,tier:3},{type:203,tier:2}],Faction:3,Type:8};
 		UniqueItems["28602"] = {Id:28602,Name:"Scourge Knight's Necklace", Effects:[{type:208,tier:2},{type:58,tier:2},{type:207,tier:3},{type:5,tier:2},{type:208,tier:3}],Faction:2,Type:8};		
+		UniqueItems["28603"] = {Id:28603,Name:"Noble Necklace", Effects:[{type:207,tier:2},{type:22,tier:2},{type:201,tier:2},{type:22,tier:2},{type:207,tier:3}],Faction:1,Type:8};
+		UniqueItems["28604"] = {Id:28604,Name:"Feral Pendant", Effects:[{type:206,tier:2},{type:201,tier:1},{type:1,tier:2},{type:201,tier:2},{type:206,tier:3}],Faction:3,Type:8};
 		
 		for (var i=28001;i<28500;i++) {
 			if (!unsafeWindow.itemlist['i'+i]) continue;
@@ -28783,16 +28785,18 @@ Tabs.Nomad = {
 			}
 		}
 
-		t.eventFetchNomadDetails();
-	  
-		t.time = setTimeout(function() {t.checkAutoTrade();},Options.NomadOptions.TradeInterval*1000);
+		t.eventFetchNomadDetails(t.checkAutoTrade);
 	},
 
 	checkAutoTrade: function () {
+		var t = Tabs.Nomad;
+		if (Options.NomadOptions.AutoTrade) {
+			t.start();
+		};
 	
 	},
 	
-	eventFetchNomadDetails: function () {
+	eventFetchNomadDetails: function (notify) {
 		var t = Tabs.Nomad;
 		NomadMessage = 'Fetching Nomad details from server...';
 		t.ValidNomad = false;
@@ -28812,6 +28816,7 @@ Tabs.Nomad = {
 				if (!rslt.ok){
 					if (rslt.msg) { t.NomadMessage = rslt.msg; }
 					else { t.NomadMessage = 'No Nomad Camp Details Available'; }
+					Options.NomadOptions.TradeAmount = 0;
 					Options.NomadOptions.AutoTrade = false;
 					saveOptions();
 					t.show();
@@ -28823,9 +28828,11 @@ Tabs.Nomad = {
 				t.eventId = rslt.eventId;
 				t.prizes = rslt.prizes["2"];
 				t.show();
+				if (notify) { notify();}
 			},
 			onFailure: function () {
 				t.NomadMessage = 'AJAX Error'; 
+				Options.NomadOptions.TradeAmount = 0;
 				Options.NomadOptions.AutoTrade = false;
 				saveOptions();
 				t.show();
@@ -28850,19 +28857,26 @@ Tabs.Nomad = {
 					unsafeWindow.update_inventory(rslt.bonusItems);
 					for (var lootId in rslt.bonusItems) {
 						if (lootId) {
-							div.innerHTML += '<br><span>You received '+rslt.bonusItems[lootId]+' '+unsafeWindow.itemlist["i"+lootId].name+'</span>';
+							div.innerHTML = '<span>You received '+rslt.bonusItems[lootId]+' '+unsafeWindow.itemlist["i"+lootId].name+'</span><br>'+div.innerHTML;
 						}
 					}
 					Options.NomadOptions.TradeAmount = Options.NomadOptions.TradeAmount-1;
+					setTimeout(t.nextqueue, 20000);
 				}
-				setTimeout(t.nextqueue, 500);
+				else {
+					div.innerHTML = '<span style="color:#800;">'+rslt.msg+'</span><br>'+div.innerHTML; 
+					Options.NomadOptions.AutoTrade = false;
+					saveOptions();
+					t.isBusy = false;
+					document.getElementById('pbNomadCancel').firstChild.innerHTML = 'Close';
+				}
 			},
 			onFailure: function () {
-				div.innerHTML = 'Server Error'; 
+				div.innerHTML = '<span style="color:#800;">Server Error!</span><br>'+div.innerHTML; 
 				Options.NomadOptions.AutoTrade = false;
 				saveOptions();
 				t.isBusy = false;
-				t.show();
+				document.getElementById('pbNomadCancel').firstChild.innerHTML = 'Close';
 			},
 		},true);		
 	},
@@ -28872,46 +28886,51 @@ Tabs.Nomad = {
 	show : function (){
 		var t = Tabs.Nomad;
 
-		var m = '<DIV class=pbStat>Nomad Camp Auto Trade</div><br>';
-        m += '<TABLE align=center width=98% cellpadding=0 cellspacing=0 class=pbTab>';
-		m += '<TR><td colspan=3>X:&nbsp<INPUT id=btNomadX size=3 maxlength=3 type=text value="'+Options.NomadOptions.x+'">&nbsp&nbsp&nbspY:&nbsp<INPUT id=btNomadY size=3 maxlength=3 type=text value="'+Options.NomadOptions.y+'">&nbsp;&nbsp;&nbsp;<INPUT id=btNomadRefresh type=submit value="Refresh Nomad Details">&nbsp;(Co-ordinates currently not required, but added to the tab in case they are in the future)</td></tr>';
-		m += '<TR><td colspan=3>&nbsp;</td></tr>';
-		if (t.ValidNomad) {
-			m += '<TR><td align=right>Trade Item:&nbsp;</td><td colspan=2><b>'+unsafeWindow.itemlist["i"+t.tradeItem].name+'</b></td></tr>';
-			m += '<TR><td align=right>Quantity per Trade:&nbsp;</td><td colspan=2><b>'+t.tradeItemQuantity+'</b></td></tr>';
-			m += '<TR><td align=right>You Own:&nbsp;</td><td><b>'+(Seed.items["i"+t.tradeItem]?Seed.items["i"+t.tradeItem]:0)+'</b></td><td>Amount to Trade:&nbsp;<INPUT size=4 id=btNomadItemAmount type=text value="'+Options.NomadOptions.TradeAmount+'">&nbsp;<INPUT id=btNomadTrade type=submit value="Do Trade"></td></tr>';
+		if (!t.isBusy) {
+			var m = '<DIV class=pbStat>Nomad Camp Auto Trade</div><br>';
+			m += '<TABLE align=center width=98% cellpadding=0 cellspacing=0 class=pbTab>';
+			m += '<TR><td colspan=3>X:&nbsp<INPUT id=btNomadX size=3 maxlength=3 type=text value="'+Options.NomadOptions.x+'">&nbsp&nbsp&nbspY:&nbsp<INPUT id=btNomadY size=3 maxlength=3 type=text value="'+Options.NomadOptions.y+'">&nbsp;&nbsp;&nbsp;<INPUT id=btNomadRefresh type=submit value="Refresh Nomad Details">&nbsp;(Co-ordinates currently not required, but added to the tab in case they are in the future)</td></tr>';
 			m += '<TR><td colspan=3>&nbsp;</td></tr>';
-			m += '<TR><td>&nbsp;</td><td colspan=2><b>Possible Prizes from Trade:-</b></td></tr>';
+			if (t.ValidNomad) {
+				m += '<TR><td align=right>Trade Item:&nbsp;</td><td colspan=2><b>'+unsafeWindow.itemlist["i"+t.tradeItem].name+'</b></td></tr>';
+				m += '<TR><td align=right>Quantity per Trade:&nbsp;</td><td colspan=2><b>'+t.tradeItemQuantity+'</b></td></tr>';
+				m += '<TR><td align=right>You Own:&nbsp;</td><td><b>'+(Seed.items["i"+t.tradeItem]?Seed.items["i"+t.tradeItem]:0)+'</b></td><td>Amount to Trade:&nbsp;<INPUT size=4 id=btNomadItemAmount type=text value="'+Options.NomadOptions.TradeAmount+'">&nbsp;<INPUT id=btNomadTrade type=submit value="Do Trade"></td></tr>';
+				m += '<TR><td colspan=3>&nbsp;</td></tr>';
+				m += '<TR><td>&nbsp;</td><td colspan=2><b>Possible Prizes from Trade:-</b></td></tr>';
 
-			for (var p in t.prizes) {
-				if (t.prizes[p].itemId) {
-					m += '<TR><td>&nbsp;</td><td colspan=2>'+t.prizes[p].quantity + ' ' +unsafeWindow.itemlist["i"+t.prizes[p].itemId].name+'</td></tr>';
-				}	
+				for (var p in t.prizes) {
+					if (t.prizes[p].itemId) {
+						m += '<TR><td>&nbsp;</td><td colspan=2>'+t.prizes[p].quantity + ' ' +unsafeWindow.itemlist["i"+t.prizes[p].itemId].name+'</td></tr>';
+					}	
+				}
 			}
-		}
-		else {
-			m += '<TR><td align=center colspan=3>'+t.NomadMessage+'</td></tr>';
-		}
-		m += '</table><br>';
+			else {
+				m += '<TR><td align=center colspan=3>'+t.NomadMessage+'</td></tr>';
+			}
+			m += '</table><br>';
 		
-		t.myDiv.innerHTML = m;
+			t.myDiv.innerHTML = m;
 		
-		document.getElementById('btNomadRefresh').addEventListener('click', function() {t.eventFetchNomadDetails();},false);
+			document.getElementById('btNomadRefresh').addEventListener('click', function() {t.eventFetchNomadDetails();},false);
 
-		document.getElementById('btNomadX').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadX').value)) document.getElementById('btNomadX').value='';}, false);
-		document.getElementById('btNomadY').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadY').value)) document.getElementById('btNomadY').value='';}, false);
+			document.getElementById('btNomadX').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadX').value)) document.getElementById('btNomadX').value='';}, false);
+			document.getElementById('btNomadY').addEventListener('keyup', function(){ if (isNaN(document.getElementById('btNomadY').value)) document.getElementById('btNomadY').value='';}, false);
 
-		document.getElementById('btNomadX').addEventListener('change', function(){Options.NomadOptions.x = document.getElementById('btNomadX').value;} , false);
-		document.getElementById('btNomadY').addEventListener('change', function(){Options.NomadOptions.y = document.getElementById('btNomadY').value;} , false);
+			document.getElementById('btNomadX').addEventListener('change', function(){Options.NomadOptions.x = document.getElementById('btNomadX').value;} , false);
+			document.getElementById('btNomadY').addEventListener('change', function(){Options.NomadOptions.y = document.getElementById('btNomadY').value;} , false);
 
-		if (t.ValidNomad) {
-			document.getElementById('btNomadTrade').addEventListener('click', function() {t.start();},false);
-			document.getElementById('btNomadItemAmount').addEventListener('change', function(e) {
-				Options.NomadOptions.TradeAmount = parseIntNan(e.target.value);
-				e.target.value = Options.NomadOptions.TradeAmount;
-				saveOptions();
-			},false);
-		}	
+			if (t.ValidNomad) {
+				document.getElementById('btNomadTrade').addEventListener('click', function() {t.start();},false);
+				document.getElementById('btNomadItemAmount').addEventListener('change', function(e) {
+					Options.NomadOptions.TradeAmount = parseIntNan(e.target.value);
+					e.target.value = Options.NomadOptions.TradeAmount;
+					saveOptions();
+				},false);
+			}	
+		}
+		else { // reset curtain position..
+			t.setCurtain(true);
+		}
 	},  
 	
 	setPopup: function (onoff) {
@@ -28939,18 +28958,22 @@ Tabs.Nomad = {
 		var t = Tabs.Nomad;
 		if (onoff) {
 			var off = getAbsoluteOffsets(t.myDiv);
-			var curtain = document.createElement('div');
-			curtain.id = 'ptNomadCurtain';
-			curtain.style.zindex = mainPop.div.zIndex + 1;
-			curtain.style.backgroundColor = "#000000";
-			curtain.style.opacity = '0.5';
+			
+			var curtain = document.getElementById('ptNomadCurtain');
+			if (!curtain) {
+				curtain = document.createElement('div');
+				curtain.id = 'ptNomadCurtain';
+				curtain.style.zindex = mainPop.div.zIndex + 1;
+				curtain.style.backgroundColor = "#000000";
+				curtain.style.opacity = '0.5';
+				curtain.style.display = 'block';
+				curtain.style.position = 'absolute';
+				t.myDiv.appendChild(curtain);
+			}	
 			curtain.style.width = (t.myDiv.clientWidth+4) + 'px';
 			curtain.style.height = (t.myDiv.clientHeight+4) + 'px';
-			curtain.style.display = 'block';
-			curtain.style.position = 'absolute';
 			curtain.style.top = off.top + 'px';
 			curtain.style.left = off.left + 'px';
-			t.myDiv.appendChild(curtain);
 		} else {
 			t.myDiv.removeChild(document.getElementById('ptNomadCurtain'));
 		}
@@ -28974,6 +28997,9 @@ Tabs.Nomad = {
 
 		Options.NomadOptions.TradeAmount = parseIntNan(Options.NomadOptions.TradeAmount);
 		if(Options.NomadOptions.TradeAmount > 0) {
+			Options.NomadOptions.AutoTrade = true;
+			saveOptions();
+
 			t.isBusy = true;
 			t.setCurtain(true);
 			var popDiv = t.setPopup(true);
@@ -28984,6 +29010,10 @@ Tabs.Nomad = {
 			document.getElementById('pbNomadCancel').addEventListener('click', t.e_Cancel, false);
 			t.nextqueue();
 		}	
+		else {
+			Options.NomadOptions.AutoTrade = false;
+			saveOptions();
+		}
 	},
    
 	nextqueue : function (){
@@ -28992,8 +29022,12 @@ Tabs.Nomad = {
 			return;
 		var div = $("pbnomad_info");
 		if(Options.NomadOptions.TradeAmount == 0){
-			div.innerHTML += "<br><span>Completed!</span>";
+			div.innerHTML = "<span>Completed!</span><br>"+div.innerHTML;
 			document.getElementById('pbNomadCancel').firstChild.innerHTML = 'Close';
+
+			Options.NomadOptions.AutoTrade = false;
+			saveOptions();
+
 			t.isBusy = false;
 			return;
 		}
