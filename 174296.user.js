@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150625a
+// @version        20150701a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Error in nomad tab timing!</p>
+// @releasenotes 	<p>Fixed auto-transport siege load bug</p><p>Fixed reassign max march size calculation</p><p>Stats for Commander's Pendant champ item</p><p>Restrict tower alert emails to 1 every 10 minutes</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150625a';
+var Version = '20150701a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -129,7 +129,7 @@ var Options = {
   pbWideMap    : false,
   pbFoodAlert  : false,
   pbFoodAlertInt  : 1,
-  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,emailapp:0,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{},towercityactive:{}, whisper:true, whisperTroops:500000},
+  alertConfig  : {aChat:false, aPrefix:'** I\'m being attacked! **', scouting:false, wilds:false, defend:true, minTroops:10000, spamLimit:10, lastAttack:0, barbautoswitch:false, raidautoswitch: {}, alertTR:false, alertTRset:1, alertTR2:false, alertTRsetwaittime:60,RecentActivity:false,email:false,emailapp:0,alertTRtoff:false,AFK:true,lastatkarr:[],guardian:false,guardautoswitch:{},lastarrtime:[],towercitytext:{},towercityactive:{}, whisper:true, whisperTroops:500000, lastEmailSent:null},
   alertSound   : {enabled:false, soundUrl:DEFAULT_ALERT_SOUND_URL, repeat:true, playLength:20, repeatDelay:0.5, volume:100, alarmActive:false, expireTime:0},
   spamconfig   : {aspam:false, spamvert:'Join my Alliance!!', spammins:'30', atime:2 , spamstate:'a'},
   giftDomains  : {valid:false, list:{}},
@@ -5557,7 +5557,7 @@ Tabs.tower = {
 				<TD><INPUT id=pbalertWild type=checkbox '+ (Options.alertConfig.wilds?'CHECKED ':'') +'/></td><TD>'+translate("Alert on wild attack")+'&nbsp;&nbsp;</td>\
 				<TD><INPUT id=pbalertDefend type=checkbox '+ (Options.alertConfig.defend?'CHECKED ':'') +'/></td><TD>'+translate("Display defend status")+'&nbsp;&nbsp;</td>\
 				</table></td></tr>';
-		m += '<TR><TD><INPUT id=pbalertemail type=checkbox '+ (Options.alertConfig.email?'CHECKED ':'') +'/></td><TD>'+translate("Email on incoming attack")+'</td></tr>';
+		m += '<TR><TD><INPUT id=pbalertemail type=checkbox '+ (Options.alertConfig.email?'CHECKED ':'') +'/></td><TD>'+translate("Email on incoming attack")+'&nbsp;<span style="color:#800;"><b>** Restricted to one email every 10 mins **</b></span></td></tr>';
 		m += '</table>';
 		m += '<BR><DIV class=pbStat>'+translate("Actions")+'</div><TABLE class=pbTab>\
 				<TR><TD><INPUT id=pbalertraid type=checkbox '+ (Options.alertConfig.raid?'CHECKED':'') +'/></td><td>'+translate("Stop raids on impending")+'</td></tr>\
@@ -6457,27 +6457,12 @@ Tabs.tower = {
 			}	
 		}		
 		if(Options.alertConfig.email) {
-//			if (Options.alertConfig.emailapp == 1) {
+			var now = unsafeWindow.unixtime();
+			if (!Options.alertConfig.lastEmailSent || (Options.alertConfig.lastEmailSent + (10*60) < now)) {
 				koc2Mail.towerToMail(email);
-//			}
-//			else {
-//				var x = window.open();
-//				var y = http+"baos.kocscripters.com/kocalert/index.php?PING=1";
-//				x.location=y;
-//				setTimeout(function(){
-//					var data = {};
-//					data.Subject ='kocalert '+getServerId()+' ';
-//					if(m.marchStatus == 9) data.Subject += attackrecalled;
-//					data.Subject += scoutingat+' '+target;
-//					data.Message = msg.replace(eval('/'+fchar+'/g'),'');
-//					GM_xmlhttpRequest({
-//						method: 'POST',
-//						url: http+'baos.kocscripters.com/kocalert/index.php',
-//						headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', },
-//						data: implodeUrlArgs(data),
-//					});//x.close();
-//				},10000);
-//			}	
+				Options.alertConfig.lastEmailSent = now;
+				saveOptions();
+			}	
 		};
 	},
 
@@ -10926,10 +10911,10 @@ Tabs.transport = {
         if(tboost > unsafeWindow.cm.thronestats.boosts['Load'].Max) tboost = unsafeWindow.cm.thronestats.boosts['Load'].Max;
         var loadBoostBase = (Math.floor(Number(tboost)) * 0.01) +featherweight;
         
-					if (unsafeWindow.cm.unitFrontendType[unit] == "siege") {
+					if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "siege") {
 						loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(59) * 0.01)
 					};
-                    if (unsafeWindow.cm.unitFrontendType[unit] == "horsed") {
+                    if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "horsed") {
                         loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(48) * 0.01);
                     };
 
@@ -13762,7 +13747,7 @@ Tabs.Options = {
         <TR><TD><INPUT id=pballowWinMove type=checkbox /></td><TD>'+translate("Enable window drag (move window by dragging top bar with mouse)")+'</td></tr>\
         <TR><TD><INPUT id=pbTrackWinOpen type=checkbox /></td><TD>'+translate("Remember window open state on refresh")+'</td></tr>\
         <TR><TD><INPUT id=pbHideOnGoto type=checkbox /></td><TD>'+translate("Hide window when clicking on map coordinates")+'</td></tr>\
-        <TR><TD><INPUT id=pbWideOpt type=checkbox '+ (GlobalOptions.pbWideScreen?'CHECKED ':'') +'/></td><TD>'+translate("Enable widescreen style:")+' '+ htmlSelector({normal:'Normal', wide:'Widescreen', ultra:'Ultra'},GlobalOptions.pbWideScreenStyle,'id=selectScreenMode') +' '+translate("(all domains, requires refresh)")+'</td></tr>\
+        <TR><TD><INPUT id=pbWideOpt type=checkbox '+ (GlobalOptions.pbWideScreen?'CHECKED ':'') +'/></td><TD>'+translate("Enable widescreen style:")+' '+ htmlSelector({normal:'Normal (100%)', wide:'Wide (1520px)', ultra:'Ultra (1900px)'},GlobalOptions.pbWideScreenStyle,'id=selectScreenMode') +' '+translate("(all domains, requires refresh)")+'</td></tr>\
         <TR><TD><INPUT id=pbsendmeaway type=checkbox '+ (GlobalOptions.pbNoMoreKabam?'CHECKED ':'')+'/></td><TD>'+translate("Send me away from Kabam!")+'</td></tr>\
         <TR><TD><INPUT id=pbupdate type=checkbox '+ (GlobalOptions.pbupdate?'CHECKED ':'') +'/></td><TD>'+translate("Check updates on")+' '+ htmlSelector({0:'Greasyfork', 1:'SourceForge'},GlobalOptions.pbupdatebeta,'id=pbupdatebeta') +' '+translate("(all domains)")+' &nbsp; &nbsp; <INPUT id=pbupdatenow type=submit value="'+translate("Update Now")+'" /></td></tr>\
         <TR><TD>&nbsp;&nbsp;&nbsp;-</td><TD>'+translate("Change window transparency between \"0.7 - 2\" ")+'&nbsp <INPUT id=pbtogOpacity type=text size=3 /> <span style="color:#800; font-weight:bold"><sup>'+translate("*Requires Refresh")+'</sup></span></td></tr>\
@@ -23769,7 +23754,8 @@ var March = {
       }
       var tr = Math.floor(equippedthronestats(66));
       if (tr>unsafeWindow.cm.thronestats.boosts.MarchSize.Max)tr=unsafeWindow.cm.thronestats.boosts.MarchSize.Max;
-      if(tr > 0)buff+=(tr/100);
+      if(tr > 0)
+		buff*=(1 + tr/100);
       
       if(ascended.isPrestigeCity){
          var b = ascended.prestigeLevel;
@@ -25450,6 +25436,7 @@ Tabs.Champion = {
 		UniqueItems["28602"] = {Id:28602,Name:"Scourge Knight's Necklace", Effects:[{type:208,tier:2},{type:58,tier:2},{type:207,tier:3},{type:5,tier:2},{type:208,tier:3}],Faction:2,Type:8};		
 		UniqueItems["28603"] = {Id:28603,Name:"Noble Necklace", Effects:[{type:207,tier:2},{type:22,tier:2},{type:201,tier:2},{type:22,tier:2},{type:207,tier:3}],Faction:1,Type:8};
 		UniqueItems["28604"] = {Id:28604,Name:"Feral Pendant", Effects:[{type:206,tier:2},{type:201,tier:1},{type:1,tier:2},{type:201,tier:2},{type:206,tier:3}],Faction:3,Type:8};
+		UniqueItems["28605"] = {Id:28605,Name:" Commander's Pendant", Effects:[{type:209,tier:1},{type:51,tier:2},{type:208,tier:2},{type:18,tier:2},{type:209,tier:2}],Faction:1,Type:8};
 		
 		for (var i=28001;i<28500;i++) {
 			if (!unsafeWindow.itemlist['i'+i]) continue;
