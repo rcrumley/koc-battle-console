@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150701a
+// @version        20150702a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Fixed auto-transport siege load bug</p><p>Fixed reassign max march size calculation</p><p>Stats for Commander's Pendant champ item</p><p>Restrict tower alert emails to 1 every 10 minutes</p>
+// @releasenotes 	<p>Auto Transport Siege Load Bug fix Mk II</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150701a';
+var Version = '20150702a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -10902,27 +10902,29 @@ Tabs.transport = {
       var rallypointlevel = March.getMaxSize(city);
         if (parseInt(Troops) > parseInt(rallypointlevel)){ Troops = (rallypointlevel); }
       
-      var featherweight = parseInt(Seed.tech.tch10) * 0.1;
+        var featherweight = parseInt(Seed.tech.tch10) * 0.1;
         var loadEffectBoost = 0;
         if (Seed.playerEffects.loadExpire > unsafeWindow.unixtime()) {
             loadEffectBoost = 0.25;
         };
-        var tboost = unsafeWindow.cm.ThroneController.effectBonus(6)+loadEffectBoost;
-        if(tboost > unsafeWindow.cm.thronestats.boosts['Load'].Max) tboost = unsafeWindow.cm.thronestats.boosts['Load'].Max;
-        var loadBoostBase = (Math.floor(Number(tboost)) * 0.01) +featherweight;
+        var loadBoostBase = (Math.floor(unsafeWindow.cm.ThroneController.effectBonus(6)) * 0.01) + loadEffectBoost;
+        if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "siege") {
+                loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(59) * 0.01)
+        };
         
-					if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "siege") {
-						loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(59) * 0.01)
-					};
-                    if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "horsed") {
-                        loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(48) * 0.01);
-                    };
-
+        if (unsafeWindow.cm.unitFrontendType[unit.slice(3)] == "horsed") {
+                loadBoostBase += (unsafeWindow.cm.ThroneController.effectBonus(48) * 0.01);
+        };
+        
 		var Load = parseInt(unsafeWindow.unitstats[unit]['5']);
 		if (unsafeWindow.seed.queue_sacr[cityID]) {
 			for(var sacIndex = 0; sacIndex < unsafeWindow.seed.queue_sacr[cityID].length; sacIndex ++ ) if(unsafeWindow.seed.queue_sacr[cityID][sacIndex]["unitType"] == unit.slice(3)) Load *= unsafeWindow.seed.queue_sacr[cityID][sacIndex]["multiplier"][0];
 		}
 
+		if (loadBoostBase > Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100) {
+			loadBoostBase = Number(unsafeWindow.cm.thronestats.boosts.Load.Max)/100;
+		};
+		loadBoostBase += featherweight; //Should be done after throne room max check to get max boost?
         loadBoostBase += 1;
         var LoadUnit = Math.floor(loadBoostBase*Load)-1;
         var maxloadperwagon = LoadUnit;
