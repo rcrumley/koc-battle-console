@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150702a
+// @version        20150710a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Auto Transport Siege Load Bug fix Mk II</p>
+// @releasenotes 	<p>Delete Reassign Routes button</p><p>Stop facebook publish popup posting twice</p><p>Crafting zero duration items inventory update</p><p>Fix autotransport when both types of auras used</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150702a';
+var Version = '20150710a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -862,8 +862,10 @@ function HandlePublishPopup() {
                   privacy_setting.selectedIndex = 0;
                   if (GlobalOptions.autoPublishGamePopups){
                      nHtml.Click(publish_button);
+					 return;
                   }else if (GlobalOptions.autoCancelGamePopups){
                      nHtml.Click(cancel_publish_button);
+					 return;
                   }
                }
             }
@@ -12804,15 +12806,22 @@ Tabs.AutoCraft = {
 						if (!TrainOptions.CraftingNbFix[itemId] && TrainOptions.CraftingNb[itemId] > 0)
 							TrainOptions.CraftingNb[itemId] = TrainOptions.CraftingNb[itemId] -1;
 						saveTrainOptions();
-						if(!Seed.queue_craft["city"+currentcity]) { Seed.queue_craft["city"+currentcity]=[]; }
-						var n={};
-						n.recipeId=recipeId;
-						n.craftingUnixTime=o.time.startTime;
-						n.craftingEtaUnixTime=o.time.endTime;
-						n.craftingId=o.craftingId;
-						n.categoryId=null;
-						n.recipeIndex=null;
-						unsafeWindow.seed.queue_craft["city"+currentcity].push(n);
+						Seed.queue_craft["city"+currentcity]=[];
+						if (o.time.duration==0) { // no duration, don't add to queue, just inventory!
+							crafted = {};
+							crafted[params.itemId] = 1;
+							unsafeWindow.update_inventory(crafted);
+						}
+						else {
+							var n={};
+							n.recipeId=recipeId;
+							n.craftingUnixTime=o.time.startTime;
+							n.craftingEtaUnixTime=o.time.endTime;
+							n.craftingId=o.craftingId;
+							n.categoryId=null;
+							n.recipeIndex=null;
+							unsafeWindow.seed.queue_craft["city"+currentcity].push(n);
+						}	
 						for (var k in t.craftinfo[itemId].inputItems) {
 							// logit ('item: ' +k+ ': ' +t.craftinfo[itemId].inputItems[k]);
 							if (t.craftinfo[itemId].inputItems[k] > 0) 
@@ -14438,7 +14447,7 @@ Tabs.Reassign = {
 		}
 		m += '<TD>'+translate("Check reassign every:")+' <INPUT id=pbreassigninterval type=text size=2 value="'+Options.reassigninterval+'"\> '+translate("minutes")+'</td>';
 		m += '<TD>'+translate("Reassign with Knights")+'? <INPUT id=pbreassignknights type=checkbox '+(Options.ReassignKnights?'CHECKED':'')+'></td>';
-		m += '<TD><INPUT id=pbReassShowRoutes type=submit value="Show Routes"></td>';
+		m += '<TD><INPUT id=pbReassShowRoutes type=submit value="Show Routes">&nbsp;<INPUT id=pbReassReset type=submit value="Delete Routes"></td>';
 		m += '</tr></table></div>';
 		m += '<DIV id=pbReassignDivD class=pbStat>'+translate("ADD REASSIGN ROUTE")+'</div>';
 
@@ -14513,6 +14522,10 @@ Tabs.Reassign = {
 			Options.ReassignKnights = document.getElementById('pbreassignknights').checked;
 			saveOptions();
 		}, false);
+        document.getElementById('pbReassReset')
+            .addEventListener('click', function () {
+            t.reassignRoutes=[];t.saveReassignRoutes();
+        }, false);
 
 		for (var k in t.troops){
 			t.addListeners(t.troops[k]);
@@ -23744,16 +23757,10 @@ var March = {
       var buff = 1;
       var max = 0;
       var now = unixTime();
-      if (Seed.playerEffects.aurasExpire) {
-         if (Seed.playerEffects.aurasExpire > now) {
-            buff += 0.15
-         }
-      }
-      if (Seed.playerEffects.auras2Expire) {
-         if (Seed.playerEffects.auras2Expire > now) {
-            buff += 0.3
-         }
-      }
+		if (Seed.playerEffects.auras2Expire && Seed.playerEffects.auras2Expire > now) { buff += 0.3	}
+		else {
+			if (Seed.playerEffects.aurasExpire && Seed.playerEffects.aurasExpire > now) { buff += 0.15 } 
+		}
       var tr = Math.floor(equippedthronestats(66));
       if (tr>unsafeWindow.cm.thronestats.boosts.MarchSize.Max)tr=unsafeWindow.cm.thronestats.boosts.MarchSize.Max;
       if(tr > 0)
