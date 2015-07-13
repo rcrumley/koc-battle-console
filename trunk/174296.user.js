@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150710a
+// @version        20150713a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Delete Reassign Routes button</p><p>Stop facebook publish popup posting twice</p><p>Crafting zero duration items inventory update</p><p>Fix autotransport when both types of auras used</p>
+// @releasenotes 	<p>Champion on city tooltips</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150710a';
+var Version = '20150713a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -886,6 +886,9 @@ var TrainCity = 0;
 var CM = unsafeWindow.cm;
 var FFVersion = getFirefoxVersion();
 var IMGURL = unsafeWindow.stimgUrl+"img/";
+
+var ChampImagePrefix = IMGURL+"champion_hall/championPort_0";
+var ChampImageSuffix = "_50x50.jpg";
 
 function pbStartup (){
   clearTimeout (pbStartupTimer);
@@ -7865,12 +7868,14 @@ Tabs.build = {
         //unsafeWindow.buildslot = t.koc_buildslot; // restore original koc function
     },
     onUnload: function () {
-        var t = Tabs.build;
-        for (var i = 0; i < Cities.cities.length; i++) {
-            //t["bQ_" + Cities.cities[i].id] = []; //clean up if needed
-            if (!ResetAll) GM_setValue('bQ_' + getServerId() + '_' + Cities.cities[i].id, JSON2.stringify((t["bQ_" + Cities.cities[i].id])));
-        }
-        t.saveBuildStates();
+		if (unsafeWindow.pbLoaded) {
+			var t = Tabs.build;
+			for (var i = 0; i < Cities.cities.length; i++) {
+				//t["bQ_" + Cities.cities[i].id] = []; //clean up if needed
+				if (!ResetAll) GM_setValue('bQ_' + getServerId() + '_' + Cities.cities[i].id, JSON2.stringify((t["bQ_" + Cities.cities[i].id])));
+			}
+			t.saveBuildStates();
+		}	
     },
     _addTab: function (queueId, cityId, buildingType, buildingTime, buildingLevel, buildingAttempts, buildingMode) {
         var t = Tabs.build;
@@ -9360,8 +9365,10 @@ var exportToKOCattack = {
   },
   
   onUnload : function (){
-    var t = exportToKOCattack;
-    if (!ResetAll) GM_setValue ('atkTroops_'+ getServerId(),  JSON2.stringify(t.troops));
+	if (unsafeWindow.pbLoaded) {
+		var t = exportToKOCattack;
+		if (!ResetAll) GM_setValue ('atkTroops_'+ getServerId(),  JSON2.stringify(t.troops));
+	}	
   },
   
   doExport : function (coordList, city){
@@ -11144,9 +11151,11 @@ Tabs.transport = {
         clearTimeout(t.displaytimer);
     },
     onUnload: function () {
-        var t = Tabs.transport;
-        if (!ResetAll) t.saveTradeRoutes();
-        if (!ResetAll) t.saveTraderState();
+		if (unsafeWindow.pbLoaded) {
+			var t = Tabs.transport;
+			if (!ResetAll) t.saveTradeRoutes();
+			if (!ResetAll) t.saveTraderState();
+		}	
     },
 }
 
@@ -12853,7 +12862,9 @@ Tabs.AutoCraft = {
 	},
 	onUnload: function(){
 		var t = Tabs.AutoCraft;
-		t.saveCraftState();
+		if (unsafeWindow.pbLoaded) {
+			t.saveCraftState();
+		}	
 	},
 };
   
@@ -13712,7 +13723,9 @@ Tabs.ActionLog = {
 
   onUnload : function (){
     var t = Tabs.ActionLog;
-    if (!ResetAll) GM_setValue ('log_'+getServerId(), JSON2.stringify(t.last50));
+	if (unsafeWindow.pbLoaded) {
+		if (!ResetAll) GM_setValue ('log_'+getServerId(), JSON2.stringify(t.last50));
+	}	
   },
     
   _addTab : function (msg, ts){
@@ -14890,8 +14903,10 @@ Tabs.Reassign = {
 
 	onUnload: function(){
 		var t = Tabs.Reassign;
-		if (!ResetAll) t.saveReassignRoutes();
-		if (!ResetAll) t.saveReassignState();
+		if (unsafeWindow.pbLoaded) {
+			if (!ResetAll) t.saveReassignRoutes();
+			if (!ResetAll) t.saveReassignState();
+		}	
 	},
 }
 
@@ -17012,16 +17027,18 @@ function ToggleDivDisplay(h,w,div) {
 }
 
 function onUnload (){
-  Options.pbWinPos = mainPop.getLocation();
+	if (unsafeWindow.pbLoaded) {
+		Options.pbWinPos = mainPop.getLocation();
 
-  if (Tabs.Search.searchRunning) {
-	Tabs.Search.clearlastsearch();
-	Options.LastSearch.opt = Tabs.Search.opt;
-	Options.LastSearch.time = unixTime();
-	Options.LastSearch.mapDat = Tabs.Search.mapDat.slice();
-  }	
+		if (Tabs.Search.searchRunning) {
+			Tabs.Search.clearlastsearch();
+			Options.LastSearch.opt = Tabs.Search.opt;
+			Options.LastSearch.time = unixTime();
+			Options.LastSearch.mapDat = Tabs.Search.mapDat.slice();
+		}	
   
-  if (!ResetAll) saveOptions();
+		if (!ResetAll) saveOptions();
+	}	
 }
 
 function mouseMainTab (me){   // right-click on main button resets window location
@@ -24112,8 +24129,10 @@ Tabs.popcontrol = {
    onUnload : function ()
       {
       var t = Tabs.popcontrol;
-      //if (!ResetAll) GM_setValue ('log_'+getServerId(), JSON2.stringify(t.last50));
-      GM_setValue ('poptab_log_'+getServerId(), JSON2.stringify(t.loglast99));
+		if (unsafeWindow.pbLoaded) {
+			//if (!ResetAll) GM_setValue ('log_'+getServerId(), JSON2.stringify(t.last50));
+			GM_setValue ('poptab_log_'+getServerId(), JSON2.stringify(t.loglast99));
+		}	
       },
     
    addlogrow : function (msg, ts)
@@ -27705,7 +27724,7 @@ var OreAlert = {
 
 
 function GuardianTT () {
-	var z = new CalterUwFunc("showCityTooltip",[[/showTooltip/,'a += "<div>"+g_js_strings.guardian[seed.guardian[j].type+"_fullName"]+"</div>";showTooltip'],
+	var z = new CalterUwFunc("showCityTooltip",[[/showTooltip/,'a += "<div>"+g_js_strings.guardian[seed.guardian[j].type+"_fullName"]+"</div><div>" + pbgetchampstatus(seed.cities[j][0])+"</div>";showTooltip'],
 												['g_js_strings.showPopTooltip.currpop','provincenames[\'p\'+seed.cities[j][4]] + "</div><div>" + pbcheckascension(seed.cities[j][0]) + g_js_strings.showPopTooltip.currpop']]);
 												
 	unsafeWindow.pbcheckascension = function (id) {
@@ -27713,6 +27732,34 @@ function GuardianTT () {
 			return "<b>Ascension Protection: "+unsafeWindow.timestr(unsafeWindow.cm.PrestigeCityPlayerProtectionController.getTimeLeft(id),false)+"</b></div><div>";
 		} else return "";	
 	}
+	
+	unsafeWindow.pbgetchampstatus = function (id) {
+		var citychamp;
+		var ChampText = "No Champion!";
+		var gotchamp = false;
+		for (y in Seed.champion.champions) {
+			citychamp = Seed.champion.champions[y];
+			if (citychamp.assignedCity == id) {
+				gotchamp = true;
+				var champname = citychamp.name;
+				var champstatus = citychamp.status;
+				if (champstatus != "10") {
+					ChampText = champname + ' (Defending)';
+				}
+				else {
+					ChampText = champname + ' (Marching)';
+				}
+				break;	
+			}
+		}
+		if (gotchamp) {
+			return '<table cellspacing=0><tr><td class="xtab"><img height=14 src="'+ChampImagePrefix+citychamp.avatarId+ChampImageSuffix+'"></td><td class=xtab>'+ChampText+'</td></tr></table>';
+		}
+		else {
+			return '<table cellspacing=0><tr><td class="xtab">'+ChampText+'</td></tr></table>';
+		}
+	};
+	
    z.setEnable(true); 
 };
 
