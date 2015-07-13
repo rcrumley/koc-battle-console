@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150519a
+// @version        20150713a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
-// @releasenotes 	<p>Champion Viewer (Players Tab - Details)</p><p>Alliance Membership Monitor (Alliance Tab)</p><p>Export to Excel (Alliance Tab)</p>
+// @releasenotes 	<p>Champion status icon on game screen</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -26,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150519a';
+var Version = '20150713a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -380,6 +380,9 @@ var GameIcons = {
 	returning: '<img src='+IMGURL+'/returning.jpg>',
 };
 
+var ChampImagePrefix = IMGURL+"champion_hall/championPort_0";
+var ChampImageSuffix = "_50x50.jpg";
+
 var GlobalEffects = [1,2,3,4,5,6,7,17,18,19,20,21,22,23,102,103,8,9,73];
 
 var AttackEffects = [1,17,24,29,34,39,44,50,56,61,102,113,119,135,140];
@@ -665,9 +668,11 @@ function ToggleDivDisplay(h, w, div) {
 }
 
 function onUnload() {
-	Options.ptWinPos = mainPop.getLocation();
-	saveOptions();
-	if (!ResetColors) saveColors();
+	if (uW.ptLoaded) {
+		Options.ptWinPos = mainPop.getLocation();
+		saveOptions();
+		if (!ResetColors) saveColors();
+	}	
 }
 var knightRoles = [
 	['Foreman', 'politics', 'Pol'],
@@ -1034,7 +1039,7 @@ var mapinfoFix = {
 		}
 		if (FFVersion.substring(2,4) > 16) {
 			t.dispStatusMod = new CalterUwFunc('MapObject.prototype.populateSlots', [
-				[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";']
+				[/var\s*g\s*=""/, 'var g = ""; g+=ptGetProvince(N);if (G) g += "<div>Status: " + G + "</div>";'],
 			]);
 		}	
 		else {
@@ -12957,8 +12962,10 @@ Tabs.IRC = {
 		window.addEventListener('unload', t.onUnload, false);
 	},
 	onUnload: function () {
-		var t = Tabs.IRC;
-		localStorage.setItem('IRCSeen_log_' + GetServerId(), JSON2.stringify(t.seenLog));
+		if (uW.ptLoaded) {
+			var t = Tabs.IRC;
+			localStorage.setItem('IRCSeen_log_' + GetServerId(), JSON2.stringify(t.seenLog));
+		}	
 	},
 	grabChat: function (uid, name, msg) {
 		var t = Tabs.IRC;
@@ -17902,20 +17909,117 @@ var cdtd = {
 			[/cm\.PrestigeCityView\.render\(\)/im, 'cm.PrestigeCityView.render();cdtdhook();']
 		]);
 		unsafeWindow.cdtdhook = t.citychange;
+		unsafeWindow.ptCreateChampionPopUp = t.createchamppopup;
+		
 		if (Options.EnhCBtns) {
 			t.views.setEnable(true);
 			unsafeWindow.update_citylist2 = unsafeWindow.update_citylist;
 			unsafeWindow.update_citylist = function (e) {
 				unsafeWindow.update_citylist2(e);
+				cdtd.drawchampicon();
 				cdtd.drawdefendstatus();
 			};
 			if (Options.ColrCityBtns) t.replace();
+			cdtd.drawchampicon();
 			t.drawdefendstatus();
 		};
 	},
 	citychange: function () {
+		cdtd.drawchampicon();
 		cdtd.drawdefendstatus();
 		Tabs.Options.checkAscension(); // ascension expiry tied into enhanced city buttons
+	},
+	drawchampicon: function () {
+		var t = cdtd;
+		var e = ById('maparea_boosts_champion'); 
+		if (!e) {
+			e = document.createElement ('table');
+			e.height = "20";
+			e.style.cssFloat = 'left';
+			e.style.border = '1px';
+			e.style.borderSpacing = '1px';
+			e.style.borderCollapse = 'separate';
+			e.style.backgroundColor = '#fff';
+			e.id = 'maparea_boosts_champion';
+			e.className = 'trimg';
+			e.zIndex = '10011';
+			ById('maparea_boosts').appendChild (e);
+		}	
+		var citychamp;
+		var gotchamp = false;
+		for (y in Seed.champion.champions) {
+			citychamp = Seed.champion.champions[y];
+			if (citychamp.assignedCity == uW.currentcityid) {
+				gotchamp = true;
+				break;	
+			}
+		}
+		if (gotchamp) {
+			e.style.display = 'block';
+			e.innerHTML = '<tr><td id=maparea_boosts_championtd class="xtab trimg" style="padding:0px;"><img style="margin-left:0px;" id=maparea_boosts_champion_image height=18 src="'+ChampImagePrefix+citychamp.avatarId+ChampImageSuffix+'"></td></tr>'
+			ById('maparea_boosts_champion_image').addEventListener('mouseover',function () {uW.ptCreateChampionPopUp(e,citychamp.assignedCity,true,null,true);},false);
+			ById('maparea_boosts_champion_image').addEventListener('mouseout',function () {uW.removeTooltip();},false);
+		}
+		else {
+			e.style.display = 'none';
+		}
+	},
+	createchamppopup: function (elem,chkcityId,localchamp,champid,status) {
+		var t = cdtd;
+		effects = document.getElementById(elem.id+'effects');
+		var oureffects = '<table cellspacing=0 style="background-color:none;"><tr><td class=xtab><b><center><br>No Champion<br>Assigned!</center></b></td></tr></table>';
+		try {
+			var T = unsafeWindow.cm.ChampionManager.get("selectedChampion")
+			var Champs = unsafeWindow.cm.ChampionModalController.getCastleViewData();
+			unsafeWindow.cm.ChampionManager.selectChampion(T);
+			for (y in Champs.champions) {
+				chkchamp = Champs.champions[y];
+				if (chkchamp.id) {
+					if ((!champid && chkchamp.city == chkcityId) || (chkchamp.id == champid)) {
+						if (status) {
+							var champstatus = chkchamp.status;
+							if (champstatus != "Marching") {
+								status = ' (Defending)';
+							}
+							else {
+								status = ' (Marching)';
+							}
+						}
+						else {
+							status = '';
+						}
+						oureffects = '<table cellspacing=0 class=ptTab><tr><td colspan=2><b>'+chkchamp.name+status+'</b></td></tr><tr><td colspan=2><b>Champion Stats</b></td></tr>';
+						var gotchamp = false;
+						for (cy in chkchamp.stats.champion) {
+							cs = chkchamp.stats.champion[cy];
+							gotchamp = true;
+							oureffects+="<tr><td>"+cs.name+"</td><td>"+cs.amount+"</td></tr>";
+						}	
+						if (!gotchamp) { oureffects += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+						oureffects+="<tr><td colspan=2><b>Troop Stats</b></td></tr>";
+						var gottroop = false;
+						for (ty in chkchamp.stats.troop) {
+							ts = chkchamp.stats.troop[ty];
+							gottroop = true;
+							oureffects+="<tr><td>"+ts.name+"</td><td>"+ts.amount+"</td></tr>";
+						}	
+						if (!gottroop) { oureffects += '<tr><td colspan=2><i>None Available</i></td></tr>'; }
+						oureffects+="</table>";
+						break;
+					}	
+				}
+			}
+		}		
+		catch (err) {
+			logerr(err); // write to log
+			oureffects = '<table cellspacing=0><tr><td class=xtab><b><center>Error reading champion data :(</center></b></td></tr></table>';
+		}
+		
+		td = document.getElementById(elem.id+'td');
+		uW.jQuery('#'+td.id).children("span").remove();
+		if (status) {
+			uW.showTooltip(oureffects,td,null,'mod_maparea');return;
+		}
 	},
 	drawdefendstatus: function () {
 		var t = cdtd;
