@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150713a
+// @version        20150714a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Champion on city tooltips</p>
+// @releasenotes 	<p>Move Throne HUD left 100px (away from new Champ icon)</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150713a';
+var Version = '20150714a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -5066,7 +5066,7 @@ Tabs.Throne = {
 		div.style.position = "absolute";
 		div.style.top = "29px";
 		div.style.width = "390px";
-		div.style.right = "170px";
+		div.style.right = "270px";
 		div.id = "ThroneHUD";
 		div.style.zIndex = "20000";
 		par = document.getElementById('mod_maparea');
