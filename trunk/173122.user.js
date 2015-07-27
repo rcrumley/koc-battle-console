@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150713a
+// @version        20150727a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
-// @releasenotes 	<p>Champion status icon on game screen</p>
+// @releasenotes 	<p>Tournament Tab fix for glory tourneys</p><p>Option to change auto defence build packet size</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -26,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150713a';
+var Version = '20150727a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -341,6 +341,7 @@ var AutoTrainOptions = {
 	keepWood:				{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
 	keepStone:			{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
 	keepOre:				{1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0},
+	packetAmount: 50,
 };
 var ChatIcons = {};
 var IRCOptions = {
@@ -3512,10 +3513,11 @@ Tabs.Tournament = {
 							tournyhtml.push("<div>" + unsafeWindow.g_js_strings.commonstr.alliance + "</div>");
 							tournyhtml.push("</td>");
 							tournyhtml.push("<td  style='background-color:red'>");
-							if (rslt.type == 31)
-								tournyhtml.push("<div>" + unsafeWindow.g_js_strings.modal_tourny_changetab.mightgained + "</div>");
-							else
-								tournyhtml.push("<div>" + rslt.contestcategory + "</div>");
+							if (rslt.type == 31) { tournyhtml.push(unsafeWindow.g_js_strings.modal_tourny_changetab.mightgained); }
+							else {
+								if (rslt.type == 25) { tournyhtml.push(unsafeWindow.g_js_strings.modal_tourny_changetab.glorygained); }
+								else { tournyhtml.push(rslt.contestcategory); }
+							}	
 							tournyhtml.push("</td>");
 							tournyhtml.push("<td  style='background-color:red'>");
 							tournyhtml.push("<div>" + unsafeWindow.g_js_strings.commonstr.reward + "</div>");
@@ -7991,7 +7993,7 @@ Tabs.Train = {
       <option value='26'>" + uW.itemlist.i26.name + " (" + (Seed.items.i26?Seed.items.i26:0) + ")</option>\
       </select></div>\
       <BR><INPUT id='pttdButDo' type=submit value='" + uW.g_js_strings.modal_openWalls.builddefenses + "'\></td></tr>\
-	 <TR><TD align=center colspan=3><b>AUTOBUILD</b><br>Will queue small amounts<br>until all available wall space used</TD></TR>\
+	 <TR><TD align=center colspan=3><b>AUTOBUILD</b><br>Will queue&nbsp;<INPUT id=ptDefPacket type=text size=6 maxlength=7 value='"+AutoTrainOptions.packetAmount+"'\>&nbsp;units<br>until all available wall/field space used</TD></TR>\
 	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoTraps" + (AutoTrainOptions.doTraps[1] ? ' CHECKED ' : '') + ">Traps</TD></TR>\
    	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoCaltrops" + (AutoTrainOptions.doCalrops[1] ? ' CHECKED ' : '') + ">Caltrops</TD></TR>\
 	 <TR><TD align=center colspan=3><INPUT type=CHECKBOX id=chkDoSpikes" + (AutoTrainOptions.doSpikes[1] ? ' CHECKED ' : '') + ">Spiked Barriers</TD></TR>\
@@ -8062,6 +8064,13 @@ Tabs.Train = {
 		document.getElementById('chkDoSpikes').addEventListener('change', t.clickCheckDoSpikes, false);
 		document.getElementById('chkDoXbows').addEventListener('change', t.clickCheckDoXbows, false);
 		document.getElementById('chkDoTrebs').addEventListener('change', t.clickCheckDoTrebs, false);
+		
+		document.getElementById('ptDefPacket').addEventListener ('change', function (e) {
+			if (isNaN(e.target.value)) { e.target.value = 50; }
+			AutoTrainOptions.packetAmount = e.target.value;
+			saveAutoTrainOptions();
+		}, false);
+		
 		document.getElementById('pttrgamble').addEventListener('change', t.changeTroopSelect, false);
 		document.getElementById('chkPop').addEventListener('change', t.clickCheckIdlePop, false);
 		t.changeTroopSelect();
@@ -9180,8 +9189,8 @@ Tabs.Train = {
 						numberToTrain = parseInt(availOre / 1200);
 					if ((availableSpace / 4) < numberToTrain)
 						numberToTrain = parseInt(availableSpace / 4);
-					if (numberToTrain > 50)
-						numberToTrain = 50;
+					if (numberToTrain > AutoTrainOptions.packetAmount)
+						numberToTrain = AutoTrainOptions.packetAmount;
 					logit('Building ' + numberToTrain + ' Trebuchets in city ' + Cities.byID[cityId].name);
 					try {
 						doDefTrain(cityId, 0, 55, numberToTrain);
