@@ -1,6 +1,6 @@
 ﻿// ==UserScript==
 // @name           KOC Power Bot
-// @version        20150715a
+// @version        20150727a
 // @namespace      mat
 // @homepage       https://greasyfork.org/en/scripts/892-koc-power-bot
 // @include        *.kingdomsofcamelot.com/*main_src.php*
@@ -20,7 +20,7 @@
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
 // @description    Automated features for Kingdoms of Camelot
-// @releasenotes 	<p>Remove Flash dependency for Tower Alerts - Now uses HTML5 sound if available.<br><b>PLEASE NOTE:</b> Very old browsers will still need to use Flash for .mp3 files, so the default sound file has been changed to an .ogg sound format, which is more compatible with HTML5 in older browsers.</p>
+// @releasenotes 	<p>Option to Delete All Incoming Scout Reports</p>
 // ==/UserScript==
 
 //Fixed weird bug with koc game
@@ -34,7 +34,7 @@ if(window.self.location != window.top.location){
    }
 }
 
-var Version = '20150715a';
+var Version = '20150727a';
 
 var http =  window.location.protocol+"\/\/";
 
@@ -163,6 +163,7 @@ var Options = {
   DeleteMsgs3  : false,
   DeleteMsgsdf  : false,
   DeleteMsgs4  : false,
+  DeleteMsgs5  : false,
   DeleteMsgsUID : "",
   Foodstatus   : {1:0,2:0,3:0,4:0,5:0,6:0,7:0},
   Creststatus  : {1101:0,1102:0,1103:0,1104:0,1105:0,1106:0,1107:0,1108:0,1109:0,1110:0,1111:0,1112:0,1113:0,1114:0,1115:0},
@@ -13957,6 +13958,7 @@ Tabs.Options = {
         <TR><TD><INPUT id=deletes1toggle type=checkbox /></td><TD> '+translate("Auto delete wild reports")+'</td></tr>\
         <TR><TD><INPUT id=deletesDFtoggle type=checkbox /></td><TD> '+translate("Auto delete DF reports (and log items for DF Summary)")+'</td></tr>\
         <TR><TD><INPUT id=deletes2toggle type=checkbox /></td><TD> '+translate("Auto delete 'Crest' reports (and log items for Attack Summary)")+'</td></tr>\
+        <TR><TD><INPUT id=deletes5toggle type=checkbox /></td><TD> '+translate("Auto delete ALL incoming scout reports")+'</td></tr>\
         <TR><TD><INPUT id=deletes3toggle type=checkbox /></td><TD> '+translate("Auto delete incoming attack reports from alliances I'm friendly to")+'</td></tr>\
         <TR><TD><INPUT id=deletes4toggle type=checkbox /></td><TD> '+translate("Auto delete incoming attack reports from the following UIDs (separated by commas)")+'</td></tr>\
         <TR><TD>&nbsp;</td><TD><input id=pbdeleteuidreps type=text size=100 /></td></tr>\
@@ -14049,6 +14051,7 @@ Tabs.Options = {
       t.togOpt ('deletes2toggle', 'DeleteMsgs2');    
       t.togOpt ('deletes3toggle', 'DeleteMsgs3');    
       t.togOpt ('deletes4toggle', 'DeleteMsgs4');    
+      t.togOpt ('deletes5toggle', 'DeleteMsgs5');    
       t.togOpt ('deletesDFtoggle', 'DeleteMsgsdf');      
       t.changeOpt ('pbdeleteuidreps', 'DeleteMsgsUID');
       t.changeOpt ('pbDelFoodUsers', 'DeleteFoodUsers');
@@ -20327,7 +20330,7 @@ var DeleteReports = {
     
     startdeletereports : function(){
         var t = DeleteReports;
-          if(!t.deleting && (Options.DeleteMsg || Options.DeleteMsgs0 || Options.DeleteMsgs1 || Options.DeleteMsgs2 || Options.DeleteMsgs3 || Options.DeleteMsgs4 || Options.expinc)){
+          if(!t.deleting && (Options.DeleteMsg || Options.DeleteMsgs0 || Options.DeleteMsgs1 || Options.DeleteMsgs2 || Options.DeleteMsgs3 || Options.DeleteMsgs4 || Options.DeleteMsgs5 || Options.expinc)){
               t.deleting = true;
               t.fetchreport(0, t.checkreports);
           }
@@ -20463,25 +20466,36 @@ var DeleteReports = {
 					deletes1.push(k.substr(2));
 				}	
             }
-            if (Options.DeleteMsgs3){
-               for (l in unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
-                  if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendlyToThem[l].allianceId)
-                        deletes1.push(k.substr(2));
-               }
-               for (l in unsafeWindow.seed.allianceDiplomacies.friendly) {
-                  if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendly[l].allianceId)
-                        deletes1.push(k.substr(2));
-               }
-                }
-            if (Options.DeleteMsgs4){
-					if (Options.DeleteMsgsUID != "") {
-						// split string by commas
-						var UIDArray = Options.DeleteMsgsUID.split(","); 
-						if (UIDArray.indexOf(reports[k].side1PlayerId) != -1)
+            if (Options.DeleteMsgs3 && unsafeWindow.seed.allianceDiplomacies){
+				if (unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
+
+					for (l in unsafeWindow.seed.allianceDiplomacies.friendlyToThem) {
+						if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendlyToThem[l].allianceId)
 							deletes1.push(k.substr(2));
 					}
+				}	
+				if (unsafeWindow.seed.allianceDiplomacies.friendly) {
+					for (l in unsafeWindow.seed.allianceDiplomacies.friendly) {
+						if(reports[k].side1AllianceId == unsafeWindow.seed.allianceDiplomacies.friendly[l].allianceId)
+							deletes1.push(k.substr(2));
+					}
+				}	
+			}
+			
+            if (Options.DeleteMsgs4){
+				if (Options.DeleteMsgsUID != "") {
+					// split string by commas
+					var UIDArray = Options.DeleteMsgsUID.split(","); 
+					if (UIDArray.indexOf(reports[k].side1PlayerId) != -1)
+						deletes1.push(k.substr(2));
 				}
-			}            
+			}
+			if (Options.DeleteMsgs5){
+				if(reports[k].marchType==3 && t.isMyself(reports[k].side0PlayerId))
+					deletes1.push(k.substr(2));
+			}
+				
+		}            
         if(deletes1.length > 0 || deletes0.length > 0){
             t.deleteCheckedReports(deletes1, deletes0);
         } else {
