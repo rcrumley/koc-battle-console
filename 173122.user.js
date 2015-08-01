@@ -1,7 +1,7 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name           KOC Power Tools
 // @namespace      mat
-// @version        20150727a
+// @version        20150801a
 // @include        *.kingdomsofcamelot.com/*main_src.php*
 // @description    Enhancements and bug fixes for Kingdoms of Camelot
 // @icon  		http://www.gravatar.com/avatar/f9c545f386b902b6fe8ec3c73a62c524?r=PG&s=60&default=identicon
@@ -15,7 +15,7 @@
 // @grant       GM_log
 // @grant       GM_registerMenuCommand
 // @license			http://creativecommons.org/licenses/by-nc-sa/3.0/
-// @releasenotes 	<p>Tournament Tab fix for glory tourneys</p><p>Option to change auto defence build packet size</p>
+// @releasenotes 	<p>Fixed auto build defence packet amount option, and save settings by user</p>
 // ==/UserScript==
 //Fixed weird bug with koc game
 if (window.self.location != window.top.location) {
@@ -26,7 +26,7 @@ if (window.self.location != window.top.location) {
 //This value is used for statistics (https://nicodebelder.eu/kocReportView/Stats.html).
 //Please change it to your project name.
 var SourceName = "Barbarossa's Power Tools";
-var Version = '20150727a';
+var Version = '20150801a';
 var Title = 'KOC Power Tools';
 var DEBUG_BUTTON = true;
 var DEBUG_TRACE = false;
@@ -8999,8 +8999,8 @@ Tabs.Train = {
 						numberToTrain = parseInt(availOre / 400);
 					if ((availableSpace / 4) < numberToTrain)
 						numberToTrain = parseInt(availableSpace / 4);
-					if (numberToTrain > 50)
-						numberToTrain = 50;
+					if (numberToTrain > AutoTrainOptions.packetAmount)
+						numberToTrain = AutoTrainOptions.packetAmount;
 					logit('Building ' + numberToTrain + ' Traps in city ' + Cities.byID[cityId].name);
 					try {
 						doDefTrain(cityId, 0, 60, numberToTrain);
@@ -9044,8 +9044,8 @@ Tabs.Train = {
 						numberToTrain = parseInt(availWood / 400);
 					if ((availableSpace) < numberToTrain)
 						numberToTrain = parseInt(availableSpace);
-					if (numberToTrain > 50)
-						numberToTrain = 50;
+					if (numberToTrain > AutoTrainOptions.packetAmount)
+						numberToTrain = AutoTrainOptions.packetAmount;
 					logit('Building ' + numberToTrain + ' Caltrops in city ' + Cities.byID[cityId].name);
 					try {
 						doDefTrain(cityId, 0, 61, numberToTrain);
@@ -9091,8 +9091,8 @@ Tabs.Train = {
 						numberToTrain = parseInt(availStone / 50);
 					if ((availableSpace / 3) < numberToTrain)
 						numberToTrain = parseInt(availableSpace / 3);
-					if (numberToTrain > 50)
-						numberToTrain = 50;
+					if (numberToTrain > AutoTrainOptions.packetAmount)
+						numberToTrain = AutoTrainOptions.packetAmount;
 					logit('Building ' + numberToTrain + ' Spikes in city ' + Cities.byID[cityId].name);
 					try {
 						doDefTrain(cityId, 0, 62, numberToTrain);
@@ -9140,8 +9140,8 @@ Tabs.Train = {
 						numberToTrain = parseInt(availOre / 500);
 					if ((availableSpace / 2) < numberToTrain)
 						numberToTrain = parseInt(availableSpace / 2);
-					if (numberToTrain > 50)
-						numberToTrain = 50;
+					if (numberToTrain > AutoTrainOptions.packetAmount)
+						numberToTrain = AutoTrainOptions.packetAmount;
 					logit('Building ' + numberToTrain + ' Crossbows in city ' + Cities.byID[cityId].name);
 					try {
 						doDefTrain(cityId, 0, 53, numberToTrain);
@@ -16332,7 +16332,8 @@ function readColors() {
 
 function readAutoTrainOptions() {
 	var serverID = GetServerId();
-	s = GM_getValue('AutoTrainOptions_' + serverID);
+	s = GM_getValue('AutoTrainOptions_'+serverID+'_'+unsafeWindow.tvuid);
+	if (!s) s = GM_getValue('AutoTrainOptions_'+serverID);
 	if (s != null) {
 		opts = JSON2.parse(s);
 		for (k in opts) {
@@ -16350,7 +16351,7 @@ function readAutoTrainOptions() {
 
 function saveAutoTrainOptions() {
 	var serverID = GetServerId();
-	GM_setValue('AutoTrainOptions_' + serverID, JSON2.stringify(AutoTrainOptions));
+	GM_setValue('AutoTrainOptions_'+serverID+'_'+unsafeWindow.tvuid, JSON2.stringify(AutoTrainOptions));
 }
 
 function readIRCOptions() {
